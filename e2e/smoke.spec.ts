@@ -117,7 +117,8 @@ test('an exercise shows its verdict and a readable solution', async ({ page }) =
   // The unedited starter code is an honest wrong answer: it never finishes the replicate body.
   const exercise = page.locator('section.exercise').first();
   await exercise.getByRole('button', { name: 'Check my answer' }).click();
-  await expect(exercise.locator('.exercise-outcome')).toBeVisible({ timeout: 120_000 });
+  // A wrong answer or an R error is explained by the avatar, not the outcome box.
+  await expect(exercise.locator('.exercise-outcome, .avatar-tip').first()).toBeVisible({ timeout: 120_000 });
 
   await exercise.getByRole('button', { name: 'Show solution' }).click();
   const code = exercise.locator('.exercise-solution code');

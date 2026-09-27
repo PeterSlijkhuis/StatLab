@@ -1,0 +1,15 @@
+.avatar-tip { display: flex; align-items: flex-start; gap: 0.7rem; margin: 0.7rem 0; }
+.avatar-tip .avatar { flex: none; border-radius: 50%; box-shadow: var(--shadow-sm); }
+.avatar-tip-bubble {
+  position: relative; flex: 1; min-width: 0; padding: 0.65rem 0.85rem; border-radius: var(--radius);
+  border: 1px solid #fcd34d; background: var(--warn-soft); color: #78350f; line-height: 1.45;
+  animation: pop-in var(--medium) var(--ease) both;
+}
+.avatar-tip-bubble::before {
+  content: ""; position: absolute; left: -7px; top: 1rem; width: 12px; height: 12px; transform: rotate(45deg);
+  background: inherit; border-left: inherit; border-bottom: inherit;
+}
+.avatar-tip-error .avatar-tip-bubble { border-color: #fca5a5; background: var(--danger-soft); color: #7f1d1d; }
+.avatar-tip-bubble p { margin: 0; }
+.avatar-tip-bubble p + p { margin-top: 0.4rem; }
+@media (prefers-reduced-motion: reduce) { .avatar-tip-bubble { animation: none; } }

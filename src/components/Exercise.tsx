@@ -2,9 +2,11 @@ import { useRef, useState } from 'react';
 import { getExercise } from '../content/exercises';
 import { useLesson } from '../content/LessonContext';
 import { runExercise, type CheckOutcome } from '../r/checker';
+import { explainRError } from '../r/explainError';
 import { findLesson } from '../content/manifest';
 import { getDraft, getProgress, markExercise, saveDraft } from '../state/progress';
 import { lessonStatus, POINTS } from '../state/stats';
+import AvatarTip from './AvatarTip';
 import { confetti, showToast } from './celebrate';
 import { PLOT_SIZE, R_STOPPED_MESSAGE } from './CodeBlock';
 import FileUpload from './FileUpload';
@@ -121,19 +123,29 @@ export default function Exercise({ id }: { id: string }) {
         </div>
       )}
 
-      {outcome && (
+      {(outcome?.status === 'pass' || outcome?.status === 'broken-check') && (
         <div className={`exercise-outcome outcome-${outcome.status}`}>
           {outcome.status === 'pass' && <p>{outcome.message}</p>}
-          {outcome.status === 'fail' && <p>{outcome.message}</p>}
-          {outcome.status === 'student-error' && (
-            <p>Your code did not run. R reported the error shown below.</p>
-          )}
           {outcome.status === 'broken-check' && (
             <p>
               There is a problem with this exercise itself, not with your answer. Please report it.
             </p>
           )}
         </div>
+      )}
+
+      {/* Mistakes are explained by the student's own avatar. */}
+      {outcome?.status === 'fail' && (
+        <AvatarTip tone="wrong">
+          <p>{outcome.message}</p>
+          {hintsShown < definition.hints.length && <p>Stuck? Press "Show a hint" and I'll give you a nudge.</p>}
+        </AvatarTip>
+      )}
+      {outcome?.status === 'student-error' && (
+        <AvatarTip tone="error">
+          <p><strong>Your code did not run.</strong> {explainRError(outcome.run.output.filter((o) => o.type === 'error').map((o) => o.data).join('\n'))}</p>
+          <p>R's own message is shown below.</p>
+        </AvatarTip>
       )}
 
       {/* An answer that prints nothing and draws nothing would leave an empty dark panel under the verdict. */}
