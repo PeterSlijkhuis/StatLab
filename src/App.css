@@ -106,6 +106,14 @@ button { font: inherit; }
   font-size: 0.78rem; font-weight: 650; color: var(--ink-2); background: var(--surface-2);
   padding: 0.2rem 0.6rem; border-radius: 999px; font-variant-numeric: tabular-nums;
 }
+.sidebar-avatar {
+  display: flex; align-items: center; gap: 0.6rem; margin: 0 0.35rem 0.7rem; padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm); text-decoration: none; color: var(--ink-2); font-size: 0.85rem; font-weight: 650;
+  transition: background var(--fast);
+}
+.sidebar-avatar .avatar { border-radius: 50%; flex: none; }
+.sidebar-avatar:hover, .sidebar-avatar.active { background: var(--brand-soft); color: var(--brand-ink); }
+.sidebar-avatar small { display: block; font-weight: 500; color: var(--muted); font-size: 0.75rem; }
 .sidebar-part { margin-top: 1rem; }
 .sidebar-part-title { margin: 0 0.5rem 0.35rem; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
 .sidebar-module h2 { margin: 0; font-size: inherit; letter-spacing: 0; }

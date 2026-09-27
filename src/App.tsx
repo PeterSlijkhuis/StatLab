@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Lesson from './pages/Lesson';
 import RWorkspace from './pages/RWorkspace';
 import ModelChooser from './pages/ModelChooser';
+import AvatarStudio from './pages/AvatarStudio';
 import { fetchDataset, prepareSession } from './r/session';
 import { getWebR } from './r/webrClient';
 import './App.css';
@@ -92,6 +93,7 @@ export default function App() {
           <Route path="/lesson/:lessonId" element={<Lesson />} />
           <Route path="/workspace" element={<RWorkspace />} />
           <Route path="/which-model" element={<ModelChooser />} />
+          <Route path="/avatar" element={<AvatarStudio />} />
           {/* The page was called "which test" until the curriculum settled on
               teaching one model under many names. Kept so links already shared
               with students, and any bookmark, still land somewhere. */}
