@@ -4,6 +4,8 @@ import { MODULES } from '../content/manifest';
 import { PARTS } from '../content/parts';
 import { getProgress, subscribeProgress } from '../state/progress';
 import { courseStats, lessonStatus, moduleOf, moduleProgress } from '../state/stats';
+import { currentLook, pointsToSpend } from '../state/avatar';
+import Avatar from './Avatar';
 import Credits from './Credits';
 import Logo from './Logo';
 
@@ -55,6 +57,11 @@ export default function Sidebar({ open = false }: Props) {
   return (
     <nav ref={nav} id="course-nav" className={open ? 'sidebar open' : 'sidebar'} aria-label="Course navigation">
       <NavLink to="/" className="sidebar-home"><Logo /> StatLab</NavLink>
+
+      <NavLink to="/avatar" className="sidebar-avatar">
+        <Avatar look={currentLook(progress)} size={40} />
+        <span>Your avatar<small>{pointsToSpend(progress)} points to spend</small></span>
+      </NavLink>
 
       <div className="sidebar-stats" aria-label="Your progress">
         <span title="Days in a row with some work done"><span aria-hidden="true">🔥</span> {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>

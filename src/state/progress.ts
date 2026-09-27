@@ -20,6 +20,17 @@ export type Progress = {
    * still import, and an empty store still reads as `{ version, lessons }`.
    */
   activity?: string[];
+  /**
+   * The student's avatar: what it wears now, and every piece bought with
+   * points. Optional for the same reason as `activity`. Its shape is checked
+   * in `src/state/avatar.ts`, which also falls back piece by piece.
+   */
+  avatar?: AvatarSave;
+};
+
+export type AvatarSave = {
+  look: Record<string, string>;
+  owned: string[];
 };
 
 /** Enough for any streak worth showing, and small enough never to matter. */
@@ -56,6 +67,12 @@ function isProgress(value: unknown): value is Progress {
   if (!isRecord(value.lessons)) return false;
   if (value.activity !== undefined) {
     if (!Array.isArray(value.activity) || !value.activity.every((day) => typeof day === 'string')) return false;
+  }
+  if (value.avatar !== undefined) {
+    const avatar = value.avatar;
+    if (!isRecord(avatar) || !isRecord(avatar.look) || !Array.isArray(avatar.owned)) return false;
+    if (!Object.values(avatar.look).every((id) => typeof id === 'string')) return false;
+    if (!avatar.owned.every((id) => typeof id === 'string')) return false;
   }
   return Object.values(value.lessons).every(isLessonProgress);
 }
@@ -171,6 +188,16 @@ export function saveDraft(lessonId: string, blockId: string, code: string): void
   update(lessonId, (lesson) => {
     lesson.drafts[blockId] = code;
   });
+}
+
+/**
+ * Dressing the avatar is not studying, so unlike every other write this one
+ * leaves the streak alone.
+ */
+export function saveAvatar(avatar: AvatarSave): void {
+  const progress = getProgress();
+  progress.avatar = avatar;
+  write(progress);
 }
 
 export function getDraft(lessonId: string, blockId: string): string | undefined {
