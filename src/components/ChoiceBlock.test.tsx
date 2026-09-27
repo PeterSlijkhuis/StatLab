@@ -56,4 +56,18 @@ describe('ChoiceBlock', () => {
     await userEvent.click(screen.getByRole('button', { name: /it gets wider/i }));
     expect(screen.getByRole('button', { name: /it gets narrower/i })).toHaveProperty('disabled', true);
   });
+
+  test('a wrong quiz answer is explained by the student\'s avatar', async () => {
+    const { container } = wrap(<ChoiceBlock id="q3" kind="quiz" question="Q" choices={choices} />);
+    await userEvent.click(screen.getByRole('button', { name: /it gets wider/i }));
+    const tip = container.querySelector('.avatar-tip');
+    expect(tip?.querySelector('svg.avatar')).not.toBeNull();
+    expect(tip?.textContent).toMatch(/Not quite\..*more data means/);
+  });
+
+  test('a right answer and a prediction keep the plain response, without the avatar', async () => {
+    const { container } = wrap(<ChoiceBlock id="q4" kind="quiz" question="Q" choices={choices} />);
+    await userEvent.click(screen.getByRole('button', { name: /it gets narrower/i }));
+    expect(container.querySelector('.avatar-tip')).toBeNull();
+  });
 });

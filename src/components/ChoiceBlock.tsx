@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLesson } from '../content/LessonContext';
 import { markQuiz } from '../state/progress';
 import { POINTS } from '../state/stats';
+import AvatarTip from './AvatarTip';
 import './ChoiceBlock.css';
 
 export type Choice = {
@@ -65,7 +66,14 @@ export default function ChoiceBlock({ id, kind, question, choices }: Props) {
           </li>
         ))}
       </ul>
-      {selection && (
+      {/* A wrong answer is explained by the student's own avatar. Predictions
+          are never wrong, so they keep the plain response. */}
+      {selection && kind !== 'predict' && !selection.correct && (
+        <AvatarTip tone="wrong">
+          <p><strong>Not quite. </strong>{selection.response}</p>
+        </AvatarTip>
+      )}
+      {selection && (kind === 'predict' || selection.correct) && (
         <div className={`choice-response ${selection.correct ? 'right' : 'wrong'}`}>
           {kind !== 'predict' && <strong>{selection.correct ? 'Correct. ' : 'Not quite. '}</strong>}
           {selection.response}

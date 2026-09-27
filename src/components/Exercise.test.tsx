@@ -91,6 +91,26 @@ describe('Exercise', () => {
     expect(screen.queryByText(/not quite/i)).toBeNull();
   });
 
+  test('the avatar explains an R error in plain words', async () => {
+    runExercise.mockResolvedValue({
+      status: 'student-error',
+      message: 'Your code did not run.',
+      run: { output: [{ type: 'error', data: "object 'mn' not found" }], images: [], errored: true },
+    });
+    const { container } = renderExercise();
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    await waitFor(() => expect(container.querySelector('.avatar-tip')).not.toBeNull());
+    expect(container.querySelector('.avatar-tip')!.textContent).toMatch(/anything called "mn"/);
+  });
+
+  test('the avatar gives the reason for a wrong answer and points to a hint', async () => {
+    runExercise.mockResolvedValue({ status: 'fail', message: 'm is 0 but should be 5.', run: emptyRun });
+    const { container } = renderExercise();
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    await waitFor(() => expect(container.querySelector('.avatar-tip')).not.toBeNull());
+    expect(container.querySelector('.avatar-tip')!.textContent).toMatch(/should be 5.*Show a hint/);
+  });
+
   test('a broken check blames the exercise, never the student', async () => {
     runExercise.mockResolvedValue({ status: 'broken-check', message: 'check exploded', run: emptyRun });
     renderExercise();
