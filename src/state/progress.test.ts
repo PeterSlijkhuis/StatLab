@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe('progress store', () => {
   test('starts empty with a version stamp', () => {
-    expect(getProgress()).toEqual({ version: 1, lessons: {} });
+    expect(getProgress()).toEqual({ version: 2, lessons: {} });
   });
 
   test('records exercise results', () => {
@@ -69,7 +69,7 @@ describe('progress store', () => {
 
   test('survives corrupt stored data by starting fresh', () => {
     localStorage.setItem('statlab.progress.v1', '{{{');
-    expect(getProgress()).toEqual({ version: 1, lessons: {} });
+    expect(getProgress()).toEqual({ version: 2, lessons: {} });
   });
 
   test('works when localStorage throws', () => {
@@ -145,17 +145,17 @@ describe('progress store', () => {
 
 describe('streak', () => {
   test('counts consecutive active days ending today', () => {
-    const progress = { version: 1 as const, lessons: {}, activity: ['2026-09-19', '2026-09-20', '2026-09-21', '2026-09-22'] };
+    const progress = { version: 2 as const, lessons: {}, activity: ['2026-09-19', '2026-09-20', '2026-09-21', '2026-09-22'] };
     expect(currentStreak(progress, new Date(2026, 8, 22, 20))).toBe(4);
   });
 
   test('is still alive the morning after, before the student has started', () => {
-    const progress = { version: 1 as const, lessons: {}, activity: ['2026-09-20', '2026-09-21'] };
+    const progress = { version: 2 as const, lessons: {}, activity: ['2026-09-20', '2026-09-21'] };
     expect(currentStreak(progress, new Date(2026, 8, 22, 8))).toBe(2);
   });
 
   test('breaks after a missed day', () => {
-    const progress = { version: 1 as const, lessons: {}, activity: ['2026-09-18', '2026-09-20'] };
+    const progress = { version: 2 as const, lessons: {}, activity: ['2026-09-18', '2026-09-20'] };
     expect(currentStreak(progress, new Date(2026, 8, 22, 8))).toBe(0);
   });
 
@@ -171,5 +171,33 @@ describe('streak', () => {
 
   test('rejects an activity list that is not a list of days', () => {
     expect(importProgress(JSON.stringify({ version: 1, lessons: {}, activity: [3] }))).toBe(false);
+  });
+});
+
+describe('migration from version 1', () => {
+  test('moves the old Modules 9 to 15 up one, keys and all', () => {
+    const lesson = (exercise: string, quiz: string) => ({
+      exercises: { [exercise]: 'passed' },
+      quizzes: { [quiz]: true, 'q-r-meaning': true },
+      drafts: { [exercise]: 'x <- 1', 'c-load': 'y' },
+    });
+    localStorage.setItem(
+      'statlab.progress.v1',
+      JSON.stringify({
+        version: 1,
+        lessons: { '06-1': lesson('m6-1-a', 'i-6-1'), '09-2': lesson('m9-2-a', 'i-9-2'), '15-4': lesson('m15-4-a', 'i-15-4') },
+      }),
+    );
+    const { version, lessons } = getProgress();
+    expect(version).toBe(2);
+    expect(Object.keys(lessons).sort()).toEqual(['06-1', '10-2', '16-4']);
+    expect(lessons['06-1']).toEqual(lesson('m6-1-a', 'i-6-1'));
+    expect(lessons['10-2']).toEqual(lesson('m10-2-a', 'i-10-2'));
+    expect(lessons['16-4']).toEqual(lesson('m16-4-a', 'i-16-4'));
+  });
+
+  test('an exported version 1 file imports into the new numbers', () => {
+    expect(importProgress(JSON.stringify({ version: 1, lessons: { '14-2': { exercises: { 'm14-2-a': 'passed' }, quizzes: {}, drafts: {} } } }))).toBe(true);
+    expect(getProgress().lessons['15-2'].exercises['m15-2-a']).toBe('passed');
   });
 });

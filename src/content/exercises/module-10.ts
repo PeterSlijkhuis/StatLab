@@ -4,258 +4,309 @@ export const module10: ExerciseDef[] = [
   {
     id: 'm10-1-a',
     prompt:
-      'Fit the model that predicts wellbeing from autonomy and workload together. Store it in model2 and store the workload coefficient in b_workload.',
+      'Two questions in one. How strongly does autonomy go with wellbeing, and how strongly does workload? Store the Pearson correlation between autonomy and wellbeing in r_autonomy, and between workload and wellbeing in r_workload. Look at the summary table first: you should be able to say which of the two will be negative before you compute either.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# A plus sign adds a predictor. It does not multiply them together - that is Module 12.\nmodel2 <- \nb_workload <- ',
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# Never correlate what you have not looked at.\nd %>% summarise(\n  mean_autonomy = mean(autonomy), mean_workload = mean(workload),\n  mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing)\n)\n\nr_autonomy <- \nr_workload <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy + workload, data = d)\nb_workload <- model2 %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- cor(d$autonomy, d$wellbeing)\nr_workload <- cor(d$workload, d$wellbeing)',
     wrongAnswers: [
-      // * instead of +: an interaction model, whose workload coefficient means
-      // something else entirely (the workload slope at autonomy = 0).
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy * workload, data = d)\nb_workload <- model2 %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
-      // The second row of the table read as "the second predictor".
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy + workload, data = d)\nb_workload <- model2 %>% tidy() %>% slice(2) %>% pull(estimate)',
-      // Only one predictor in the model, so the coefficient is the unadjusted one.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ workload, data = d)\nb_workload <- model2 %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
-      // Two separate models stitched together, which is not a multiple regression.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy, data = d)\nb_workload <- lm(wellbeing ~ workload, data = d) %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
+      // The second line never got edited: both hold the autonomy correlation.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- cor(d$autonomy, d$wellbeing)\nr_workload <- cor(d$autonomy, d$wellbeing)',
+      // abs() applied "to tidy it up", which deletes the finding.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- cor(d$autonomy, d$wellbeing)\nr_workload <- abs(cor(d$workload, d$wellbeing))',
+      // Covariance rather than correlation: right direction, meaningless size.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- cov(d$autonomy, d$wellbeing)\nr_workload <- cov(d$workload, d$wellbeing)',
+      // The two predictors correlated with each other instead of with the outcome.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- cor(d$autonomy, d$wellbeing)\nr_workload <- cor(d$workload, d$autonomy)',
     ],
     alternateSolutions: [
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy + workload, data = d)\nb_workload <- coef(model2)["workload"]',
-      // Predictors in the other order: the same model, a different row order.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ workload + autonomy, data = d)\nb_workload <- model2 %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel2 <- lm(wellbeing ~ autonomy + workload, data = d)\nb_workload <- summary(model2)$coefficients["workload", "Estimate"]',
+      // dplyr route, one number pulled out of a one-row summary.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- d %>% summarise(r = cor(autonomy, wellbeing)) %>% pull(r)\nr_workload <- d %>% summarise(r = cor(workload, wellbeing)) %>% pull(r)',
+      // with() avoids repeating d$ and leaves a bare number.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nr_autonomy <- with(d, cor(autonomy, wellbeing))\nr_workload <- with(d, cor(workload, wellbeing))',
+      // A correlation matrix, read off by position: leaves no names behind.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm <- cor(d[, c("autonomy", "workload", "wellbeing")])\nr_autonomy <- m["autonomy", "wellbeing"]\nr_workload <- m["workload", "wellbeing"]',
     ],
     check: `
-      if (!has_answer("model2") || !has_answer("b_workload")) {
-        list(pass = FALSE, message = "I need both model2 (the two-predictor lm) and b_workload (its workload coefficient).")
+      if (!has_answer("r_autonomy") || !has_answer("r_workload")) {
+        list(pass = FALSE, message = "I need both r_autonomy and r_workload.")
       } else {
-        model2 <- answer("model2")
-        b <- as.vector(answer("b_workload"))
-        if (!inherits(model2, "lm")) {
-          list(pass = FALSE, message = "model2 is not a fitted linear model. Use lm(wellbeing ~ autonomy + workload, data = d).")
+        r_a <- as.vector(answer("r_autonomy"))
+        r_w <- as.vector(answer("r_workload"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        exp_a <- cor(d$autonomy, d$wellbeing)
+        exp_w <- cor(d$workload, d$wellbeing)
+        if (!is.numeric(r_a) || length(r_a) != 1L || !is.numeric(r_w) || length(r_w) != 1L) {
+          list(pass = FALSE, message = "Each answer should be a single number. summarise() gives a one-row table; pull() turns it into a number.")
+        } else if (isTRUE(all.equal(r_w, exp_a, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "Both of your answers are the autonomy correlation - the second line still says autonomy. Change it to workload.")
+        } else if (isTRUE(all.equal(r_w, abs(exp_w), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("You dropped the sign. r is ", round(exp_w, 3), ", and the minus sign is the entire finding: the busier the employee, the lower the reported wellbeing. abs() throws away the direction."))
+        } else if (isTRUE(all.equal(r_a, cov(d$autonomy, d$wellbeing), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the covariance. It has the right sign but its size depends on the units, so it cannot be compared across variables. cor() divides by both SDs, which fixes the answer between -1 and 1.")
+        } else if (!isTRUE(all.equal(r_a, exp_a, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("r_autonomy is ", round(r_a, 3), ", but cor(d$autonomy, d$wellbeing) is ", round(exp_a, 3), "."))
+        } else if (!isTRUE(all.equal(r_w, exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("r_workload is ", round(r_w, 3), ", but cor(d$workload, d$wellbeing) is ", round(exp_w, 3), ". Check that you correlated workload with wellbeing, and not with autonomy."))
         } else {
-          d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-          reference <- lm(wellbeing ~ autonomy + workload, data = d)
-          exp_workload <- as.vector(coef(reference)["workload"])
-          exp_autonomy <- as.vector(coef(reference)["autonomy"])
-          alone <- as.vector(coef(lm(wellbeing ~ workload, data = d))["workload"])
-          terms_in <- names(coef(model2))
-          if (!identical(sort(terms_in), sort(c("(Intercept)", "autonomy", "workload")))) {
-            list(pass = FALSE, message = paste0("model2 should have exactly two predictors, autonomy and workload. Yours has: ", paste(setdiff(terms_in, "(Intercept)"), collapse = ", "), ". A star between predictors adds an interaction term as well; a plus sign is what you want here."))
-          } else if (!is.numeric(b) || length(b) != 1L) {
-            list(pass = FALSE, message = "b_workload should be a single number: filter tidy() to the workload row and pull(estimate).")
-          } else if (isTRUE(all.equal(b, exp_autonomy, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = "That is the autonomy coefficient. tidy() lists the intercept first, so slice(2) is the first predictor, not the second. Filter on the term name instead of the row number.")
-          } else if (isTRUE(all.equal(b, alone, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = paste0("That is workload's coefficient when it is the only predictor (", round(alone, 3), "). With autonomy in the model it is ", round(exp_workload, 3), " - close, but a different quantity."))
-          } else if (!isTRUE(all.equal(b, exp_workload, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = paste0("b_workload is ", round(b, 4), " but the workload coefficient of this model is ", round(exp_workload, 4), "."))
-          } else {
-            list(pass = TRUE, message = paste0("b = ", round(exp_workload, 2), " for workload and ", round(exp_autonomy, 2), " for autonomy. Each is the predicted change in wellbeing for one extra point of that variable among employees who match on the other one."))
-          }
+          list(pass = TRUE, message = paste0("Autonomy r = ", round(exp_a, 3), "; workload r = ", round(exp_w, 3), ". Same outcome, opposite directions. A correlation is only ever a description of these 480 employees - it is not evidence that giving someone autonomy would raise their wellbeing."))
         }
       }
     `,
     hints: [
-      'Predictors are added with a plus: lm(wellbeing ~ autonomy + workload, data = d).',
-      'tidy() now returns three rows: the intercept, autonomy and workload.',
-      'filter(term == "workload") %>% pull(estimate) picks the one you want by name rather than by position.',
+      'cor(x, y) takes two vectors: cor(d$autonomy, d$wellbeing).',
+      'Do the same for workload, and keep the sign exactly as R gives it.',
+      'If you prefer pipes: d %>% summarise(r = cor(autonomy, wellbeing)) %>% pull(r).',
     ],
   },
   {
     id: 'm10-2-a',
     prompt:
-      'Fit autonomy alone, then autonomy alongside workload and tenure_years. Store the autonomy coefficient from the first model in b_simple and from the second in b_adjusted, so you can see how much adding the other predictors moves it.',
+      'Fit the linear model that predicts wellbeing from autonomy. Store the fitted model in model, and the autonomy coefficient - the slope - in slope.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nb_simple <- \nb_adjusted <- ',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# The outcome goes on the left of the tilde, the predictor on the right.\nmodel <- \nslope <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nsimple <- lm(wellbeing ~ autonomy, data = d)\nfull <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nb_simple <- simple %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\nb_adjusted <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
     wrongAnswers: [
-      // Both read off the same model: the comparison collapses.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nfull <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nb_simple <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\nb_adjusted <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
-      // The two the wrong way round.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nsimple <- lm(wellbeing ~ autonomy, data = d)\nfull <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nb_simple <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\nb_adjusted <- simple %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
-      // A predictor missing from the adjusted model.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nsimple <- lm(wellbeing ~ autonomy, data = d)\nfull <- lm(wellbeing ~ autonomy + workload, data = d)\nb_simple <- simple %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\nb_adjusted <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
-      // Standardised coefficients in the second slot: a different scale, not an adjustment.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nsimple <- lm(wellbeing ~ autonomy, data = d)\nz <- lm(scale(wellbeing) ~ scale(autonomy) + scale(workload) + scale(tenure_years), data = d)\nb_simple <- simple %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\nb_adjusted <- z %>% tidy() %>% slice(2) %>% pull(estimate)',
+      // The formula reversed: a perfectly valid model of the wrong thing.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(autonomy ~ wellbeing, data = d)\nslope <- model %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
+      // The intercept read off as the slope.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- model %>% tidy() %>% slice(1) %>% pull(estimate)',
+      // The wrong predictor.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ workload, data = d)\nslope <- model %>% tidy() %>% filter(term == "workload") %>% pull(estimate)',
+      // The correlation offered as the slope.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- cor(d$autonomy, d$wellbeing)',
     ],
     alternateSolutions: [
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nb_simple <- coef(lm(wellbeing ~ autonomy, data = d))["autonomy"]\nb_adjusted <- coef(lm(wellbeing ~ autonomy + workload + tenure_years, data = d))["autonomy"]',
-      // update() builds the second model from the first.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nsimple <- lm(wellbeing ~ autonomy, data = d)\nfull <- update(simple, . ~ . + workload + tenure_years)\nb_simple <- coef(simple)[[2]]\nb_adjusted <- full %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)',
+      // Base R: coef() leaves a named number, which as.vector() in the check strips.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- coef(model)["autonomy"]',
+      // Position rather than name.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- coef(model)[[2]]',
+      // The coefficient table from summary(), a 1x1 matrix after the subset.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nslope <- summary(model)$coefficients["autonomy", "Estimate", drop = FALSE]',
     ],
     check: `
-      if (!has_answer("b_simple") || !has_answer("b_adjusted")) {
-        list(pass = FALSE, message = "I need both b_simple and b_adjusted.")
+      if (!has_answer("model") || !has_answer("slope")) {
+        list(pass = FALSE, message = "I need both model (the fitted lm) and slope (its autonomy coefficient).")
       } else {
-        b_simple <- as.vector(answer("b_simple"))
-        b_adjusted <- as.vector(answer("b_adjusted"))
-        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        exp_simple <- as.vector(coef(lm(wellbeing ~ autonomy, data = d))["autonomy"])
-        exp_adjusted <- as.vector(coef(lm(wellbeing ~ autonomy + workload + tenure_years, data = d))["autonomy"])
-        if (!is.numeric(b_simple) || length(b_simple) != 1L || !is.numeric(b_adjusted) || length(b_adjusted) != 1L) {
-          list(pass = FALSE, message = "Both answers should be single numbers.")
-        } else if (isTRUE(all.equal(b_simple, b_adjusted, tolerance = 1e-12, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Your two numbers are identical, so they came from the same model. b_simple comes from lm(wellbeing ~ autonomy), b_adjusted from the model that also contains workload and tenure_years.")
-        } else if (isTRUE(all.equal(b_simple, exp_adjusted, tolerance = 1e-6, check.attributes = FALSE)) && isTRUE(all.equal(b_adjusted, exp_simple, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "You have them the wrong way round. b_simple is from the one-predictor model; b_adjusted is from the model with all three.")
-        } else if (!isTRUE(all.equal(b_simple, exp_simple, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("b_simple is ", round(b_simple, 4), " but lm(wellbeing ~ autonomy) gives ", round(exp_simple, 4), "."))
-        } else if (!isTRUE(all.equal(b_adjusted, exp_adjusted, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("b_adjusted is ", round(b_adjusted, 4), " but the model with autonomy, workload and tenure_years gives ", round(exp_adjusted, 4), ". Check that all three predictors are in it and that you did not standardise anything - a scaled coefficient is in SD units, which is a change of scale rather than an adjustment."))
+        model <- answer("model")
+        slope <- as.vector(answer("slope"))
+        if (!inherits(model, "lm")) {
+          list(pass = FALSE, message = "model is not a fitted linear model. Build it with lm(wellbeing ~ autonomy, data = d) and store the whole result, not just a number from it.")
         } else {
-          list(pass = TRUE, message = paste0("Alone: ", round(exp_simple, 3), ". Alongside workload and tenure: ", round(exp_adjusted, 3), " - a change of ", round(exp_adjusted - exp_simple, 3), ". The coefficient moved because autonomy is not independent of the others; how far it moves is how much of its apparent effect they account for."))
+          d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+          reference <- lm(wellbeing ~ autonomy, data = d)
+          b <- as.vector(coef(reference)["autonomy"])
+          a <- as.vector(coef(reference)["(Intercept)"])
+          outcome <- as.character(formula(model))[2]
+          if (!identical(outcome, "wellbeing")) {
+            list(pass = FALSE, message = paste0("Your model predicts ", outcome, ", not wellbeing. In y ~ x the outcome goes on the left of the tilde. Swapping the two fits a different line: it minimises the wrong residuals and gives a different slope."))
+          } else if (!("autonomy" %in% names(coef(model)))) {
+            list(pass = FALSE, message = paste0("Your model has no autonomy coefficient. Its predictors are: ", paste(names(coef(model))[-1], collapse = ", "), "."))
+          } else if (!is.numeric(slope) || length(slope) != 1L) {
+            list(pass = FALSE, message = "slope should be a single number. tidy() gives a table with one row per coefficient - filter to the autonomy row, then pull(estimate).")
+          } else if (isTRUE(all.equal(slope, a, tolerance = 1e-6, check.attributes = FALSE))) {
+            list(pass = FALSE, message = paste0("That is the intercept, ", round(a, 2), ": predicted wellbeing for an employee with autonomy = 0. The slope is the autonomy row, ", round(b, 2), "."))
+          } else if (isTRUE(all.equal(slope, cor(d$autonomy, d$wellbeing), tolerance = 1e-6, check.attributes = FALSE))) {
+            list(pass = FALSE, message = "That is the correlation, not the slope. The correlation is unit-free; the slope is in the units of the data - points of wellbeing per one point of autonomy.")
+          } else if (!isTRUE(all.equal(slope, b, tolerance = 1e-6, check.attributes = FALSE))) {
+            list(pass = FALSE, message = paste0("slope is ", round(slope, 4), ", but the autonomy coefficient is ", round(b, 4), "."))
+          } else {
+            list(pass = TRUE, message = paste0("b = ", round(b, 2), ". Each extra point of autonomy goes with ", round(b, 2), " more points of wellbeing on average. The intercept is ", round(a, 2), " - the prediction at autonomy = 0, which no employee in this study has, so read it as where the line starts rather than as a finding."))
+          }
         }
       }
     `,
     hints: [
-      'Fit two models and keep both: one with autonomy alone, one with all three predictors.',
-      'Pull the autonomy row out of each with filter(term == "autonomy") %>% pull(estimate).',
-      'Do not standardise anything. Both numbers should be in the original units.',
+      'lm(outcome ~ predictor, data = d) fits the model. Store the whole thing in model.',
+      'model %>% tidy() gives one row per coefficient, with columns term, estimate, std.error, statistic and p.value.',
+      'filter(term == "autonomy") %>% pull(estimate) takes the slope out of that table as a plain number.',
     ],
   },
   {
     id: 'm10-2-b',
     prompt:
-      'Add remote working to the model. Store the fitted model in model_remote, its remote coefficient in b_remote, and the group means and SDs in remote_means, one row per level of remote. The coefficient and the means have to tell the same story - make sure you can see that they do.',
+      'Use the fitted model to predict the wellbeing of an employee whose autonomy is 8. Store that single predicted value in pred_8.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlevels(d$remote)\n\nmodel_remote <- \nb_remote <- \nremote_means <- ',
+      'library(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\n\n# predict() wants a data frame whose column has the same name as the predictor.\npred_8 <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(estimate)\nremote_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- predict(model, newdata = data.frame(autonomy = 8))',
     wrongAnswers: [
-      // The intercept read as a group mean - the classic categorical-predictor error.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)\nb_remote <- model_remote %>% tidy() %>% slice(1) %>% pull(estimate)\nremote_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
-      // The reference level flipped, so the coefficient changes sign.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$remote <- relevel(d$remote, ref = "Yes")\nmodel_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteNo") %>% pull(estimate)\nremote_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
-      // remote never made it into the model.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy + workload, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "workload") %>% pull(estimate)\nremote_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
-      // The means grouped by the wrong variable.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(estimate)\nremote_means <- d %>%\n  group_by(training) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      // The intercept forgotten: a slope times 8 is a change, not a prediction.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- coef(model)[2] * 8',
+      // The 8 forgotten: the prediction at autonomy = 1.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- coef(model)[1] + coef(model)[2]',
+      // The observed mean of employees near autonomy 8, which is not what the line says.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- mean(d$wellbeing[round(d$autonomy) == 8])',
     ],
     alternateSolutions: [
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)\nb_remote <- coef(model_remote)["remoteYes"]\nremote_means <- aggregate(wellbeing ~ remote, data = d, FUN = function(x) c(mean = mean(x), sd = sd(x), n = length(x)))',
-      // Predictors in a different order, and the means built with across().
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote + autonomy + workload, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(estimate)\nremote_means <- d %>%\n  group_by(remote) %>%\n  summarise(across(wellbeing, list(mean = mean, sd = sd)), n = n())',
+      // The arithmetic, done by hand.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- coef(model)[[1]] + coef(model)[[2]] * 8',
+      // broom route: augment() on new data.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\npred_8 <- model %>% augment(newdata = data.frame(autonomy = 8)) %>% pull(.fitted)',
     ],
     check: `
-      if (!has_answer("model_remote") || !has_answer("b_remote") || !has_answer("remote_means")) {
-        list(pass = FALSE, message = "I need all three: model_remote, b_remote and remote_means.")
+      if (!has_answer("pred_8")) {
+        list(pass = FALSE, message = "I could not find an object called pred_8.")
       } else {
-        model_remote <- answer("model_remote")
-        b <- as.vector(answer("b_remote"))
-        means_tbl <- answer("remote_means")
+        pred <- as.vector(answer("pred_8"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- lm(wellbeing ~ autonomy + workload + remote, data = d)
-        exp_b <- as.vector(coef(reference)["remoteYes"])
-        intercept <- as.vector(coef(reference)["(Intercept)"])
-        raw <- tapply(d$wellbeing, d$remote, mean)
-        raw_gap <- as.vector(raw[["Yes"]] - raw[["No"]])
-        if (!inherits(model_remote, "lm")) {
-          list(pass = FALSE, message = "model_remote is not a fitted linear model.")
-        } else if (!("remoteYes" %in% names(coef(model_remote)))) {
-          list(pass = FALSE, message = paste0("model_remote has no remoteYes coefficient; its predictors are ", paste(setdiff(names(coef(model_remote)), "(Intercept)"), collapse = ", "), ". Add remote to the formula. R names the coefficient after the level it is NOT using as the reference."))
-        } else if (!is.numeric(b) || length(b) != 1L) {
-          list(pass = FALSE, message = "b_remote should be a single number.")
-        } else if (isTRUE(all.equal(b, intercept, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the intercept (", round(intercept, 2), "). With a factor in the model the intercept is not a group mean either - it is the prediction for the reference level at autonomy = 0 and workload = 0. The remote coefficient is the remoteYes row."))
-        } else if (isTRUE(all.equal(b, -exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("Your coefficient has the opposite sign, which happens when the reference level is flipped: you are reporting office-based relative to remote. levels(d$remote) is No then Yes, so the default coefficient is remoteYes: remote minus office-based, which is ", round(exp_b, 2), "."))
-        } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("b_remote is ", round(b, 4), " but the remoteYes coefficient is ", round(exp_b, 4), "."))
-        } else if (!is.data.frame(means_tbl) || nrow(means_tbl) != 2L) {
-          list(pass = FALSE, message = "remote_means should be a two-row table, one row per level of remote. Group by remote, not by another factor.")
+        reference <- lm(wellbeing ~ autonomy, data = d)
+        expected <- as.vector(predict(reference, newdata = data.frame(autonomy = 8)))
+        a <- as.vector(coef(reference)["(Intercept)"])
+        b <- as.vector(coef(reference)["autonomy"])
+        if (!is.numeric(pred) || length(pred) != 1L) {
+          list(pass = FALSE, message = "pred_8 should be a single number. Give predict() a newdata frame with exactly one row.")
+        } else if (isTRUE(all.equal(pred, b * 8, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("You multiplied the slope by 8 but left out the intercept. The line is wellbeing = ", round(a, 2), " + ", round(b, 2), " x autonomy, and every prediction starts from that intercept."))
+        } else if (isTRUE(all.equal(pred, a + b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the prediction at autonomy = 1: you added one slope rather than eight. Multiply the slope by the autonomy value you want.")
+        } else if (!isTRUE(all.equal(pred, expected, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("pred_8 is ", round(pred, 3), ", but the model predicts ", round(expected, 3), " at autonomy = 8. Note that the model's prediction is the height of the line there, not the average of the employees who happen to score 8."))
         } else {
-          group_col <- NULL
-          for (nm in names(means_tbl)) {
-            if (identical(sort(as.character(unique(means_tbl[[nm]]))), c("No", "Yes"))) group_col <- nm
-          }
-          if (is.null(group_col)) {
-            list(pass = FALSE, message = "remote_means has no column holding the two levels No and Yes. Check which variable you grouped by.")
-          } else {
-            found_means <- FALSE
-            for (value in numeric_columns(means_tbl)) {
-              if (length(value) == 2L &&
-                  isTRUE(all.equal(sort(value), sort(as.vector(raw)), tolerance = 1e-6, check.attributes = FALSE))) found_means <- TRUE
-            }
-            if (!found_means) {
-              list(pass = FALSE, message = paste0("No column of remote_means holds the two mean wellbeing scores, which are ", round(raw[["No"]], 1), " for office-based and ", round(raw[["Yes"]], 1), " for remote."))
-            } else {
-              list(pass = TRUE, message = paste0("b = ", round(exp_b, 2), ": remote employees score ", round(exp_b, 2), " points higher than office-based employees with the same autonomy and workload. The raw gap in the means is ", round(raw_gap, 2), " - the same direction, a different size, because the raw gap does not hold anything constant. When those two disagree in sign, believe the means first and go looking for what changed."))
-            }
-          }
+          list(pass = TRUE, message = paste0("The model predicts ", round(expected, 2), " points of wellbeing at autonomy = 8. That is a prediction about the average employee at that level, not about any particular one: the residual SD around this line is about ", round(sigma(reference), 2), " points."))
         }
       }
     `,
     hints: [
-      'A factor predictor goes into the formula by name: lm(wellbeing ~ autonomy + workload + remote, data = d).',
-      'R names the coefficient after the non-reference level, so look for the term remoteYes in tidy().',
-      'group_by(remote) %>% summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n()) gives the descriptives.',
+      'predict(model, newdata = ...) takes a data frame of predictor values.',
+      'The data frame needs one column named exactly like the predictor: data.frame(autonomy = 8).',
+      'By hand it is intercept + slope * 8, which is coef(model)[[1]] + coef(model)[[2]] * 8.',
     ],
   },
   {
     id: 'm10-3-a',
     prompt:
-      'Get the three numbers an APA report of this model needs. Fit wellbeing on autonomy, workload and tenure_years, then store R-squared in r2, the model F statistic in f_value, and the residual degrees of freedom in df_resid.',
+      'Read the model output into three numbers: the t statistic for the autonomy slope in t_slope, its p value in p_slope, and the proportion of variance the model explains in r2.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\n\nmodel3 %>% glance()\n\nr2 <- \nf_value <- \ndf_resid <- ',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\n\nmodel %>% tidy()\nmodel %>% glance()\n\nt_slope <- \np_slope <- \nr2 <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nr2 <- model3 %>% glance() %>% pull(r.squared)\nf_value <- model3 %>% glance() %>% pull(statistic)\ndf_resid <- model3 %>% glance() %>% pull(df.residual)',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nt_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(statistic)\np_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(p.value)\nr2 <- model %>% glance() %>% pull(r.squared)',
     wrongAnswers: [
-      // Adjusted R-squared reported as R-squared.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nr2 <- model3 %>% glance() %>% pull(adj.r.squared)\nf_value <- model3 %>% glance() %>% pull(statistic)\ndf_resid <- model3 %>% glance() %>% pull(df.residual)',
-      // A coefficient t offered as the model F.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nr2 <- model3 %>% glance() %>% pull(r.squared)\nf_value <- model3 %>% tidy() %>% filter(term == "autonomy") %>% pull(statistic)\ndf_resid <- model3 %>% glance() %>% pull(df.residual)',
-      // n reported as the residual df.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nr2 <- model3 %>% glance() %>% pull(r.squared)\nf_value <- model3 %>% glance() %>% pull(statistic)\ndf_resid <- nrow(d)',
-      // The numerator df reported as the residual df.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nr2 <- model3 %>% glance() %>% pull(r.squared)\nf_value <- model3 %>% glance() %>% pull(statistic)\ndf_resid <- model3 %>% glance() %>% pull(df)',
+      // The intercept row read instead of the slope row.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nt_slope <- model %>% tidy() %>% slice(1) %>% pull(statistic)\np_slope <- model %>% tidy() %>% slice(1) %>% pull(p.value)\nr2 <- model %>% glance() %>% pull(r.squared)',
+      // Adjusted R-squared handed in as R-squared.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nt_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(statistic)\np_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(p.value)\nr2 <- model %>% glance() %>% pull(adj.r.squared)',
+      // The estimate mistaken for the test statistic.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nt_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(estimate)\np_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(p.value)\nr2 <- model %>% glance() %>% pull(r.squared)',
+      // r2 filled with the correlation rather than its square.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\nt_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(statistic)\np_slope <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(p.value)\nr2 <- cor(d$autonomy, d$wellbeing)',
     ],
     alternateSolutions: [
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\ns <- summary(model3)\nr2 <- s$r.squared\nf_value <- s$fstatistic[["value"]]\ndf_resid <- s$fstatistic[["dendf"]]',
-      // df.residual() is its own generic, and glance() is pulled once into a variable.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nfit <- model3 %>% glance()\nr2 <- fit$r.squared\nf_value <- fit$statistic\ndf_resid <- df.residual(model3)',
+      // Base R: the coefficient matrix and summary()$r.squared.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\ns <- summary(model)\nt_slope <- s$coefficients["autonomy", "t value"]\np_slope <- s$coefficients["autonomy", "Pr(>|t|)"]\nr2 <- s$r.squared',
+      // R-squared as the squared correlation - the same number, a different route.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\ncoefs <- model %>% tidy()\nt_slope <- coefs$statistic[coefs$term == "autonomy"]\np_slope <- coefs$p.value[coefs$term == "autonomy"]\nr2 <- cor(d$autonomy, d$wellbeing)^2',
     ],
     check: `
-      if (!has_answer("r2") || !has_answer("f_value") || !has_answer("df_resid")) {
-        list(pass = FALSE, message = "I need all three: r2, f_value and df_resid.")
+      if (!has_answer("t_slope") || !has_answer("p_slope") || !has_answer("r2")) {
+        list(pass = FALSE, message = "I need all three: t_slope, p_slope and r2.")
       } else {
+        t_value <- as.vector(answer("t_slope"))
+        p_value <- as.vector(answer("p_slope"))
         r2 <- as.vector(answer("r2"))
-        f_value <- as.vector(answer("f_value"))
-        df_resid <- as.vector(answer("df_resid"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- summary(lm(wellbeing ~ autonomy + workload + tenure_years, data = d))
+        reference <- summary(lm(wellbeing ~ autonomy, data = d))
+        exp_t <- as.vector(reference$coefficients["autonomy", "t value"])
+        exp_p <- as.vector(reference$coefficients["autonomy", "Pr(>|t|)"])
+        exp_b <- as.vector(reference$coefficients["autonomy", "Estimate"])
+        int_t <- as.vector(reference$coefficients["(Intercept)", "t value"])
         exp_r2 <- as.vector(reference$r.squared)
-        exp_adj <- as.vector(reference$adj.r.squared)
-        exp_f <- as.vector(reference$fstatistic[["value"]])
-        exp_num <- as.vector(reference$fstatistic[["numdf"]])
-        exp_den <- as.vector(reference$fstatistic[["dendf"]])
-        if (!is.numeric(r2) || length(r2) != 1L || !is.numeric(f_value) || length(f_value) != 1L || !is.numeric(df_resid) || length(df_resid) != 1L) {
-          list(pass = FALSE, message = "All three should be single numbers.")
-        } else if (isTRUE(all.equal(r2, exp_adj, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is adjusted R-squared (", round(exp_adj, 4), "), which discounts R-squared for the number of predictors. glance() has both; pull r.squared, which is ", round(exp_r2, 4), "."))
+        if (!is.numeric(t_value) || length(t_value) != 1L || !is.numeric(p_value) || length(p_value) != 1L || !is.numeric(r2) || length(r2) != 1L) {
+          list(pass = FALSE, message = "Each of the three should be a single number. pull() takes one column out of a tidy() or glance() table as a plain vector.")
+        } else if (isTRUE(all.equal(t_value, int_t, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the intercept's t, which tests whether the line passes through zero at autonomy = 0 - a question nobody asked. Filter tidy() to the autonomy row.")
+        } else if (isTRUE(all.equal(t_value, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "You pulled estimate rather than statistic. In tidy(), estimate is b, std.error is its SE, and statistic is t = b / SE.")
+        } else if (isTRUE(all.equal(r2, sqrt(exp_r2), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is r, the correlation (", round(sqrt(exp_r2), 3), "). R-squared is its square, ", round(exp_r2, 3), " - the share of the variance in wellbeing the model accounts for."))
+        } else if (isTRUE(all.equal(r2, as.vector(reference$adj.r.squared), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is adjusted R-squared, which penalises the number of predictors. glance() has both: pull r.squared.")
+        } else if (!isTRUE(all.equal(t_value, exp_t, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("t_slope is ", round(t_value, 3), " but should be ", round(exp_t, 3), "."))
+        } else if (!isTRUE(all.equal(p_value, exp_p, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "p_slope is not the p value of the autonomy row. In tidy() that column is called p.value.")
         } else if (!isTRUE(all.equal(r2, exp_r2, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("r2 is ", round(r2, 4), " but should be ", round(exp_r2, 4), "."))
-        } else if (isTRUE(all.equal(f_value^2, exp_f, tolerance = 1e-4, check.attributes = FALSE)) || (exp_f > 60 && abs(f_value) < 30)) {
-          list(pass = FALSE, message = paste0("f_value looks like a coefficient's t statistic rather than the model's F. The model F tests all three predictors at once and is in glance()'s statistic column: ", round(exp_f, 2), "."))
-        } else if (!isTRUE(all.equal(f_value, exp_f, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("f_value is ", round(f_value, 3), " but the model F is ", round(exp_f, 3), "."))
-        } else if (isTRUE(all.equal(df_resid, nrow(d), tolerance = 1e-9, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is n, not the residual degrees of freedom. The model estimates four things (an intercept and three slopes), so df_resid is ", nrow(d), " - 4 = ", exp_den, "."))
-        } else if (isTRUE(all.equal(df_resid, exp_num, tolerance = 1e-9, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the numerator df - the number of predictors (", exp_num, "). APA reports F with both: F(", exp_num, ", ", exp_den, ")."))
-        } else if (!isTRUE(all.equal(df_resid, exp_den, tolerance = 1e-9, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("df_resid is ", df_resid, " but should be ", exp_den, "."))
+          list(pass = FALSE, message = paste0("r2 is ", round(r2, 4), " but glance()'s r.squared is ", round(exp_r2, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("F(", exp_num, ", ", exp_den, ") = ", round(exp_f, 2), ", R-squared = ", round(exp_r2, 3), ". Those are the three numbers the first sentence of an APA regression report needs; the coefficients go in the sentences after it."))
+          list(pass = TRUE, message = paste0("t(", reference$df[2], ") = ", round(exp_t, 2), ", p ", if (exp_p < 0.001) "< .001" else paste0("= ", format(round(exp_p, 3), nsmall = 3)), ", R-squared = ", round(exp_r2, 3), ". In a simple regression that t and the model F test say exactly the same thing, because there is only one predictor to test."))
         }
       }
     `,
     hints: [
-      'glance() returns one row for the whole model, with r.squared, statistic, p.value and df.residual among its columns.',
-      'The model F is the statistic column of glance() - not a t from tidy().',
-      'df.residual is n minus the number of estimated coefficients, the intercept included.',
+      'tidy() names the columns estimate, std.error, statistic and p.value. The t statistic is statistic.',
+      'glance() returns one row for the whole model, with r.squared and adj.r.squared among its columns.',
+      'filter(term == "autonomy") first, so you read the slope row rather than the intercept row.',
+    ],
+  },
+  {
+    id: 'm10-3-b',
+    prompt:
+      'Workload now. Fit the model predicting wellbeing from workload and store it in model_wl. Then build wl_means: the mean wellbeing in each third of workload, from the lightest third to the heaviest, as a table with one row per third.',
+    starterCode:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nmodel_wl <- \n\n# ntile(workload, 3) labels each employee 1, 2 or 3 by how heavy their workload is.\nwl_means <- ',
+    solution:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing))',
+    wrongAnswers: [
+      // Autonomy fitted again: a positive slope where a negative one belongs.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ autonomy, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing))',
+      // The thirds taken on the outcome instead of the predictor.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing))',
+      // The formula reversed.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(workload ~ wellbeing, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing))',
+      // Two halves rather than three thirds.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 2)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing))',
+    ],
+    alternateSolutions: [
+      // Base R: cut() on the quantiles, then aggregate().
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nbreaks <- quantile(d$workload, probs = c(0, 1/3, 2/3, 1))\nd$third <- cut(d$workload, breaks = breaks, include.lowest = TRUE, labels = FALSE)\nwl_means <- aggregate(wellbeing ~ third, data = d, FUN = mean)',
+      // The same table with an extra column of SDs, which is still one row per third.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+    ],
+    check: `
+      if (!has_answer("model_wl") || !has_answer("wl_means")) {
+        list(pass = FALSE, message = "I need both model_wl (the fitted lm) and wl_means (the table of means).")
+      } else {
+        model_wl <- answer("model_wl")
+        wl_means <- answer("wl_means")
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        reference <- lm(wellbeing ~ workload, data = d)
+        b <- as.vector(coef(reference)["workload"])
+        breaks <- quantile(d$workload, probs = c(0, 1/3, 2/3, 1))
+        third <- cut(d$workload, breaks = breaks, include.lowest = TRUE, labels = FALSE)
+        expected <- as.vector(tapply(d$wellbeing, third, mean))
+        if (!inherits(model_wl, "lm")) {
+          list(pass = FALSE, message = "model_wl is not a fitted linear model. Use lm(wellbeing ~ workload, data = d).")
+        } else if (!identical(as.character(formula(model_wl))[2], "wellbeing")) {
+          list(pass = FALSE, message = paste0("model_wl predicts ", as.character(formula(model_wl))[2], ". Wellbeing is the outcome here, so it belongs on the left of the tilde."))
+        } else if (!("workload" %in% names(coef(model_wl)))) {
+          list(pass = FALSE, message = "model_wl has no workload coefficient. The predictor for this exercise is workload, not autonomy.")
+        } else if (!isTRUE(all.equal(as.vector(coef(model_wl)["workload"]), b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "model_wl is fitted to different data from d. Fit it to the whole workplace dataset.")
+        } else if (!is.data.frame(wl_means)) {
+          list(pass = FALSE, message = "wl_means should be a table - the result of group_by() %>% summarise(), or of aggregate().")
+        } else if (nrow(wl_means) != 3L) {
+          list(pass = FALSE, message = paste0("wl_means has ", nrow(wl_means), " rows. ntile(workload, 3) splits the employees into three groups, so the table should have three."))
+        } else {
+          numeric_cols <- vapply(wl_means, is.numeric, logical(1))
+          means_col <- NULL
+          for (nm in names(wl_means)[numeric_cols]) {
+            if (isTRUE(all.equal(as.vector(wl_means[[nm]]), expected, tolerance = 1e-6, check.attributes = FALSE))) means_col <- nm
+          }
+          if (is.null(means_col)) {
+            list(pass = FALSE, message = paste0("No column of wl_means holds the mean wellbeing of the three workload thirds, which are ", paste(round(expected, 1), collapse = ", "), ". Check that you split on workload rather than on wellbeing."))
+          } else if (b >= 0) {
+            list(pass = FALSE, message = "Your model's workload slope is not negative, which contradicts the table: mean wellbeing falls as workload rises. Check which variable you put on the right of the tilde.")
+          } else {
+            list(pass = TRUE, message = paste0("b = ", round(b, 2), " per point of workload, and the table says the same thing in plain means: ", round(expected[1], 1), " in the lightest third down to ", round(expected[3], 1), " in the heaviest, a drop of ", round(expected[1] - expected[3], 1), " points. The sign of b is the finding, and the means are how you check you have not read it backwards."))
+          }
+        }
+      }
+    `,
+    hints: [
+      'mutate(third = ntile(workload, 3)) adds a column labelling each employee 1, 2 or 3.',
+      'Then group_by(third) %>% summarise(mean_wellbeing = mean(wellbeing)).',
+      'Fit the model with lm(wellbeing ~ workload, data = d) - wellbeing is the outcome, so it goes first.',
     ],
   },
 ];

@@ -22,7 +22,7 @@ HR's target is a leaving rate of 20 %. Take two hypotheses:
 
 - **H0**: the rate is exactly 0.20.
 - **H1**: the rate could be anything, with every value from 0 to 1 equally
-  plausible beforehand (the flat prior of lesson 15.1).
+  plausible beforehand (the flat prior of lesson 16.1).
 
 <CodeBlock id="c-bf-by-hand" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 left_all <- sum(d$left_company)
@@ -117,7 +117,7 @@ real, meaningful effect would typically produce. This is why a *p* between .01 a
 .05 in a large sample is weak evidence, and why a Bayes factor is a useful second
 opinion.
 
-<Exercise id="m15-3-a" />
+<Exercise id="m16-3-a" />
 
 ## In RStudio: the BayesFactor package
 
@@ -149,7 +149,7 @@ JASP does the same through menus.
 />
 
 <Interpret
-  id="i-15-3"
+  id="i-16-3"
   question="Wellbeing was compared between employees with and without mentoring: b = -0.25, SE = 0.96, p = .79, and the BIC approximation gives BF01 = 21.1. Which write-up is correct?"
   choices={[
     { text: 'Wellbeing did not differ between employees with and without mentoring, b = -0.25, SE = 0.96, p = .79. A Bayes factor from the BIC approximation showed strong evidence for no difference, BF01 = 21.1.', correct: true, response: 'Correct: the estimate and test, then the Bayes factor with its method, read as evidence for the null.' },

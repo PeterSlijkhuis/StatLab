@@ -113,7 +113,7 @@ export function writeWorkplace(options = {}) {
   const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 
   // Employees are nested in sites: each site has its own wellbeing intercept,
-  // which is exactly the variance component Module 13 fits with (1 | site).
+  // which is exactly the variance component Module 14 fits with (1 | site).
   const siteIntercept = Object.fromEntries(SITES.map((s) => [s, normal(rng, 0, 2.6)]));
 
   const OVERRIDES = {

@@ -1,6 +1,6 @@
 Part 3 of this course is about one idea with several names. Regression, the
 *t*-test, ANOVA — statistics textbooks put them in separate chapters, and in R
-they are one function. From here to Module 14 you will fit models with `lm()`,
+they are one function. From here to Module 15 you will fit models with `lm()`,
 `lmer()` and `glm()`, and everything else is a special case of one of the three.
 
 The data for all six modules is a workplace study: 480 employees across four
@@ -17,7 +17,7 @@ glimpse(d)`} />
 
 `stringsAsFactors = TRUE` matters more here than it did in Module 2. It is what
 turns `department`, `site`, `remote`, `training` and `mentoring` into factors,
-and from Module 11 onwards a factor is what tells `lm()` to compare groups
+and from Module 12 onwards a factor is what tells `lm()` to compare groups
 rather than to treat a label as a number.
 
 ## Start with the descriptives, always
@@ -71,7 +71,7 @@ next lesson fits with `lm()`.
 
 > **Change the y variable.** Edit either block to use `performance` instead of
 > `wellbeing` and run it again. The relationships are not the same, and noticing
-> that now will save you an embarrassing sentence in Module 10.
+> that now will save you an embarrassing sentence in Module 11.
 
 ## Measuring it
 
@@ -104,7 +104,7 @@ ones, and the only cure is practice.
 
 <Simulation name="correlation" />
 
-<Exercise id="m9-1-a" />
+<Exercise id="m10-1-a" />
 
 <Quiz
   id="q-r-meaning"
@@ -118,7 +118,7 @@ ones, and the only cure is practice.
 />
 
 <Interpret
-  id="i-9-1"
+  id="i-10-1"
   question="A colleague sends you this line for their results section: they found r = -.42 between workload and wellbeing across 480 employees, p < .001. Which sentence reports it correctly in APA 7 style?"
   choices={[
     { text: 'Workload was negatively correlated with wellbeing, r(478) = -.42, p < .001.', correct: true, response: 'Correct. Pearson r takes n - 2 degrees of freedom, the sign is kept, and the leading zero is dropped from a statistic that cannot exceed 1.' },

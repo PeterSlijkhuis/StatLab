@@ -4,296 +4,279 @@ export const module14: ExerciseDef[] = [
   {
     id: 'm14-1-a',
     prompt:
-      'See for yourself why a straight line is the wrong shape for a yes/no outcome. Fit lm(left_company ~ wellbeing) and store it in lpm, count how many of its fitted values fall outside the range 0 to 1 and store that count in n_impossible, and build rate_by_third: the proportion who left in each third of wellbeing, lowest third first.',
+      'Reshape the two engagement columns into long format. Store the result in long_d, with one row per employee per measurement, a factor column time whose levels are t1 then t2, and a numeric column engagement. Then build time_means: the mean, SD and n of engagement at each time point. The means are what tell you which way engagement moved.',
     starterCode:
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# left_company is 0 or 1, so its mean is the proportion who left.\nd %>% summarise(n = n(), leavers = sum(left_company), rate = mean(left_company))\n\nlpm <- \nn_impossible <- \nrate_by_third <- ',
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlong_d <- d %>%\n  pivot_longer(\n    cols = ,\n    names_to = ,\n    values_to = \n  )\n\ntime_means <- ',
     solution:
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(\n    cols = c(engagement_t1, engagement_t2),\n    names_to = "time",\n    values_to = "engagement"\n  ) %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\ntime_means <- long_d %>%\n  group_by(time) %>%\n  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())',
     wrongAnswers: [
-      // & where | was meant: no fitted value can be below 0 AND above 1, so the
-      // count comes out 0. (Testing against 0 to 100 instead of 0 to 1 is the
-      // other classic slip, but on this data no fitted value exceeds 1, so it
-      // gives the right answer for the wrong reason and cannot be graded.)
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 & fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
-      // Counting the leavers instead of the impossible predictions.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(d$left_company == 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
-      // The thirds taken on the outcome, which makes the rates trivially 0 and 1.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(left_company, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
-      // The wrong predictor, so the fitted values are someone else\'s.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ tenure_years, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
+      // names_to and values_to the wrong way round: the columns swap roles.
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(\n    cols = c(engagement_t1, engagement_t2),\n    names_to = "engagement",\n    values_to = "time"\n  )\ntime_means <- long_d %>%\n  group_by(engagement) %>%\n  summarise(mean_engagement = mean(time), sd_engagement = sd(time), n = n())',
+      // The wrong pair of columns reshaped.
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(\n    cols = c(wellbeing, performance),\n    names_to = "time",\n    values_to = "engagement"\n  ) %>%\n  mutate(time = factor(time))\ntime_means <- long_d %>%\n  group_by(time) %>%\n  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())',
+      // Only one time point kept: 480 rows, and no comparison possible.
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  select(employee_id, site, engagement = engagement_t1) %>%\n  mutate(time = factor("t1"))\ntime_means <- long_d %>%\n  group_by(time) %>%\n  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())',
+      // Grouped by department rather than by time.
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(\n    cols = c(engagement_t1, engagement_t2),\n    names_to = "time",\n    values_to = "engagement"\n  ) %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\ntime_means <- long_d %>%\n  group_by(department) %>%\n  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())',
     ],
     alternateSolutions: [
-      // Base R: predict() instead of fitted(), and table thirds with cut().
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\np <- predict(lpm)\nn_impossible <- length(which(p < 0 | p > 1))\nbreaks <- quantile(d$wellbeing, probs = c(0, 1/3, 2/3, 1))\nd$third <- cut(d$wellbeing, breaks = breaks, include.lowest = TRUE, labels = FALSE)\nrate_by_third <- aggregate(left_company ~ third, data = d, FUN = mean)',
-      // The count written as a sum over a single logical vector.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(!dplyr::between(fitted(lpm), 0, 1))\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n(), leavers = sum(left_company))',
+      // names_prefix strips the shared start, so the levels are already t1 and t2.
+      'library(dplyr)\nlibrary(tidyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(\n    cols = starts_with("engagement_"),\n    names_to = "time",\n    names_prefix = "engagement_",\n    values_to = "engagement"\n  ) %>%\n  mutate(time = factor(time))\ntime_means <- long_d %>%\n  group_by(time) %>%\n  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())',
+      // Base R: two stacked frames, and aggregate() for the summary.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- rbind(\n  data.frame(employee_id = d$employee_id, site = d$site, time = "t1", engagement = d$engagement_t1),\n  data.frame(employee_id = d$employee_id, site = d$site, time = "t2", engagement = d$engagement_t2)\n)\nlong_d$time <- factor(long_d$time, levels = c("t1", "t2"))\ntime_means <- aggregate(engagement ~ time, data = long_d,\n  FUN = function(x) c(mean = mean(x), sd = sd(x), n = length(x)))',
     ],
     check: `
-      if (!has_answer("lpm") || !has_answer("n_impossible") || !has_answer("rate_by_third")) {
-        list(pass = FALSE, message = "I need all three: lpm, n_impossible and rate_by_third.")
+      if (!has_answer("long_d") || !has_answer("time_means")) {
+        list(pass = FALSE, message = "I need both long_d and time_means.")
       } else {
-        lpm <- answer("lpm")
-        n_imp <- as.vector(answer("n_impossible"))
-        tbl <- answer("rate_by_third")
+        long_d <- answer("long_d")
+        tbl <- answer("time_means")
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- lm(left_company ~ wellbeing, data = d)
-        p <- fitted(reference)
-        exp_n <- sum(p < 0 | p > 1)
-        breaks <- quantile(d$wellbeing, probs = c(0, 1/3, 2/3, 1))
-        third <- cut(d$wellbeing, breaks = breaks, include.lowest = TRUE, labels = FALSE)
-        exp_rates <- as.vector(tapply(d$left_company, third, mean))
-        # cut() on the quantiles keeps tied wellbeing scores in one third;
-        # ntile() splits them so the thirds come out equal in size. Both are
-        # correct readings of "the lowest third", and on this data the tie at
-        # the boundary makes them differ, so accept either.
-        by_rank <- ceiling(rank(d$wellbeing, ties.method = "first") * 3 / nrow(d))
-        exp_rates_ntile <- as.vector(tapply(d$left_company, by_rank, mean))
-        if (!inherits(lpm, "lm")) {
-          list(pass = FALSE, message = "lpm should be an ordinary linear model - this exercise is about what goes wrong when you fit one to a 0/1 outcome.")
-        } else if (!("wellbeing" %in% names(coef(lpm)))) {
-          list(pass = FALSE, message = paste0("lpm has no wellbeing coefficient; its predictors are ", paste(setdiff(names(coef(lpm)), "(Intercept)"), collapse = ", "), "."))
-        } else if (!is.numeric(n_imp) || length(n_imp) != 1L) {
-          list(pass = FALSE, message = "n_impossible should be a single number.")
-        } else if (isTRUE(all.equal(as.numeric(n_imp), as.numeric(sum(d$left_company)), tolerance = 1e-9, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the number of employees who left (", sum(d$left_company), "). The question is how many PREDICTIONS the line makes that no probability could take - count the fitted values below 0 or above 1."))
-        } else if (isTRUE(all.equal(as.numeric(n_imp), 0, tolerance = 1e-9)) && exp_n > 0) {
-          list(pass = FALSE, message = paste0("You found none, but there are ", exp_n, ". A fitted value is impossible if it is below 0 OR above 1, so the two tests join with |, not with &: no number is both at once. Check the range too - a predicted probability lies between 0 and 1, not between 0 and 100."))
-        } else if (!isTRUE(all.equal(as.numeric(n_imp), as.numeric(exp_n), tolerance = 1e-9, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("n_impossible is ", n_imp, " but ", exp_n, " fitted values from lm(left_company ~ wellbeing) fall outside 0 to 1."))
-        } else if (!is.data.frame(tbl) || nrow(tbl) != 3L) {
-          list(pass = FALSE, message = "rate_by_third should have three rows, one per third of wellbeing.")
+        expected_values <- sort(c(d$engagement_t1, d$engagement_t2))
+        exp_m1 <- mean(d$engagement_t1)
+        exp_m2 <- mean(d$engagement_t2)
+        if (!is.data.frame(long_d)) {
+          list(pass = FALSE, message = "long_d should be a data frame.")
+        } else if (nrow(long_d) != 2L * nrow(d)) {
+          list(pass = FALSE, message = paste0("long_d has ", nrow(long_d), " rows. Two measurements for each of ", nrow(d), " employees is ", 2L * nrow(d), " rows - one row per employee per time point."))
+        } else if (!("engagement" %in% names(long_d)) || !is.numeric(long_d$engagement)) {
+          list(pass = FALSE, message = paste0("long_d needs a numeric column called engagement holding the scores. Its columns are: ", paste(names(long_d), collapse = ", "), ". names_to gets the name of the column the value came FROM; values_to gets the values themselves - it is easy to write them the wrong way round."))
+        } else if (!("time" %in% names(long_d))) {
+          list(pass = FALSE, message = paste0("long_d needs a column called time saying which measurement each row is. Its columns are: ", paste(names(long_d), collapse = ", "), "."))
+        } else if (!isTRUE(all.equal(sort(as.vector(long_d$engagement)), as.vector(expected_values), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "The values in long_d$engagement are not the two engagement columns. Reshape engagement_t1 and engagement_t2, not another pair.")
+        } else if (length(unique(as.character(long_d$time))) != 2L) {
+          list(pass = FALSE, message = "time should take exactly two values, one per measurement.")
         } else {
-          found <- FALSE
-          shown <- exp_rates
-          for (value in numeric_columns(tbl)) {
-            if (length(value) != 3L) next
-            if (isTRUE(all.equal(value, exp_rates, tolerance = 1e-6, check.attributes = FALSE))) {
-              found <- TRUE
-            } else if (isTRUE(all.equal(value, exp_rates_ntile, tolerance = 1e-6, check.attributes = FALSE))) {
-              found <- TRUE
-              shown <- exp_rates_ntile
-            }
-          }
-          if (!found) {
-            list(pass = FALSE, message = paste0("No column of rate_by_third holds the three leaving rates, which are ", paste(round(exp_rates, 3), collapse = ", "), " from the lowest third of wellbeing to the highest. Split on wellbeing, not on left_company."))
+          labels <- sort(unique(as.character(long_d$time)))
+          first_label <- labels[1]
+          means_by_time <- tapply(long_d$engagement, as.character(long_d$time), mean)
+          if (!isTRUE(all.equal(as.vector(means_by_time[[labels[1]]]), exp_m1, tolerance = 1e-6, check.attributes = FALSE))) {
+            list(pass = FALSE, message = "The first level of time does not hold the time 1 scores. Set the levels explicitly so that the earlier measurement comes first - otherwise the model in the next lesson reports the change backwards.")
+          } else if (!is.data.frame(tbl) || nrow(tbl) != 2L) {
+            list(pass = FALSE, message = paste0("time_means should have two rows, one per time point. Yours has ", if (is.data.frame(tbl)) nrow(tbl) else 0, ". Group by time."))
           } else {
-            list(pass = TRUE, message = paste0(exp_n, " of the ", nrow(d), " fitted values are impossible probabilities. And the descriptives say the effect is real: ", round(100 * shown[1], 1), " % of the least happy third left, against ", round(100 * shown[3], 1), " % of the happiest. A model that predicts a negative probability for the very employees it should be most confident about is the wrong shape, not the wrong data."))
+            found <- FALSE
+            for (value in numeric_columns(tbl)) {
+              if (length(value) == 2L &&
+                  isTRUE(all.equal(sort(value), sort(c(exp_m1, exp_m2)), tolerance = 1e-6, check.attributes = FALSE))) found <- TRUE
+            }
+            if (!found) {
+              list(pass = FALSE, message = paste0("No column of time_means holds the two mean engagement scores, which are ", round(exp_m1, 2), " and ", round(exp_m2, 2), ". Check that you grouped by time."))
+            } else {
+              list(pass = TRUE, message = paste0("960 rows, two per employee. Engagement went from ", round(exp_m1, 2), " at time 1 to ", round(exp_m2, 2), " at time 2, a rise of ", round(exp_m2 - exp_m1, 2), " points. Keep that direction in mind: the model in the next lesson should report the same sign, and if it does not, the level order of time is the first thing to check."))
+            }
           }
         }
       }
     `,
     hints: [
-      'fitted(lpm) gives the predicted value for every employee.',
-      'sum() over a logical vector counts the TRUEs: sum(fitted(lpm) < 0 | fitted(lpm) > 1).',
-      'mean() of a 0/1 column is the proportion of 1s, so summarise(rate = mean(left_company)) is the leaving rate.',
+      'pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement").',
+      'names_to names the new column that holds the OLD column names; values_to names the column that holds the numbers.',
+      'factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")) fixes both the order and the labels.',
     ],
   },
   {
     id: 'm14-2-a',
     prompt:
-      'Fit the logistic regression of leaving on wellbeing and tenure. Store the fitted model in m_left and the wellbeing coefficient - on the log-odds scale, exactly as the model reports it - in b_wellbeing.',
+      'Fit the mixed-effects model for the two measurements: engagement predicted by time, with a random intercept for each employee. Store the model in m_time and the fixed effect of time in b_time.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# Without family = binomial, glm() fits an ordinary linear model and says nothing.\nm_left <- \nb_wellbeing <- ',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\n\n# (1 | employee_id) gives every employee their own starting level.\nm_time <- \nb_time <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nb_time <- fixef(m_time)[["timet2"]]',
     wrongAnswers: [
-      // family left off: a gaussian glm, which runs and is not logistic regression.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
-      // lm instead of glm: the same mistake with a different spelling.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- lm(left_company ~ wellbeing + tenure_years, data = d)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
-      // The coefficient exponentiated when the log odds were asked for.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- exp(coef(m_left)[["wellbeing"]])',
-      // The tenure coefficient read as wellbeing\'s.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "tenure_years") %>% pull(estimate)',
-      // The intercept read as the wellbeing effect.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% slice(1) %>% pull(estimate)',
+      // An ordinary lm: it ignores that each employee appears twice.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lm(engagement ~ time, data = long_d)\nb_time <- coef(m_time)[["timet2"]]',
+      // The wrong grouping factor: site does not identify the repeated measure.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | site), data = long_d)\nb_time <- fixef(m_time)[["timet2"]]',
+      // The intercept read as the effect of time.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nb_time <- fixef(m_time)[[1]]',
+      // The level order reversed, so the fixed effect reports the fall from t2 to t1.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t2", "engagement_t1"), labels = c("t2", "t1")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nb_time <- fixef(m_time)[[2]]',
     ],
     alternateSolutions: [
-      // family written as the function call, which is the canonical form.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial(link = "logit"))\nb_wellbeing <- coef(m_left)["wellbeing"]',
-      // The predictors in the other order, and the coefficient by name.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ tenure_years + wellbeing, data = d, family = "binomial")\nb_wellbeing <- summary(m_left)$coefficients["wellbeing", "Estimate"]',
+      // The fixed effect read off the summary table instead of with fixef().
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nb_time <- summary(m_time)$coefficients["timet2", "Estimate"]',
+      // names_prefix leaves the levels as t1 and t2 without a second mutate,
+      // and the effect is taken by position.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = starts_with("engagement_"), names_to = "time", names_prefix = "engagement_", values_to = "engagement")\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nb_time <- fixef(m_time)[[2]]',
     ],
     check: `
-      if (!has_answer("m_left") || !has_answer("b_wellbeing")) {
-        list(pass = FALSE, message = "I need both m_left and b_wellbeing.")
+      if (!has_answer("m_time") || !has_answer("b_time")) {
+        list(pass = FALSE, message = "I need both m_time and b_time.")
       } else {
-        m_left <- answer("m_left")
-        b <- as.vector(answer("b_wellbeing"))
+        m_time <- answer("m_time")
+        b <- as.vector(answer("b_time"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
-        exp_b <- as.vector(coef(reference)["wellbeing"])
-        exp_tenure <- as.vector(coef(reference)["tenure_years"])
-        exp_intercept <- as.vector(coef(reference)["(Intercept)"])
-        if (!inherits(m_left, "glm")) {
-          list(pass = FALSE, message = "m_left is not a glm. lm() fits a straight line to the 0/1 outcome, which is the model lesson 14-1 showed predicting impossible probabilities. Use glm().")
-        } else if (!identical(family(m_left)$family, "binomial")) {
-          list(pass = FALSE, message = paste0("m_left is a glm, but its family is \\"", family(m_left)$family, "\\", not binomial. Without family = binomial, glm() fits an ordinary linear model - it runs, it prints a coefficient table, and it is not logistic regression. The family is what puts the outcome on the log-odds scale."))
-        } else if (!("wellbeing" %in% names(coef(m_left)))) {
-          list(pass = FALSE, message = paste0("m_left has no wellbeing coefficient; its predictors are ", paste(setdiff(names(coef(m_left)), "(Intercept)"), collapse = ", "), "."))
+        long <- data.frame(
+          employee_id = rep(d$employee_id, 2),
+          site = rep(d$site, 2),
+          time = factor(rep(c("t1", "t2"), each = nrow(d)), levels = c("t1", "t2")),
+          engagement = c(d$engagement_t1, d$engagement_t2)
+        )
+        reference <- lmerTest::lmer(engagement ~ time + (1 | employee_id), data = long)
+        exp_b <- as.vector(lme4::fixef(reference)[[2]])
+        exp_intercept <- as.vector(lme4::fixef(reference)[[1]])
+        if (!inherits(m_time, "merMod")) {
+          list(pass = FALSE, message = "m_time is not a mixed-effects model. An lm() on the long data treats each employee's two rows as two unrelated people, which throws away the pairing and gets the standard error wrong. Use lmer(engagement ~ time + (1 | employee_id), data = long_d).")
+        } else if (!("employee_id" %in% names(m_time@flist))) {
+          list(pass = FALSE, message = paste0("The random intercept is grouped by ", paste(names(m_time@flist), collapse = ", "), ". The repeated measurement is within employees, so the grouping factor has to be employee_id: the model needs to know which two rows belong to the same person."))
         } else if (!is.numeric(b) || length(b) != 1L) {
-          list(pass = FALSE, message = "b_wellbeing should be a single number.")
-        } else if (isTRUE(all.equal(b, exp(exp_b), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("You exponentiated. exp(b) = ", round(exp(exp_b), 4), " is the odds ratio, which lesson 14-3 is about. The coefficient itself, on the log-odds scale, is ", round(exp_b, 4), " - and the sign is readable there in a way it is not after exponentiating, because below zero means less likely while below one means the same thing."))
-        } else if (isTRUE(all.equal(b, exp_tenure, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the tenure coefficient (", round(exp_tenure, 4), "). Filter tidy() to the wellbeing row."))
+          list(pass = FALSE, message = "b_time should be a single number.")
         } else if (isTRUE(all.equal(b, exp_intercept, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the intercept (", round(exp_intercept, 4), "): the log odds of leaving for an employee with wellbeing 0 and no tenure at all, which describes nobody."))
-        } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("b_wellbeing is ", round(b, 4), " but the wellbeing coefficient is ", round(exp_b, 4), "."))
+          list(pass = FALSE, message = paste0("That is the intercept (", round(exp_intercept, 2), "), the predicted engagement at time 1. The effect of time is the second fixed effect, ", round(exp_b, 2), "."))
+        } else if (isTRUE(all.equal(b, -exp_b, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("Right size, wrong sign: your time factor has t2 as its first level, so the coefficient reports the fall from time 2 back to time 1. Set levels = c(\\"engagement_t1\\", \\"engagement_t2\\") so the earlier measurement is the reference and the coefficient is the rise, ", round(exp_b, 2), "."))
+        } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("b_time is ", round(b, 4), " but the fixed effect of time is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("b = ", round(exp_b, 4), " log odds per point of wellbeing. Negative, so higher wellbeing goes with a lower chance of leaving - which is the direction the leaving rates by third showed in the last lesson. Log odds are not readable as they stand; exp() fixes that in lesson 14-3."))
+          list(pass = TRUE, message = paste0("Engagement rose by ", round(exp_b, 2), " points from time 1 to time 2. Because each employee has their own intercept, that estimate is built from within-employee changes rather than from the difference between two piles of scores - which is why it is the right model for data where the same people were measured twice."))
         }
       }
     `,
     hints: [
-      'glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial) - the family argument is what makes it logistic.',
-      'tidy() works on a glm exactly as it does on an lm, and the estimate column is on the log-odds scale.',
-      'Do not exponentiate yet. This exercise asks for the coefficient as the model reports it.',
+      'lmer(engagement ~ time + (1 | employee_id), data = long_d) - the fixed part before the plus, the random part in brackets.',
+      'The vertical bar reads "grouped by": (1 | employee_id) is an intercept for each employee.',
+      'fixef(m_time) returns the fixed effects; the one you want is the second, named after the second level of time.',
     ],
   },
   {
     id: 'm14-2-b',
     prompt:
-      'Turn both slopes into odds ratios. Store exp() of the wellbeing coefficient in or_wellbeing and exp() of the tenure coefficient in or_tenure. One of them should come out below 1 and one above; make sure you can say which and why.',
+      'Split the leftover variation in two. From the same model, store the standard deviation of the employee random intercepts in sd_employee, the residual standard deviation in sd_residual, and the intraclass correlation - the share of the variance that is between employees - in icc.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\n\nm_left %>% tidy()\n\nor_wellbeing <- \nor_tenure <- ',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\n\nvc <- as.data.frame(VarCorr(m_time))\nvc\n\nsd_employee <- \nsd_residual <- \n# The ICC compares VARIANCES, not standard deviations.\nicc <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nsd_employee <- vc$sdcor[vc$grp == "employee_id"]\nsd_residual <- vc$sdcor[vc$grp == "Residual"]\nicc <- sd_employee^2 / (sd_employee^2 + sd_residual^2)',
     wrongAnswers: [
-      // Not exponentiated at all: log odds labelled as odds ratios.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- coef(m_left)[["wellbeing"]]\nor_tenure <- coef(m_left)[["tenure_years"]]',
-      // The standard errors exponentiated instead of the estimates.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- exp(summary(m_left)$coefficients["wellbeing", "Std. Error"])\nor_tenure <- exp(summary(m_left)$coefficients["tenure_years", "Std. Error"])',
-      // The reciprocal taken "to make it bigger than 1".
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- 1 / exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
-      // Exponentiated coefficients from a model with no binomial family.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nor_wellbeing <- exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
+      // Variances handed in where SDs were asked for.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nsd_employee <- vc$vcov[vc$grp == "employee_id"]\nsd_residual <- vc$vcov[vc$grp == "Residual"]\nicc <- sd_employee / (sd_employee + sd_residual)',
+      // The ICC computed from standard deviations rather than variances.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nsd_employee <- vc$sdcor[vc$grp == "employee_id"]\nsd_residual <- vc$sdcor[vc$grp == "Residual"]\nicc <- sd_employee / (sd_employee + sd_residual)',
+      // The two components swapped.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nsd_employee <- vc$sdcor[vc$grp == "Residual"]\nsd_residual <- vc$sdcor[vc$grp == "employee_id"]\nicc <- sd_employee^2 / (sd_employee^2 + sd_residual^2)',
+      // The ICC as the share of variance that is WITHIN employees.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nsd_employee <- vc$sdcor[vc$grp == "employee_id"]\nsd_residual <- vc$sdcor[vc$grp == "Residual"]\nicc <- sd_residual^2 / (sd_employee^2 + sd_residual^2)',
     ],
     alternateSolutions: [
-      // broom does the exponentiating.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nors <- m_left %>% tidy(exponentiate = TRUE)\nor_wellbeing <- ors$estimate[ors$term == "wellbeing"]\nor_tenure <- ors$estimate[ors$term == "tenure_years"]',
-      // The whole coefficient vector exponentiated at once, then indexed.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nall_ors <- exp(coef(m_left))\nor_wellbeing <- all_ors["wellbeing"]\nor_tenure <- all_ors["tenure_years"]',
+      // sigma() for the residual SD, and the variance components pulled by position.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nsd_employee <- attr(VarCorr(m_time)$employee_id, "stddev")[["(Intercept)"]]\nsd_residual <- sigma(m_time)\nicc <- sd_employee^2 / (sd_employee^2 + sd_residual^2)',
+      // The variances taken first, then square-rooted.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nvc <- as.data.frame(VarCorr(m_time))\nvar_employee <- vc$vcov[vc$grp == "employee_id"]\nvar_residual <- vc$vcov[vc$grp == "Residual"]\nsd_employee <- sqrt(var_employee)\nsd_residual <- sqrt(var_residual)\nicc <- var_employee / (var_employee + var_residual)',
     ],
     check: `
-      if (!has_answer("or_wellbeing") || !has_answer("or_tenure")) {
-        list(pass = FALSE, message = "I need both or_wellbeing and or_tenure.")
+      if (!has_answer("sd_employee") || !has_answer("sd_residual") || !has_answer("icc")) {
+        list(pass = FALSE, message = "I need all three: sd_employee, sd_residual and icc.")
       } else {
-        or_w <- as.vector(answer("or_wellbeing"))
-        or_t <- as.vector(answer("or_tenure"))
+        sd_e <- as.vector(answer("sd_employee"))
+        sd_r <- as.vector(answer("sd_residual"))
+        icc <- as.vector(answer("icc"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
-        b_w <- as.vector(coef(reference)["wellbeing"])
-        b_t <- as.vector(coef(reference)["tenure_years"])
-        exp_w <- exp(b_w)
-        exp_t <- exp(b_t)
-        gaussian_fit <- glm(left_company ~ wellbeing + tenure_years, data = d)
-        if (!is.numeric(or_w) || length(or_w) != 1L || !is.numeric(or_t) || length(or_t) != 1L) {
-          list(pass = FALSE, message = "Both should be single numbers.")
-        } else if (isTRUE(all.equal(or_w, b_w, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("Those are still log odds. An odds ratio is exp() of the coefficient: exp(", round(b_w, 3), ") = ", round(exp_w, 3), ". You can spot the mistake without any arithmetic - an odds ratio is never negative, and a log odds usually is."))
-        } else if (isTRUE(all.equal(or_w, exp(as.vector(summary(reference)$coefficients["wellbeing", "Std. Error"])), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "You exponentiated the standard error rather than the estimate. Exponentiate the estimate column; the SE stays on the log-odds scale, which is where the confidence interval is built before being exponentiated with it.")
-        } else if (isTRUE(all.equal(or_w, 1 / exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("You inverted it. 1/OR flips the direction of the comparison, so ", round(1 / exp_w, 3), " would be the odds ratio for a one-point DECREASE in wellbeing. Report exp(b) = ", round(exp_w, 3), " and say in words that higher wellbeing lowers the odds."))
-        } else if (isTRUE(all.equal(or_w, exp(as.vector(coef(gaussian_fit)["wellbeing"])), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Those come from a glm fitted without family = binomial, so they are exp() of a linear-model slope - a number with no interpretation at all. Refit with family = binomial.")
-        } else if (!isTRUE(all.equal(or_w, exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("or_wellbeing is ", round(or_w, 4), " but exp() of the wellbeing coefficient is ", round(exp_w, 4), "."))
-        } else if (!isTRUE(all.equal(or_t, exp_t, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("or_tenure is ", round(or_t, 4), " but exp() of the tenure coefficient is ", round(exp_t, 4), "."))
+        long <- data.frame(
+          employee_id = rep(d$employee_id, 2),
+          time = factor(rep(c("t1", "t2"), each = nrow(d)), levels = c("t1", "t2")),
+          engagement = c(d$engagement_t1, d$engagement_t2)
+        )
+        reference <- lmerTest::lmer(engagement ~ time + (1 | employee_id), data = long)
+        vc <- as.data.frame(lme4::VarCorr(reference))
+        exp_sd_e <- as.vector(vc$sdcor[vc$grp == "employee_id"])
+        exp_sd_r <- as.vector(vc$sdcor[vc$grp == "Residual"])
+        exp_icc <- exp_sd_e^2 / (exp_sd_e^2 + exp_sd_r^2)
+        sd_icc <- exp_sd_e / (exp_sd_e + exp_sd_r)
+        if (!is.numeric(sd_e) || length(sd_e) != 1L || !is.numeric(sd_r) || length(sd_r) != 1L || !is.numeric(icc) || length(icc) != 1L) {
+          list(pass = FALSE, message = "All three should be single numbers.")
+        } else if (isTRUE(all.equal(sd_e, exp_sd_e^2, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the variance (", round(exp_sd_e^2, 2), "), not the standard deviation. In as.data.frame(VarCorr(m)) the vcov column holds variances and the sdcor column holds their square roots; report SDs, which are in the units of engagement."))
+        } else if (isTRUE(all.equal(sd_e, exp_sd_r, tolerance = 1e-4, check.attributes = FALSE)) && isTRUE(all.equal(sd_r, exp_sd_e, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "You have the two components the wrong way round. The employee_id row is the between-employee SD; the Residual row is what is left within an employee across the two measurements.")
+        } else if (!isTRUE(all.equal(sd_e, exp_sd_e, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("sd_employee is ", round(sd_e, 4), " but the employee_id standard deviation is ", round(exp_sd_e, 4), "."))
+        } else if (!isTRUE(all.equal(sd_r, exp_sd_r, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("sd_residual is ", round(sd_r, 4), " but the residual standard deviation is ", round(exp_sd_r, 4), "."))
+        } else if (isTRUE(all.equal(icc, sd_icc, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("You divided standard deviations. The ICC is a share of VARIANCE, so square both first: ", round(exp_sd_e, 2), " squared over ", round(exp_sd_e, 2), " squared plus ", round(exp_sd_r, 2), " squared, which is ", round(exp_icc, 3), "."))
+        } else if (isTRUE(all.equal(icc, 1 - exp_icc, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the share of variance WITHIN employees (", round(1 - exp_icc, 3), "). The ICC is the between-employee share, ", round(exp_icc, 3), " - the proportion of the total that the random intercepts account for."))
+        } else if (!isTRUE(all.equal(icc, exp_icc, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("icc is ", round(icc, 4), " but should be ", round(exp_icc, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("OR = ", round(exp_w, 3), " per point of wellbeing and ", round(exp_t, 3), " per year of tenure. An odds ratio multiplies rather than adds: below 1 means the odds of leaving shrink with each extra point, above 1 means they grow. Both are ratios of ODDS, not of risks, and the two are only close when the outcome is rare."))
+          list(pass = TRUE, message = paste0("Between employees SD = ", round(exp_sd_e, 2), ", within-employee residual SD = ", round(exp_sd_r, 2), ", ICC = ", round(exp_icc, 3), ". So about ", round(100 * exp_icc), " % of the variation in engagement is stable differences between people. That is exactly the dependence an ordinary lm would have ignored, and the reason its standard error for time would be wrong."))
         }
       }
     `,
     hints: [
-      'exp() undoes the log in log odds: exp(coef(m_left)[["wellbeing"]]).',
-      'Use the double bracket, or unname(), so you get a plain number rather than a named one.',
-      'An odds ratio is always positive. If yours is negative, you have not exponentiated.',
+      'as.data.frame(VarCorr(m_time)) gives one row per variance component, with grp, vcov and sdcor columns.',
+      'vc$sdcor[vc$grp == "employee_id"] picks the between-employee SD; the residual row is labelled "Residual".',
+      'The ICC is between-variance over total variance, so square the SDs before dividing.',
     ],
   },
   {
     id: 'm14-3-a',
     prompt:
-      'Build the table that goes in the results section: odds ratios with their 95 % confidence intervals, for every term in the model including the intercept. Store it in or_table, with the odds ratio in a column called OR and the interval bounds beside it.',
+      'Show that with two time points the mixed model reproduces the paired-samples t-test. Fit the model and store it in m_time, store its t statistic for time in t_lmer, and store the t from the paired t-test in t_paired. They should agree.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\n\n# Build the interval on the log-odds scale first, then exponentiate the whole thing.\nor_table <- ',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\n\nm_time <- \nt_lmer <- \n# t.test needs paired = TRUE, or it forgets who is who.\nt_paired <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(cbind(OR = coef(m_left), confint(m_left)))',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
     wrongAnswers: [
-      // Never exponentiated: log odds in a table labelled OR.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- cbind(OR = coef(m_left), confint(m_left))',
-      // Only the interval: no estimate to report alongside it.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(confint(m_left))',
-      // The whole summary matrix exponentiated, so the SE, z and p are mangled too.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(summary(m_left)$coefficients)',
-      // Built from a model with no binomial family.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nor_table <- exp(cbind(OR = coef(m_left), confint(m_left)))',
+      // paired left out: the pairing is discarded and the t is much smaller.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1)$statistic',
+      // An lm on the long data instead of a mixed model.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lm(engagement ~ time, data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
+      // The intercept row read as the time effect.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["(Intercept)", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
+      // A one-sample test on the time 2 scores, which runs and answers nothing.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2)$statistic',
     ],
     alternateSolutions: [
-      // broom builds the same table as a data frame, with Wald intervals.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- m_left %>%\n  tidy(exponentiate = TRUE, conf.int = TRUE) %>%\n  select(term, OR = estimate, conf.low, conf.high)',
-      // Wald intervals built by hand from the estimate and its SE.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nest <- coef(m_left)\nse <- summary(m_left)$coefficients[, "Std. Error"]\nor_table <- exp(cbind(OR = est, lower = est - 1.96 * se, upper = est + 1.96 * se))',
+      // The paired test written the other way round: the t flips sign, and the
+      // check compares sizes, which is what the equivalence is about.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t1, d$engagement_t2, paired = TRUE)$statistic',
+      // The paired test as a one-sample test on the differences - the same test.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- coef(summary(m_time))[2, "t value"]\nt_paired <- t.test(d$engagement_t2 - d$engagement_t1)$statistic',
     ],
     check: `
-      if (!has_answer("or_table")) {
-        list(pass = FALSE, message = "I could not find an object called or_table.")
+      if (!has_answer("m_time") || !has_answer("t_lmer") || !has_answer("t_paired")) {
+        list(pass = FALSE, message = "I need all three: m_time, t_lmer and t_paired.")
       } else {
-        tbl <- answer("or_table")
+        m_time <- answer("m_time")
+        t_lmer <- as.vector(answer("t_lmer"))
+        t_paired <- as.vector(answer("t_paired"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
-        b <- coef(reference)
-        exp_or <- as.vector(exp(b))
-        profile <- suppressMessages(confint(reference))
-        se <- summary(reference)$coefficients[, "Std. Error"]
-        wald <- cbind(b - 1.96 * se, b + 1.96 * se)
-        gaussian_fit <- glm(left_company ~ wellbeing + tenure_years, data = d)
-        numeric_cols <- list()
-        if (is.matrix(tbl) || is.data.frame(tbl)) {
-          for (nm in colnames(tbl)) {
-            column <- if (is.data.frame(tbl)) tbl[[nm]] else tbl[, nm]
-            if (is.numeric(column)) numeric_cols[[nm]] <- as.vector(column)
-          }
-        }
-        matches <- function(target, tol) {
-          for (column in numeric_cols) {
-            if (length(column) == length(target) &&
-                isTRUE(all.equal(column, as.vector(target), tolerance = tol, check.attributes = FALSE))) return(TRUE)
-          }
-          FALSE
-        }
-        if (!is.matrix(tbl) && !is.data.frame(tbl)) {
-          list(pass = FALSE, message = "or_table should be a table - a matrix from cbind() or a data frame - with one row per term.")
-        } else if (nrow(tbl) != length(b)) {
-          list(pass = FALSE, message = paste0("or_table has ", nrow(tbl), " rows but the model has ", length(b), " terms (the intercept included). exp(confint(m)) on its own gives the interval with no estimate column; cbind the odds ratios on first."))
-        } else if (length(numeric_cols) < 3L) {
-          list(pass = FALSE, message = paste0("or_table needs at least three numeric columns: the odds ratio and the two interval bounds. Yours has ", length(numeric_cols), "."))
-        } else if (matches(as.vector(b), 1e-6)) {
-          list(pass = FALSE, message = paste0("One of your columns holds the raw coefficients, so the table was never exponentiated. exp() the whole cbind() at once - the interval has to be built on the log-odds scale and exponentiated with the estimate, not the other way round. The wellbeing OR should be ", round(exp(b[["wellbeing"]]), 3), ", not ", round(b[["wellbeing"]], 3), "."))
-        } else if (matches(as.vector(exp(coef(gaussian_fit))), 1e-6)) {
-          list(pass = FALSE, message = "Those odds ratios come from a glm fitted without family = binomial. Refit with family = binomial before exponentiating anything.")
-        } else if (!matches(exp_or, 1e-6)) {
-          list(pass = FALSE, message = paste0("No column of or_table holds the odds ratios, which are ", paste(round(exp_or, 3), collapse = ", "), " for the intercept, wellbeing and tenure."))
-        # Tolerance 1e-4, not 1e-6: confint() on a glm finds the profile-likelihood
-        # bounds by iterative root-finding, so two runs agree to several decimals
-        # rather than to machine precision. Wald bounds are accepted as well.
-        } else if (!matches(as.vector(exp(profile[, 1])), 1e-4) && !matches(as.vector(exp(wald[, 1])), 1e-4)) {
-          list(pass = FALSE, message = "No column of or_table holds the lower bounds of the 95 % intervals. confint(m) gives profile-likelihood bounds on the log-odds scale; exponentiate them together with the estimates.")
-        } else if (!matches(as.vector(exp(profile[, 2])), 1e-4) && !matches(as.vector(exp(wald[, 2])), 1e-4)) {
-          list(pass = FALSE, message = "No column of or_table holds the upper bounds of the 95 % intervals.")
+        long <- data.frame(
+          employee_id = rep(d$employee_id, 2),
+          time = factor(rep(c("t1", "t2"), each = nrow(d)), levels = c("t1", "t2")),
+          engagement = c(d$engagement_t1, d$engagement_t2)
+        )
+        reference <- lmerTest::lmer(engagement ~ time + (1 | employee_id), data = long)
+        exp_t <- as.vector(coef(summary(reference))[2, "t value"])
+        exp_intercept_t <- as.vector(coef(summary(reference))[1, "t value"])
+        exp_paired <- as.vector(t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic)
+        unpaired <- as.vector(t.test(d$engagement_t2, d$engagement_t1)$statistic)
+        if (!inherits(m_time, "merMod")) {
+          list(pass = FALSE, message = "m_time is not a mixed-effects model. An lm() on the long data pretends the 960 rows come from 960 different people, which inflates the residual variance and shrinks the t. Use lmer with (1 | employee_id).")
+        } else if (!is.numeric(t_lmer) || length(t_lmer) != 1L || !is.numeric(t_paired) || length(t_paired) != 1L) {
+          list(pass = FALSE, message = "Both t statistics should be single numbers.")
+        } else if (isTRUE(all.equal(t_lmer, exp_intercept_t, tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "t_lmer is the intercept's t, which tests whether engagement at time 1 differs from zero. The row you want is the one named after the second level of time.")
+        } else if (!isTRUE(all.equal(abs(t_lmer), abs(exp_t), tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("t_lmer is ", round(t_lmer, 4), " but the fixed effect of time has t = ", round(exp_t, 4), "."))
+        } else if (isTRUE(all.equal(abs(t_paired), abs(unpaired), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the independent-samples t (", round(unpaired, 3), "), which treats the two measurements as two unrelated groups and throws away the fact that they come from the same 480 people. With paired = TRUE it becomes ", round(exp_paired, 3), " - far larger, because each employee acts as their own control."))
+        # Tolerance 1e-3, not 1e-6: REML fits the variance components by
+        # optimisation, so the equivalence with the paired t is exact in
+        # algebra and agrees only to several decimals in floating point.
+        } else if (!isTRUE(all.equal(abs(t_paired), abs(exp_t), tolerance = 1e-3, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("t_paired is ", round(t_paired, 4), ", which does not match the model's ", round(exp_t, 4), ". Check that you compared engagement_t2 with engagement_t1 and passed paired = TRUE."))
         } else {
-          kind <- if (matches(as.vector(exp(profile[, 1])), 1e-4)) "profile-likelihood" else "Wald"
-          list(pass = TRUE, message = paste0("Your intervals are ", kind, " bounds, which is fine - say which kind you used. Wellbeing: OR = ", round(exp(b[["wellbeing"]]), 3), ", 95 % CI [", round(exp(profile[["wellbeing", 1]]), 3), ", ", round(exp(profile[["wellbeing", 2]]), 3), "]. The test of no effect is whether that interval contains 1, not 0 - exponentiating moved the null value with everything else."))
+          list(pass = TRUE, message = paste0("Both are about ", round(abs(exp_t), 3), " in size. With exactly two time points and nobody missing, lmer(engagement ~ time + (1 | employee_id)) and t.test(paired = TRUE) are the same test - the random intercept is doing precisely what taking a difference score does. The model keeps working when there are three time points, or when someone missed one; the paired t-test does not."))
         }
       }
     `,
     hints: [
-      'cbind(OR = coef(m_left), confint(m_left)) builds the three columns on the log-odds scale.',
-      'Wrap the whole cbind() in exp() so the estimate and both bounds are transformed together.',
-      'confint() on a glm prints "Waiting for profiling to be done..." - that is a message, not an error.',
+      'summary(m_time)$coefficients is a matrix with a "t value" column; take the timet2 row.',
+      't.test(d$engagement_t2, d$engagement_t1, paired = TRUE) compares each employee with themselves.',
+      'Without paired = TRUE you get the independent-samples test, which is a different and much less powerful comparison.',
     ],
   },
 ];

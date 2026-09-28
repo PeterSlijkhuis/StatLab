@@ -69,7 +69,7 @@ c(with_binomial = coef(m_left)[["wellbeing"]], without = coef(no_family)[["wellb
 Two coefficients, two scales, no warning. Check `family()` when a logistic
 coefficient looks suspiciously small.
 
-<Exercise id="m14-2-a" />
+<Exercise id="m15-2-a" />
 
 ## Reading the table
 
@@ -88,10 +88,10 @@ better, and the drop from null to residual is what the model bought.
 
 <CodeBlock id="c-lrtest" code={`anova(m_left, test = "LRT") %>% tidy()`} />
 
-That likelihood-ratio test is the closest thing to the model *F* of Module 10: it
+That likelihood-ratio test is the closest thing to the model *F* of Module 11: it
 asks whether the predictors together explain more than chance.
 
-<Exercise id="m14-2-b" />
+<Exercise id="m15-2-b" />
 
 <Quiz
   id="q-family"
@@ -105,7 +105,7 @@ asks whether the predictors together explain more than chance.
 />
 
 <Interpret
-  id="i-14-2"
+  id="i-15-2"
   question="Your model gives, for wellbeing, b = -0.062, SE = 0.013, z = -4.77, p < .001, and for tenure b = -0.108, SE = 0.031, z = -3.48, p < .001. Which reading is correct?"
   choices={[
     { text: 'Each additional point of wellbeing reduces the probability of leaving by 0.062.', response: 'The coefficient is in log odds, not in probability. How much the probability moves depends on where on the curve you start.' },

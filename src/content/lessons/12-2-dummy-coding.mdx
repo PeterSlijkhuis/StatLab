@@ -56,13 +56,13 @@ data.frame(
 Four coefficients, four group means, nothing lost. A one-factor linear model is
 the group means written in a different coordinate system.
 
-<Exercise id="m11-2-a" />
+<Exercise id="m12-2-a" />
 
 ## The overall test
 
 The three *t*s test three specific comparisons with Engineering. To ask whether
 department matters **at all** you need one test of all three coefficients at
-once — which is the model *F* from Module 10, and which is what a one-way ANOVA
+once — which is the model *F* from Module 11, and which is what a one-way ANOVA
 reports.
 
 <CodeBlock id="c-f" code={`model_dept %>% glance() %>% select(r.squared, statistic, df, df.residual, p.value)
@@ -75,7 +75,7 @@ for one, this is it.
 
 ## When the mean is the wrong summary
 
-<Exercise id="m11-2-b" />
+<Exercise id="m12-2-b" />
 
 The model you just fitted compares **means**, because that is what least squares
 does. When a group's distribution is skewed or pulled apart at both ends, its
@@ -95,12 +95,12 @@ the means whenever they disagree, and say which one your conclusion rests on.
 />
 
 <Interpret
-  id="i-11-2"
+  id="i-12-2"
   question="For the four-department model you have F(3, 476) = 9.84, p < .001, R-squared = .058; the Marketing coefficient is b = -1.22, SE = 1.12, t = -1.09, p = .276. Which reading is correct?"
   choices={[
     { text: 'Wellbeing differed across departments, F(3, 476) = 9.84, p < .001, R-squared = .058. Marketing did not differ significantly from the reference department, Engineering, b = -1.22, SE = 1.12, t(476) = -1.09, p = .276.', correct: true, response: 'Correct. The omnibus test and the single comparison are reported separately, and the comparison names its reference group.' },
     { text: 'Marketing employees have the same wellbeing as Engineering employees, p = .276.', response: 'A non-significant comparison is not evidence of equality. The confidence interval here spans roughly -3.4 to +1.0, which is not "the same".' },
     { text: 'Department explains 5.8 % of wellbeing, and Marketing is the worst department, b = -1.22.', response: 'R-squared is a share of variance, not of wellbeing, and one non-significant coefficient relative to one reference group does not rank the four departments.' },
-    { text: 'Wellbeing differed across departments, F(3, 476) = 9.84, p < .001, so every department differs from every other.', response: 'The omnibus F says at least one difference exists somewhere. Which ones is the question lesson 11-3 answers.' },
+    { text: 'Wellbeing differed across departments, F(3, 476) = 9.84, p < .001, so every department differs from every other.', response: 'The omnibus F says at least one difference exists somewhere. Which ones is the question lesson 12-3 answers.' },
   ]}
 />

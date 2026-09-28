@@ -4,7 +4,7 @@ distribution for each coefficient, with a prior you choose on purpose.
 
 ## The slope as an unknown
 
-Take the model of wellbeing on autonomy from lesson 9.2.
+Take the model of wellbeing on autonomy from lesson 10.2.
 
 <CodeBlock id="c-lm" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 
@@ -15,7 +15,7 @@ b_hat <- coef(m_autonomy)[["autonomy"]]
 se_hat <- summary(m_autonomy)$coefficients["autonomy", "Std. Error"]
 c(b_hat = b_hat, se_hat = se_hat)`} />
 
-The slope is the unknown now, as the leaving rate was in lesson 15.1. With a few
+The slope is the unknown now, as the leaving rate was in lesson 16.1. With a few
 hundred cases, what the data say about it is summed up very well by a normal
 curve centred on the estimate, with the standard error as its spread. That curve
 is the likelihood, so the grid method works exactly as before.
@@ -96,7 +96,7 @@ last two lines are the kind of answer a Bayesian regression is for: it is
 practically certain that the slope is positive, and about a 98 % probability that
 it is above half a point, a size someone might care about.
 
-<Exercise id="m15-4-a" />
+<Exercise id="m16-4-a" />
 
 ## In RStudio: brms
 
@@ -140,7 +140,7 @@ computed here, since the normal shortcut is very accurate with 480 cases.
 />
 
 <Interpret
-  id="i-15-4"
+  id="i-16-4"
   question="A Bayesian regression of wellbeing on autonomy with a Normal(0, 0.5) prior on the slope gives a posterior mean of 0.89, 95 % CrI [0.50, 1.27], and P(slope > 0) > .999. Which write-up is correct?"
   choices={[
     { text: 'With a Normal(0, 0.5) prior on the slope, each additional point of autonomy was associated with 0.89 points higher wellbeing, 95 % CrI [0.50, 1.27]. The posterior probability of a positive association exceeded .999.', correct: true, response: 'Correct: the prior is stated, the estimate has its credible interval, and the probability is of the claim itself.' },

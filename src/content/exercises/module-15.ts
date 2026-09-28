@@ -1,342 +1,299 @@
 import type { ExerciseDef } from '../../r/checker';
 
-const READ = 'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)';
-
-/** Engineering's leavers and headcount, shared by 15-1 and 15-2. */
-const ENGINEERING =
-  `${READ}\n` +
-  'eng <- d[d$department == "Engineering", ]\n' +
-  'left_eng <- sum(eng$left_company)\n' +
-  'n_eng <- nrow(eng)';
-
-/** Leavers and headcount for remote and office workers, for 15-2. */
-const REMOTE =
-  `${READ}\n` +
-  'left_remote <- sum(d$left_company[d$remote == "Yes"])\n' +
-  'n_remote <- sum(d$remote == "Yes")\n' +
-  'left_office <- sum(d$left_company[d$remote == "No"])\n' +
-  'n_office <- sum(d$remote == "No")';
-
-/** The workload model's slope and standard error, for 15-4. */
-const WORKLOAD =
-  `${READ}\n` +
-  'm_workload <- lm(wellbeing ~ workload, data = d)\n' +
-  'b_hat <- coef(m_workload)[["workload"]]\n' +
-  'se_hat <- summary(m_workload)$coefficients["workload", "Std. Error"]';
-
 export const module15: ExerciseDef[] = [
   {
     id: 'm15-1-a',
     prompt:
-      'In Engineering, 33 of 128 employees left. Using the grid and the sector prior dbeta(p_grid, 3, 17), compute the posterior for Engineering\'s leaving rate and store it, normalised to sum to 1, in posterior_eng. Store the posterior mean in eng_mean.',
+      'See for yourself why a straight line is the wrong shape for a yes/no outcome. Fit lm(left_company ~ wellbeing) and store it in lpm, count how many of its fitted values fall outside the range 0 to 1 and store that count in n_impossible, and build rate_by_third: the proportion who left in each third of wellbeing, lowest third first.',
     starterCode:
-      `${ENGINEERING}\nc(left = left_eng, employees = n_eng)\n\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\n\n# Prior times likelihood, then divide by the total.\nposterior_eng <- \neng_mean <- `,
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# left_company is 0 or 1, so its mean is the proportion who left.\nd %>% summarise(n = n(), leavers = sum(left_company), rate = mean(left_company))\n\nlpm <- \nn_impossible <- \nrate_by_third <- ',
     solution:
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- sum(p_grid * posterior_eng)`,
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
     wrongAnswers: [
-      // The flat prior of the lesson instead of the sector prior.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nposterior_eng <- dbinom(left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- sum(p_grid * posterior_eng)`,
-      // Never normalised, so the "probabilities" do not sum to 1.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(left_eng, size = n_eng, prob = p_grid)\neng_mean <- sum(p_grid * posterior_eng)`,
-      // Counted the employees who stayed as the successes.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(n_eng - left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- sum(p_grid * posterior_eng)`,
-      // The whole company rather than Engineering.
-      `${READ}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(sum(d$left_company), size = nrow(d), prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- sum(p_grid * posterior_eng)`,
-      // The peak of the posterior instead of its mean.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- p_grid[which.max(posterior_eng)]`,
+      // & where | was meant: no fitted value can be below 0 AND above 1, so the
+      // count comes out 0. (Testing against 0 to 100 instead of 0 to 1 is the
+      // other classic slip, but on this data no fitted value exceeds 1, so it
+      // gives the right answer for the wrong reason and cannot be graded.)
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 & fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
+      // Counting the leavers instead of the impossible predictions.
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(d$left_company == 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
+      // The thirds taken on the outcome, which makes the rates trivially 0 and 1.
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(left_company, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
+      // The wrong predictor, so the fitted values are someone else\'s.
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ tenure_years, data = d)\nn_impossible <- sum(fitted(lpm) < 0 | fitted(lpm) > 1)\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n())',
     ],
     alternateSolutions: [
-      // The beta shortcut of lesson 15.2, evaluated on the grid.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nposterior_eng <- dbeta(p_grid, 3 + left_eng, 17 + n_eng - left_eng)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- (3 + left_eng) / (3 + 17 + n_eng)`,
-      // Counted inline, with weighted.mean() for the posterior mean.
-      `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\np_grid <- seq(0, 1, length.out = 1001)\nlikelihood <- dbinom(33, 128, p_grid)\nunnormalised <- dbeta(p_grid, 3, 17) * likelihood\nposterior_eng <- unnormalised / sum(unnormalised)\neng_mean <- weighted.mean(p_grid, posterior_eng)`,
+      // Base R: predict() instead of fitted(), and table thirds with cut().
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\np <- predict(lpm)\nn_impossible <- length(which(p < 0 | p > 1))\nbreaks <- quantile(d$wellbeing, probs = c(0, 1/3, 2/3, 1))\nd$third <- cut(d$wellbeing, breaks = breaks, include.lowest = TRUE, labels = FALSE)\nrate_by_third <- aggregate(left_company ~ third, data = d, FUN = mean)',
+      // The count written as a sum over a single logical vector.
+      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlpm <- lm(left_company ~ wellbeing, data = d)\nn_impossible <- sum(!dplyr::between(fitted(lpm), 0, 1))\nrate_by_third <- d %>%\n  mutate(third = ntile(wellbeing, 3)) %>%\n  group_by(third) %>%\n  summarise(rate = mean(left_company), n = n(), leavers = sum(left_company))',
     ],
     check: `
-      if (!has_answer("posterior_eng") || !has_answer("eng_mean")) {
-        list(pass = FALSE, message = "I need both posterior_eng and eng_mean.")
+      if (!has_answer("lpm") || !has_answer("n_impossible") || !has_answer("rate_by_third")) {
+        list(pass = FALSE, message = "I need all three: lpm, n_impossible and rate_by_third.")
       } else {
-        post <- answer("posterior_eng")
-        m <- as.vector(answer("eng_mean"))
+        lpm <- answer("lpm")
+        n_imp <- as.vector(answer("n_impossible"))
+        tbl <- answer("rate_by_third")
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        eng <- d[d$department == "Engineering", ]
-        k <- sum(eng$left_company)
-        n <- nrow(eng)
-        p_grid <- seq(0, 1, length.out = 1001)
-        normalise <- function(x) x / sum(x)
-        expected <- normalise(dbeta(p_grid, 3, 17) * dbinom(k, n, p_grid))
-        exp_mean <- sum(p_grid * expected)
-        close <- function(a, b) isTRUE(abs(a - b) < 1e-4)
-        flat_mean <- sum(p_grid * normalise(dbinom(k, n, p_grid)))
-        stayed_mean <- sum(p_grid * normalise(dbeta(p_grid, 3, 17) * dbinom(n - k, n, p_grid)))
-        company_mean <- sum(p_grid * normalise(dbeta(p_grid, 3, 17) * dbinom(sum(d$left_company), nrow(d), p_grid)))
-        if (!is.numeric(post) || length(post) != length(p_grid)) {
-          list(pass = FALSE, message = "posterior_eng should hold one probability for each of the 1001 values in p_grid.")
-        } else if (any(!is.finite(post))) {
-          list(pass = FALSE, message = "posterior_eng contains NA or NaN values. Check that the likelihood uses the counts left_eng and n_eng.")
-        } else if (!close(sum(post), 1)) {
-          list(pass = FALSE, message = paste0("posterior_eng adds up to ", signif(sum(post), 3), ", not 1. Divide prior times likelihood by its own sum, so the posterior is a probability distribution."))
-        } else if (!is.numeric(m) || length(m) != 1L || !is.finite(m)) {
-          list(pass = FALSE, message = "eng_mean should be a single number.")
-        } else if (close(m, flat_mean)) {
-          list(pass = FALSE, message = paste0("That is the posterior mean with a flat prior (", round(flat_mean, 3), "). Multiply the likelihood by the sector prior, dbeta(p_grid, 3, 17), before normalising."))
-        } else if (close(m, stayed_mean)) {
-          list(pass = FALSE, message = "That is the rate of STAYING. The first argument of dbinom() is the number of leavers, left_eng.")
-        } else if (close(m, company_mean)) {
-          list(pass = FALSE, message = "That is the posterior for the whole company. Use Engineering's counts: left_eng out of n_eng.")
-        } else if (close(m, p_grid[which.max(expected)])) {
-          list(pass = FALSE, message = "That is the peak of the posterior, the single most plausible rate. The posterior mean averages every rate, weighted by its probability: sum(p_grid * posterior_eng).")
-        } else if (!close(m, exp_mean)) {
-          list(pass = FALSE, message = paste0("eng_mean is ", round(m, 4), ", but the posterior mean for Engineering with the sector prior is ", round(exp_mean, 4), "."))
-        } else if (max(abs(post - expected)) > 1e-6) {
-          list(pass = FALSE, message = "eng_mean is right, but posterior_eng is not the posterior it came from. Store prior times likelihood, divided by its sum.")
+        reference <- lm(left_company ~ wellbeing, data = d)
+        p <- fitted(reference)
+        exp_n <- sum(p < 0 | p > 1)
+        breaks <- quantile(d$wellbeing, probs = c(0, 1/3, 2/3, 1))
+        third <- cut(d$wellbeing, breaks = breaks, include.lowest = TRUE, labels = FALSE)
+        exp_rates <- as.vector(tapply(d$left_company, third, mean))
+        # cut() on the quantiles keeps tied wellbeing scores in one third;
+        # ntile() splits them so the thirds come out equal in size. Both are
+        # correct readings of "the lowest third", and on this data the tie at
+        # the boundary makes them differ, so accept either.
+        by_rank <- ceiling(rank(d$wellbeing, ties.method = "first") * 3 / nrow(d))
+        exp_rates_ntile <- as.vector(tapply(d$left_company, by_rank, mean))
+        if (!inherits(lpm, "lm")) {
+          list(pass = FALSE, message = "lpm should be an ordinary linear model - this exercise is about what goes wrong when you fit one to a 0/1 outcome.")
+        } else if (!("wellbeing" %in% names(coef(lpm)))) {
+          list(pass = FALSE, message = paste0("lpm has no wellbeing coefficient; its predictors are ", paste(setdiff(names(coef(lpm)), "(Intercept)"), collapse = ", "), "."))
+        } else if (!is.numeric(n_imp) || length(n_imp) != 1L) {
+          list(pass = FALSE, message = "n_impossible should be a single number.")
+        } else if (isTRUE(all.equal(as.numeric(n_imp), as.numeric(sum(d$left_company)), tolerance = 1e-9, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the number of employees who left (", sum(d$left_company), "). The question is how many PREDICTIONS the line makes that no probability could take - count the fitted values below 0 or above 1."))
+        } else if (isTRUE(all.equal(as.numeric(n_imp), 0, tolerance = 1e-9)) && exp_n > 0) {
+          list(pass = FALSE, message = paste0("You found none, but there are ", exp_n, ". A fitted value is impossible if it is below 0 OR above 1, so the two tests join with |, not with &: no number is both at once. Check the range too - a predicted probability lies between 0 and 1, not between 0 and 100."))
+        } else if (!isTRUE(all.equal(as.numeric(n_imp), as.numeric(exp_n), tolerance = 1e-9, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("n_impossible is ", n_imp, " but ", exp_n, " fitted values from lm(left_company ~ wellbeing) fall outside 0 to 1."))
+        } else if (!is.data.frame(tbl) || nrow(tbl) != 3L) {
+          list(pass = FALSE, message = "rate_by_third should have three rows, one per third of wellbeing.")
         } else {
-          list(pass = TRUE, message = paste0("Correct: ", round(exp_mean, 3), ". The data alone say ", round(k / n, 3), " and the prior says 0.15. With 128 employees against a prior worth about 20, the posterior sits much closer to the data."))
+          found <- FALSE
+          shown <- exp_rates
+          for (value in numeric_columns(tbl)) {
+            if (length(value) != 3L) next
+            if (isTRUE(all.equal(value, exp_rates, tolerance = 1e-6, check.attributes = FALSE))) {
+              found <- TRUE
+            } else if (isTRUE(all.equal(value, exp_rates_ntile, tolerance = 1e-6, check.attributes = FALSE))) {
+              found <- TRUE
+              shown <- exp_rates_ntile
+            }
+          }
+          if (!found) {
+            list(pass = FALSE, message = paste0("No column of rate_by_third holds the three leaving rates, which are ", paste(round(exp_rates, 3), collapse = ", "), " from the lowest third of wellbeing to the highest. Split on wellbeing, not on left_company."))
+          } else {
+            list(pass = TRUE, message = paste0(exp_n, " of the ", nrow(d), " fitted values are impossible probabilities. And the descriptives say the effect is real: ", round(100 * shown[1], 1), " % of the least happy third left, against ", round(100 * shown[3], 1), " % of the happiest. A model that predicts a negative probability for the very employees it should be most confident about is the wrong shape, not the wrong data."))
+          }
         }
       }
     `,
     hints: [
-      'The likelihood is dbinom(left_eng, size = n_eng, prob = p_grid): one value for each candidate rate.',
-      'posterior_eng <- prior * likelihood, and then posterior_eng <- posterior_eng / sum(posterior_eng).',
-      'The posterior mean is sum(p_grid * posterior_eng).',
+      'fitted(lpm) gives the predicted value for every employee.',
+      'sum() over a logical vector counts the TRUEs: sum(fitted(lpm) < 0 | fitted(lpm) > 1).',
+      'mean() of a 0/1 column is the proportion of 1s, so summarise(rate = mean(left_company)) is the leaving rate.',
     ],
   },
   {
     id: 'm15-2-a',
     prompt:
-      'Give a 95 % credible interval for Engineering\'s leaving rate, with a flat Beta(1, 1) prior. Store it in ci_engineering: two numbers, the lower bound first.',
+      'Fit the logistic regression of leaving on wellbeing and tenure. Store the fitted model in m_left and the wellbeing coefficient - on the log-odds scale, exactly as the model reports it - in b_wellbeing.',
     starterCode:
-      `${ENGINEERING}\nc(left = left_eng, employees = n_eng)\n\n# Posterior: Beta(1 + leavers, 1 + stayers). qbeta() gives its percentiles.\nci_engineering <- `,
-    solution: `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng - left_eng)`,
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# Without family = binomial, glm() fits an ordinary linear model and says nothing.\nm_left <- \nb_wellbeing <- ',
+    solution:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
     wrongAnswers: [
-      // Forgot the prior's 1 + 1, which is Beta(0, 0), not flat.
-      `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), left_eng, n_eng - left_eng)`,
-      // A 90 % interval.
-      `${ENGINEERING}\nci_engineering <- qbeta(c(0.05, 0.95), 1 + left_eng, 1 + n_eng - left_eng)`,
-      // The second shape parameter given the headcount instead of the stayers.
-      `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng)`,
-      // The whole company.
-      `${READ}\nci_engineering <- qbeta(c(0.025, 0.975), 1 + sum(d$left_company), 1 + nrow(d) - sum(d$left_company))`,
+      // family left off: a gaussian glm, which runs and is not logistic regression.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
+      // lm instead of glm: the same mistake with a different spelling.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- lm(left_company ~ wellbeing + tenure_years, data = d)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "wellbeing") %>% pull(estimate)',
+      // The coefficient exponentiated when the log odds were asked for.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- exp(coef(m_left)[["wellbeing"]])',
+      // The tenure coefficient read as wellbeing\'s.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% filter(term == "tenure_years") %>% pull(estimate)',
+      // The intercept read as the wellbeing effect.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nb_wellbeing <- m_left %>% tidy() %>% slice(1) %>% pull(estimate)',
     ],
     alternateSolutions: [
-      // Each bound on its own.
-      `${ENGINEERING}\nlower <- qbeta(0.025, 1 + left_eng, 1 + n_eng - left_eng)\nupper <- qbeta(0.975, 1 + left_eng, 1 + n_eng - left_eng)\nci_engineering <- c(lower = lower, upper = upper)`,
-      // Read off a fine grid, as in lesson 15.1.
-      `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 100001)\npost <- dbinom(left_eng, n_eng, p_grid)\npost <- post / sum(post)\ncdf <- cumsum(post)\nci_engineering <- c(p_grid[which(cdf >= 0.025)[1]], p_grid[which(cdf >= 0.975)[1]])`,
+      // family written as the function call, which is the canonical form.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial(link = "logit"))\nb_wellbeing <- coef(m_left)["wellbeing"]',
+      // The predictors in the other order, and the coefficient by name.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ tenure_years + wellbeing, data = d, family = "binomial")\nb_wellbeing <- summary(m_left)$coefficients["wellbeing", "Estimate"]',
     ],
     check: `
-      if (!has_answer("ci_engineering")) {
-        list(pass = FALSE, message = "I could not find an object called ci_engineering.")
+      if (!has_answer("m_left") || !has_answer("b_wellbeing")) {
+        list(pass = FALSE, message = "I need both m_left and b_wellbeing.")
       } else {
-        ci <- as.vector(unlist(answer("ci_engineering")))
+        m_left <- answer("m_left")
+        b <- as.vector(answer("b_wellbeing"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        eng <- d[d$department == "Engineering", ]
-        k <- sum(eng$left_company)
-        n <- nrow(eng)
-        expected <- qbeta(c(0.025, 0.975), 1 + k, 1 + n - k)
-        close <- function(a, b) isTRUE(all(abs(a - b) < 5e-4))
-        if (!is.numeric(ci) || length(ci) != 2L || any(!is.finite(ci))) {
-          list(pass = FALSE, message = "ci_engineering should be two numbers: the lower and the upper bound.")
-        } else if (ci[1] > ci[2]) {
-          list(pass = FALSE, message = "The bounds are the wrong way round. Put the lower bound first.")
-        } else if (close(ci, qbeta(c(0.025, 0.975), k, n - k))) {
-          list(pass = FALSE, message = "Close, but that posterior has no prior in it. A flat prior is Beta(1, 1), so add 1 to each shape: Beta(1 + left_eng, 1 + n_eng - left_eng).")
-        } else if (close(ci, qbeta(c(0.05, 0.95), 1 + k, 1 + n - k))) {
-          list(pass = FALSE, message = "That is a 90 % interval. A 95 % interval leaves 2.5 % in each tail: qbeta(c(0.025, 0.975), ...).")
-        } else if (close(ci, binom.test(k, n)$conf.int)) {
-          list(pass = FALSE, message = "That is the frequentist confidence interval from binom.test(). Here the interval should come from the posterior, with qbeta().")
-        } else if (!close(ci, expected)) {
-          list(pass = FALSE, message = paste0("ci_engineering is [", paste(round(ci, 3), collapse = ", "), "]. The posterior is Beta(1 + ", k, ", 1 + ", n - k, "): leavers in the first shape, stayers in the second."))
+        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
+        exp_b <- as.vector(coef(reference)["wellbeing"])
+        exp_tenure <- as.vector(coef(reference)["tenure_years"])
+        exp_intercept <- as.vector(coef(reference)["(Intercept)"])
+        if (!inherits(m_left, "glm")) {
+          list(pass = FALSE, message = "m_left is not a glm. lm() fits a straight line to the 0/1 outcome, which is the model lesson 15-1 showed predicting impossible probabilities. Use glm().")
+        } else if (!identical(family(m_left)$family, "binomial")) {
+          list(pass = FALSE, message = paste0("m_left is a glm, but its family is \\"", family(m_left)$family, "\\", not binomial. Without family = binomial, glm() fits an ordinary linear model - it runs, it prints a coefficient table, and it is not logistic regression. The family is what puts the outcome on the log-odds scale."))
+        } else if (!("wellbeing" %in% names(coef(m_left)))) {
+          list(pass = FALSE, message = paste0("m_left has no wellbeing coefficient; its predictors are ", paste(setdiff(names(coef(m_left)), "(Intercept)"), collapse = ", "), "."))
+        } else if (!is.numeric(b) || length(b) != 1L) {
+          list(pass = FALSE, message = "b_wellbeing should be a single number.")
+        } else if (isTRUE(all.equal(b, exp(exp_b), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("You exponentiated. exp(b) = ", round(exp(exp_b), 4), " is the odds ratio, which lesson 15-3 is about. The coefficient itself, on the log-odds scale, is ", round(exp_b, 4), " - and the sign is readable there in a way it is not after exponentiating, because below zero means less likely while below one means the same thing."))
+        } else if (isTRUE(all.equal(b, exp_tenure, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the tenure coefficient (", round(exp_tenure, 4), "). Filter tidy() to the wellbeing row."))
+        } else if (isTRUE(all.equal(b, exp_intercept, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the intercept (", round(exp_intercept, 4), "): the log odds of leaving for an employee with wellbeing 0 and no tenure at all, which describes nobody."))
+        } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("b_wellbeing is ", round(b, 4), " but the wellbeing coefficient is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: [", paste(round(expected, 3), collapse = ", "), "]. Given these data and a flat prior, there is a 95 % probability that Engineering's leaving rate lies in this range. It is wider than the company's, because it rests on 128 people instead of 480."))
+          list(pass = TRUE, message = paste0("b = ", round(exp_b, 4), " log odds per point of wellbeing. Negative, so higher wellbeing goes with a lower chance of leaving - which is the direction the leaving rates by third showed in the last lesson. Log odds are not readable as they stand; exp() fixes that in lesson 15-3."))
         }
       }
     `,
     hints: [
-      'With a Beta(1, 1) prior the posterior is Beta(1 + left_eng, 1 + n_eng - left_eng).',
-      'The middle 95 % runs from the 2.5th to the 97.5th percentile.',
-      'ci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng - left_eng)',
+      'glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial) - the family argument is what makes it logistic.',
+      'tidy() works on a glm exactly as it does on an lm, and the estimate column is on the log-odds scale.',
+      'Do not exponentiate yet. This exercise asks for the coefficient as the model reports it.',
     ],
   },
   {
     id: 'm15-2-b',
     prompt:
-      'Do remote workers leave less often than office workers? With flat Beta(1, 1) priors, draw 10,000 plausible leaving rates for each group into rate_remote and rate_office, and store the probability that the remote rate is the lower one in prob_remote_lower.',
+      'Turn both slopes into odds ratios. Store exp() of the wellbeing coefficient in or_wellbeing and exp() of the tenure coefficient in or_tenure. One of them should come out below 1 and one above; make sure you can say which and why.',
     starterCode:
-      `${REMOTE}\nc(left_remote = left_remote, n_remote = n_remote, left_office = left_office, n_office = n_office)\n\nset.seed(1502)\nrate_remote <- \nrate_office <- \nprob_remote_lower <- `,
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\n\nm_left %>% tidy()\n\nor_wellbeing <- \nor_tenure <- ',
     solution:
-      `${REMOTE}\nset.seed(1502)\nrate_remote <- rbeta(10000, 1 + left_remote, 1 + n_remote - left_remote)\nrate_office <- rbeta(10000, 1 + left_office, 1 + n_office - left_office)\nprob_remote_lower <- mean(rate_remote < rate_office)`,
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
     wrongAnswers: [
-      // The comparison the wrong way round.
-      `${REMOTE}\nset.seed(1502)\nrate_remote <- rbeta(10000, 1 + left_remote, 1 + n_remote - left_remote)\nrate_office <- rbeta(10000, 1 + left_office, 1 + n_office - left_office)\nprob_remote_lower <- mean(rate_remote > rate_office)`,
-      // Compared the two averages once, which gives TRUE, not a probability.
-      `${REMOTE}\nset.seed(1502)\nrate_remote <- rbeta(10000, 1 + left_remote, 1 + n_remote - left_remote)\nrate_office <- rbeta(10000, 1 + left_office, 1 + n_office - left_office)\nprob_remote_lower <- mean(rate_remote) < mean(rate_office)`,
-      // The lesson's training groups instead of remote working.
-      `${READ}\nset.seed(1502)\nrate_remote <- rbeta(10000, 1 + sum(d$left_company[d$training == "Yes"]), 1 + sum(d$training == "Yes" & d$left_company == 0))\nrate_office <- rbeta(10000, 1 + sum(d$left_company[d$training == "No"]), 1 + sum(d$training == "No" & d$left_company == 0))\nprob_remote_lower <- mean(rate_remote < rate_office)`,
+      // Not exponentiated at all: log odds labelled as odds ratios.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- coef(m_left)[["wellbeing"]]\nor_tenure <- coef(m_left)[["tenure_years"]]',
+      // The standard errors exponentiated instead of the estimates.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- exp(summary(m_left)$coefficients["wellbeing", "Std. Error"])\nor_tenure <- exp(summary(m_left)$coefficients["tenure_years", "Std. Error"])',
+      // The reciprocal taken "to make it bigger than 1".
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_wellbeing <- 1 / exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
+      // Exponentiated coefficients from a model with no binomial family.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nor_wellbeing <- exp(coef(m_left)[["wellbeing"]])\nor_tenure <- exp(coef(m_left)[["tenure_years"]])',
     ],
     alternateSolutions: [
-      // Another seed and more draws: the answer moves by Monte Carlo noise only.
-      `${REMOTE}\nset.seed(42)\nrate_remote <- rbeta(50000, 1 + left_remote, 1 + n_remote - left_remote)\nrate_office <- rbeta(50000, 1 + left_office, 1 + n_office - left_office)\nprob_remote_lower <- mean(rate_office - rate_remote > 0)`,
-      // Stayers counted directly, and the share written as a sum.
-      `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ncounts <- table(d$remote, d$left_company)\nset.seed(1)\nrate_remote <- rbeta(10000, 1 + counts["Yes", "1"], 1 + counts["Yes", "0"])\nrate_office <- rbeta(10000, 1 + counts["No", "1"], 1 + counts["No", "0"])\nprob_remote_lower <- sum(rate_remote < rate_office) / 10000`,
+      // broom does the exponentiating.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nors <- m_left %>% tidy(exponentiate = TRUE)\nor_wellbeing <- ors$estimate[ors$term == "wellbeing"]\nor_tenure <- ors$estimate[ors$term == "tenure_years"]',
+      // The whole coefficient vector exponentiated at once, then indexed.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nall_ors <- exp(coef(m_left))\nor_wellbeing <- all_ors["wellbeing"]\nor_tenure <- all_ors["tenure_years"]',
     ],
     check: `
-      if (!has_answer("prob_remote_lower")) {
-        list(pass = FALSE, message = "I could not find an object called prob_remote_lower.")
+      if (!has_answer("or_wellbeing") || !has_answer("or_tenure")) {
+        list(pass = FALSE, message = "I need both or_wellbeing and or_tenure.")
       } else {
-        p <- as.vector(answer("prob_remote_lower"))
+        or_w <- as.vector(answer("or_wellbeing"))
+        or_t <- as.vector(answer("or_tenure"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        shapes <- function(group) {
-          k <- sum(d$left_company[group])
-          c(1 + k, 1 + sum(group) - k)
-        }
-        # The exact probability that a draw from the first posterior is below one from the second.
-        p_lower <- function(a, b) integrate(function(x) dbeta(x, a[1], a[2]) * pbeta(x, b[1], b[2], lower.tail = FALSE), 0, 1)$value
-        exact <- p_lower(shapes(d$remote == "Yes"), shapes(d$remote == "No"))
-        training <- p_lower(shapes(d$training == "Yes"), shapes(d$training == "No"))
-        if (is.logical(p) && length(p) == 1L) {
-          list(pass = FALSE, message = "prob_remote_lower is TRUE or FALSE, a single comparison. Compare the draws pair by pair, rate_remote < rate_office, and take the mean() of that to get the share of draws where remote is lower.")
-        } else if (!is.numeric(p) || length(p) != 1L || !is.finite(p)) {
-          list(pass = FALSE, message = "prob_remote_lower should be a single number between 0 and 1.")
-        } else if (abs(p - (1 - exact)) < 0.015) {
-          list(pass = FALSE, message = "That is the probability that remote workers leave MORE often. Flip the comparison: rate_remote < rate_office.")
-        } else if (abs(p - training) < 0.03) {
-          list(pass = FALSE, message = "That looks like the training comparison from the lesson. Use the remote column: left_remote out of n_remote, and left_office out of n_office.")
-        } else if (abs(p - exact) >= 0.015) {
-          list(pass = FALSE, message = paste0("prob_remote_lower is ", round(p, 3), ", but it should come out close to ", round(exact, 2), ". Draw each group's rates from Beta(1 + leavers, 1 + stayers)."))
+        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
+        b_w <- as.vector(coef(reference)["wellbeing"])
+        b_t <- as.vector(coef(reference)["tenure_years"])
+        exp_w <- exp(b_w)
+        exp_t <- exp(b_t)
+        gaussian_fit <- glm(left_company ~ wellbeing + tenure_years, data = d)
+        if (!is.numeric(or_w) || length(or_w) != 1L || !is.numeric(or_t) || length(or_t) != 1L) {
+          list(pass = FALSE, message = "Both should be single numbers.")
+        } else if (isTRUE(all.equal(or_w, b_w, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("Those are still log odds. An odds ratio is exp() of the coefficient: exp(", round(b_w, 3), ") = ", round(exp_w, 3), ". You can spot the mistake without any arithmetic - an odds ratio is never negative, and a log odds usually is."))
+        } else if (isTRUE(all.equal(or_w, exp(as.vector(summary(reference)$coefficients["wellbeing", "Std. Error"])), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "You exponentiated the standard error rather than the estimate. Exponentiate the estimate column; the SE stays on the log-odds scale, which is where the confidence interval is built before being exponentiated with it.")
+        } else if (isTRUE(all.equal(or_w, 1 / exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("You inverted it. 1/OR flips the direction of the comparison, so ", round(1 / exp_w, 3), " would be the odds ratio for a one-point DECREASE in wellbeing. Report exp(b) = ", round(exp_w, 3), " and say in words that higher wellbeing lowers the odds."))
+        } else if (isTRUE(all.equal(or_w, exp(as.vector(coef(gaussian_fit)["wellbeing"])), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "Those come from a glm fitted without family = binomial, so they are exp() of a linear-model slope - a number with no interpretation at all. Refit with family = binomial.")
+        } else if (!isTRUE(all.equal(or_w, exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("or_wellbeing is ", round(or_w, 4), " but exp() of the wellbeing coefficient is ", round(exp_w, 4), "."))
+        } else if (!isTRUE(all.equal(or_t, exp_t, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("or_tenure is ", round(or_t, 4), " but exp() of the tenure coefficient is ", round(exp_t, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: about ", round(exact, 2), ". Given these data, it is very probable that remote workers leave less often. Compare that with lesson 11: a p-value would only have said whether a difference of zero is ruled out."))
+          list(pass = TRUE, message = paste0("OR = ", round(exp_w, 3), " per point of wellbeing and ", round(exp_t, 3), " per year of tenure. An odds ratio multiplies rather than adds: below 1 means the odds of leaving shrink with each extra point, above 1 means they grow. Both are ratios of ODDS, not of risks, and the two are only close when the outcome is rare."))
         }
       }
     `,
     hints: [
-      'rbeta(10000, 1 + left_remote, 1 + n_remote - left_remote) draws 10,000 plausible rates for the remote group.',
-      'rate_remote < rate_office compares the draws pair by pair and gives 10,000 TRUEs and FALSEs.',
-      'The mean of a TRUE/FALSE vector is the share of TRUEs: mean(rate_remote < rate_office).',
+      'exp() undoes the log in log odds: exp(coef(m_left)[["wellbeing"]]).',
+      'Use the double bracket, or unname(), so you get a plain number rather than a named one.',
+      'An odds ratio is always positive. If yours is negative, you have not exponentiated.',
     ],
   },
   {
     id: 'm15-3-a',
     prompt:
-      'Remote workers report higher wellbeing, p = .008. How strong is the evidence? Fit lm(wellbeing ~ remote) as m_remote and store the Bayes factor for a remote effect against the null model, BF10 from the BIC approximation, in bf10.',
+      'Build the table that goes in the results section: odds ratios with their 95 % confidence intervals, for every term in the model including the intercept. Store it in or_table, with the odds ratio in a column called OR and the interval bounds beside it.',
     starterCode:
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\n\n# BF10 = exp((BIC of the null model - BIC of the alternative) / 2)\nm_remote <- \nbf10 <- `,
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\n\n# Build the interval on the log-odds scale first, then exponentiate the whole thing.\nor_table <- ',
     solution:
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf10 <- exp((BIC(m0) - BIC(m_remote)) / 2)`,
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(cbind(OR = coef(m_left), confint(m_left)))',
     wrongAnswers: [
-      // BF01 instead of BF10.
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf10 <- exp((BIC(m_remote) - BIC(m0)) / 2)`,
-      // Forgot to halve the difference.
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf10 <- exp(BIC(m0) - BIC(m_remote))`,
-      // AIC in place of BIC.
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf10 <- exp((AIC(m0) - AIC(m_remote)) / 2)`,
-      // The training model from the lesson.
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ training, data = d)\nbf10 <- exp((BIC(m0) - BIC(m_remote)) / 2)`,
+      // Never exponentiated: log odds in a table labelled OR.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- cbind(OR = coef(m_left), confint(m_left))',
+      // Only the interval: no estimate to report alongside it.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(confint(m_left))',
+      // The whole summary matrix exponentiated, so the SE, z and p are mangled too.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- exp(summary(m_left)$coefficients)',
+      // Built from a model with no binomial family.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d)\nor_table <- exp(cbind(OR = coef(m_left), confint(m_left)))',
     ],
     alternateSolutions: [
-      // Through BF01.
-      `${READ}\nm0 <- lm(wellbeing ~ 1, data = d)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf01 <- exp((BIC(m_remote) - BIC(m0)) / 2)\nbf10 <- 1 / bf01`,
-      // The null model written inline, and the formula rearranged.
-      `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_remote <- lm(wellbeing ~ remote, data = d)\nbf10 <- exp(-0.5 * (BIC(m_remote) - BIC(lm(wellbeing ~ 1, data = d))))`,
+      // broom builds the same table as a data frame, with Wald intervals.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nor_table <- m_left %>%\n  tidy(exponentiate = TRUE, conf.int = TRUE) %>%\n  select(term, OR = estimate, conf.low, conf.high)',
+      // Wald intervals built by hand from the estimate and its SE.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\nest <- coef(m_left)\nse <- summary(m_left)$coefficients[, "Std. Error"]\nor_table <- exp(cbind(OR = est, lower = est - 1.96 * se, upper = est + 1.96 * se))',
     ],
     check: `
-      if (!has_answer("bf10")) {
-        list(pass = FALSE, message = "I could not find an object called bf10.")
+      if (!has_answer("or_table")) {
+        list(pass = FALSE, message = "I could not find an object called or_table.")
       } else {
-        bf <- as.vector(answer("bf10"))
+        tbl <- answer("or_table")
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        m0 <- lm(wellbeing ~ 1, data = d)
-        m1 <- lm(wellbeing ~ remote, data = d)
-        expected <- exp((BIC(m0) - BIC(m1)) / 2)
-        close <- function(a, b) isTRUE(abs(a / b - 1) < 1e-4)
-        if (!is.numeric(bf) || length(bf) != 1L || !is.finite(bf)) {
-          list(pass = FALSE, message = "bf10 should be a single number.")
-        } else if (has_answer("m_remote") && inherits(answer("m_remote"), "lm") && !("remoteYes" %in% names(coef(answer("m_remote"))))) {
-          list(pass = FALSE, message = "m_remote has no remote coefficient. Fit lm(wellbeing ~ remote, data = d).")
-        } else if (close(bf, 1 / expected)) {
-          list(pass = FALSE, message = "That is BF01, the evidence for the null. For BF10 the null model's BIC comes first: exp((BIC(m0) - BIC(m_remote)) / 2).")
-        } else if (close(bf, expected^2)) {
-          list(pass = FALSE, message = "Nearly: halve the BIC difference before exponentiating.")
-        } else if (close(bf, exp((AIC(m0) - AIC(m1)) / 2))) {
-          list(pass = FALSE, message = "That uses AIC. The approximation to a Bayes factor uses BIC, whose penalty grows with the sample size.")
-        } else if (!close(bf, expected)) {
-          list(pass = FALSE, message = paste0("bf10 is ", signif(bf, 3), ", but the BIC approximation for wellbeing ~ remote gives ", signif(expected, 3), "."))
+        reference <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
+        b <- coef(reference)
+        exp_or <- as.vector(exp(b))
+        profile <- suppressMessages(confint(reference))
+        se <- summary(reference)$coefficients[, "Std. Error"]
+        wald <- cbind(b - 1.96 * se, b + 1.96 * se)
+        gaussian_fit <- glm(left_company ~ wellbeing + tenure_years, data = d)
+        numeric_cols <- list()
+        if (is.matrix(tbl) || is.data.frame(tbl)) {
+          for (nm in colnames(tbl)) {
+            column <- if (is.data.frame(tbl)) tbl[[nm]] else tbl[, nm]
+            if (is.numeric(column)) numeric_cols[[nm]] <- as.vector(column)
+          }
+        }
+        matches <- function(target, tol) {
+          for (column in numeric_cols) {
+            if (length(column) == length(target) &&
+                isTRUE(all.equal(column, as.vector(target), tolerance = tol, check.attributes = FALSE))) return(TRUE)
+          }
+          FALSE
+        }
+        if (!is.matrix(tbl) && !is.data.frame(tbl)) {
+          list(pass = FALSE, message = "or_table should be a table - a matrix from cbind() or a data frame - with one row per term.")
+        } else if (nrow(tbl) != length(b)) {
+          list(pass = FALSE, message = paste0("or_table has ", nrow(tbl), " rows but the model has ", length(b), " terms (the intercept included). exp(confint(m)) on its own gives the interval with no estimate column; cbind the odds ratios on first."))
+        } else if (length(numeric_cols) < 3L) {
+          list(pass = FALSE, message = paste0("or_table needs at least three numeric columns: the odds ratio and the two interval bounds. Yours has ", length(numeric_cols), "."))
+        } else if (matches(as.vector(b), 1e-6)) {
+          list(pass = FALSE, message = paste0("One of your columns holds the raw coefficients, so the table was never exponentiated. exp() the whole cbind() at once - the interval has to be built on the log-odds scale and exponentiated with the estimate, not the other way round. The wellbeing OR should be ", round(exp(b[["wellbeing"]]), 3), ", not ", round(b[["wellbeing"]], 3), "."))
+        } else if (matches(as.vector(exp(coef(gaussian_fit))), 1e-6)) {
+          list(pass = FALSE, message = "Those odds ratios come from a glm fitted without family = binomial. Refit with family = binomial before exponentiating anything.")
+        } else if (!matches(exp_or, 1e-6)) {
+          list(pass = FALSE, message = paste0("No column of or_table holds the odds ratios, which are ", paste(round(exp_or, 3), collapse = ", "), " for the intercept, wellbeing and tenure."))
+        # Tolerance 1e-4, not 1e-6: confint() on a glm finds the profile-likelihood
+        # bounds by iterative root-finding, so two runs agree to several decimals
+        # rather than to machine precision. Wald bounds are accepted as well.
+        } else if (!matches(as.vector(exp(profile[, 1])), 1e-4) && !matches(as.vector(exp(wald[, 1])), 1e-4)) {
+          list(pass = FALSE, message = "No column of or_table holds the lower bounds of the 95 % intervals. confint(m) gives profile-likelihood bounds on the log-odds scale; exponentiate them together with the estimates.")
+        } else if (!matches(as.vector(exp(profile[, 2])), 1e-4) && !matches(as.vector(exp(wald[, 2])), 1e-4)) {
+          list(pass = FALSE, message = "No column of or_table holds the upper bounds of the 95 % intervals.")
         } else {
-          list(pass = TRUE, message = paste0("Correct: BF10 = ", round(expected, 2), ". With p = .008 you might have called this a clear effect, but the data favour it over the null by less than 2 to 1: anecdotal evidence. Report both, and let readers see how strong the evidence really is."))
+          kind <- if (matches(as.vector(exp(profile[, 1])), 1e-4)) "profile-likelihood" else "Wald"
+          list(pass = TRUE, message = paste0("Your intervals are ", kind, " bounds, which is fine - say which kind you used. Wellbeing: OR = ", round(exp(b[["wellbeing"]]), 3), ", 95 % CI [", round(exp(profile[["wellbeing", 1]]), 3), ", ", round(exp(profile[["wellbeing", 2]]), 3), "]. The test of no effect is whether that interval contains 1, not 0 - exponentiating moved the null value with everything else."))
         }
       }
     `,
     hints: [
-      'm_remote <- lm(wellbeing ~ remote, data = d)',
-      'BIC(m0) and BIC(m_remote) give the two BIC values. The better model has the lower BIC.',
-      'bf10 <- exp((BIC(m0) - BIC(m_remote)) / 2)',
-    ],
-  },
-  {
-    id: 'm15-4-a',
-    prompt:
-      'Workload lowers wellbeing by about 3.3 points per point. Combine that estimate with a sceptical Normal(0, 1) prior on the slope. Store the posterior mean in post_mean_b and a 95 % credible interval, lower bound first, in cri_b.',
-    starterCode:
-      `${WORKLOAD}\nc(b_hat = b_hat, se_hat = se_hat)\n\nprior_sd <- 1\n# Weight each source by its precision, 1 / variance.\npost_mean_b <- \ncri_b <- `,
-    solution:
-      `${WORKLOAD}\nprior_sd <- 1\nw_data <- 1 / se_hat^2\nw_prior <- 1 / prior_sd^2\npost_mean_b <- (w_data * b_hat + w_prior * 0) / (w_data + w_prior)\npost_sd_b <- sqrt(1 / (w_data + w_prior))\ncri_b <- qnorm(c(0.025, 0.975), mean = post_mean_b, sd = post_sd_b)`,
-    wrongAnswers: [
-      // No prior at all: the least-squares estimate and its confidence interval.
-      `${WORKLOAD}\npost_mean_b <- b_hat\ncri_b <- qnorm(c(0.025, 0.975), mean = b_hat, sd = se_hat)`,
-      // Weighted by 1 / SE rather than 1 / SE squared.
-      `${WORKLOAD}\nprior_sd <- 1\nw_data <- 1 / se_hat\nw_prior <- 1 / prior_sd\npost_mean_b <- (w_data * b_hat) / (w_data + w_prior)\npost_sd_b <- sqrt(1 / (1 / se_hat^2 + 1 / prior_sd^2))\ncri_b <- qnorm(c(0.025, 0.975), mean = post_mean_b, sd = post_sd_b)`,
-      // Right mean, but the interval uses the standard error instead of the posterior SD.
-      `${WORKLOAD}\nprior_sd <- 1\nw_data <- 1 / se_hat^2\nw_prior <- 1 / prior_sd^2\npost_mean_b <- (w_data * b_hat) / (w_data + w_prior)\ncri_b <- qnorm(c(0.025, 0.975), mean = post_mean_b, sd = se_hat)`,
-      // Halfway between the estimate and the prior mean.
-      `${WORKLOAD}\npost_mean_b <- (b_hat + 0) / 2\ncri_b <- qnorm(c(0.025, 0.975), mean = post_mean_b, sd = se_hat)`,
-    ],
-    alternateSolutions: [
-      // The grid method of the lesson, on a fine grid.
-      `${WORKLOAD}\nb_grid <- seq(-6, 2, length.out = 80001)\npost <- dnorm(b_grid, 0, 1) * dnorm(b_hat, mean = b_grid, sd = se_hat)\npost <- post / sum(post)\npost_mean_b <- sum(b_grid * post)\ncdf <- cumsum(post)\ncri_b <- c(b_grid[which(cdf >= 0.025)[1]], b_grid[which(cdf >= 0.975)[1]])`,
-      // Written with variances, and the interval as mean plus or minus 1.96 SD.
-      `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nfit <- summary(lm(wellbeing ~ workload, data = d))$coefficients\nv_data <- fit["workload", "Std. Error"]^2\nv_prior <- 1\npost_var <- 1 / (1 / v_data + 1 / v_prior)\npost_mean_b <- post_var * fit["workload", "Estimate"] / v_data\ncri_b <- post_mean_b + c(-1, 1) * qnorm(0.975) * sqrt(post_var)`,
-    ],
-    check: `
-      if (!has_answer("post_mean_b") || !has_answer("cri_b")) {
-        list(pass = FALSE, message = "I need both post_mean_b and cri_b.")
-      } else {
-        m <- as.vector(unlist(answer("post_mean_b")))
-        ci <- as.vector(unlist(answer("cri_b")))
-        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        fit <- summary(lm(wellbeing ~ workload, data = d))$coefficients
-        b <- fit["workload", "Estimate"]
-        se <- fit["workload", "Std. Error"]
-        precision <- 1 / se^2 + 1
-        exp_mean <- (b / se^2) / precision
-        exp_sd <- sqrt(1 / precision)
-        exp_ci <- qnorm(c(0.025, 0.975), exp_mean, exp_sd)
-        close <- function(a, b, tol = 1e-3) isTRUE(all(abs(a - b) < tol))
-        if (!is.numeric(m) || length(m) != 1L || !is.finite(m)) {
-          list(pass = FALSE, message = "post_mean_b should be a single number.")
-        } else if (close(m, b)) {
-          list(pass = FALSE, message = paste0("That is the least-squares estimate, ", round(b, 3), ", with no prior in it. Weight it against the prior's mean of 0 by precision: 1 / se_hat^2 for the data, 1 / prior_sd^2 for the prior."))
-        } else if (close(m, b / 2)) {
-          list(pass = FALSE, message = "Halfway between the estimate and the prior would be right only if both were equally precise. Weight each by its precision, 1 / variance.")
-        } else if (close(m, (b / se) / (1 / se + 1))) {
-          list(pass = FALSE, message = "The weights should be precisions, 1 / variance: 1 / se_hat^2, not 1 / se_hat.")
-        } else if (!close(m, exp_mean)) {
-          list(pass = FALSE, message = paste0("post_mean_b is ", round(m, 3), ", but the precision-weighted posterior mean is ", round(exp_mean, 3), "."))
-        } else if (!is.numeric(ci) || length(ci) != 2L || any(!is.finite(ci))) {
-          list(pass = FALSE, message = "cri_b should be two numbers: the lower and the upper bound.")
-        } else if (ci[1] > ci[2]) {
-          list(pass = FALSE, message = "The bounds of cri_b are the wrong way round. Put the lower bound first.")
-        } else if (close(ci, qnorm(c(0.025, 0.975), exp_mean, se))) {
-          list(pass = FALSE, message = "The mean is right, but the interval uses the standard error. The posterior is narrower than the data alone: its SD is sqrt(1 / (w_data + w_prior)).")
-        } else if (!close(ci, exp_ci, 2e-3)) {
-          list(pass = FALSE, message = paste0("cri_b is [", paste(round(ci, 3), collapse = ", "), "], but the 95 % credible interval is [", paste(round(exp_ci, 3), collapse = ", "), "]. Use qnorm() with the posterior mean and the posterior SD."))
-        } else {
-          list(pass = TRUE, message = paste0("Correct: ", round(exp_mean, 2), ", 95 % CrI [", paste(round(exp_ci, 2), collapse = ", "), "]. The prior pulled the estimate from ", round(b, 2), " towards zero even though the data are precise, because an effect this large is far out in a Normal(0, 1) prior. A sceptical prior has to be one you can defend."))
-        }
-      }
-    `,
-    hints: [
-      'w_data <- 1 / se_hat^2 and w_prior <- 1 / prior_sd^2 are the two precisions.',
-      'post_mean_b <- (w_data * b_hat + w_prior * 0) / (w_data + w_prior)',
-      'The posterior SD is sqrt(1 / (w_data + w_prior)); then cri_b <- qnorm(c(0.025, 0.975), post_mean_b, that SD).',
+      'cbind(OR = coef(m_left), confint(m_left)) builds the three columns on the log-odds scale.',
+      'Wrap the whole cbind() in exp() so the estimate and both bounds are transformed together.',
+      'confint() on a glm prints "Waiting for profiling to be done..." - that is a message, not an error.',
     ],
   },
 ];
