@@ -16,7 +16,7 @@ R orders factor levels alphabetically unless you tell it otherwise, so the
 reference here is **Engineering**. Nothing about Engineering makes it the natural
 baseline; it simply sorts first. If a different department is the sensible
 comparison for your question, say so with
-`relevel(d$department, ref = "Sales")` and report which one you chose.
+`d$department <- relevel(d$department, ref = "Sales")` and report which one you chose.
 
 <Predict
   id="p-count"

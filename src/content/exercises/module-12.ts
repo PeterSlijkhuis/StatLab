@@ -300,7 +300,7 @@ export const module12: ExerciseDef[] = [
         } else if (nrow(tbl) != nrow(tukey)) {
           list(pass = FALSE, message = paste0("Four departments give ", nrow(tukey), " pairwise comparisons; pairs_tbl has ", nrow(tbl), ". Check that you ran the comparisons on department."))
         } else if (isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(none$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Those p values are unadjusted. Six comparisons at .05 each give about a 26 % chance of at least one false positive, which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
+          list(pass = FALSE, message = "Those p values are unadjusted. Six comparisons at .05 each give about a 26 % chance of at least one false positive if the tests were independent (about 21 % here, since they share groups), which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
         } else if (!isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(tukey$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "Your p values are adjusted, but not with Tukey's method. Tukey is the one designed for all pairwise comparisons after a linear model; Bonferroni is more conservative here. Pass adjust = \\"tukey\\".")
         } else if (!is.numeric(n_sig) || length(n_sig) != 1L) {
