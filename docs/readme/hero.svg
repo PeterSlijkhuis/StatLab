@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" role="img" aria-label="StatLab: learn statistics by doing it in R, right in your browser">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="0.55" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="curve" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <clipPath id="round"><rect width="1280" height="440" rx="28"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="1280" height="440" fill="url(#bg)"/>
+    <rect width="1280" height="440" fill="url(#glow)"/>
+    <g fill="#ffffff" opacity="0.08">
+      <circle cx="1180" cy="60" r="140"/><circle cx="60" cy="430" r="110"/>
+    </g>
+    <!-- bell curve with shaded tail -->
+    <path d="M760 360 C 860 360, 880 150, 960 150 S 1060 360, 1160 360 Z" fill="#ffffff" opacity="0.10"/>
+    <path d="M760 360 C 860 360, 880 150, 960 150 S 1060 360, 1160 360" fill="none" stroke="url(#curve)" stroke-width="6" stroke-linecap="round"/>
+    <line x1="740" y1="360" x2="1180" y2="360" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2"/>
+    <!-- scatter and fitted line -->
+    <g fill="#ffffff">
+      <circle cx="800" cy="120" r="6" opacity="0.9"/><circle cx="832" cy="104" r="6" opacity="0.9"/>
+      <circle cx="860" cy="96" r="6" opacity="0.9"/><circle cx="884" cy="76" r="6" opacity="0.9"/>
+      <circle cx="912" cy="82" r="6" opacity="0.9"/><circle cx="940" cy="58" r="6" opacity="0.9"/>
+    </g>
+    <line x1="786" y1="128" x2="956" y2="52" stroke="#fde68a" stroke-width="4" stroke-linecap="round"/>
+    <!-- code card -->
+    <g transform="translate(990 70)">
+      <rect width="250" height="112" rx="16" fill="#0f172a" opacity="0.92"/>
+      <circle cx="22" cy="20" r="5" fill="#f87171"/><circle cx="38" cy="20" r="5" fill="#fbbf24"/><circle cx="54" cy="20" r="5" fill="#34d399"/>
+      <text x="20" y="54" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" fill="#e2e8f0">m &lt;- <tspan fill="#93c5fd">lm</tspan>(y ~ x)</text>
+      <text x="20" y="82" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" fill="#e2e8f0"><tspan fill="#93c5fd">summary</tspan>(m)</text>
+      <text x="20" y="102" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#34d399">&#10003; checked in R</text>
+    </g>
+    <!-- words -->
+    <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fill="#ffffff">
+      <rect x="64" y="56" width="236" height="36" rx="18" fill="#ffffff" opacity="0.18"/>
+      <text x="82" y="80" font-size="16" font-weight="700" letter-spacing="0.5">UNIVERSITY OF TWENTE</text>
+      <text x="60" y="176" font-size="96" font-weight="800" letter-spacing="-2">StatLab</text>
+      <text x="64" y="226" font-size="28" font-weight="700">Learn statistics by doing it in R.</text>
+      <text x="64" y="262" font-size="28" font-weight="700" fill="#e0f2fe">Right in your browser. Nothing to install.</text>
+    </g>
+    <!-- stat chips -->
+    <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#1e1b4b" text-anchor="middle">
+      <g transform="translate(64 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">18</text><text x="80" y="56">modules</text></g>
+      <g transform="translate(236 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">59</text><text x="80" y="56">lessons</text></g>
+      <g transform="translate(408 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">84</text><text x="80" y="56">exercises</text></g>
+      <g transform="translate(580 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">0</text><text x="80" y="56">installs</text></g>
+    </g>
+  </g>
+</svg>
