@@ -137,9 +137,9 @@ describe('Module 10', () => {
 describe('Module 11', () => {
   const module11 = ALL_EXERCISES.filter((exercise) => exercise.id.startsWith('m11-'));
 
-  test('defines all four exercises', () => {
+  test('defines all six exercises', () => {
     expect(module11.map((exercise) => exercise.id)).toEqual([
-      'm11-1-a', 'm11-2-a', 'm11-2-b', 'm11-3-a',
+      'm11-1-a', 'm11-2-a', 'm11-2-b', 'm11-3-a', 'm11-4-a', 'm11-4-b',
     ]);
   });
 

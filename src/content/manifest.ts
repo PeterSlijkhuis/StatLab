@@ -26,7 +26,7 @@ export type ModuleMeta = {
  * The curriculum as planned: spec §7, Module 0 and the fourteen modules after
  * it, Module 9 on counts and proportions (inserted later, which moved the old
  * Modules 9 to 15 up one; see migrate() in src/state/progress.ts), then the
- * advanced Module 16 on Bayesian statistics. A module appears in MODULES below only once every one of its
+ * advanced Modules 16 and 17. A module appears in MODULES below only once every one of its
  * lesson files exists, so this list can be complete while the course is still
  * being written.
  */
@@ -354,6 +354,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         file: '11-3-model-fit-and-reporting',
         exercises: ['m11-3-a'],
       },
+      {
+        id: '11-4',
+        title: 'Checking the model',
+        file: '11-4-checking-the-model',
+        exercises: ['m11-4-a', 'm11-4-b'],
+      },
     ],
   },
   {
@@ -488,6 +494,33 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Bayesian regression',
         file: '16-4-bayesian-regression',
         exercises: ['m16-4-a'],
+      },
+    ],
+  },
+  {
+    id: 'module-17',
+    number: 17,
+    title: 'Mediation, factors and reports',
+    lessons: [
+      {
+        id: '17-1',
+        title: 'Mediation',
+        file: '17-1-mediation',
+        exercises: ['m17-1-a'],
+      },
+      {
+        id: '17-2',
+        title: 'Exploratory factor analysis',
+        file: '17-2-factor-analysis',
+        exercises: ['m17-2-a'],
+      },
+      {
+        id: '17-3',
+        title: 'Reproducible reports with Quarto',
+        file: '17-3-reports-with-quarto',
+        // Guided reading about software the browser cannot run, so it
+        // completes on a visit, as 00-1 does.
+        exercises: [],
       },
     ],
   },

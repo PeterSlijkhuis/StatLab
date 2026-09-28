@@ -1,0 +1,125 @@
+Lesson 3-4 asked whether a set of items measures **one** thing. Often a
+questionnaire is meant to measure several things at once, and the question is
+which items belong together. **Exploratory factor analysis** finds the few
+underlying factors that explain how a set of items correlate.
+
+As in lesson 3-4, the course data has scale scores rather than items, so this
+lesson builds six items of its own, answered from 1 to 7 by 300 people.
+
+<CodeBlock id="c-items" code={`set.seed(172)
+n <- 300
+pressure <- rnorm(n)
+support <- 0.3 * pressure + rnorm(n, 0, 0.95)
+item <- function(f, load) round(pmin(7, pmax(1, 4 + 1.3 * (load * f + rnorm(n, 0, sqrt(1 - load^2))))))
+items <- data.frame(
+  deadlines = item(pressure, 0.80), overtime = item(pressure, 0.75), too_much = item(pressure, 0.70),
+  help = item(support, 0.80), listened = item(support, 0.75), feedback = item(support, 0.65)
+)
+
+round(cor(items), 2)`} />
+
+The first three items ask about deadlines, overtime and having too much to do.
+The last three ask whether a manager helps, listens and gives feedback. In the
+correlation table they form two blocks: strong correlations within each set of
+three, weak ones between them.
+
+## How many factors?
+
+The **eigenvalues** of the correlation matrix say how much of the items'
+variance each successive dimension captures. A **scree plot** draws them, and
+the usual reading is to keep the factors before the line flattens.
+
+<CodeBlock id="c-scree" code={`eigenvalues <- eigen(cor(items))$values
+round(eigenvalues, 2)
+
+plot(eigenvalues, type = "b", xlab = "Factor", ylab = "Eigenvalue")
+abline(h = 1, lty = 2)`} />
+
+Two eigenvalues stand out, 2.34 and 1.65, and after that the line is flat.
+The older rule of keeping every eigenvalue above 1 agrees here, though it often
+keeps too many. In RStudio, `psych::fa.parallel(items)` runs parallel analysis,
+which compares the eigenvalues with those of random data and is the better
+guide.
+
+<Predict
+  id="p-rotation"
+  question="Work pressure and manager support are probably related: people with less support may feel more pressure. Should the two factors be allowed to correlate?"
+  choices={[
+    { text: 'No, factors must always be independent', response: 'That is a choice, called orthogonal rotation (varimax). For psychological constructs it is rarely realistic.' },
+    { text: 'Yes, so use an oblique rotation such as promax', correct: true, response: 'Right. If the factors turn out to be uncorrelated, promax gives nearly the same answer as varimax anyway.' },
+    { text: 'It makes no difference to the result', response: 'It changes the loadings whenever the factors really are correlated, and here they are.' },
+  ]}
+/>
+
+## Fitting the model
+
+`factanal()` is part of base R. Give it the items and the number of factors.
+
+<CodeBlock id="c-efa" code={`efa <- factanal(items, factors = 2, rotation = "promax")
+
+print(efa$loadings, cutoff = 0.3)
+efa$PVAL`} />
+
+- Each **loading** is how strongly an item reflects a factor. `cutoff = 0.3`
+  hides the small ones, and what is left is the structure: the pressure items on
+  one factor, the support items on the other.
+- The factors come unnamed. Naming them is your job, from the items that load on
+  each.
+- The chi-square test asks whether two factors reproduce the correlations. A
+  large p-value, here .70, means they do.
+
+<Exercise id="m17-2-a" />
+
+## Factors or components?
+
+Principal component analysis, `prcomp()`, looks similar and is often confused
+with factor analysis.
+
+<CodeBlock id="c-pca" code={`pca <- prcomp(items, scale. = TRUE)
+round(summary(pca)$importance["Proportion of Variance", ], 2)`} />
+
+The difference is what they model. Components summarise **all** the variance of
+the items, measurement error included, into a few scores. Factors model only the
+variance items **share**, as the effect of traits you cannot observe directly.
+To reduce many variables to a few scores, use components. To find out which
+traits a questionnaire measures, use factors.
+
+## From exploring to confirming
+
+An exploratory analysis finds a structure in one dataset. To test that
+structure, specify it in advance and fit a **confirmatory factor analysis** to
+new data. In RStudio, with the `lavaan` package:
+
+```r
+library(lavaan)
+model <- "
+  pressure =~ deadlines + overtime + too_much
+  support  =~ help + listened + feedback
+"
+fit <- cfa(model, data = items)
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+Common guides for good fit are a CFI of .95 or more, an RMSEA of .06 or less and
+an SRMR of .08 or less.
+
+<Quiz
+  id="q-loadings"
+  question="An item loads 0.45 on both factors. What does that suggest?"
+  choices={[
+    { text: 'It is the best item, because it measures both', response: 'An item that belongs to two factors does not help tell them apart. It is usually a problem.' },
+    { text: 'It is ambiguous: it reflects both traits and may need rewording or removing', correct: true, response: 'Right. A cross-loading item muddies both scales. Read its wording before deciding.' },
+    { text: 'The analysis needs more factors', response: 'Possibly, but one cross-loading item is not enough reason. Look at the item first.' },
+  ]}
+/>
+
+<Interpret
+  id="i-17-2"
+  question="A two-factor EFA with promax rotation on six items gives loadings of .67 to .76 for three pressure items on factor 1 and .63 to .77 for three support items on factor 2, no cross-loadings above .30, and chi-square test of fit p = .70. Which report is correct?"
+  choices={[
+    { text: 'An exploratory factor analysis (maximum likelihood, promax rotation) supported two factors. The three pressure items loaded on the first (.67 to .76) and the three support items on the second (.63 to .77), with no cross-loadings above .30; two factors reproduced the item correlations well, chi-square p = .70.', correct: true, response: 'Correct: the method, the rotation, the loadings, the criterion for cross-loadings and the fit.' },
+    { text: 'The questionnaire is valid because the factor analysis worked.', response: 'A clean structure is one piece of evidence for validity, not proof, and "worked" tells a reader nothing.' },
+    { text: 'Factor analysis proved that pressure and support are two separate traits.', response: 'An exploratory analysis suggests a structure in one sample. Confirming it needs a CFA on new data.' },
+    { text: 'The factors explained 50% of the variance, so the questionnaire is reliable.', response: 'Variance explained is not reliability, and the report leaves out which items load where.' },
+  ]}
+/>
