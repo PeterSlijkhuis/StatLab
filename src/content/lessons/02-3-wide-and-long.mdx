@@ -64,7 +64,7 @@ row. Three parts of this course insist on it.
 
 1. ggplot2 maps columns to axes and colours. To put time on the x axis, time has
    to be a column.
-2. `group_by(time)` in Module 3 needs a column to group by.
+2. `group_by()`, which Module 3 teaches, can only group by a column, so time has to be one.
 3. `lmer(engagement ~ time + (1 | employee_id))` in Module 14 needs one row per
    observation, with the person identified.
 
