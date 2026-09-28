@@ -1,5 +1,27 @@
 import type { ExerciseDef } from '../../r/checker';
 
+/**
+ * A made-up five-item survey of 200 people, answered on a 1 to 5 scale. q3 is
+ * worded the other way round and q5 barely measures the same thing. The course
+ * datasets hold scale scores rather than items, so lesson 03-4 and its two
+ * exercises build this one the same way.
+ */
+const SURVEY =
+  'set.seed(34)\n' +
+  'n <- 200\n' +
+  'trait <- rnorm(n)\n' +
+  'likert <- function(x) pmin(5, pmax(1, round(3 + x)))\n' +
+  'survey <- data.frame(\n' +
+  '  q1 = likert(0.9 * trait + rnorm(n, 0, 0.6)),\n' +
+  '  q2 = likert(0.8 * trait + rnorm(n, 0, 0.7)),\n' +
+  '  q3 = likert(-0.8 * trait + rnorm(n, 0, 0.7)),\n' +
+  '  q4 = likert(0.7 * trait + rnorm(n, 0, 0.8)),\n' +
+  '  q5 = likert(0.1 * trait + rnorm(n, 0, 1))\n' +
+  ')';
+
+/** The same survey with q3 already reversed, for the alpha exercise. */
+const REVERSED = `${SURVEY}\nsurvey$q3_r <- 6 - survey$q3`;
+
 export const module03: ExerciseDef[] = [
   {
     id: 'm3-1-a',
@@ -316,6 +338,110 @@ export const module03: ExerciseDef[] = [
       'Add median_wellbeing = median(wellbeing) beside the mean in the same summarise() call.',
       'slice_max(median_wellbeing, n = 1) keeps the row with the largest median.',
       'pull(department) turns that one-cell column into a value; as.character() drops the factor labelling.',
+    ],
+  },
+  {
+    id: 'm3-4-a',
+    prompt:
+      'Agreeing with q3 means LOW wellbeing, so it has to be turned round before it joins the others. Store the reversed item in survey$q3_r, on the same 1 to 5 scale, then store each person\'s scale score, the mean of q1, q2, q3_r, q4 and q5, in survey$score.',
+    starterCode:
+      '# survey is already in your environment.\nhead(survey)\n\nsurvey$q3_r <- \nsurvey$score <- ',
+    setupCode: SURVEY,
+    solution:
+      'survey$q3_r <- 6 - survey$q3\nsurvey$score <- rowMeans(survey[, c("q1", "q2", "q3_r", "q4", "q5")])',
+    wrongAnswers: [
+      // 5 - q3 puts the item on 0 to 4, so every score is 0.2 too low.
+      'survey$q3_r <- 5 - survey$q3\nsurvey$score <- rowMeans(survey[, c("q1", "q2", "q3_r", "q4", "q5")])',
+      // Never reversed: q3 cancels the other items out.
+      'survey$q3_r <- survey$q3\nsurvey$score <- rowMeans(survey[, c("q1", "q2", "q3", "q4", "q5")])',
+      // The sum rather than the mean, which leaves the 1 to 5 scale.
+      'survey$q3_r <- 6 - survey$q3\nsurvey$score <- rowSums(survey[, c("q1", "q2", "q3_r", "q4", "q5")])',
+    ],
+    alternateSolutions: [
+      // The mean written out by hand.
+      'survey$q3_r <- 6 - survey$q3\nsurvey$score <- (survey$q1 + survey$q2 + survey$q3_r + survey$q4 + survey$q5) / 5',
+    ],
+    check: `
+      if (!has_answer("survey")) {
+        list(pass = FALSE, message = "The survey has gone missing. Press Reset and try again.")
+      } else {
+        s <- answer("survey")
+        reversed <- 6 - s$q3
+        target <- (s$q1 + s$q2 + reversed + s$q4 + s$q5) / 5
+        if (!is.data.frame(s) || !all(c("q3_r", "score") %in% names(s))) {
+          list(pass = FALSE, message = "Add two columns to survey: q3_r and score.")
+        } else if (isTRUE(all.equal(as.numeric(s$q3_r), s$q3))) {
+          list(pass = FALSE, message = "q3_r is the same as q3. Reversing a 1 to 5 item turns 1 into 5 and 5 into 1: 6 - q3.")
+        } else if (isTRUE(all.equal(as.numeric(s$q3_r), 5 - s$q3))) {
+          list(pass = FALSE, message = "5 - q3 turns the item into 0 to 4. On a 1 to 5 scale the reversed item is (lowest + highest) - q3, so 6 - q3.")
+        } else if (!isTRUE(all.equal(as.numeric(s$q3_r), reversed))) {
+          list(pass = FALSE, message = "q3_r should be 6 - q3, so that a 1 becomes a 5 and a 5 becomes a 1.")
+        } else if (isTRUE(all.equal(as.numeric(s$score), target * 5))) {
+          list(pass = FALSE, message = "That is the sum of the items. Take the mean, so the score stays on the 1 to 5 scale the items were answered on.")
+        } else if (!isTRUE(all.equal(as.numeric(s$score), target))) {
+          list(pass = FALSE, message = "score should be the mean of q1, q2, q3_r, q4 and q5: the reversed q3, not the original.")
+        } else {
+          list(pass = TRUE, message = paste0("Correct. Scores run from ", min(target), " to ", max(target), ", on the same 1 to 5 scale as the answers. Next: do the five items deserve to be averaged at all?"))
+        }
+      }
+    `,
+    hints: [
+      'On a 1 to 5 scale, 6 - x turns 1 into 5, 2 into 4 and leaves 3 where it is.',
+      'rowMeans() takes the mean across the columns you give it, one value per person.',
+      'survey$score <- rowMeans(survey[, c("q1", "q2", "q3_r", "q4", "q5")])',
+    ],
+  },
+  {
+    id: 'm3-4-b',
+    prompt:
+      'How consistently do the five items measure one thing? Compute Cronbach\'s alpha for q1, q2, q3_r, q4 and q5 and store it in alpha. The formula is in the starter code.',
+    starterCode:
+      '# survey, with q3_r already added, is in your environment.\nitems <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]\nk <- ncol(items)\n\n# alpha = k / (k - 1) * (1 - sum of the item variances / variance of the total)\nalpha <- ',
+    setupCode: REVERSED,
+    solution:
+      'items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]\nk <- ncol(items)\nalpha <- k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))',
+    wrongAnswers: [
+      // The original q3, so the reversed item pulls against the rest.
+      'items <- survey[, c("q1", "q2", "q3", "q4", "q5")]\nk <- ncol(items)\nalpha <- k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))',
+      // Standard deviations where the formula has variances.
+      'items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]\nk <- ncol(items)\nalpha <- k / (k - 1) * (1 - sum(apply(items, 2, sd)) / sd(rowSums(items)))',
+      // The variance of the mean score instead of the total.
+      'items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]\nk <- ncol(items)\nalpha <- k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowMeans(items)))',
+    ],
+    alternateSolutions: [
+      // From the covariance matrix: its diagonal holds the item variances, its sum the variance of the total.
+      'C <- cov(survey[, c("q1", "q2", "q3_r", "q4", "q5")])\nalpha <- ncol(C) / (ncol(C) - 1) * (1 - sum(diag(C)) / sum(C))',
+    ],
+    check: `
+      if (!has_answer("survey")) {
+        list(pass = FALSE, message = "The survey has gone missing. Press Reset and try again.")
+      } else if (!has_answer("alpha")) {
+        list(pass = FALSE, message = "I could not find an object called alpha.")
+      } else {
+        s <- answer("survey")
+        alpha_of <- function(items) {
+          k <- ncol(items)
+          k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))
+        }
+        items <- data.frame(s$q1, s$q2, 6 - s$q3, s$q4, s$q5)
+        target <- alpha_of(items)
+        unreversed <- alpha_of(data.frame(s$q1, s$q2, s$q3, s$q4, s$q5))
+        got <- suppressWarnings(as.numeric(answer("alpha")))
+        if (length(got) != 1L || is.na(got)) {
+          list(pass = FALSE, message = "alpha should be a single number.")
+        } else if (abs(got - unreversed) < 1e-6) {
+          list(pass = FALSE, message = paste0("alpha is ", round(got, 2), ", close to nothing, because q3 still points the other way and cancels the rest out. Use q3_r."))
+        } else if (abs(got - target) > 1e-6) {
+          list(pass = FALSE, message = paste0("alpha is ", round(got, 3), ", but it should be ", round(target, 3), ". The formula uses variances, var(), both for the items and for the total, rowSums()."))
+        } else {
+          list(pass = TRUE, message = paste0("Correct: alpha = ", format(round(target, 2), nsmall = 2), ". Acceptable, and the lesson shows which item is holding it back."))
+        }
+      }
+    `,
+    hints: [
+      'apply(items, 2, var) gives the variance of each column; sum() adds them up.',
+      'The total is rowSums(items): each person\'s five answers added together.',
+      'alpha <- k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))',
     ],
   },
 ];

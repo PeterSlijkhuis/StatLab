@@ -540,8 +540,7 @@ binom.test(successes, nrow(d), p = 0.2)`,
                           check: 'Independent cases, each counted once, and no missing values in the outcome (nrow() would count them).',
                           traditional: 'The same question as an intercept-only logistic regression: glm(left_company ~ 1, data = d, family = binomial).',
                           note: 'Here the question is whether the share of employees who left differs from 20%. For your own data, count your own level in place of left_company == 1 and use your own proportion in place of 0.2. The output gives the observed proportion with its exact 95% confidence interval.',
-                          buildsOn: '15-2',
-                          further: 'Alan Agresti, An Introduction to Categorical Data Analysis.',
+                          lessonId: '09-1',
                         },
                       },
                     ],
@@ -655,6 +654,7 @@ counts
 chisq.test(counts, p = c(0.3, 0.2, 0.3, 0.2))`,
                     check: 'Each case counted once. Expected counts of at least 5 in every category; chisq.test() warns when they are lower.',
                     note: 'p lists the expected share of each category, in the order table() prints them (here Engineering, Marketing, Sales, Support), and must add up to 1. Leave p out to test for equal shares.',
+                    buildsOn: '09-3',
                     further: 'Alan Agresti, An Introduction to Categorical Data Analysis.',
                   },
                 },
@@ -1155,8 +1155,7 @@ prop.table(counts, margin = 2)`,
     check:
       "Each case counted once, in one cell. Expected counts of at least 5 in nearly every cell; chisq.test() warns when they are lower, and then Fisher's exact test is the alternative: fisher.test(counts).",
     note: 'A significant result means the outcome is distributed differently across the categories of the predictor. The last line shows how: the proportion of each outcome within each predictor category. For a yes-or-no outcome, logistic regression with this one predictor gives the same answer and extends to more predictors.',
-    buildsOn: '15-2',
-    further: 'Alan Agresti, An Introduction to Categorical Data Analysis.',
+    lessonId: '09-3',
   };
 }
 

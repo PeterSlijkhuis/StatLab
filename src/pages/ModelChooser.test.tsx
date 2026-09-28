@@ -61,6 +61,9 @@ const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lesson
   { clicks: [...YES_NO, /numbers, groups or both/i], id: 'logistic-regression', model: 'Logistic regression', code: 'family = binomial', lessonId: '15-2' },
   { clicks: [BAYES, /one proportion/i], id: 'bayes-proportion', model: 'Bayesian estimate of a proportion (beta-binomial)', code: 'qbeta(', lessonId: '16-2' },
   { clicks: [BAYES, /in a linear model/i], id: 'bayes-factor-models', model: 'Bayes factor from the BIC', code: 'exp((BIC(null_model) - BIC(model)) / 2)', lessonId: '16-3' },
+  { clicks: [...YES_NO, /cross-table/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [...YES_NO, /one proportion/i], id: 'proportion-vs-value', model: 'Exact binomial test', code: 'binom.test(', lessonId: '09-1' },
+  { clicks: [TO_OUTCOME, /no order/i, /one other categorical variable/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
 ];
 
 /** Answers beyond the course, reached by the same clicks a student would make. */
@@ -71,13 +74,10 @@ const BEYOND: { clicks: RegExp[]; id: string; code: string }[] = [
   { clicks: [...REPEATED, /also in different groups/i], id: 'time-by-group', code: 'time * training' },
   { clicks: [...REPEATED, /different rates/i], id: 'growth-curve', code: '(Time | Chick)' },
   { clicks: [...REPEATED, /many items or stimuli/i], id: 'crossed-random-effects', code: '(1 | lecturer)' },
-  { clicks: [...YES_NO, /cross-table/i], id: 'cross-table', code: 'chisq.test(' },
-  { clicks: [...YES_NO, /one proportion/i], id: 'proportion-vs-value', code: 'binom.test(' },
   { clicks: [TO_OUTCOME, /^yes or no/i, /more than once, or grouped/i], id: 'repeated-binary', code: 'glmer(' },
   { clicks: [TO_OUTCOME, /^yes or no/i, /trials per row/i], id: 'successes-of-trials', code: 'cbind(left, staff - left)' },
   { clicks: [TO_OUTCOME, /ordered categories/i], id: 'ordinal-regression', code: 'polr(' },
   { clicks: [TO_OUTCOME, /no order/i, /predicted from other variables/i], id: 'multinomial-regression', code: 'multinom(' },
-  { clicks: [TO_OUTCOME, /no order/i, /one other categorical variable/i], id: 'cross-table', code: 'chisq.test(' },
   { clicks: [TO_OUTCOME, /no order/i, /expected shares/i], id: 'goodness-of-fit', code: 'chisq.test(counts, p =' },
   { clicks: [TO_OUTCOME, /a count of events/i, /start here/i], id: 'poisson-regression', code: 'family = poisson' },
   { clicks: [TO_OUTCOME, /a count of events/i, /overdispersion/i], id: 'negative-binomial', code: 'glm.nb(' },
