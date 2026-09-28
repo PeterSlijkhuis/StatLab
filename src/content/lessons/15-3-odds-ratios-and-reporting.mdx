@@ -1,5 +1,5 @@
 Log odds are the right scale for fitting and the wrong scale for writing. Nobody
-has an intuition for −0.062 log odds. Exponentiate, and you get a number people
+has an intuition for −0.058 log odds. Exponentiate, and you get a number people
 can argue about.
 
 <CodeBlock id="c-load" code={`library(dplyr)
@@ -41,7 +41,7 @@ message, not a warning, and the intervals are the better ones.
 
 <Predict
   id="p-or"
-  question="The odds ratio for tenure is 0.90, with a 95 % interval from 0.85 to 0.95. Is the effect of tenure significant at the .05 level?"
+  question="The odds ratio for tenure is 0.86, with a 95 % interval from 0.81 to 0.92. Is the effect of tenure significant at the .05 level?"
   choices={[
     { text: 'Yes, because the interval does not contain 1', correct: true, response: 'Right. On the odds-ratio scale, 1 means no effect - the value 0 has been transformed away.' },
     { text: 'No, because the interval contains values below 1', response: 'Every value in the interval is below 1, which is what a protective effect looks like.' },
@@ -101,9 +101,9 @@ exactly the non-linearity the model was chosen for, and the reason a single
 
 > A logistic regression predicting whether an employee left the company from
 > wellbeing and tenure was a significant improvement on the null model,
-> χ²(2) = 38.11, *p* < .001. Lower wellbeing was associated with higher odds of
-> leaving, *OR* = 0.94, 95 % CI [0.92, 0.97], *z* = −4.77, *p* < .001, as was
-> shorter tenure, *OR* = 0.90, 95 % CI [0.85, 0.95], *z* = −3.48, *p* < .001.
+> χ²(2) = 62.83, *p* < .001. Lower wellbeing was associated with higher odds of
+> leaving, *OR* = 0.94, 95 % CI [0.92, 0.96], *z* = −5.02, *p* < .001, as was
+> shorter tenure, *OR* = 0.86, 95 % CI [0.81, 0.92], *z* = −4.54, *p* < .001.
 
 <CodeBlock id="c-lrt" code={`anova(m_left, test = "LRT") %>% tidy()
 
@@ -128,11 +128,11 @@ an odds ratio with no interval is an estimate with no error bar.
 
 <Interpret
   id="i-15-3"
-  question="Your final model gives, for wellbeing, OR = 0.94, 95 % CI [0.92, 0.97], z = -4.77, p < .001, with a likelihood-ratio test of the model against the null of chi-square(2) = 38.11, p < .001, on 480 employees of whom 97 left. Which write-up is correct APA 7?"
+  question="Your final model gives, for wellbeing, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001, with a likelihood-ratio test of the model against the null of chi-square(2) = 62.83, p < .001, on 480 employees of whom 109 left. Which write-up is correct APA 7?"
   choices={[
-    { text: 'A logistic regression predicting whether an employee left the company (97 of 480) from wellbeing and tenure improved significantly on the null model, chi-square(2) = 38.11, p < .001. Each additional point of wellbeing was associated with lower odds of leaving, OR = 0.94, 95 % CI [0.92, 0.97], z = -4.77, p < .001.', correct: true, response: 'Correct: the base rate, the model test, the odds ratio with its interval, and "odds" rather than "chance".' },
-    { text: 'Employees with higher wellbeing were 6 % less likely to leave, OR = 0.94, 95 % CI [0.92, 0.97], p < .001.', response: 'It reads the odds ratio as a risk ratio. With 20 % leaving, a 6 % reduction in the odds is not a 6 % reduction in the probability.' },
+    { text: 'A logistic regression predicting whether an employee left the company (109 of 480) from wellbeing and tenure improved significantly on the null model, chi-square(2) = 62.83, p < .001. Each additional point of wellbeing was associated with lower odds of leaving, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001.', correct: true, response: 'Correct: the base rate, the model test, the odds ratio with its interval, and "odds" rather than "chance".' },
+    { text: 'Employees with higher wellbeing were 6 % less likely to leave, OR = 0.94, 95 % CI [0.92, 0.96], p < .001.', response: 'It reads the odds ratio as a risk ratio. With 23 % leaving, a 6 % reduction in the odds is not a 6 % reduction in the probability.' },
     { text: 'Wellbeing protected employees from leaving, OR = 0.94, p < .001.', response: 'Two problems: "protected" is causal in an observational study, and the confidence interval is missing.' },
-    { text: 'Wellbeing significantly predicted leaving, OR = 0.94, 95 % CI [0.92, 0.97], z = -4.77, p < .001; since the interval excludes 0, the effect is reliable.', response: 'Everything is right except the last clause. An odds ratio is tested against 1, and an interval excluding 0 would be true of every odds ratio ever computed.' },
+    { text: 'Wellbeing significantly predicted leaving, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001; since the interval excludes 0, the effect is reliable.', response: 'Everything is right except the last clause. An odds ratio is tested against 1, and an interval excluding 0 would be true of every odds ratio ever computed.' },
   ]}
 />

@@ -29,10 +29,10 @@ was subtracted out on paper.
 
 <Predict
   id="p-holding"
-  question="The model says b = -3.09 for workload, holding autonomy and tenure constant. Which claim does that licence?"
+  question="The model says b = -3.63 for workload, holding autonomy and tenure constant. Which claim does that licence?"
   choices={[
-    { text: 'Cutting the workload of an employee by one point would raise their wellbeing by about 3 points', response: 'That is a claim about an intervention. This design observed employees; it never changed the workload of anyone.' },
-    { text: 'Among employees with the same autonomy and tenure, one point more workload goes with about 3 points less wellbeing', correct: true, response: 'Exactly - a comparison between people, in the data as collected.' },
+    { text: 'Cutting the workload of an employee by one point would raise their wellbeing by about 3.6 points', response: 'That is a claim about an intervention. This design observed employees; it never changed the workload of anyone.' },
+    { text: 'Among employees with the same autonomy and tenure, one point more workload goes with about 3.6 points less wellbeing', correct: true, response: 'Exactly - a comparison between people, in the data as collected.' },
     { text: 'Workload is three times as important as autonomy', response: 'The two are on the same 1-10 scale here, so the sizes are comparable, but "three times as important" is not what a ratio of slopes measures.' },
   ]}
 />
@@ -138,11 +138,11 @@ situation.
 
 <Interpret
   id="i-11-2"
-  question="Your model gives, for remote working, b = 1.87, SE = 0.52, t(476) = 3.60, p < .001, with autonomy and workload also in the model. Which sentence reports it correctly?"
+  question="Your model gives, for remote working, b = 2.03, SE = 0.85, t(476) = 2.39, p = .017, with autonomy and workload also in the model. Which sentence reports it correctly?"
   choices={[
-    { text: 'Remote working caused a 1.87-point increase in wellbeing, b = 1.87, SE = 0.52, t(476) = 3.60, p < .001.', response: 'Employees were not assigned to remote working; they chose it or their role imposed it. The statistics are right and the verb is not.' },
-    { text: 'Controlling for autonomy and workload, remote employees reported higher wellbeing than office-based employees, b = 1.87, SE = 0.52, t(476) = 3.60, p < .001.', correct: true, response: 'Correct: the comparison is named, the reference group is explicit, and "reported higher" stays at the level the design supports.' },
+    { text: 'Remote working caused a 2.03-point increase in wellbeing, b = 2.03, SE = 0.85, t(476) = 2.39, p = .017.', response: 'Employees were not assigned to remote working; they chose it or their role imposed it. The statistics are right and the verb is not.' },
+    { text: 'Controlling for autonomy and workload, remote employees reported higher wellbeing than office-based employees, b = 2.03, SE = 0.85, t(476) = 2.39, p = .017.', correct: true, response: 'Correct: the comparison is named, the reference group is explicit, and "reported higher" stays at the level the design supports.' },
     { text: 'Remote working was significantly associated with wellbeing, p < .001.', response: 'A p value alone is not a report. The reader cannot tell the direction, the size or the precision from this sentence.' },
-    { text: 'Remote employees scored 1.87 points higher on wellbeing than office-based employees, b = 1.87, SE = 0.52, t(476) = 3.60, p < .001.', response: 'This drops the adjustment. 1.87 is the difference among employees matched on autonomy and workload, not the raw difference between the two groups.' },
+    { text: 'Remote employees scored 2.03 points higher on wellbeing than office-based employees, b = 2.03, SE = 0.85, t(476) = 2.39, p = .017.', response: 'This drops the adjustment. 2.03 is the difference among employees matched on autonomy and workload, not the raw difference between the two groups.' },
   ]}
 />
