@@ -16,7 +16,9 @@ will only ever type the second line.
 
 <CodeBlock id="attach" code={`library(dplyr)`} />
 
-That message about objects being masked is not an error. It is R telling you
+If a message about objects being masked appears, it is not an error. R shows
+it only the first time dplyr is attached in a session, so you may not see it
+here. It is R telling you
 that `dplyr::filter` has taken the name `filter` from a function of the same
 name in the stats package, which R attaches at start-up. From now on, `filter()`
 means dplyr's version, which is the one you want.

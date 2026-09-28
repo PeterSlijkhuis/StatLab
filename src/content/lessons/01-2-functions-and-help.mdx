@@ -26,7 +26,7 @@ args(mean.default)`} />
 `args(seq)` shows only `...`. The `.default` version holds the arguments you will
 actually use.
 
-`round(x, digits = 0)` tells you two things at once: the second argument is
+`function (x, digits = 0, ...)` tells you two things at once: the second argument is
 called `digits`, and if you leave it out R rounds to a whole number. So the first
 call rounds to a whole number, and the last two are the same. The third is the one
 to write in a script you will re-read:
@@ -94,7 +94,7 @@ R's answer to exactly that problem.
 
 <Quiz
   id="q-1-2"
-  question="args(round) reports round(x, digits = 0). What does that tell you about round(2.567)?"
+  question="args(round) reports function (x, digits = 0, ...). What does that tell you about round(2.567)?"
   choices={[
     { text: 'It will fail, because digits is missing', response: 'An argument with a default is optional. Only x has no default, so only x is required.' },
     { text: 'It will round to a whole number, giving 3', correct: true, response: 'Right. digits = 0 in the argument list is the value R uses when you do not supply one.' },

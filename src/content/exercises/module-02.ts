@@ -281,7 +281,7 @@ export const module02: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(n_long, expected_rows, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("n_long is ", n_long, ", but long has ", nrow(long), " rows. Count the long table, not the wide one."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees times 2 time points is ", expected_rows, " rows. Every observation now has its own row, which is the shape ggplot2 wants in Module 4 and lmer() wants in Module 14."))
+          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees times 2 time points is ", expected_rows, " rows. Every observation now has its own row, which is the shape lmer() wants in Module 14."))
         }
       }
     `,
