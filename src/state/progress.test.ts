@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  addBonusPoint,
   currentStreak,
   exportProgress,
   getDraft,
@@ -113,6 +114,17 @@ describe('progress store', () => {
     const before = { ...localStorage };
     expect(hasStorageFailed()).toBe(false);
     expect({ ...localStorage }).toEqual(before);
+  });
+
+  test('keeps extra points across export and import, and rejects nonsense ones', () => {
+    addBonusPoint();
+    addBonusPoint();
+    const saved = exportProgress();
+    localStorage.clear();
+    expect(importProgress(saved)).toBe(true);
+    expect(getProgress().bonus).toBe(2);
+    expect(importProgress(JSON.stringify({ version: 2, lessons: {}, bonus: -5 }))).toBe(false);
+    expect(importProgress(JSON.stringify({ version: 2, lessons: {}, bonus: 'lots' }))).toBe(false);
   });
 
   test('rejects an import whose version is right but whose lessons are malformed', () => {

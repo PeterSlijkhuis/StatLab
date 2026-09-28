@@ -26,6 +26,8 @@ export type Progress = {
    * in `src/state/avatar.ts`, which also falls back piece by piece.
    */
   avatar?: AvatarSave;
+  /** Extra points earned outside the lessons. */
+  bonus?: number;
 };
 
 export type AvatarSave = {
@@ -73,6 +75,9 @@ function isProgress(value: unknown): value is Progress {
     if (!isRecord(avatar) || !isRecord(avatar.look) || !Array.isArray(avatar.owned)) return false;
     if (!Object.values(avatar.look).every((id) => typeof id === 'string')) return false;
     if (!avatar.owned.every((id) => typeof id === 'string')) return false;
+  }
+  if (value.bonus !== undefined) {
+    if (typeof value.bonus !== 'number' || !Number.isInteger(value.bonus) || value.bonus < 0) return false;
   }
   return Object.values(value.lessons).every(isLessonProgress);
 }
@@ -226,6 +231,13 @@ export function saveDraft(lessonId: string, blockId: string, code: string): void
 export function saveAvatar(avatar: AvatarSave): void {
   const progress = getProgress();
   progress.avatar = avatar;
+  write(progress);
+}
+
+/** One extra point. Not studying, so the streak is left alone. */
+export function addBonusPoint(): void {
+  const progress = getProgress();
+  progress.bonus = (progress.bonus ?? 0) + 1;
   write(progress);
 }
 

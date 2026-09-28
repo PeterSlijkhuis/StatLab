@@ -1,15 +1,29 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { getProgress } from '../state/progress';
+import { courseStats } from '../state/stats';
 import Credits from './Credits';
 import Sidebar from './Sidebar';
 
 describe('Credits', () => {
   test('names the authors and the source of the materials', () => {
-    render(<Credits />);
-    expect(screen.getByText(
+    const { container } = render(<Credits />);
+    expect(container.querySelector('.credits-authors')?.textContent).toBe(
       'Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson.',
-    )).toBeTruthy();
+    );
+  });
+
+  describe('author names', () => {
+    beforeEach(() => localStorage.clear());
+
+    test('each click on a surname adds a point', () => {
+      render(<Credits />);
+      for (let i = 0; i < 25; i++) fireEvent.click(screen.getByText('Slijkhuis'));
+      fireEvent.click(screen.getByText('Resendez Gomez'));
+      expect(getProgress().bonus).toBe(26);
+      expect(courseStats(getProgress()).points).toBe(26);
+    });
   });
 
   test('links to both partners, each opening in a new tab', () => {
@@ -32,7 +46,7 @@ describe('Credits', () => {
       </MemoryRouter>,
     );
     const nav = screen.getByRole('navigation', { name: 'Course navigation' });
-    expect(within(nav).getByText(/Made by dr\. P\.J\.H\. Slijkhuis/)).toBeTruthy();
+    expect(nav.querySelector('.credits-authors')?.textContent).toMatch(/^Made by dr\. P\.J\.H\. Slijkhuis/);
     expect(within(nav).getByRole('link', { name: 'The BMS Lab' })).toBeTruthy();
   });
 });

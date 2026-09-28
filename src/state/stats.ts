@@ -54,7 +54,7 @@ export function courseStats(progress: Progress): CourseStats {
     lessonsTotal: ALL_LESSONS.length,
     exercisesPassed: passed,
     exercisesTotal: ALL_LESSONS.reduce((sum, lesson) => sum + lesson.exercises.length, 0),
-    points: passed * POINTS.exercise + quizzesRight * POINTS.quiz + lessonsComplete * POINTS.lesson,
+    points: passed * POINTS.exercise + quizzesRight * POINTS.quiz + lessonsComplete * POINTS.lesson + (progress.bonus ?? 0),
     streak: currentStreak(progress),
   };
 }
