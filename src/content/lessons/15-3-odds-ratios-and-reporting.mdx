@@ -102,8 +102,8 @@ exactly the non-linearity the model was chosen for, and the reason a single
 > A logistic regression predicting whether an employee left the company from
 > wellbeing and tenure was a significant improvement on the null model,
 > χ²(2) = 62.83, *p* < .001. Lower wellbeing was associated with higher odds of
-> leaving, *OR* = 0.94, 95 % CI [0.92, 0.96], *z* = −5.02, *p* < .001, as was
-> shorter tenure, *OR* = 0.86, 95 % CI [0.81, 0.92], *z* = −4.54, *p* < .001.
+> leaving, *OR* = 0.94, 95% CI [0.92, 0.96], *z* = −5.02, *p* < .001, as was
+> shorter tenure, *OR* = 0.86, 95% CI [0.81, 0.92], *z* = −4.54, *p* < .001.
 
 <CodeBlock id="c-lrt" code={`anova(glm(left_company ~ 1, data = d, family = binomial), m_left, test = "LRT") %>% tidy()
 
@@ -128,11 +128,11 @@ an odds ratio with no interval is an estimate with no error bar.
 
 <Interpret
   id="i-15-3"
-  question="Your final model gives, for wellbeing, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001, with a likelihood-ratio test of the model against the null of chi-square(2) = 62.83, p < .001, on 480 employees of whom 109 left. Which write-up is correct APA 7?"
+  question="Your final model gives, for wellbeing, OR = 0.94, 95% CI [0.92, 0.96], z = -5.02, p < .001, with a likelihood-ratio test of the model against the null of chi-square(2) = 62.83, p < .001, on 480 employees of whom 109 left. Which write-up is correct APA 7?"
   choices={[
-    { text: 'A logistic regression predicting whether an employee left the company (109 of 480) from wellbeing and tenure improved significantly on the null model, chi-square(2) = 62.83, p < .001. Each additional point of wellbeing was associated with lower odds of leaving, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001.', correct: true, response: 'Correct: the base rate, the model test, the odds ratio with its interval, and "odds" rather than "chance".' },
-    { text: 'Employees with higher wellbeing were 6 % less likely to leave, OR = 0.94, 95 % CI [0.92, 0.96], p < .001.', response: 'It reads the odds ratio as a risk ratio. With 23 % leaving, a 6 % reduction in the odds is not a 6 % reduction in the probability.' },
+    { text: 'A logistic regression predicting whether an employee left the company (109 of 480) from wellbeing and tenure improved significantly on the null model, chi-square(2) = 62.83, p < .001. Each additional point of wellbeing was associated with lower odds of leaving, OR = 0.94, 95% CI [0.92, 0.96], z = -5.02, p < .001.', correct: true, response: 'Correct: the base rate, the model test, the odds ratio with its interval, and "odds" rather than "chance".' },
+    { text: 'Employees with higher wellbeing were 6 % less likely to leave, OR = 0.94, 95% CI [0.92, 0.96], p < .001.', response: 'It reads the odds ratio as a risk ratio. With 23 % leaving, a 6 % reduction in the odds is not a 6 % reduction in the probability.' },
     { text: 'Wellbeing protected employees from leaving, OR = 0.94, p < .001.', response: 'Two problems: "protected" is causal in an observational study, and the confidence interval is missing.' },
-    { text: 'Wellbeing significantly predicted leaving, OR = 0.94, 95 % CI [0.92, 0.96], z = -5.02, p < .001; since the interval excludes 0, the effect is reliable.', response: 'Everything is right except the last clause. An odds ratio is tested against 1, and an interval excluding 0 would be true of every odds ratio ever computed.' },
+    { text: 'Wellbeing significantly predicted leaving, OR = 0.94, 95% CI [0.92, 0.96], z = -5.02, p < .001; since the interval excludes 0, the effect is reliable.', response: 'Everything is right except the last clause. An odds ratio is tested against 1, and an interval excluding 0 would be true of every odds ratio ever computed.' },
   ]}
 />
