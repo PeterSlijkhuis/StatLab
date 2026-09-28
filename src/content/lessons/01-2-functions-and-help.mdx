@@ -19,21 +19,25 @@ seq(from = 1, to = 9, by = 2)`} />
 supply them.
 
 <CodeBlock id="args" code={`args(round)
-args(seq)
-args(mean)`} />
+args(seq.default)
+args(mean.default)`} />
+
+`seq()` and `mean()` hand their work on to a version for each kind of input, so
+`args(seq)` shows only `...`. The `.default` version holds the arguments you will
+actually use.
 
 `round(x, digits = 0)` tells you two things at once: the second argument is
-called `digits`, and if you leave it out R rounds to a whole number. So these
-three calls are the same, and the third is the one to write in a script you will
-re-read:
+called `digits`, and if you leave it out R rounds to a whole number. So the first
+call rounds to a whole number, and the last two are the same. The third is the one
+to write in a script you will re-read:
 
 <CodeBlock id="named" code={`round(3.14159)
 round(3.14159, 2)
 round(3.14159, digits = 2)`} />
 
 Naming an argument also frees you from its position. `seq(to = 9, from = 1, by = 2)`
-works, and `seq(9, 1, 2)` does something quite different — it counts downwards
-and fails, because R matched 9 to `from`.
+works, and `seq(9, 1, 2)` fails: R matches by position, so 9 becomes `from` and
+1 becomes `to`, and it stops with "wrong sign in 'by' argument".
 
 > **In RStudio,** `?round` opens the full help page: every argument, the value
 > returned, and worked examples at the bottom. Here, `args()` gives you the
@@ -83,8 +87,8 @@ length(seq(from = 0, to = 100, by = 10))`} />
 
 Read the first line inside out: average the scores, ignoring the missing one,
 then round to one decimal. It is compact, and once there are four or five
-functions stacked up it becomes unreadable. Module 2 introduces the pipe, which
-is R's answer to exactly that problem.
+functions stacked up it becomes unreadable. The pipe you met in Module 0 is
+R's answer to exactly that problem.
 
 <Exercise id="m1-2-b" />
 

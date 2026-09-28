@@ -52,10 +52,10 @@ column of numbers called `time` and a column of text called `engagement`.
 
 long %>% count(employee_id) %>% head(3)`} />
 
-Each time point has 480 rows, and each employee has 2. The identifier columns —
-`employee_id`, `department` — were simply repeated for each of an employee's
-rows, which is exactly what tells a model in Module 14 that those two rows
-belong to the same person.
+Each time point has 480 rows, and each employee has 2. Columns that do not change
+over time, such as `employee_id` and `department`, were simply repeated for each
+of an employee's rows. It is `employee_id` that tells a model in Module 14 that
+those two rows belong to the same person.
 
 ## Tidy data
 

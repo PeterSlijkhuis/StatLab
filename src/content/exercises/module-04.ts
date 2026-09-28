@@ -235,7 +235,7 @@ export const module04: ExerciseDef[] = [
             } else if (!isTRUE(all.equal(sort(as.vector(pd$y)), sort(d$wellbeing), tolerance = 1e-6, check.attributes = FALSE))) {
               list(pass = FALSE, message = "The variable on y is not wellbeing. The outcome - the thing you think is being affected - goes on y.")
             } else if (length(smooth_i) == 0L) {
-              list(pass = FALSE, message = "There is no fitted line. geom_line() joins the points in the order they appear, which for 480 unordered employees is a scribble; geom_smooth() fits a model and draws that.")
+              list(pass = FALSE, message = "There is no fitted line. geom_line() joins the points from left to right in order of x, which for 480 employees is a zigzag through every point; geom_smooth() fits a model and draws that.")
             } else {
               sd_layer <- ggplot2::layer_data(p, smooth_i[1])
               steps <- diff(as.vector(sd_layer$y))

@@ -75,7 +75,7 @@ summary(survey$score)`} />
 A scale score assumes the items measure one thing. If they do, people who score
 high on one item tend to score high on the others, and the items' variation adds
 up: the total varies much more than the items would if they were unrelated.
-**Cronbach's alpha** turns that into one number between 0 and 1.
+**Cronbach's alpha** turns that into one number, at most 1 and usually between 0 and 1.
 
 <CodeBlock id="c-alpha" code={`items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]
 k <- ncol(items)

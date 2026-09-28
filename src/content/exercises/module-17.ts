@@ -59,7 +59,7 @@ export const module17: ExerciseDef[] = [
         } else if (abs(got - a * b) > 1e-6) {
           list(pass = FALSE, message = paste0("indirect is ", round(got, 3), ", but a times b is ", round(a * b, 3), "."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: a = ", round(a, 2), ", b = ", round(b, 2), ", indirect = ", round(a * b, 2), ". The total effect is ", round(total, 2), " and the direct effect only ", round(direct, 2), ": nearly all of workload's link with performance runs through wellbeing."))
+          list(pass = TRUE, message = paste0("Correct: a = ", round(a, 2), ", b = ", round(b, 2), ", indirect = ", round(a * b, 2), ". The total effect is ", round(total, 2), " and the indirect effect ", round(a * b, 2), " is even larger, because the direct effect, ", round(direct, 2), ", points the other way and is small: workload's link with performance runs through wellbeing."))
         }
       }
     `,
@@ -103,7 +103,7 @@ export const module17: ExerciseDef[] = [
         } else if (!identical(as.character(got$call$rotation), "promax")) {
           list(pass = FALSE, message = "Two factors, good. Let them correlate with rotation = \\"promax\\": pressure and support are unlikely to be unrelated.")
         } else {
-          list(pass = TRUE, message = paste0("Correct. The chi-square test of fit gives p = ", format(round(got$PVAL, 2), nsmall = 2), ", so two factors reproduce the correlations well. Print it with print(efa, cutoff = 0.3) to see which items load where."))
+          list(pass = TRUE, message = paste0("Correct. The chi-square test of fit gives p = ", format(round(got$PVAL, 2), nsmall = 2), ", so there is no evidence that two factors fall short. Print it with print(efa, cutoff = 0.3) to see which items load where."))
         }
       }
     `,

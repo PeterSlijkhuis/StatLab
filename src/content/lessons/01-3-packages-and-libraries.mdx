@@ -17,9 +17,9 @@ will only ever type the second line.
 <CodeBlock id="attach" code={`library(dplyr)`} />
 
 That message about objects being masked is not an error. It is R telling you
-that `dplyr::filter` has taken the name `filter` from a base R function of the
-same name. From now on, `filter()` means dplyr's version — which is the one you
-want.
+that `dplyr::filter` has taken the name `filter` from a function of the same
+name in the stats package, which R attaches at start-up. From now on, `filter()`
+means dplyr's version, which is the one you want.
 
 ## Something to use it on
 
@@ -27,7 +27,7 @@ Let us make a small data frame by hand. A **data frame** is a table: columns of
 equal length, each with a name, each holding one kind of thing.
 
 <CodeBlock id="team" code={`team <- data.frame(
-  name = c("Ada", "Bram", "Chen", "Dana", "Eva", "Finn"),
+  name = c("Ada", "Bram", "Chen", "Dani", "Eva", "Finn"),
   hours = c(32, 41, 38, 29, 35, 44),
   stringsAsFactors = TRUE
 )
@@ -39,14 +39,14 @@ team`} />
   question="You close R, reopen it tomorrow, and type team %>% filter(hours > 35). What happens?"
   choices={[
     { text: 'It works, because dplyr was installed yesterday', response: 'Installing is permanent, but attaching is not. A new session starts with base R only.' },
-    { text: 'R cannot find filter or the pipe, until you attach dplyr again', correct: true, response: 'Right. library(dplyr) belongs at the top of every script, which is why every script you will ever read starts with a block of library() calls.' },
+    { text: 'R cannot find the pipe, and filter() is not dplyr\'s, until you attach dplyr again', correct: true, response: 'Right. library(dplyr) belongs at the top of every script, which is why every script you will ever read starts with a block of library() calls.' },
     { text: 'You have to install dplyr again first', response: 'The package is still on the machine. It simply is not attached to this session yet.' },
   ]}
 />
 
 ## The pipe
 
-dplyr brings a piece of punctuation with it: `%>%`, the **pipe**. It takes what
+dplyr brings the pipe you met in Module 0: `%>%`, the **pipe**. It takes what
 is on its left and hands it to the function on its right as the first argument.
 
 <CodeBlock id="pipe" code={`team %>% filter(hours > 35)
@@ -68,7 +68,8 @@ dplyr verb already knows which table it is working inside.
 `dplyr` belongs to a family of packages that share a design: `ggplot2` for
 figures, `tidyr` for reshaping, `broom` for reading model output. Together they
 are called the **tidyverse**, and there is a meta-package that attaches the
-whole family in one line:
+core of the family in one line (broom is not in the core, so it still needs its
+own `library()`):
 
     library(tidyverse)
 

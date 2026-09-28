@@ -20,7 +20,7 @@ error would produce".
   id="p-coef"
   question="You are about to fit lm(wellbeing ~ remote). The model will have an intercept and one coefficient. What will the intercept be?"
   choices={[
-    { text: 'The mean of all 480 employees', response: 'That would be true with sum-to-zero coding, which Module 13 uses. R\'s default is different.' },
+    { text: 'The mean of all 480 employees', response: 'Not with R\'s default coding. Even with the sum-to-zero coding of Module 13 the intercept would be the average of the two group means, which is not the mean of all 480 employees because the groups differ in size.' },
     { text: 'The mean of the office-based employees, because No is the first level', correct: true, response: 'Exactly. The intercept is the reference group\'s mean, and the coefficient is how far the other group sits from it.' },
     { text: 'Zero, because remote is not a number', response: 'R turns the factor into a 0/1 column for you. The intercept is the prediction when that column is 0.' },
     { text: 'The difference between the two means', response: 'That is the coefficient, not the intercept.' },

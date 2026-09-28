@@ -178,7 +178,7 @@ export default function PValue() {
           : `p is not below α = ${alpha}, so you would not reject the null hypothesis.`}
       </p>
       <p className="pvalue-caveat" data-testid="caveat">
-        p is how often chance alone produces a difference this big when nothing is going on. It is
+        p is how often chance alone produces a difference at least this big when nothing is going on. It is
         not the probability that the null hypothesis is true, and it is not the size of the effect.
       </p>
     </div>

@@ -53,8 +53,10 @@ opens it; an absolute path breaks the moment the project moves.
 
 file.exists("data/workplace.cvs")`} />
 
-R matches file names exactly. On many computers it matches capital letters too,
-so `"Data/Workplace.csv"` is not the same file either. When R says it cannot find
+R asks for the file exactly as you typed it. StatLab and Linux treat capital
+letters as different, so `"Data/Workplace.csv"` is not the same file either;
+Windows and macOS usually ignore case, which is how a script that works on a
+laptop can fail elsewhere. When R says it cannot find
 a file, compare your path letter by letter with what `list.files()` shows.
 
 ## Building a path

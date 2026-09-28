@@ -47,7 +47,7 @@ Three things are worth stating precisely, because students routinely mix them up
 For roughly symmetric populations, n around 15 is plenty. For strongly skewed
 ones like this, n of 40 or so is a common rule of thumb.
 
-Use the simulation to test that claim yourself: choose **Two peaks**, set n to 2,
+Use the simulation to test the theorem yourself: choose **Two peaks**, set n to 2,
 and then raise it. The population never becomes normal. The sampling
 distribution does.
 
@@ -66,8 +66,8 @@ claim that, from a single sample, without ever repeating the study.
   id="i-6-3"
   question="A colleague writes: 'Our reaction-time data are heavily skewed, so we cannot use a t-test.' With n = 120 per group, how should you respond?"
   choices={[
-    { text: 'They are right — skewed data rule out a t-test.', response: 'The t-test assumes the sampling distribution of the mean is approximately normal, not that the raw data are. Those are different claims.' },
-    { text: 'The t-test (or the equivalent linear model) assumes the sampling distribution of the mean is approximately normal. With n = 120 per group, the Central Limit Theorem makes that reasonable despite the skew.', correct: true, response: 'Exactly right, and precisely stated. Skew in the raw data matters most at small n; at 120 per group it is rarely disqualifying.' },
+    { text: 'They are right — skewed data rule out a t-test.', response: 'What the p-value relies on is an approximately normal sampling distribution of the mean, not normal raw data. Those are different claims.' },
+    { text: 'The t-test (or the equivalent linear model) formally assumes normal residuals, but what the p-value relies on is an approximately normal sampling distribution of the mean. With n = 120 per group, the Central Limit Theorem makes that reasonable despite the skew.', correct: true, response: 'Exactly right, and precisely stated. Skew in the raw data matters most at small n; at 120 per group it is rarely disqualifying.' },
     { text: 'They should transform the data first, because normality of the raw scores is required.', response: 'A transformation is sometimes useful for other reasons, but normality of raw scores is not what the test requires.' },
     { text: 'It does not matter, because t-tests make no assumptions.', response: 'They certainly make assumptions — about the sampling distribution, about independence, and about variances. The point is which assumption applies here.' },
   ]}

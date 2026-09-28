@@ -105,7 +105,7 @@ exactly the non-linearity the model was chosen for, and the reason a single
 > leaving, *OR* = 0.94, 95 % CI [0.92, 0.96], *z* = −5.02, *p* < .001, as was
 > shorter tenure, *OR* = 0.86, 95 % CI [0.81, 0.92], *z* = −4.54, *p* < .001.
 
-<CodeBlock id="c-lrt" code={`anova(m_left, test = "LRT") %>% tidy()
+<CodeBlock id="c-lrt" code={`anova(glm(left_company ~ 1, data = d, family = binomial), m_left, test = "LRT") %>% tidy()
 
 m_left %>% glance() %>% select(null.deviance, df.null, deviance, df.residual, AIC)`} />
 

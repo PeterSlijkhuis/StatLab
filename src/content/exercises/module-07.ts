@@ -280,7 +280,7 @@ export const module07: ExerciseDef[] = [
           } else if (!same(tbl$ci, want_ci)) {
             list(pass = FALSE, message = "The ci column should be the half-width of the 95 per cent interval: qt(0.975, df = n - 1) * se.")
           } else {
-            list(pass = TRUE, message = paste0("Correct. The SD bars would be about ", round(mean(want_sd), 1), " points long, the SE bars about ", round(mean(want_se), 1), ", and the CI bars about ", round(mean(want_ci), 1), " - three honest figures from one table, which is why a caption must say which one it is."))
+            list(pass = TRUE, message = paste0("Correct. The SD bars would reach about ", round(mean(want_sd), 1), " points either side of the mean, the SE bars about ", round(mean(want_se), 1), ", and the CI bars about ", round(mean(want_ci), 1), " - three honest figures from one table, which is why a caption must say which one it is."))
           }
         }
       }

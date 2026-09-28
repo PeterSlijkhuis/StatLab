@@ -20,10 +20,11 @@ summary_table`} />
 
 Three columns, three lengths, one dataset:
 
-- **`sd_exam`** — how much students differ from each other. About 12 points.
-- **`se`** — how much the group mean would differ from study to study. About
-  1.6 points, because it is the SD divided by √60.
-- **`ci`** — the half-width of the 95 per cent interval: the standard error
+- **`sd_exam`**: how much students differ from each other. About 10 to 12 points.
+- **`se`**: how much the group mean would differ from study to study. About
+  1.3 to 1.6 points, because it is the SD divided by the square root of the
+  group size (about 60).
+- **`ci`**: the half-width of the 95 per cent interval: the standard error
   times `qt(0.975, df = n - 1)`, so a shade over twice the SE.
 
 <Predict
@@ -64,8 +65,8 @@ a bar.
 - **SE bars** when the figure is about the *precision of the means*. Widely used
   and widely misread, because a reader who assumes CIs will read a 68 per cent
   bar as a 95 per cent one and see differences that are not there.
-- **CI bars** when the figure is meant to support an inference. This is the
-  default for an APA figure, and it is the one to prefer unless you have a
+- **CI bars** when the figure is meant to support an inference. This is what
+  current reporting guidance favours, and it is the one to prefer unless you have a
   reason not to.
 
 Whichever you pick, **the caption must say so**. "Error bars show 95% CIs" is
@@ -98,6 +99,6 @@ for a *difference* is a different interval, and Module 8 computes it.
     { text: 'Mean exam score by programme. Error bars show 95% confidence intervals. Psychology, M = 76.0, 95% CI [72.7, 79.3]; Business, M = 73.0, 95% CI [70.5, 75.5].', correct: true, response: 'Correct. It names what the bars are and reports both means with their intervals, which is what APA asks for and what lets a reader check the figure against the text.' },
     { text: 'Mean exam score by programme. The intervals overlap, so the two programmes do not differ.', response: 'Overlapping 95% intervals do not establish the absence of a difference. The question is about the interval for the DIFFERENCE, which is not drawn here.' },
     { text: 'Mean exam score by programme. Error bars show the range within which 95% of students in each programme scored.', response: 'That would be built from the SD and would span roughly 50 to 98. These bars are built from the standard error and describe the means.' },
-    { text: 'Mean exam score by programme, with standard error bars.', response: 'The bars shown are about twice the standard error, because they are CI bars. Labelling them SE would understate the uncertainty by half.' },
+    { text: 'Mean exam score by programme, with standard error bars.', response: 'The bars shown are about twice the standard error, because they are CI bars. Labelling them SE would lead a reader to double them for a 95% interval, overstating the uncertainty about twofold.' },
   ]}
 />

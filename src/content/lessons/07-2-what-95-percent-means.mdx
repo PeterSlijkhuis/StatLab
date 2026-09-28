@@ -41,7 +41,9 @@ intervals$captured <- intervals$lower <= mu & intervals$upper >= mu
 
 sum(intervals$captured)`} />
 
-Around 95 of the hundred contain μ. Around five do not. Now look at them.
+With this seed, 90 of the hundred contain μ and 10 do not. That is more misses
+than the five you would expect, which is itself sampling variation; over many
+runs the capture rate settles at 95 per cent. Now look at them.
 
 <CodeBlock id="plot" code={`library(ggplot2)
 
@@ -55,11 +57,11 @@ intervals %>%
 Every one of those intervals was computed correctly, by the same method, from an
 honest random sample. The widths differ because each study has its own
 standard error: `sd(s) / sqrt(40)` is computed from that study's forty people
-and comes out a little different every time. But the five that miss are not the wide ones
-and they are not mistakes. They are the five per cent, and there is nothing
-about them — no warning sign, no unusual width, no flag — that distinguishes
-them from the other ninety-five. A researcher holding one of those five has no
-way to know.
+and comes out a little different every time. But the ones that miss are not the wide ones
+and they are not mistakes. They are the misses a 95 per cent procedure is bound
+to produce, and there is nothing about them (no warning sign, no unusual width,
+no flag) that distinguishes them from the hits. A researcher holding one of
+those misses has no way to know.
 
 That is the whole point. **The 95 per cent lives in the procedure, not in the
 interval.** Run the method forever and 95 per cent of the intervals it produces
@@ -69,7 +71,7 @@ does or does not.
 ## See it run
 
 Draw a hundred intervals and watch the misses appear. Draw another hundred and
-watch a different five miss.
+watch different ones miss.
 
 <Simulation name="ci" />
 

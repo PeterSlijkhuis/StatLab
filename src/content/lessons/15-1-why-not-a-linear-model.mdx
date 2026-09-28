@@ -52,9 +52,11 @@ c(
   labs(x = "Wellbeing", y = "Left the company (0/1)", title = "A straight line through a yes/no outcome") +
   theme_classic()`} />
 
-The line leaves the strip between the dashed lines. Every prediction outside it
-is a probability that cannot exist, and it happens exactly where the data are
-most informative — at the two extremes of wellbeing.
+The line leaves the strip between the dashed lines at the high end of wellbeing,
+where it predicts negative probabilities for 3 employees. Every prediction
+outside the strip is a probability that cannot exist. Here the line never rises
+above 1, but with a steeper slope or a more common outcome it would cross the top
+line as well.
 
 There is a second problem, less visible and just as fatal. A linear model assumes
 the residuals have the same spread everywhere. With a 0/1 outcome the residual
@@ -101,7 +103,7 @@ fits it.
   question="A colleague fits lm(left_company ~ wellbeing) and reports b = -0.011, SE = 0.002, t(478) = -6.07, p < .001, concluding that each extra point of wellbeing reduces the probability of leaving by 1.1 percentage points. What should you say?"
   choices={[
     { text: 'The conclusion is fine; a linear probability model is a standard approach.', response: 'It is used in some fields, but not without the caveats - and none of them appears here.' },
-    { text: 'The direction is right and the model is the wrong shape: it predicts probabilities outside 0 to 1 at the extremes of wellbeing, and its standard errors assume a constant residual spread that a 0/1 outcome cannot have. Refit with glm(..., family = binomial).', correct: true, response: 'Correct: the finding survives, the model and its inference do not.' },
+    { text: 'The direction is right and the model is the wrong shape: it predicts probabilities below 0 at the high end of wellbeing, and its standard errors assume a constant residual spread that a 0/1 outcome cannot have. Refit with glm(..., family = binomial).', correct: true, response: 'Correct: the finding survives, the model and its inference do not.' },
     { text: 'The effect is too small to be worth reporting.', response: 'Just over a percentage point per point of wellbeing, across a scale tens of points wide, is a substantial effect. Size is not the issue.' },
     { text: 'They should report the odds ratio instead, exp(-0.011) = 0.989.', response: 'Exponentiating a linear-model slope produces a number with no interpretation. The odds ratio has to come from a logistic model.' },
   ]}

@@ -204,7 +204,7 @@ export const module16: ExerciseDef[] = [
         } else if (abs(p - exact) >= 0.015) {
           list(pass = FALSE, message = paste0("prob_remote_lower is ", round(p, 3), ", but it should come out close to ", round(exact, 2), ". Draw each group's rates from Beta(1 + leavers, 1 + stayers)."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: about ", round(exact, 2), ". Given these data, it is very probable that remote workers leave less often. Compare that with lesson 11: a p-value would only have said whether a difference of zero is ruled out."))
+          list(pass = TRUE, message = paste0("Correct: about ", round(exact, 2), ". Given these data, it is very probable that remote workers leave less often. Compare that with Module 9: a p-value would only have said whether a difference of zero is ruled out."))
         }
       }
     `,

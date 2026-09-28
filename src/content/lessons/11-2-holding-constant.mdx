@@ -33,7 +33,7 @@ was subtracted out on paper.
   choices={[
     { text: 'Cutting the workload of an employee by one point would raise their wellbeing by about 3.6 points', response: 'That is a claim about an intervention. This design observed employees; it never changed the workload of anyone.' },
     { text: 'Among employees with the same autonomy and tenure, one point more workload goes with about 3.6 points less wellbeing', correct: true, response: 'Exactly - a comparison between people, in the data as collected.' },
-    { text: 'Workload is three times as important as autonomy', response: 'The two are on the same 1-10 scale here, so the sizes are comparable, but "three times as important" is not what a ratio of slopes measures.' },
+    { text: 'Workload is three times as important as autonomy', response: 'Both are rated on 1-10 scales, but workload varies less than autonomy (SD 1.35 against 2.20), so one point means something different on each, and "three times as important" is not what a ratio of slopes measures.' },
   ]}
 />
 
@@ -127,7 +127,7 @@ situation.
 
 <Quiz
   id="q-controlling"
-  question="You are studying whether autonomy predicts performance, and you add engagement_t2 to the model as a control. Engagement is plausibly one of the ways autonomy improves performance. What have you done?"
+  question="You are studying whether autonomy predicts performance, and you add a measure of engagement to the model as a control. Suppose engagement is one of the ways autonomy improves performance. What have you done?"
   choices={[
     { text: 'Improved the model by removing a confounder', response: 'A confounder causes both the predictor and the outcome. Engagement here is caused by the predictor, which is a different animal.' },
     { text: 'Removed part of the effect you were trying to measure, because you adjusted for a variable on the causal path', correct: true, response: 'Correct. Adjusting for a mediator answers "the effect of autonomy other than through engagement", which is rarely the question asked.' },

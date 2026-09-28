@@ -4,7 +4,7 @@ export const module10: ExerciseDef[] = [
   {
     id: 'm10-1-a',
     prompt:
-      'Two questions in one. How strongly does autonomy go with wellbeing, and how strongly does workload? Store the Pearson correlation between autonomy and wellbeing in r_autonomy, and between workload and wellbeing in r_workload. Look at the summary table first: you should be able to say which of the two will be negative before you compute either.',
+      'Two questions in one. How strongly does autonomy go with wellbeing, and how strongly does workload? Store the Pearson correlation between autonomy and wellbeing in r_autonomy, and between workload and wellbeing in r_workload. Before you compute, say which of the two you expect to be negative, from what autonomy and workload are (the scatterplots above show it too).',
     starterCode:
       'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# Never correlate what you have not looked at.\nd %>% summarise(\n  mean_autonomy = mean(autonomy), mean_workload = mean(workload),\n  mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing)\n)\n\nr_autonomy <- \nr_workload <- ',
     solution:
