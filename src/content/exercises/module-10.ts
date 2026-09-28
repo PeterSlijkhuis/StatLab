@@ -309,4 +309,59 @@ export const module10: ExerciseDef[] = [
       'Fit the model with lm(wellbeing ~ workload, data = d) - wellbeing is the outcome, so it goes first.',
     ],
   },
+  {
+    id: 'm10-4-a',
+    prompt:
+      'Does performance rise with autonomy, judged only by the order of the scores? Store Spearman\'s rho between autonomy and performance in rho, and Kendall\'s tau for the same pair in tau.',
+    starterCode:
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nd %>% summarise(median_autonomy = median(autonomy), median_performance = median(performance))\n\n# cor() takes a method argument.\nrho <- \ntau <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor(d$autonomy, d$performance, method = "spearman")\ntau <- cor(d$autonomy, d$performance, method = "kendall")',
+    wrongAnswers: [
+      // No method: both are Pearson's r.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor(d$autonomy, d$performance)\ntau <- cor(d$autonomy, d$performance)',
+      // The two methods swapped.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor(d$autonomy, d$performance, method = "kendall")\ntau <- cor(d$autonomy, d$performance, method = "spearman")',
+      // Only one variable ranked, which is neither coefficient.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor(rank(d$autonomy), d$performance)\ntau <- cor(d$autonomy, d$performance, method = "kendall")',
+    ],
+    alternateSolutions: [
+      // Spearman is Pearson on the ranks.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor(rank(d$autonomy), rank(d$performance))\ntau <- cor(d$autonomy, d$performance, method = "kendall")',
+      // The estimates from cor.test(), which come back named.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nrho <- cor.test(d$autonomy, d$performance, method = "spearman", exact = FALSE)$estimate\ntau <- cor.test(d$autonomy, d$performance, method = "kendall", exact = FALSE)$estimate',
+    ],
+    check: `
+      if (!has_answer("rho") || !has_answer("tau")) {
+        list(pass = FALSE, message = "I need both rho and tau.")
+      } else {
+        rho <- as.vector(answer("rho"))
+        tau <- as.vector(answer("tau"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        exp_rho <- cor(d$autonomy, d$performance, method = "spearman")
+        exp_tau <- cor(d$autonomy, d$performance, method = "kendall")
+        pearson <- cor(d$autonomy, d$performance)
+        if (!is.numeric(rho) || length(rho) != 1L || !is.numeric(tau) || length(tau) != 1L) {
+          list(pass = FALSE, message = "Each answer should be a single number.")
+        } else if (isTRUE(all.equal(rho, pearson, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("rho is ", round(pearson, 3), ", which is Pearson's r: cor() uses Pearson unless you pass method = \\"spearman\\"."))
+        } else if (isTRUE(all.equal(rho, exp_tau, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "rho holds Kendall's tau. The two methods are swapped: spearman gives rho, kendall gives tau.")
+        } else if (!isTRUE(all.equal(rho, exp_rho, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("rho is ", round(rho, 3), ", but Spearman's rho is ", round(exp_rho, 3), ". If you ranked by hand, rank both variables."))
+        } else if (isTRUE(all.equal(tau, pearson, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "tau is Pearson's r. Pass method = \\"kendall\\".")
+        } else if (!isTRUE(all.equal(tau, exp_tau, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("tau is ", round(tau, 3), ", but Kendall's tau is ", round(exp_tau, 3), "."))
+        } else {
+          list(pass = TRUE, message = paste0("rho = ", round(exp_rho, 3), " and tau = ", round(exp_tau, 3), ", against Pearson's r = ", round(pearson, 3), ". All three agree on the direction; tau is smaller because it counts pairs rather than correlating ranks."))
+        }
+      }
+    `,
+    hints: [
+      'cor(x, y, method = "spearman") gives Spearman\'s rho.',
+      'method = "kendall" gives Kendall\'s tau.',
+      'Or rank both variables yourself: cor(rank(d$autonomy), rank(d$performance)).',
+    ],
+  },
 ];

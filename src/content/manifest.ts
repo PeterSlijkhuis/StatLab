@@ -329,6 +329,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         file: '10-3-reading-model-output',
         exercises: ['m10-3-a', 'm10-3-b'],
       },
+      {
+        id: '10-4',
+        title: 'Rank correlations',
+        file: '10-4-rank-correlations',
+        exercises: ['m10-4-a'],
+      },
     ],
   },
   {
@@ -386,6 +392,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         exercises: ['m12-3-a'],
         packages: ['emmeans'],
       },
+      {
+        id: '12-4',
+        title: 'Comparing groups on ranks',
+        file: '12-4-kruskal-wallis',
+        exercises: ['m12-4-a'],
+      },
     ],
   },
   {
@@ -439,12 +451,25 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         exercises: ['m14-3-a'],
         packages: ['lme4', 'lmerTest'],
       },
+      {
+        id: '14-4',
+        title: 'Change over time',
+        file: '14-4-change-over-time',
+        exercises: ['m14-4-a'],
+        packages: ['lme4', 'lmerTest'],
+      },
+      {
+        id: '14-5',
+        title: 'Rank tests for repeated measures',
+        file: '14-5-rank-tests-repeated',
+        exercises: ['m14-5-a'],
+      },
     ],
   },
   {
     id: 'module-15',
     number: 15,
-    title: 'Binary outcomes',
+    title: 'Binary and count outcomes',
     lessons: [
       {
         id: '15-1',
@@ -463,6 +488,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Odds ratios, and reporting',
         file: '15-3-odds-ratios-and-reporting',
         exercises: ['m15-3-a'],
+      },
+      {
+        id: '15-4',
+        title: 'Counts and Poisson regression',
+        file: '15-4-poisson-regression',
+        exercises: ['m15-4-a'],
       },
     ],
   },

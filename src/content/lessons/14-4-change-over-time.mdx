@@ -1,0 +1,138 @@
+Lesson 14-3 asked one question about change: did engagement go up? Real designs
+ask a sharper one. Did it go up **more for the people who got the training**? And
+what if there are three measurements, a pre, a mid and a post, instead of two?
+Both are the same linear mixed model with one more term.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+library(lmerTest)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+long_d <- d %>%
+  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%
+  mutate(time = factor(time,
+                       levels = c("engagement_t1", "engagement_t2"),
+                       labels = c("t1", "t2")))
+
+long_d %>%
+  group_by(training, time) %>%
+  summarise(mean_engagement = mean(engagement), n = n(), .groups = "drop")`} />
+
+Four means. Both groups rise, the trained group more. It also starts a little
+higher, which is why comparing only the second measurement would overstate what
+the training did.
+
+## A group by time interaction
+
+Time varies **within** employees and training varies **between** them. A design
+with both is often called a mixed design, or a split-plot design. The question
+"did the change differ between groups?" is an interaction, exactly as in Module 13.
+
+<CodeBlock id="c-mixed" code={`m_mixed <- lmer(engagement ~ time * training + (1 | employee_id), data = long_d)
+
+coef(summary(m_mixed))`} />
+
+Read the four fixed effects as in Module 13:
+
+- **`(Intercept)`**: the untrained group at t1.
+- **`timet2`**: the change for the untrained group.
+- **`trainingYes`**: how far the trained group sat above the untrained at t1.
+- **`timet2:trainingYes`**: how much **more** the trained group changed. This is
+  the answer to the research question.
+
+## The same answer from change scores
+
+With two time points and nobody missing, the interaction is simply a difference
+between the two groups' average change.
+
+<CodeBlock id="c-change" code={`d <- d %>% mutate(change = engagement_t2 - engagement_t1)
+
+d %>%
+  group_by(training) %>%
+  summarise(mean_change = mean(change))
+
+coef(summary(lm(change ~ training, data = d)))`} />
+
+The `trainingYes` slope on the change scores is the interaction above, with the
+same *t*. Just as the paired *t*-test was a special case of the mixed model in
+Lesson 14-3, this comparison of change scores is a special case of this one.
+
+<Predict
+  id="p-baseline"
+  question="The trained group started 1.78 points higher at t1. Does that difference bias the interaction?"
+  choices={[
+    { text: 'Yes: the interaction includes the head start', response: 'The head start is in trainingYes. The interaction compares the changes, and each employee\'s change is measured against their own t1.' },
+    { text: 'No: the interaction compares changes, and each change is measured from that employee\'s own starting point', correct: true, response: 'Right. That is the advantage of measuring before and after, rather than only after.' },
+    { text: 'It cannot be known without randomisation', response: 'Randomisation matters for a causal reading, but the arithmetic of the interaction already removes each employee\'s starting level.' },
+  ]}
+/>
+
+<Exercise id="m14-4-a" />
+
+## Three waves: pre, mid, post
+
+The workplace data has two measurements. For three, here is a small simulated
+study: 60 employees rate their stress before a programme, halfway through, and
+after it.
+
+<CodeBlock id="c-waves" code={`set.seed(114)
+n <- 60
+id <- factor(1:n)
+base <- rnorm(n, 30, 6)
+wide <- data.frame(
+  id,
+  pre = round(base + rnorm(n, 0, 3), 1),
+  mid = round(base - 3 + rnorm(n, 0, 3), 1),
+  post = round(base - 5 + rnorm(n, 0, 3), 1)
+)
+
+waves <- wide %>%
+  pivot_longer(cols = c(pre, mid, post), names_to = "wave", values_to = "stress") %>%
+  mutate(wave = factor(wave, levels = c("pre", "mid", "post")))
+
+waves %>%
+  group_by(wave) %>%
+  summarise(mean_stress = mean(stress), sd_stress = sd(stress))`} />
+
+There are two ways to put time into the model, and they answer different
+questions.
+
+<CodeBlock id="c-factor" code={`m_waves <- lmer(stress ~ wave + (1 | id), data = waves)
+coef(summary(m_waves))
+anova(m_waves)`} />
+
+**Time as a factor** gives each wave its own mean: two dummy variables, compared
+with the pre measurement. The *F* test asks whether the three means differ at all.
+
+<CodeBlock id="c-linear" code={`waves <- waves %>% mutate(wave_number = as.numeric(wave) - 1)
+
+m_linear <- lmer(stress ~ wave_number + (1 | id), data = waves)
+coef(summary(m_linear))`} />
+
+**Time as a number** (0, 1, 2) fits one straight line: a single slope, the average
+change per wave. Here it is about −2.35 points of stress per wave. It uses one
+degree of freedom instead of two, which buys power when the change really is
+steady, and it misleads when the change is not, for instance when everything
+happens between pre and mid.
+
+<Quiz
+  id="q-waves"
+  question="The mid and post coefficients of the factor model are -2.44 and -4.70. Is a straight line a fair summary?"
+  choices={[
+    { text: 'Yes: the drop from pre to mid is about the same as from mid to post, so one slope of about -2.35 per wave loses little', correct: true, response: 'Right. -2.44 and -2.26 are steps of nearly equal size.' },
+    { text: 'No: a straight line can never describe three means', response: 'It can, when the steps are equal. Only look at the steps.' },
+    { text: 'Only if the p value of the slope is below .05', response: 'Significance says whether there is a slope, not whether a line is the right shape.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-4"
+  question="For the training by time interaction, the model gives b = 2.29, SE = 0.31, t(478) = 7.41, p < .001. Which write-up is correct APA 7?"
+  choices={[
+    { text: 'A linear mixed model with a random intercept per employee showed that engagement rose more for employees who received training than for those who did not, b = 2.29, SE = 0.31, t(478) = 7.41, p < .001: an average rise of 2.87 points against 0.58.', correct: true, response: 'Correct. The model, the interaction and both groups\' change are there, so a reader sees what "more" means.' },
+    { text: 'Training raised engagement by 2.29 points, b = 2.29, p < .001.', response: 'The SE and t are missing, and nothing says training was randomised, so "raised" claims more than the design shows.' },
+    { text: 'Trained employees had higher engagement at t2, b = 2.29, SE = 0.31, t(478) = 7.41, p < .001.', response: 'The interaction is about the difference in change, not the difference at t2, which would include the head start at t1.' },
+    { text: 'Both groups improved significantly, b = 2.29, SE = 0.31, t(478) = 7.41, p < .001.', response: 'This interaction tests whether the improvements differ, not whether each one is above zero.' },
+  ]}
+/>

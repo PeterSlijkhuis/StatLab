@@ -95,9 +95,9 @@ function allEqualCalls(check: string): string[] {
 describe('Module 10', () => {
   const module10 = ALL_EXERCISES.filter((exercise) => exercise.id.startsWith('m10-'));
 
-  test('defines all five exercises', () => {
+  test('defines all six exercises', () => {
     expect(module10.map((exercise) => exercise.id)).toEqual([
-      'm10-1-a', 'm10-2-a', 'm10-2-b', 'm10-3-a', 'm10-3-b',
+      'm10-1-a', 'm10-2-a', 'm10-2-b', 'm10-3-a', 'm10-3-b', 'm10-4-a',
     ]);
   });
 
@@ -161,9 +161,9 @@ describe('Module 11', () => {
 describe('Module 12', () => {
   const module12 = ALL_EXERCISES.filter((exercise) => exercise.id.startsWith('m12-'));
 
-  test('defines all five exercises', () => {
+  test('defines all six exercises', () => {
     expect(module12.map((exercise) => exercise.id)).toEqual([
-      'm12-1-a', 'm12-1-b', 'm12-2-a', 'm12-2-b', 'm12-3-a',
+      'm12-1-a', 'm12-1-b', 'm12-2-a', 'm12-2-b', 'm12-3-a', 'm12-4-a',
     ]);
   });
 
@@ -230,9 +230,9 @@ describe('Module 13', () => {
 describe('Module 14', () => {
   const module14 = ALL_EXERCISES.filter((exercise) => exercise.id.startsWith('m14-'));
 
-  test('defines all four exercises', () => {
+  test('defines all six exercises', () => {
     expect(module14.map((exercise) => exercise.id)).toEqual([
-      'm14-1-a', 'm14-2-a', 'm14-2-b', 'm14-3-a',
+      'm14-1-a', 'm14-2-a', 'm14-2-b', 'm14-3-a', 'm14-4-a', 'm14-5-a',
     ]);
   });
 
@@ -272,9 +272,9 @@ describe('Module 14', () => {
 describe('Module 15', () => {
   const module15 = ALL_EXERCISES.filter((exercise) => exercise.id.startsWith('m15-'));
 
-  test('defines all four exercises', () => {
+  test('defines all five exercises', () => {
     expect(module15.map((exercise) => exercise.id)).toEqual([
-      'm15-1-a', 'm15-2-a', 'm15-2-b', 'm15-3-a',
+      'm15-1-a', 'm15-2-a', 'm15-2-b', 'm15-3-a', 'm15-4-a',
     ]);
   });
 

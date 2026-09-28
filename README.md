@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/statlab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 59 lessons, 84 exercises, 0 installs." width="100%"></a>
+  <a href="https://peterslijkhuis.github.io/statlab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 64 lessons, 89 exercises, 0 installs." width="100%"></a>
 </p>
 
 <p align="center">
@@ -43,7 +43,7 @@
     </td>
     <td width="33%" valign="top">
       <h3>✅ Answers checked by R</h3>
-      84 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
+      89 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
     </td>
     <td width="33%" valign="top">
       <h3>🧑‍🔬 An avatar that coaches</h3>
@@ -137,7 +137,7 @@ live in the browser, and export to a file that imports on any other computer.
 
 ## The course
 
-**18 modules · 59 lessons · 84 checked exercises · 6 interactive simulations.**
+**18 modules · 64 lessons · 89 checked exercises · 6 interactive simulations.**
 From "what is a file path?" to mixed models, logistic regression, mediation and
 Bayes. Statistics is taught the way the course team's own R workshops teach it:
 in tidyverse style and through the linear model. `lm`, `lmer` and `glm` do the
@@ -159,12 +159,12 @@ their traditional names.
 | 8 | Hypothesis testing | Null distributions, p-values, Type I and II errors, power, effect sizes and sample-size planning | p-values and power |
 | 9 | Counts and proportions | One proportion, contingency tables, the chi-square test, Cramér's V, Fisher's exact test | |
 | **The linear model** | | | |
-| 10 | Correlation and simple regression | `lm(y ~ x)`, reading model output with `tidy()` and `glance()` | Correlation, least squares |
-| 11 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F, checking residuals and influential cases | |
-| 12 | Categorical predictors | The t-test as `lm`, dummy coding, `emmeans` pairwise comparisons | |
+| 10 | Correlation and simple regression | `lm(y ~ x)`, reading model output with `tidy()` and `glance()`, Spearman and Kendall rank correlations | Correlation, least squares |
+| 11 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F, checking residuals and influential cases, Simpson's paradox | |
+| 12 | Categorical predictors | The t-test as `lm`, dummy coding, `emmeans` pairwise comparisons, the Kruskal-Wallis test | |
 | 13 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
-| 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test | |
-| 15 | Binary outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting | |
+| 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test, group by time designs, pre, mid and post, Wilcoxon and Friedman tests | |
+| 15 | Binary and count outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting, Poisson regression for counts | |
 | **Advanced** | | | |
 | 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
 | 17 | Mediation, factors and reports | Indirect effects with bootstrap intervals, exploratory factor analysis, reproducible reports with Quarto | |
@@ -202,6 +202,9 @@ linear-model part has a real effect to find.
 
 StatLab was made by **dr. P.J.H. Slijkhuis** and **dr. V.d.C. Resendez Gomez**,
 based on materials provided by **dr. S.J. Watson**.
+Theory, terminology and topic order follow
+[*Analysing Data Using Linear Models*](https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf) by Stéphanie M. van den Berg
+(5th edition, University of Twente, 2021).
 
 <p>
   <a href="https://www.utwente.nl/en/"><img src="src/assets/logos/utwente.png" alt="University of Twente" height="56"></a>

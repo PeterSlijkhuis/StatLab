@@ -1,0 +1,86 @@
+The linear model compares group **means**. When the scores in a group are skewed,
+or a few extreme scores drag a mean away from where most people are, you can
+compare the groups on **ranks** instead. With two groups that is the Mann-Whitney
+test (`wilcox.test()`); with three or more it is the Kruskal-Wallis test.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>%
+  group_by(department) %>%
+  summarise(n = n(), mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing))`} />
+
+In Lesson 12-2 you saw Engineering's mean sit below its median: a tail of low
+scores pulls the mean down. A rank test is not bothered by how far down that tail
+reaches, only by where each employee falls in the overall order.
+
+## Ranks, then an ordinary comparison
+
+Rank all 480 wellbeing scores together, from 1 (lowest) to 480 (highest), then look
+at the average rank in each department.
+
+<CodeBlock id="c-ranks" code={`d <- d %>% mutate(wellbeing_rank = rank(wellbeing))
+
+d %>%
+  group_by(department) %>%
+  summarise(mean_rank = mean(wellbeing_rank))`} />
+
+If department made no difference, every department's mean rank would be near the
+middle, about 240. Support sits far below the others. The Kruskal-Wallis statistic
+*H* measures how far the mean ranks spread around that middle, and under the null
+hypothesis it follows a chi-square distribution with *k* − 1 degrees of freedom,
+where *k* is the number of groups.
+
+<CodeBlock id="c-kw" code={`kruskal.test(wellbeing ~ department, data = d)`} />
+
+The formula is the same one you would give `lm()`. What changes is the question:
+not "do the means differ?" but "do the groups tend to sit at different places in
+the order?"
+
+<Predict
+  id="p-kw-vs-lm"
+  question="The linear model on the same data gives F(3, 476) = 4.86, p = .002. Kruskal-Wallis gives a smaller p value. What does that tell you?"
+  choices={[
+    { text: 'The rank test is always more powerful, so it should always be used', response: 'Not always. With roughly normal data the linear model is slightly more powerful. Here the skew favours ranks.' },
+    { text: 'Both tests find a department difference; the rank test sees it more clearly because the skewed tails no longer blur the means', correct: true, response: 'Right. They agree on the conclusion, and the ranks are less distracted by the long low tails.' },
+    { text: 'The two tests contradict each other', response: 'They agree: both reject the null. They differ only in how strongly.' },
+  ]}
+/>
+
+<Exercise id="m12-4-a" />
+
+## What it costs
+
+A rank test answers a vaguer question. It tells you that the departments differ in
+where their employees tend to fall, not by how many points of wellbeing, and it
+does not come with coefficients, confidence intervals for differences, or a way to
+add a covariate. That is why the linear model stays the default in this course,
+and the rank test is the check you reach for when the assumptions of Lesson 11-4
+clearly fail in a small sample.
+
+To see **which** departments differ, follow up with pairwise Mann-Whitney tests,
+adjusted for multiple comparisons just as in Lesson 12-3:
+
+<CodeBlock id="c-pairwise" code={`pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = "holm", exact = FALSE)`} />
+
+<Quiz
+  id="q-kw-df"
+  question="A Kruskal-Wallis test compares five teams. How many degrees of freedom does H have?"
+  choices={[
+    { text: '5', response: 'One fewer than the number of groups: the mean ranks must average to the overall middle, which uses one up.' },
+    { text: '4', correct: true, response: 'Right: k - 1, exactly as for the F test of a factor with k levels.' },
+    { text: 'The number of employees minus 5', response: 'That would be residual degrees of freedom. H has only the between-groups ones.' },
+  ]}
+/>
+
+<Interpret
+  id="i-12-4"
+  question="kruskal.test() gives Kruskal-Wallis chi-squared = 25.55, df = 3, p = 1.18e-05 for wellbeing by department, with Support's median at 41.85 and the others between 46.90 and 48.65. Which write-up is correct APA 7?"
+  choices={[
+    { text: 'A Kruskal-Wallis test showed that wellbeing differed between departments, H(3) = 25.55, p < .001. Support had the lowest median wellbeing (Mdn = 41.85), against 46.90 to 48.65 in the other departments.', correct: true, response: 'Correct. The test, its degrees of freedom and p are there, and the medians describe the difference in a way that matches a rank test.' },
+    { text: 'Support employees scored 6 points lower on average, H(3) = 25.55, p < .001.', response: 'A rank test does not estimate a difference in points. Report medians, and use the linear model if you need an estimated difference.' },
+    { text: 'The department means differed significantly, H(3) = 25.55, p < .001.', response: 'The test is about ranks, not means. Two groups can have equal means and still differ on this test.' },
+    { text: 'Wellbeing differed between departments, p = 1.18e-05.', response: 'The statistic and degrees of freedom are missing, and APA reports p < .001 rather than the exact tiny value.' },
+  ]}
+/>

@@ -1,5 +1,5 @@
 .credits { color: var(--muted); }
-.credits-authors { margin: 0 0 0.75rem; line-height: 1.5; }
+.credits-authors, .credits-book { margin: 0 0 0.75rem; line-height: 1.5; }
 .credits-partners { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.2rem; list-style: none; margin: 0; padding: 0; }
 .credits-partner { display: inline-flex; align-items: center; color: var(--ink-2); text-decoration: none; }
 .credits-partner:hover .credits-wordmark { border-color: var(--brand); color: var(--brand-ink); }

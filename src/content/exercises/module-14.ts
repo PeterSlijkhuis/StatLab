@@ -279,4 +279,111 @@ export const module14: ExerciseDef[] = [
       'Without paired = TRUE you get the independent-samples test, which is a different and much less powerful comparison.',
     ],
   },
+  {
+    id: 'm14-4-a',
+    prompt:
+      'Did engagement rise more for employees who received training? Fit the mixed model with a time by training interaction and a random intercept per employee, and store the interaction coefficient, as a single number, in b_interaction.',
+    starterCode:
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\n\nlong_d %>% group_by(training, time) %>% summarise(mean_engagement = mean(engagement), .groups = "drop")\n\nb_interaction <- ',
+    solution:
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_mixed <- lmer(engagement ~ time * training + (1 | employee_id), data = long_d)\nb_interaction <- fixef(m_mixed)["timet2:trainingYes"]',
+    wrongAnswers: [
+      // The head start at t1, not the difference in change.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nb_interaction <- mean(d$engagement_t1[d$training == "Yes"]) - mean(d$engagement_t1[d$training == "No"])',
+      // The difference at t2 only, which still contains the head start.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nb_interaction <- mean(d$engagement_t2[d$training == "Yes"]) - mean(d$engagement_t2[d$training == "No"])',
+      // The change of the untrained group: the time main effect.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nb_interaction <- mean(d$engagement_t2[d$training == "No"] - d$engagement_t1[d$training == "No"])',
+    ],
+    alternateSolutions: [
+      // Change scores: with two waves and no gaps this is the same number.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nb_interaction <- coef(lm(change ~ training, data = d))["trainingYes"]',
+      // The difference in mean change, by hand.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nchange <- d$engagement_t2 - d$engagement_t1\nmeans <- tapply(change, d$training, mean)\nb_interaction <- means[["Yes"]] - means[["No"]]',
+    ],
+    check: `
+      if (!has_answer("b_interaction")) {
+        list(pass = FALSE, message = "I need b_interaction, the time by training coefficient.")
+      } else {
+        b <- as.vector(answer("b_interaction"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        change <- d$engagement_t2 - d$engagement_t1
+        yes <- d$training == levels(d$training)[2]
+        expected <- mean(change[yes]) - mean(change[!yes])
+        head_start <- mean(d$engagement_t1[yes]) - mean(d$engagement_t1[!yes])
+        at_t2 <- mean(d$engagement_t2[yes]) - mean(d$engagement_t2[!yes])
+        if (!is.numeric(b) || length(b) != 1L) {
+          list(pass = FALSE, message = "b_interaction should be a single number. fixef(m_mixed) gives the fixed effects; pick the one with a colon in its name.")
+        } else if (isTRUE(all.equal(b, head_start, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the difference at t1: the trained group's head start, trainingYes in the model. The interaction is the difference in change.")
+        } else if (isTRUE(all.equal(b, at_t2, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the difference at t2, ", round(at_t2, 2), ". It still contains the head start at t1. The interaction compares how much each group changed."))
+        } else if (isTRUE(all.equal(b, mean(change[!yes]), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the change in the untrained group, timet2 in the model. The interaction is how much more the trained group changed.")
+        } else if (!isTRUE(all.equal(b, expected, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("b_interaction is ", round(b, 3), ", but the interaction is ", round(expected, 3), ". Use time * training in the formula and take the timet2:trainingYes coefficient."))
+        } else {
+          list(pass = TRUE, message = paste0("b = ", round(expected, 2), ". Trained employees rose ", round(mean(change[yes]), 2), " points on average, untrained ones ", round(mean(change[!yes]), 2), "."))
+        }
+      }
+    `,
+    hints: [
+      'time * training in the formula fits both main effects and their interaction.',
+      'Keep the random intercept: + (1 | employee_id).',
+      'fixef(m_mixed)["timet2:trainingYes"] takes the interaction out.',
+    ],
+  },
+  {
+    id: 'm14-5-a',
+    prompt:
+      'Did engagement rise from t1 to t2, judged on ranks? Run the Wilcoxon signed-rank test with t2 first and t1 second, and store its statistic V, as a single number, in v.',
+    starterCode:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nsummary(d$engagement_t2 - d$engagement_t1)\n\nv <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nv <- wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
+    wrongAnswers: [
+      // paired = TRUE forgotten: the Mann-Whitney W.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nv <- wilcox.test(d$engagement_t2, d$engagement_t1)$statistic',
+      // The columns in the other order: the rank sum of the negative changes.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nv <- wilcox.test(d$engagement_t1, d$engagement_t2, paired = TRUE)$statistic',
+      // The paired t statistic.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nv <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
+    ],
+    alternateSolutions: [
+      // A one-sample signed-rank test on the differences is the same test.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nv <- wilcox.test(d$engagement_t2 - d$engagement_t1)$statistic',
+      // With the normal approximation asked for explicitly.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ntest <- wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE, exact = FALSE)\nv <- unname(test$statistic)',
+    ],
+    check: `
+      if (!has_answer("v")) {
+        list(pass = FALSE, message = "I need v, the signed-rank statistic.")
+      } else {
+        v <- as.vector(answer("v"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        test <- wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE, exact = FALSE)
+        expected <- as.vector(test$statistic)
+        reversed <- as.vector(wilcox.test(d$engagement_t1, d$engagement_t2, paired = TRUE, exact = FALSE)$statistic)
+        unpaired <- as.vector(wilcox.test(d$engagement_t2, d$engagement_t1, exact = FALSE)$statistic)
+        t_value <- as.vector(t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic)
+        if (!is.numeric(v) || length(v) != 1L) {
+          list(pass = FALSE, message = "v should be a single number: wilcox.test(...)$statistic.")
+        } else if (isTRUE(all.equal(v, unpaired, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is W from the Mann-Whitney test, which treats t1 and t2 as different people. Add paired = TRUE.")
+        } else if (isTRUE(all.equal(v, reversed, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is V with the columns the other way round: the rank sum of the negative changes. Put engagement_t2 first.")
+        } else if (isTRUE(all.equal(v, t_value, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the paired t statistic. The signed-rank test is wilcox.test() with paired = TRUE.")
+        } else if (!isTRUE(all.equal(v, expected, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("v is ", round(v, 1), ", but V is ", round(expected, 1), "."))
+        } else {
+          list(pass = TRUE, message = paste0("V = ", round(expected), ", p ", if (test$p.value < .001) "< .001" else paste("=", signif(test$p.value, 3)), ". Positive changes carry far more rank than negative ones: engagement rose."))
+        }
+      }
+    `,
+    hints: [
+      'wilcox.test() takes the same arguments as t.test(), including paired = TRUE.',
+      'Put engagement_t2 first, so V sums the ranks of the rises.',
+    ],
+  },
 ];
