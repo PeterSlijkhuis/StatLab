@@ -73,6 +73,12 @@ Same *F*, same degrees of freedom, same *p*. "One-way ANOVA" is the traditional
 name for the *F* test of a linear model with one factor, and if someone asks
 for one, this is it.
 
+Look back at the SDs you printed: Engineering's spread is more than twice
+Marketing's, which is the warning sign from Lesson 12-1. The group sizes are
+close, which softens the problem, and `oneway.test(wellbeing ~ department, data = d)`,
+the Welch version that does not pool the variances, gives *F*(3, 258.7) = 8.60,
+*p* < .001. The conclusion stands, and it is worth checking every time.
+
 ## When the mean is the wrong summary
 
 <Exercise id="m12-2-b" />
