@@ -91,7 +91,7 @@ profiles %>%
   mutate(predicted_probability = predict(m_left, newdata = profiles, type = "response"))`} />
 
 `type = "response"` returns probabilities; without it you get log odds. Notice
-that the three gaps are not equal even though the wellbeing values are evenly
+that the two gaps are not equal even though the wellbeing values are evenly
 spaced — the curve is steepest in the middle, so the same change in the predictor
 buys a different change in probability depending on where you start. That is
 exactly the non-linearity the model was chosen for, and the reason a single

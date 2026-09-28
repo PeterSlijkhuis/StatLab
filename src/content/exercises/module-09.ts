@@ -156,7 +156,7 @@ export const module09: ExerciseDef[] = [
           } else if (abs(stat - yates) > 1e-6 && abs(stat - plain) > 1e-6) {
             list(pass = FALSE, message = "That is a chi-square test, but not of remote by left_company. Give chisq.test() the two-way table of both variables; a table of remote alone only asks whether remote and office workers are equally common.")
           } else {
-            list(pass = TRUE, message = paste0("Correct: chi-square(1, N = ", nrow(d), ") = ", round(stat, 2), ", p = ", format(round(got$p.value, 3), nsmall = 3), ". An 8-point gap in leaving rates, and this sample cannot tell it from chance at the .05 level."))
+            list(pass = TRUE, message = paste0("Correct: chi-square(1, N = ", nrow(d), ") = ", round(stat, 2), ", p = ", format(round(got$p.value, 3), nsmall = 3), ". A 7-point gap in leaving rates, and this sample cannot tell it from chance at the .05 level."))
           }
         }
       }

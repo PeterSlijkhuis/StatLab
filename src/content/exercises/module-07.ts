@@ -186,13 +186,13 @@ export const module07: ExerciseDef[] = [
           value <- as.numeric(value)
           # A band, not a value: a 95 per cent procedure captures mu about 95 times
           # in 100, and the count has an SD of about 2.2, so anything from 86 up is
-          # an honest result. Every wrong answer below lands at 100, 5, 0.95 or ~63.
+          # an honest result. Every wrong answer below lands at 100, 5, 0.95 or ~60.
           if (value > 0 && value < 1) {
             list(pass = FALSE, message = paste0("That is the PROPORTION (", round(value, 2), "). The exercise asks for the count out of 100, so use sum() rather than mean()."))
           } else if (isTRUE(all.equal(value, 100, tolerance = 1e-9))) {
             list(pass = FALSE, message = "All 100 intervals captured it, which cannot happen by chance with a 95 per cent procedure. You almost certainly compared each interval against its own sample mean, which sits in the middle of it by construction. Compare against mu, the population mean.")
           } else if (value >= 86 && value <= 99) {
-            list(pass = TRUE, message = paste0(value, " of your 100 intervals contained mu. Not 95, and it never is exactly 95 - but close, and it would settle on 95 over enough studies. The 95 per cent describes the PROCEDURE, not any one interval."))
+            list(pass = TRUE, message = paste0(value, " of your 100 intervals contained mu. It will rarely be exactly 95, but it lands close, and over enough studies the proportion settles on 95 per cent. The 95 per cent describes the PROCEDURE, not any one interval."))
           } else if (value <= 14) {
             list(pass = FALSE, message = paste0("Only ", value, " intervals captured mu. If you counted the ones that MISSED, take 100 minus your count - the misses are the 5 per cent, not the 95."))
           } else {

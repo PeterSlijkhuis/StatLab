@@ -1,4 +1,4 @@
-Training employees raises their performance a little. A theory says why: training
+Trained employees perform a little better. A theory says why: training
 raises engagement, and engaged people perform better. **Mediation analysis**
 asks whether the data fit that story, by splitting the effect of training into
 the part that runs through engagement and the part that does not.
@@ -43,7 +43,7 @@ engagement.
   id="p-mediation-test"
   question="How should you decide whether the indirect effect of 1.78 is more than chance?"
   choices={[
-    { text: 'Check that a and b are both significant', response: 'That was the old Baron and Kenny approach. It never tests the product itself, and it has less power than testing a × b directly.' },
+    { text: 'Check that a and b are both significant', response: 'That is part of the old Baron and Kenny steps. It never estimates the indirect effect or gives it an interval, so a reader cannot judge how large it is.' },
     { text: 'Divide it by its standard error and compare with a normal distribution (the Sobel test)', response: 'The Sobel test assumes a × b is normally distributed, and a product of two estimates usually is not. It is no longer recommended.' },
     { text: 'Bootstrap a confidence interval for a × b', correct: true, response: 'Right. Resampling makes no assumption about the shape of the product, and it is the current standard.' },
   ]}
@@ -118,7 +118,7 @@ macro for SPSS, model 4, fits the same model.
   id="i-17-1"
   question="a = 4.07, b = 0.44, indirect = 1.78 with 95% bootstrap CI [1.19, 2.40], direct = -0.16 (p = .82), total = 1.62. Which report is correct?"
   choices={[
-    { text: 'Training was associated with higher engagement (a = 4.07), which in turn was associated with higher performance (b = 0.44). The indirect effect was 1.78, 95% bootstrap CI [1.19, 2.40], based on 1000 resamples; the direct effect was small and non-significant (c′ = -0.16, p = .82). The pattern is consistent with engagement mediating the effect of training.', correct: true, response: 'Correct: every path, the indirect effect with its interval and how it was computed, and a causal claim no stronger than the design allows.' },
+    { text: 'Training was associated with higher engagement (a = 4.07), which in turn was associated with higher performance (b = 0.44). The indirect effect was 1.78, 95% bootstrap CI [1.19, 2.40], based on 1,000 resamples; the direct effect was small and non-significant (c′ = -0.16, p = .82). The pattern is consistent with engagement mediating the effect of training.', correct: true, response: 'Correct: every path, the indirect effect with its interval and how it was computed, and a causal claim no stronger than the design allows.' },
     { text: 'Training caused higher performance through engagement (Sobel test, p < .001).', response: 'The Sobel test is no longer recommended, and "caused" overstates what these data can show.' },
     { text: 'Because the direct effect was not significant, training does not affect performance.', response: 'The total effect of training is 1.62 and significant. The point of mediation is that it runs through engagement.' },
     { text: 'Both a and b were significant, so there was mediation.', response: 'That is the old steps approach. Report and test the indirect effect itself, with its interval.' },

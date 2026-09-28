@@ -139,7 +139,7 @@ export const module16: ExerciseDef[] = [
         } else if (ci[1] > ci[2]) {
           list(pass = FALSE, message = "The bounds are the wrong way round. Put the lower bound first.")
         } else if (close(ci, qbeta(c(0.025, 0.975), k, n - k))) {
-          list(pass = FALSE, message = "Close, but that posterior has no prior in it. A flat prior is Beta(1, 1), so add 1 to each shape: Beta(1 + left_eng, 1 + n_eng - left_eng).")
+          list(pass = FALSE, message = "Close, but Beta(left_eng, n_eng - left_eng) is the posterior from a Beta(0, 0) prior, not a flat one. A flat prior is Beta(1, 1), so add 1 to each shape: Beta(1 + left_eng, 1 + n_eng - left_eng).")
         } else if (close(ci, qbeta(c(0.05, 0.95), 1 + k, 1 + n - k))) {
           list(pass = FALSE, message = "That is a 90 % interval. A 95 % interval leaves 2.5 % in each tail: qbeta(c(0.025, 0.975), ...).")
         } else if (close(ci, binom.test(k, n)$conf.int)) {
@@ -274,7 +274,7 @@ export const module16: ExerciseDef[] = [
   {
     id: 'm16-4-a',
     prompt:
-      'Workload lowers wellbeing by about 3.3 points per point. Combine that estimate with a sceptical Normal(0, 1) prior on the slope. Store the posterior mean in post_mean_b and a 95 % credible interval, lower bound first, in cri_b.',
+      'Each extra point of workload goes with about 3.3 points lower wellbeing. Combine that estimate with a sceptical Normal(0, 1) prior on the slope. Store the posterior mean in post_mean_b and a 95 % credible interval, lower bound first, in cri_b.',
     starterCode:
       `${WORKLOAD}\nc(b_hat = b_hat, se_hat = se_hat)\n\nprior_sd <- 1\n# Weight each source by its precision, 1 / variance.\npost_mean_b <- \ncri_b <- `,
     solution:
