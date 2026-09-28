@@ -102,7 +102,7 @@ export const TREE: Question = {
       next: {
         kind: 'question',
         text: 'What kind of outcome are you analysing?',
-        help: 'The outcome is the variable you want to explain. A total or mean of several questionnaire items counts as a number; a single 5-point item counts as ordered categories.',
+        help: 'The outcome is the variable you want to explain. A total or mean of several questionnaire items counts as a number. A single rating item with 5 or more levels is usually treated as a number too; one with only 3 or 4 levels (never, sometimes, often) counts as ordered categories. A number of successes out of a fixed number of tries, such as 7 correct out of 10, is not a count of events: choose yes or no.',
         options: [
           {
             label: 'A number on a scale (a score, time, rating or amount)',
@@ -110,7 +110,7 @@ export const TREE: Question = {
             next: {
               kind: 'question',
               text: 'How were the scores collected?',
-              help: 'This decides whether the observations are independent, which matters more than anything else about the choice.',
+              help: 'This decides whether the observations are independent, which matters more than anything else about the choice. If people share a team, class or site that could make them alike, choose that option even when each person gave one score.',
               options: [
                 {
                   label: 'One score per case, from different people',
@@ -134,7 +134,8 @@ model %>% tidy(conf.int = TRUE)`,
                             'Independent scores and no extreme outliers; roughly normal scores, which matters mainly in small samples. For a small, clearly skewed sample, the one-sample Wilcoxon signed-rank test: wilcox.test(d$exam_score, mu = 70).',
                           traditional: 'The one-sample t-test: t.test(d$exam_score, mu = 70). Same t, same p.',
                           note: 'Here the question is whether the mean exam score differs from 70; put your own comparison value in its place. ~ 1 means a model with no predictors, so the intercept is how far the mean lies from that value, with its confidence interval.',
-                          lessonId: '08-3',
+                          buildsOn: '08-3',
+                          further: 'Van den Berg, Analysing Data Using Linear Models, section 5.15, The intercept only model.',
                         },
                       },
                       {
@@ -205,7 +206,7 @@ curved %>% glance()`,
                               },
                             },
                             {
-                              label: "A predictor's effect depends on another number (a moderator)",
+                              label: "A predictor's effect depends on another variable, a number or a group (moderation)",
                               next: {
                                 kind: 'answer',
                                 id: 'continuous-moderation',
@@ -223,7 +224,7 @@ emtrends(model, ~ autonomy_c, var = "workload_c", at = list(autonomy_c = c(-s, 0
                                 check:
                                   'The same as for multiple regression. Interactions need much larger samples to detect than main effects, so a non-significant interaction is weak evidence that there is none.',
                                 traditional: 'Moderation analysis, as in PROCESS model 1.',
-                                note: 'The workload_c:autonomy_c coefficient is the moderation: how much the slope of workload changes for each one-unit increase in autonomy. Centring makes each main effect the slope at the other variable\'s mean. emtrends() gives the simple slopes: the slope of workload at one SD below mean autonomy, at the mean, and one SD above.',
+                                note: 'The workload_c:autonomy_c coefficient is the moderation: how much the slope of workload changes for each one-unit increase in autonomy. Centring makes each main effect the slope at the other variable\'s mean. emtrends() gives the simple slopes: the slope of workload at one SD below mean autonomy, at the mean, and one SD above. With a group as the moderator, leave it uncentred: lm(wellbeing ~ workload_c * remote, data = d), where workload_c:remoteYes is the difference between the two groups\' slopes.',
                                 buildsOn: '13-1',
                                 further:
                                   'Andrew Hayes, Introduction to Mediation, Moderation, and Conditional Process Analysis, which also covers the Johnson-Neyman technique for finding where the slope stops being significant.',
@@ -297,7 +298,7 @@ model <- lm(engagement_t2 ~ engagement_t1 + training, data = d)
 model %>% tidy(conf.int = TRUE)
 emmeans(model, pairwise ~ training)`,
                                 check:
-                                  'The covariate relates to the outcome in a roughly straight line with a similar slope in every group: fit lm(engagement_t2 ~ engagement_t1 * training, data = d) and check that the interaction is small. The covariate is measured before the groups could have changed it.',
+                                  'The covariate relates to the outcome in a roughly straight line with a similar slope in every group: fit lm(engagement_t2 ~ engagement_t1 * training, data = d) and check that the interaction is small. The covariate is measured before the groups could have changed it. If the slopes clearly differ, that difference is your finding: see the moderation model under numeric predictors.',
                                 traditional: 'ANCOVA: anova(model) gives the F test for the groups, adjusted for the covariate entered before them.',
                                 note: 'The group coefficients are differences between groups at the same value of the covariate: here, trained and untrained employees who started with the same engagement. emmeans gives each group\'s adjusted mean, its predicted mean at the average covariate, and the pairwise differences between them.',
                                 lessonId: '11-2',
@@ -353,15 +354,15 @@ summary.aov(model)`,
                   },
                 },
                 {
-                  label: 'The same people measured more than once',
+                  label: 'The same people measured more than once, or under more than one condition',
                   group: 'Repeated measures and nested data',
                   next: {
                     kind: 'question',
                     text: 'What does the design look like?',
-                    help: 'All of these need the data in long format: one row per person per measurement, which pivot_longer() makes.',
+                    help: 'All of these need the data in long format: one row per person per measurement, which pivot_longer() makes. Matched pairs, such as twins or couples, count as one unit measured twice: give each pair its own id.',
                     options: [
                       {
-                        label: 'Twice, such as before and after',
+                        label: 'Twice, such as before and after, or under two conditions',
                         next: {
                           kind: 'answer',
                           id: 'before-after',
@@ -398,10 +399,10 @@ model <- lmer(weight ~ time + (1 | Chick), data = long_d)
 anova(model)
 emmeans(model, pairwise ~ time, adjust = "holm")`,
                           check:
-                            'Data in long format: one row per case per measurement, which ChickWeight already is. Residuals roughly normal, which matters mainly in small samples. For a small, clearly skewed sample with no missing measurements, the Friedman test: friedman.test(weight ~ time | Chick, data = long_d), which needs every chick at every time point.',
+                            'Data in long format: one row per case per measurement, which ChickWeight already is. Residuals roughly normal, which matters mainly in small samples. The model assumes the same spread at every time point and the same correlation between every pair of them. Compare the SDs per time point first: in ChickWeight they grow from about 1 g at hatching to about 72 g at day 21, so read its p-values with care. For a growth process like this, a growth-curve model with random slopes fits better. For a small, clearly skewed sample, the Friedman test, which needs every chick at every time point, so keep only the complete ones first: complete <- long_d %>% group_by(Chick) %>% filter(n() == 3) %>% ungroup() %>% droplevels(), then friedman.test(weight ~ time | Chick, data = complete).',
                           traditional: 'Repeated-measures ANOVA. With complete data the F matches its uncorrected F: both assume the time points are equally correlated.',
                           note: 'anova() tests whether weight differs across the time points at all; emmeans then compares each pair of time points. (1 | Chick) lets each chick have its own level, as (1 | id) would for people. Unlike repeated-measures ANOVA, the model keeps the chicks that missed a weighing.',
-                          lessonId: '14-2',
+                          lessonId: '14-4',
                         },
                       },
                       {
@@ -442,7 +443,7 @@ summary(model)`,
                           check:
                             'Time coded as a number that starts at 0 (in ChickWeight, days since hatching), so the intercept is the starting level; at least three time points per person. If R reports a singular fit, the data cannot support a separate slope for each person: go back to (1 | Chick).',
                           note: '(Time | Chick) gives every chick its own starting weight and its own growth rate, as (time | id) would for people. The fixed effect of Time is the average gain per day; the random-effect variance for Time shows how much chicks differ in it.',
-                          buildsOn: '14-2',
+                          buildsOn: '14-4',
                           further: 'Singer and Willett, Applied Longitudinal Data Analysis, the standard text on growth models.',
                         },
                       },
@@ -496,6 +497,7 @@ summary(model)`,
             next: {
               kind: 'question',
               text: 'How were the outcomes collected?',
+              help: 'If the same people answer more than once, or people share a team, class or site, choose the second option even when each row is a different person.',
               options: [
                 {
                   label: 'One per case, from different people',
@@ -537,7 +539,7 @@ exp(cbind(OR = coef(model), confint(model)))`,
 successes <- sum(d$left_company == 1)
 binom.test(successes, nrow(d), p = 0.2)`,
                           check: 'Independent cases, each counted once, and no missing values in the outcome (nrow() would count them).',
-                          traditional: 'The same question as an intercept-only logistic regression: glm(left_company ~ 1, data = d, family = binomial).',
+                          traditional: 'The large-sample version is prop.test(successes, nrow(d), p = 0.2, correct = FALSE). As a model, an intercept-only logistic regression tests the same value only with an offset: glm(left_company ~ 1, offset = rep(qlogis(0.2), nrow(d)), data = d, family = binomial), whose intercept is the difference in log odds from 20%. Without the offset it tests 50%.',
                           note: 'Here the question is whether the share of employees who left differs from 20%. For your own data, count your own level in place of left_company == 1 and use your own proportion in place of 0.2. The output gives the observed proportion with its exact 95% confidence interval.',
                           lessonId: '09-1',
                         },
@@ -558,7 +560,7 @@ model <- glmer(left_company ~ wellbeing + (1 | site), data = d, family = binomia
 summary(model)
 exp(fixef(model))`,
                     check:
-                      'For repeated measurements, long format: one row per person per measurement. Clustered data, such as employees in sites, is already in shape. With few clusters or a rare outcome the model may fail to converge; simplify the random part first. With one yes-or-no answer at exactly two time points and nothing else in the model, McNemar\'s test is the simple alternative.',
+                      'For repeated measurements, long format: one row per person per measurement. Clustered data, such as employees in sites, is already in shape. With few clusters or a rare outcome the model may fail to converge; simplify the random part first.',
                     traditional: "For one yes-or-no answer at two time points, McNemar's test: mcnemar.test(table(before, after)).",
                     note: 'exp() turns the coefficients into odds ratios for people in the same cluster, here the same site, holding its random intercept fixed. These are usually further from 1 than the population-average odds ratios an ordinary logistic regression gives.',
                     buildsOn: '14-2',
@@ -581,7 +583,7 @@ summary(model)
 exp(cbind(OR = coef(model), confint(model)))`,
                     check:
                       'Trials independent within a row. If the residual deviance is much larger than its degrees of freedom, the proportions vary more than a binomial allows: refit with family = quasibinomial.',
-                    note: 'Here each row is one department at one site, made by counting how many of its staff left. cbind() gives the successes and failures, so a team where 3 of 20 left weighs twenty employees. The coefficients are log odds of a success, here leaving, read exactly as in logistic regression.',
+                    note: 'Here each row is one department at one site, made by counting how many of its staff left. cbind() gives the successes and failures, so a team where 3 of 20 left weighs twenty employees. The coefficients are log odds of a success, here leaving, read exactly as in logistic regression. Because wellbeing is now a team average, its odds ratio compares teams, not individual employees.',
                     buildsOn: '15-2',
                     further: 'Dunn and Smyth, Generalized Linear Models With Examples in R.',
                   },
@@ -603,7 +605,7 @@ model <- polr(Sat ~ Infl + Type, data = housing, weights = Freq, Hess = TRUE)
 summary(model)
 exp(cbind(OR = coef(model), confint(model)))`,
               check:
-                'Proportional odds: each predictor shifts the odds of being above any cut-off by the same amount. The ordinal package tests it: ordinal::clm(Sat ~ Infl, nominal = ~ Infl, data = housing, weights = Freq). A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
+                'Proportional odds: each predictor shifts the odds of being above any cut-off by the same amount. The ordinal package tests it: ordinal::nominal_test(ordinal::clm(Sat ~ Infl + Type, data = housing, weights = Freq)), where a small p flags a predictor that breaks the assumption. A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
               note: 'Each row of housing is one combination of answers, and Freq says how many tenants gave it, hence weights = Freq; with one row per person, leave it out. Your own outcome needs to be a factor with its levels in order: factor(x, levels = c("low", "medium", "high"), ordered = TRUE). An odds ratio above 1 means that predictor goes with higher categories of the outcome. The intercepts (the zeta values in the output) are the cut-offs between adjacent categories.',
               buildsOn: '15-2',
               further: 'Alan Agresti, Analysis of Ordinal Categorical Data, and the ordinal package\'s vignettes.',
@@ -661,7 +663,7 @@ chisq.test(counts, p = c(0.3, 0.2, 0.3, 0.2))`,
             },
           },
           {
-            label: 'A count of events (0, 1, 2, and so on)',
+            label: 'A count of events with no fixed maximum (0, 1, 2, and so on)',
             group: 'Count outcomes',
             next: {
               kind: 'question',
@@ -669,7 +671,7 @@ chisq.test(counts, p = c(0.3, 0.2, 0.3, 0.2))`,
               help: 'Start with the first option. Its check tells you whether you need the second.',
               options: [
                 {
-                  label: 'Counts of events per case (start here)',
+                  label: 'Ordinary counts, or not sure yet (start here)',
                   next: {
                     kind: 'answer',
                     id: 'poisson-regression',
@@ -683,7 +685,7 @@ model %>% tidy(conf.int = TRUE, exponentiate = TRUE)
 sum(residuals(model, type = "pearson")^2) / df.residual(model)`,
                     check:
                       'Whole-number counts, independent between cases. The last line estimates the dispersion: near 1 is fine; clearly above 1 (say, 1.5 or more) means overdispersion, and the negative binomial model is the better choice. If cases were observed for different lengths of time, add + offset(log(exposure)) to the formula.',
-                    note: 'exponentiate = TRUE turns the coefficients into rate ratios: 1.20 means 20% more events for each one-unit increase in a numeric predictor, or than in the reference level of a factor. For counts measured repeatedly or in groups, lme4\'s glmer(..., family = poisson) adds a random intercept.',
+                    note: 'exponentiate = TRUE turns the coefficients into rate ratios: 1.20 means 20% more events for each one-unit increase in a numeric predictor, or than in the reference level of a factor. For warpbreaks the dispersion comes out near 4.3, so its confidence intervals are too narrow: go on to the negative binomial model. For counts measured repeatedly or in groups, lme4\'s glmer(..., family = poisson) adds a random intercept.',
                     lessonId: '15-4',
                   },
                 },
@@ -701,7 +703,7 @@ summary(model)
 exp(cbind(RR = coef(model), confint(model)))`,
                     check: 'Whole-number counts, independent between cases. Compare with the Poisson model: AIC(glm(breaks ~ wool + tension, data = warpbreaks, family = poisson), model), lower is better.',
                     note: 'Read the exponentiated coefficients as rate ratios, exactly as in Poisson regression. theta in the output measures the extra spread: the smaller it is, the more overdispersed the counts.',
-                    buildsOn: '15-2',
+                    buildsOn: '15-4',
                     further: 'Dunn and Smyth, Generalized Linear Models With Examples in R.',
                   },
                 },
@@ -720,7 +722,7 @@ summary(model)`,
                     check:
                       'A real reason for the extra zeros. Compare with a plain negative binomial model by AIC(): it often copes with many zeros on its own. If every zero comes from the same process, a hurdle model, pscl::hurdle(), fits better.',
                     note: 'The formula has two parts. Before the | is the count model for cases that could have events; after it is the model for the chance of being a structural zero. Both parts take their own predictors: here the mentor\'s articles (ment) and young children (kid5) in the count part, and the mentor\'s articles in the zero part.',
-                    buildsOn: '15-2',
+                    buildsOn: '15-4',
                     further: 'Zuur, Savel\'ev and Ieno, A Beginner\'s Guide to Zero-Inflated Models with R.',
                   },
                 },
@@ -748,8 +750,8 @@ fit <- survfit(Surv(tenure_years, left_company) ~ remote, data = d)
 summary(fit)$table
 survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                     check:
-                      'Censoring unrelated to the outcome: cases that leave early are not more or less at risk than those who stay. The log-rank test has most power when the curves do not cross.',
-                    traditional: 'Kaplan-Meier curves with the log-rank test.',
+                      'Censoring unrelated to the outcome: cases that leave early are not more or less at risk than those who stay. The log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
+                    traditional: 'The log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "breslow"))$sctest.',
                     note: 'Surv(tenure_years, left_company) pairs each employee\'s years at the company with whether they left (1) or still work there, which makes them censored (0). summary(fit)$table gives each group\'s median time to the event; survdiff() is the log-rank test; plot(fit) draws the curves.',
                     further: 'Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, and the survival package\'s vignettes.',
                   },
@@ -785,6 +787,7 @@ cox.zph(model)`,
       next: {
         kind: 'question',
         text: 'Which describes your question?',
+        help: 'Mediation is about a third variable that carries the effect. If the third variable changes how strong the effect is, that is moderation: go back and choose the first option on the first question.',
         options: [
           {
             label: 'Does X affect Y through a mediator M?',
@@ -826,7 +829,7 @@ items <- lavaan::HolzingerSwineford1939 %>% select(x4:x6)
 psych::alpha(items)`,
               check:
                 'Reverse-worded items recoded first (on a 1 to 5 scale, 6 minus the score). Alpha rises with the number of items, so a long scale can reach .80 without measuring one thing; a confirmatory factor analysis checks that.',
-              note: "Here x4 to x6 are three verbal tests meant to measure one ability. raw_alpha is Cronbach's alpha: .70 is a common minimum for research, .80 is better. The table of reliability if an item is dropped points to items that weaken the scale. psych::omega() gives McDonald's omega, which many journals now prefer.",
+              note: "Here x4 to x6 are three verbal tests meant to measure one ability. raw_alpha is Cronbach's alpha: .70 is a common minimum for research, .80 is better. The table of reliability if an item is dropped points to items that weaken the scale. psych::omega(items, nfactors = 1) gives McDonald's omega, which many journals now prefer.",
               lessonId: '03-4',
             },
           },
@@ -882,7 +885,7 @@ summary(fit, fit.measures = TRUE, standardized = TRUE)`,
       group: 'Dimension reduction and clustering',
       next: {
         kind: 'question',
-        text: 'What do you want to reduce?',
+        text: 'What do you want to summarise or group?',
         options: [
           {
             label: 'Many numeric variables into a few summary scores',
@@ -963,12 +966,12 @@ d %>% group_by(cluster) %>% summarise(across(c(workload, autonomy, wellbeing, pe
               when: 'One series measured at regular intervals, and you want to model how each value depends on the ones before and forecast the next.',
               rCode: `# The course data is not a time series, so this uses LakeHuron, built into R: the lake's level each year from 1875 to 1972.
 series <- LakeHuron
-model <- arima(series, order = c(2, 0, 0))
+model <- arima(series, order = c(2, 0, 0), xreg = time(series) - 1920)
 model
-predict(model, n.ahead = 10)`,
+predict(model, n.ahead = 10, newxreg = 1973:1982 - 1920)`,
               check:
                 'Equally spaced observations with no gaps. A trend or a seasonal pattern needs differencing or a seasonal term first; plot(series) and acf(series) show both. In RStudio, forecast::auto.arima(series) chooses the orders for you.',
-              note: 'order = c(p, d, q) sets the autoregressive terms, the number of differences and the moving-average terms. predict() gives forecasts with standard errors, which grow the further ahead you look. Compare candidate orders by AIC: lower is better. For your own data, ts(d$value, start = c(2020, 1), frequency = 12) turns a column of monthly values into a series.',
+              note: 'order = c(p, d, q) sets the autoregressive terms, the number of differences and the moving-average terms. xreg adds a straight-line trend in years, centred on 1920; predict() needs the future years in newxreg. predict() gives forecasts with standard errors, which grow the further ahead you look. Compare candidate orders by AIC: lower is better. For your own data, ts(d$value, start = c(2020, 1), frequency = 12) turns a column of monthly values into a series.',
               further: 'Hyndman and Athanasopoulos, Forecasting: Principles and Practice (free online at otexts.com), which uses the fable package.',
             },
           },
@@ -984,13 +987,13 @@ library(broom)
 # The course data is not a time series, so this uses Nile, built into R: the river's yearly flow from 1871 to 1970.
 # The flow drops after 1898, the year work began on the first Aswan dam.
 d <- data.frame(year = 1871:1970, flow = as.numeric(Nile)) %>%
-  mutate(time = year - 1870, after = as.numeric(year >= 1899), time_after = pmax(0, year - 1898))
+  mutate(time = year - 1870, after = as.numeric(year >= 1899), time_after = pmax(0, year - 1899))
 model <- lm(flow ~ time + after + time_after, data = d)
 model %>% tidy(conf.int = TRUE)
 acf(residuals(model), plot = FALSE)`,
               check:
                 'Enough time points before and after, at least eight on each side as a common guide. Values next to each other in time are often correlated, which makes the standard errors too small: if acf() shows autocorrelation, fit nlme::gls(..., correlation = nlme::corAR1()) in RStudio instead.',
-              note: 'time is the trend before the change, after is the immediate jump when it happens, and time_after is the change in slope afterwards. Here 1899 is the first year after the change; use the first time point after your own intervention.',
+              note: 'time is the trend before the change, after is the jump in the first year after it, and time_after (0 up to and including that year) is the change in slope afterwards. Here 1899 is the first year after the change; use the first time point after your own intervention.',
               buildsOn: '11-1',
               further: 'Bernal, Cummins and Gasparrini (2017), Interrupted time series regression for the evaluation of public health interventions: a tutorial, International Journal of Epidemiology.',
             },
@@ -1072,7 +1075,7 @@ qbeta(c(0.025, 0.5, 0.975), 1 + left, 1 + stayed)
 pbeta(0.2, 1 + left, 1 + stayed, lower.tail = FALSE)`,
               check:
                 'Independent cases, each counted once, and no missing values in the outcome. The 1 + in each shape is a flat Beta(1, 1) prior; with fewer than about 30 cases, show that the answer holds under another reasonable prior too.',
-              traditional: 'The exact binomial test and its confidence interval: binom.test(left, left + stayed).',
+              traditional: 'The exact binomial test and its confidence interval: binom.test(left, left + stayed, p = 0.2).',
               note: 'Here the proportion is the share of employees who left. The qbeta() line gives the posterior median with a 95% credible interval around it; the pbeta() line is the posterior probability that the share is above 20%. Put the value your own claim is about in place of 0.2.',
               lessonId: '16-2',
             },
@@ -1130,8 +1133,7 @@ hypothesis(model, "autonomy > 0")`,
               check:
                 'Set the prior on the scale of your variables: normal(0, 1) here says one point of autonomy rarely moves wellbeing by more than 2 points. In the summary, every Rhat should be 1.00, and pp_check(model) should show simulated data that look like yours.',
               note: 'The summary gives each coefficient a posterior mean, error and 95% credible interval; hypothesis() gives the posterior probability of a claim. The same call takes several predictors, family = bernoulli() for a yes-or-no outcome, and (1 | id) for repeated measures.',
-              buildsOn: '16-4',
-              further: "Richard McElreath, Statistical Rethinking, and Paul Bürkner's brms vignettes (free online).",
+              lessonId: '16-4',
             },
           },
         ],
@@ -1154,7 +1156,7 @@ chisq.test(counts, correct = FALSE)
 prop.table(counts, margin = 2)`,
     check:
       "Each case counted once, in one cell. Expected counts of at least 5 in nearly every cell; chisq.test() warns when they are lower, and then Fisher's exact test is the alternative: fisher.test(counts).",
-    note: 'A significant result means the outcome is distributed differently across the categories of the predictor. The last line shows how: the proportion of each outcome within each predictor category. For a yes-or-no outcome, logistic regression with this one predictor gives the same answer and extends to more predictors.',
+    note: 'A significant result means the outcome is distributed differently across the categories of the predictor. The last line shows how: the proportion of each outcome within each predictor category. For a yes-or-no outcome, logistic regression with this one predictor gives the same chi-square with anova(glm(left_company ~ department, data = d, family = binomial), test = "Rao"), and extends to more predictors.',
     lessonId: '09-3',
   };
 }

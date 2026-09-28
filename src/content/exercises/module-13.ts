@@ -189,7 +189,7 @@ export const module13: ExerciseDef[] = [
         } else if (isTRUE(all.equal(f_training, exp_int, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the interaction's F (", round(exp_int, 2), "), on the training:mentoring row. The training main effect is on the row called training."))
         } else if (isTRUE(all.equal(f_training, as.vector(default3["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("You fitted without sum-to-zero contrasts, so that F (", round(as.vector(default3["training", "F value"]), 2), ") is not the main effect of training. Under R's default treatment contrasts a type III main-effect test asks about training among employees with NO mentoring only - a simple effect wearing a main effect's name. With contrasts = list(training = contr.sum, mentoring = contr.sum) the same row becomes ", round(exp_f, 2), "."))
+          list(pass = FALSE, message = paste0("Mentoring is still on R's default treatment contrasts, so that F (", round(as.vector(default3["training", "F value"]), 2), ") is not the main effect of training. With mentoring treatment-coded, a type III test of training asks about training among employees with NO mentoring only: a simple effect wearing a main effect's name. With contrasts = list(training = contr.sum, mentoring = contr.sum) the same row becomes ", round(exp_f, 2), "."))
         } else if (isTRUE(all.equal(f_training, as.vector(type2["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the type II F (", round(as.vector(type2["training", "F value"]), 2), "). Type II tests each main effect while ignoring the interaction, which is only defensible when the interaction is negligible. This exercise asks for type III."))
         } else if (!isTRUE(all.equal(f_training, exp_f, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -253,7 +253,7 @@ export const module13: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(yes_m, exp_yes, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("effect_yes_mentoring is ", round(yes_m, 4), " but the training effect among mentored employees is ", round(exp_yes, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("Training is worth ", round(exp_no, 2), " points without mentoring and ", round(exp_yes, 2), " points with it - a difference of ", round(exp_yes - exp_no, 2), ", which is the interaction coefficient again. The overall training effect, ", round(overall, 2), ", is an average of these two and describes neither group. When an interaction is present, report the simple effects."))
+          list(pass = TRUE, message = paste0("Training is worth ", round(exp_no, 2), " points without mentoring and ", round(exp_yes, 2), " points with it - a difference of ", round(exp_yes - exp_no, 2), ", which is the interaction coefficient again. The overall training effect, ", round(overall, 2), ", blends these two and describes neither group. When an interaction is present, report the simple effects."))
         }
       }
     `,
