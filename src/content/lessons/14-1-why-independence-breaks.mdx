@@ -1,4 +1,4 @@
-Every model in Modules 9 to 12 assumed that the rows of your data are independent
+Every model in Modules 10 to 13 assumed that the rows of your data are independent
 — that knowing one employee's score tells you nothing about the next. Two very
 common designs break that assumption, and both are in this dataset.
 
@@ -71,7 +71,7 @@ Three things that trip people up:
 Two means, and the direction of the change. Whatever the model says next has to
 agree with this table.
 
-<Exercise id="m13-1-a" />
+<Exercise id="m14-1-a" />
 
 ## Seeing the dependence
 
@@ -103,7 +103,7 @@ cloud of heights, which is exactly what the next lesson fixes.
 />
 
 <Interpret
-  id="i-13-1"
+  id="i-14-1"
   question="A colleague stacked the two measurements into 960 rows, ran lm(engagement ~ time), and reports b = 1.31, SE = 0.42, t(958) = 3.12, p = .002. What should you tell them?"
   choices={[
     { text: 'The analysis is fine; 960 observations is a good sample.', response: 'There are 480 independent units, not 960. Counting each person twice overstates the information available.' },

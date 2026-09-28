@@ -12,7 +12,7 @@ export type LessonProgress = {
 };
 
 export type Progress = {
-  version: 1;
+  version: 2;
   lessons: Record<string, LessonProgress>;
   /**
    * Local calendar days (YYYY-MM-DD) on which the student did anything, oldest
@@ -36,7 +36,7 @@ export type AvatarSave = {
 /** Enough for any streak worth showing, and small enough never to matter. */
 const ACTIVITY_DAYS_KEPT = 120;
 
-const empty = (): Progress => ({ version: 1, lessons: {} });
+const empty = (): Progress => ({ version: 2, lessons: {} });
 
 const emptyLesson = (): LessonProgress => ({ exercises: {}, quizzes: {}, drafts: {} });
 
@@ -63,7 +63,7 @@ function isLessonProgress(value: unknown): value is LessonProgress {
  */
 function isProgress(value: unknown): value is Progress {
   if (!isRecord(value)) return false;
-  if (value.version !== 1) return false;
+  if (value.version !== 2) return false;
   if (!isRecord(value.lessons)) return false;
   if (value.activity !== undefined) {
     if (!Array.isArray(value.activity) || !value.activity.every((day) => typeof day === 'string')) return false;
@@ -77,11 +77,40 @@ function isProgress(value: unknown): value is Progress {
   return Object.values(value.lessons).every(isLessonProgress);
 }
 
+/**
+ * Version 2 inserted a new Module 9, so the old Modules 9 to 15 became 10 to
+ * 16. A version 1 save has its lesson ids ('09-1'), exercise ids ('m9-1-a')
+ * and interpret ids ('i-9-1', 'i-14-2') moved up one module, so nothing a
+ * student did is lost or credited to the wrong lesson.
+ */
+const shiftId = (id: string) =>
+  id.replace(/^(m|i-)?(0?9|1[0-5])-(?=\d)/, (_, prefix = '', n: string) => {
+    const next = String(Number(n) + 1);
+    return prefix + (n.length === 2 ? next.padStart(2, '0') : next) + '-';
+  });
+
+const shiftKeys = <T>(record: Record<string, T>) =>
+  Object.fromEntries(Object.entries(record).map(([key, value]) => [shiftId(key), value]));
+
+function migrate(value: unknown): unknown {
+  if (!isRecord(value) || value.version !== 1 || !isRecord(value.lessons)) return value;
+  const lessons = Object.fromEntries(
+    Object.entries(value.lessons).map(([id, lesson]) => {
+      if (shiftId(id) === id || !isLessonProgress(lesson)) return [id, lesson];
+      return [
+        shiftId(id),
+        { ...lesson, exercises: shiftKeys(lesson.exercises), quizzes: shiftKeys(lesson.quizzes), drafts: shiftKeys(lesson.drafts) },
+      ];
+    }),
+  );
+  return { ...value, version: 2, lessons };
+}
+
 export function getProgress(): Progress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return empty();
-    const parsed: unknown = JSON.parse(raw);
+    const parsed = migrate(JSON.parse(raw));
     return isProgress(parsed) ? parsed : empty();
   } catch {
     // Unavailable, blocked, or corrupt storage: the app still works, unsaved.
@@ -223,7 +252,7 @@ export function exportProgress(): string {
 
 export function importProgress(json: string): boolean {
   try {
-    const parsed: unknown = JSON.parse(json);
+    const parsed = migrate(JSON.parse(json));
     if (!isProgress(parsed)) return false;
     write(parsed);
     return true;

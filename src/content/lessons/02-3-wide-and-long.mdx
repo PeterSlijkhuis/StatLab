@@ -54,7 +54,7 @@ long %>% count(employee_id) %>% head(3)`} />
 
 Each time point has 480 rows, and each employee has 2. The identifier columns —
 `employee_id`, `department` — were simply repeated for each of an employee's
-rows, which is exactly what tells a model in Module 13 that those two rows
+rows, which is exactly what tells a model in Module 14 that those two rows
 belong to the same person.
 
 ## Tidy data
@@ -65,7 +65,7 @@ row. Three parts of this course insist on it.
 1. ggplot2 maps columns to axes and colours. To put time on the x axis, time has
    to be a column.
 2. `group_by(time)` in Module 3 needs a column to group by.
-3. `lmer(engagement ~ time + (1 | employee_id))` in Module 13 needs one row per
+3. `lmer(engagement ~ time + (1 | employee_id))` in Module 14 needs one row per
    observation, with the person identified.
 
 The reverse operation exists, and is useful when a reader wants a table rather

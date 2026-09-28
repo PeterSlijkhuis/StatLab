@@ -100,11 +100,11 @@ describe('the real course dataset', () => {
 });
 
 describe('the modelling packages', () => {
-  // The step that de-risks Module 13. If lme4 and lmerTest are not published for
-  // this R version, Module 13 teaches the paired t-test and the long-format
+  // The step that de-risks Module 14. If lme4 and lmerTest are not published for
+  // this R version, Module 14 teaches the paired t-test and the long-format
   // reshape only, and the chooser's mixed-model leaf becomes reference material
   // rather than a link to a lesson. Finding that out here costs one run;
-  // finding it out at Module 13 costs the module.
+  // finding it out at Module 14 costs the module.
   test('emmeans, car, lme4 and lmerTest install and attach', async () => {
     const real = new WebR();
     await real.init();
@@ -117,7 +117,7 @@ describe('the modelling packages', () => {
       expect(result.errored, result.output.map((o) => o.data).join('\n')).toBe(false);
 
       // Not just attachable: a mixed model must actually fit, which is what
-      // Module 13 asks a student to do.
+      // Module 14 asks a student to do.
       const fitted = await evaluateR(
         real,
         'd <- data.frame(y = rnorm(60), g = rep(letters[1:10], each = 6))\n' +

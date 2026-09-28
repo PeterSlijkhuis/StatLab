@@ -4,263 +4,318 @@ export const module12: ExerciseDef[] = [
   {
     id: 'm12-1-a',
     prompt:
-      'Build the change score - engagement at time 2 minus time 1 - as a new column called change, then fit the model in which training and mentoring interact. Store the fitted model in model_int and the interaction coefficient in b_int.',
+      'Fit wellbeing on remote as the only predictor. Store the model in model_remote, the remote coefficient in b_remote, and the two group means, SDs and group sizes in group_means. Then satisfy yourself that b_remote is exactly the difference between the two means in your table, in that order.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nd2 <- d %>% mutate(change = )\n\n# A star fits both main effects AND their interaction.\nmodel_int <- \nb_int <- ',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlevels(d$remote)\n\nmodel_remote <- \nb_remote <- \ngroup_means <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(estimate)\ngroup_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
     wrongAnswers: [
-      // A plus sign: no interaction term at all, so nothing to read.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training + mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // A colon without the main effects: the interaction term is there but means
-      // something different, because the main effects are not partialled out.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training:mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // The change score computed backwards.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t1 - engagement_t2)\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // Time 2 modelled directly: not a change score, and a different answer.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2)\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // A main effect read as the interaction.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes") %>% pull(estimate)',
+      // The intercept read as the effect. It is the reference group's mean.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nb_remote <- model_remote %>% tidy() %>% slice(1) %>% pull(estimate)\ngroup_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      // The difference taken the other way round: office-based minus remote.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nb_remote <- mean(d$wellbeing[d$remote == "No"]) - mean(d$wellbeing[d$remote == "Yes"])\ngroup_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      // A different predictor entirely.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ autonomy, data = d)\nb_remote <- model_remote %>% tidy() %>% slice(2) %>% pull(estimate)\ngroup_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      // The table grouped by the wrong factor, so it cannot check the coefficient.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nb_remote <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(estimate)\ngroup_means <- d %>%\n  group_by(department) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
     ],
     alternateSolutions: [
-      // The star written out in full: identical model.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training + mentoring + training:mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // Base R throughout, and the column added with $.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d\nd2$change <- d2$engagement_t2 - d2$engagement_t1\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- coef(model_int)["trainingYes:mentoringYes"]',
-      // The change computed inside the formula with I().
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(I(engagement_t2 - engagement_t1) ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% slice(4) %>% pull(estimate)',
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nb_remote <- coef(model_remote)[["remoteYes"]]\ngroup_means <- aggregate(wellbeing ~ remote, data = d, FUN = function(x) c(mean = mean(x), sd = sd(x), n = length(x)))',
+      // The coefficient computed from the means instead of read off the model.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\ngroup_means <- d %>%\n  group_by(remote) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\nb_remote <- group_means$mean_wellbeing[group_means$remote == "Yes"] - group_means$mean_wellbeing[group_means$remote == "No"]',
     ],
     check: `
-      if (!has_answer("model_int") || !has_answer("b_int")) {
-        list(pass = FALSE, message = "I need both model_int and b_int.")
+      if (!has_answer("model_remote") || !has_answer("b_remote") || !has_answer("group_means")) {
+        list(pass = FALSE, message = "I need all three: model_remote, b_remote and group_means.")
       } else {
-        model_int <- answer("model_int")
-        b <- as.vector(answer("b_int"))
+        model_remote <- answer("model_remote")
+        b <- as.vector(answer("b_remote"))
+        tbl <- answer("group_means")
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        d$change <- d$engagement_t2 - d$engagement_t1
-        reference <- lm(change ~ training * mentoring, data = d)
-        exp_b <- as.vector(coef(reference)["trainingYes:mentoringYes"])
-        exp_training <- as.vector(coef(reference)["trainingYes"])
-        exp_mentoring <- as.vector(coef(reference)["mentoringYes"])
-        flipped <- as.vector(coef(lm(I(-change) ~ training * mentoring, data = d))["trainingYes:mentoringYes"])
-        if (!inherits(model_int, "lm")) {
-          list(pass = FALSE, message = "model_int is not a fitted linear model.")
-        } else if (!("trainingYes:mentoringYes" %in% names(coef(model_int)))) {
-          list(pass = FALSE, message = paste0("model_int has no interaction term. Its coefficients are: ", paste(names(coef(model_int)), collapse = ", "), ". A plus sign fits the two effects side by side and forces them to be the same whatever the other factor is doing; a star adds the term that lets them differ."))
-        } else if (length(coef(model_int)) != 4L) {
-          list(pass = FALSE, message = paste0("A 2 x 2 design needs four coefficients: an intercept, two main effects and one interaction. Yours has ", length(coef(model_int)), ". A colon on its own gives the interaction without the main effects, which makes every coefficient mean something else."))
+        reference <- lm(wellbeing ~ remote, data = d)
+        exp_b <- as.vector(coef(reference)["remoteYes"])
+        intercept <- as.vector(coef(reference)["(Intercept)"])
+        raw <- tapply(d$wellbeing, d$remote, mean)
+        if (!inherits(model_remote, "lm")) {
+          list(pass = FALSE, message = "model_remote is not a fitted linear model.")
+        } else if (!("remoteYes" %in% names(coef(model_remote)))) {
+          list(pass = FALSE, message = paste0("model_remote has no remoteYes coefficient; its predictors are ", paste(setdiff(names(coef(model_remote)), "(Intercept)"), collapse = ", "), ". The predictor for this exercise is remote."))
         } else if (!is.numeric(b) || length(b) != 1L) {
-          list(pass = FALSE, message = "b_int should be a single number: the estimate on the trainingYes:mentoringYes row.")
-        } else if (isTRUE(all.equal(b, exp_training, tolerance = 1e-6, check.attributes = FALSE)) || isTRUE(all.equal(b, exp_mentoring, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is a main effect, not the interaction. In tidy() the interaction is the row whose term contains a colon: trainingYes:mentoringYes, which is ", round(exp_b, 2), "."))
-        } else if (isTRUE(all.equal(b, flipped, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Your change score runs the wrong way: you computed time 1 minus time 2, so every effect has the wrong sign. Change is the later measurement minus the earlier one.")
+          list(pass = FALSE, message = "b_remote should be a single number.")
+        } else if (isTRUE(all.equal(b, intercept, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the intercept, ", round(intercept, 2), ", which with a single two-level factor is the mean of the reference group - office-based employees. It is not the difference between the groups, and it is not the grand mean, which is ", round(mean(d$wellbeing), 2), "."))
+        } else if (isTRUE(all.equal(b, -exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("Right size, wrong direction. levels(d$remote) is No then Yes, so R takes No as the reference and remoteYes is Yes minus No, which is ", round(exp_b, 2), ". You have computed No minus Yes."))
         } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("b_int is ", round(b, 4), " but the interaction coefficient is ", round(exp_b, 4), ". Check that change is engagement_t2 - engagement_t1 and that the model uses a star."))
+          list(pass = FALSE, message = paste0("b_remote is ", round(b, 4), " but the remoteYes coefficient is ", round(exp_b, 4), "."))
+        } else if (!is.data.frame(tbl) || nrow(tbl) != 2L) {
+          list(pass = FALSE, message = "group_means should have exactly two rows, one for each level of remote. Check which variable you grouped by.")
         } else {
-          list(pass = TRUE, message = paste0("The interaction is ", round(exp_b, 2), ". Training alone adds ", round(exp_training, 2), " and mentoring alone ", round(exp_mentoring, 2), ", but employees who got both gained a further ", round(exp_b, 2), " on top of the two. That extra is what the interaction term is."))
+          has_levels <- FALSE
+          for (nm in names(tbl)) {
+            if (identical(sort(as.character(unique(tbl[[nm]]))), c("No", "Yes"))) has_levels <- TRUE
+          }
+          if (!has_levels) {
+            list(pass = FALSE, message = "group_means has no column holding the levels No and Yes, so it is not grouped by remote.")
+          } else {
+            list(pass = TRUE, message = paste0("Intercept ", round(intercept, 2), " is the office-based mean (", round(raw[["No"]], 2), "), and b = ", round(exp_b, 2), " carries you to the remote mean (", round(raw[["Yes"]], 2), "). With one two-level factor and nothing else in the model, the coefficients are the group means rewritten."))
+          }
         }
       }
     `,
     hints: [
-      'mutate(change = engagement_t2 - engagement_t1) adds the change column - later minus earlier.',
-      'training * mentoring fits both main effects and the interaction in one go.',
-      'tidy() names the interaction row trainingYes:mentoringYes, with a colon.',
+      'A factor goes into the formula by name: lm(wellbeing ~ remote, data = d).',
+      'levels(d$remote) shows which level R will use as the reference - the first one.',
+      'The coefficient is named after the other level, so filter(term == "remoteYes").',
+    ],
+  },
+  {
+    id: 'm12-1-b',
+    prompt:
+      'Show that the model reproduces the independent-samples t-test. Store the t statistic for remoteYes from the model in t_model, and the t statistic from the equal-variance t-test in t_ttest. The two should be identical in size. Work out for yourself why the signs differ.',
+    starterCode:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\n\nt_model <- \n# t.test defaults to Welch, which does NOT match the model. Ask for the pooled version.\nt_ttest <- ',
+    solution:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(statistic)\nt_ttest <- t.test(wellbeing ~ remote, data = d, var.equal = TRUE)$statistic',
+    wrongAnswers: [
+      // Welch: close, and not the same test.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(statistic)\nt_ttest <- t.test(wellbeing ~ remote, data = d)$statistic',
+      // The intercept row read as the group comparison.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% slice(1) %>% pull(statistic)\nt_ttest <- t.test(wellbeing ~ remote, data = d, var.equal = TRUE)$statistic',
+      // The p value handed in where the t statistic was asked for.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(p.value)\nt_ttest <- t.test(wellbeing ~ remote, data = d, var.equal = TRUE)$p.value',
+      // A paired test on two unrelated groups of different sizes would error, so
+      // instead: the one-sample test against zero, which runs and means nothing here.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(statistic)\nt_ttest <- t.test(d$wellbeing)$statistic',
+    ],
+    alternateSolutions: [
+      // Base R on both sides.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- summary(model_remote)$coefficients["remoteYes", "t value"]\nt_ttest <- t.test(d$wellbeing[d$remote == "No"], d$wellbeing[d$remote == "Yes"], var.equal = TRUE)$statistic',
+      // The t-test written with the groups the other way round, which flips its
+      // sign back into agreement with the model. Still a correct answer to the ask.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(statistic)\nt_ttest <- t.test(d$wellbeing[d$remote == "Yes"], d$wellbeing[d$remote == "No"], var.equal = TRUE)$statistic',
+    ],
+    check: `
+      if (!has_answer("t_model") || !has_answer("t_ttest")) {
+        list(pass = FALSE, message = "I need both t_model and t_ttest.")
+      } else {
+        t_model <- as.vector(answer("t_model"))
+        t_ttest <- as.vector(answer("t_ttest"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        reference <- summary(lm(wellbeing ~ remote, data = d))
+        exp_t <- as.vector(reference$coefficients["remoteYes", "t value"])
+        int_t <- as.vector(reference$coefficients["(Intercept)", "t value"])
+        welch <- as.vector(t.test(wellbeing ~ remote, data = d)$statistic)
+        if (!is.numeric(t_model) || length(t_model) != 1L || !is.numeric(t_ttest) || length(t_ttest) != 1L) {
+          list(pass = FALSE, message = "Both should be single numbers.")
+        } else if (isTRUE(all.equal(t_model, int_t, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "t_model is the intercept's t, which tests whether the office-based mean differs from zero - true of every wellbeing score in the study and of no interest. Filter tidy() to the remoteYes row.")
+        } else if (abs(t_model) < 1e-3 || abs(t_ttest) < 1e-3) {
+          list(pass = FALSE, message = "One of your two values looks like a p value rather than a t statistic. In tidy() the t is the statistic column; from t.test() it is the $statistic element.")
+        } else if (!isTRUE(all.equal(abs(t_model), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("t_model is ", round(t_model, 4), " but the remoteYes t is ", round(exp_t, 4), "."))
+        } else if (isTRUE(all.equal(abs(t_ttest), abs(welch), tolerance = 1e-9, check.attributes = FALSE)) && !isTRUE(all.equal(abs(welch), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is Welch's t (", round(welch, 4), "), which t.test() runs by default. Welch does not pool the two variances, so it is not the test the linear model runs. Add var.equal = TRUE and you get ", round(exp_t, 4), "."))
+        } else if (!isTRUE(all.equal(abs(t_ttest), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("t_ttest is ", round(t_ttest, 4), " but the equal-variance t-test on wellbeing by remote gives ", round(abs(exp_t), 4), " in size. Check that you compared the two remote groups and not something else."))
+        } else {
+          same_sign <- if (t_model * t_ttest > 0) "the same sign" else "opposite signs"
+          list(pass = TRUE, message = paste0("Both are ", round(abs(exp_t), 4), " in size, and yours have ", same_sign, ". t.test(y ~ g) subtracts the first level from the second, and lm codes the second relative to the first, so the sign flips whenever you write them in that order. The test is the same test; only the direction of the subtraction differs."))
+        }
+      }
+    `,
+    hints: [
+      'The model t is the statistic column of the remoteYes row in tidy().',
+      't.test(wellbeing ~ remote, data = d, var.equal = TRUE) runs the pooled-variance test; without var.equal you get Welch, which is a different test.',
+      'The result of t.test() is a list; its t statistic is in $statistic.',
     ],
   },
   {
     id: 'm12-2-a',
     prompt:
-      'Before any test, the four cell means. Build cell_means with one row for each combination of training and mentoring, holding the mean change, its SD and the cell n. Then compute boost: how much more the both-interventions group gained than you would predict by adding the two separate gains to the neither group.',
+      'Fit wellbeing on department, which has four levels. Store the model in model_dept, the name of the level R used as the reference in reference_level, and the coefficient for the Support department in b_support.',
     starterCode:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\n\ncell_means <- \n\n# boost = (both - neither) - (training only - neither) - (mentoring only - neither)\nboost <- ',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlevels(d$department)\n\nmodel_dept <- \nreference_level <- \nb_support <- ',
     solution:
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncell_means <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")\nm <- function(t, mt) cell_means$mean_change[cell_means$training == t & cell_means$mentoring == mt]\nboost <- (m("Yes", "Yes") - m("No", "No")) - (m("Yes", "No") - m("No", "No")) - (m("No", "Yes") - m("No", "No"))',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- levels(d$department)[1]\nb_support <- model_dept %>% tidy() %>% filter(term == "departmentSupport") %>% pull(estimate)',
     wrongAnswers: [
-      // The raw gap between the corners, which is the whole combined gain and
-      // not the extra over and above the two separate ones.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncell_means <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")\nm <- function(t, mt) cell_means$mean_change[cell_means$training == t & cell_means$mentoring == mt]\nboost <- m("Yes", "Yes") - m("No", "No")',
-      // The two separate gains added together: the additive prediction, not the excess.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncell_means <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")\nm <- function(t, mt) cell_means$mean_change[cell_means$training == t & cell_means$mentoring == mt]\nboost <- (m("Yes", "No") - m("No", "No")) + (m("No", "Yes") - m("No", "No"))',
-      // Only two cells, because only one factor was grouped on.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncell_means <- d2 %>%\n  group_by(training) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")\nboost <- cell_means$mean_change[cell_means$training == "Yes"] - cell_means$mean_change[cell_means$training == "No"]',
-      // Time 2 means rather than change means.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2)\ncell_means <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")\nm <- function(t, mt) cell_means$mean_change[cell_means$training == t & cell_means$mentoring == mt]\nboost <- (m("Yes", "Yes") - m("No", "No")) - (m("Yes", "No") - m("No", "No")) - (m("No", "Yes") - m("No", "No"))',
+      // The intercept read as Support's mean - the named mistake of this module.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- levels(d$department)[1]\nb_support <- model_dept %>% tidy() %>% slice(1) %>% pull(estimate)',
+      // The Support group mean offered as the coefficient.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- levels(d$department)[1]\nb_support <- mean(d$wellbeing[d$department == "Support"])',
+      // The reference guessed rather than read off the factor.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- "Support"\nb_support <- model_dept %>% tidy() %>% filter(term == "departmentSupport") %>% pull(estimate)',
+      // department treated as a number, which collapses four groups into one slope.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$department_num <- as.numeric(d$department)\nmodel_dept <- lm(wellbeing ~ department_num, data = d)\nreference_level <- levels(d$department)[1]\nb_support <- model_dept %>% tidy() %>% slice(2) %>% pull(estimate)',
     ],
     alternateSolutions: [
-      // Base R: the 2 x 2 table of means, and the same contrast written directly.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\ncells <- tapply(d$change, list(d$training, d$mentoring), mean)\ncell_means <- as.data.frame(as.table(cells))\nnames(cell_means) <- c("training", "mentoring", "mean_change")\nboost <- cells["Yes", "Yes"] - cells["Yes", "No"] - cells["No", "Yes"] + cells["No", "No"]',
-      // The algebraically identical short form, and a summarise() with extra columns.
-      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncell_means <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), se = sd(change) / sqrt(n()), .groups = "drop")\nm <- function(t, mt) cell_means$mean_change[cell_means$training == t & cell_means$mentoring == mt]\nboost <- m("Yes", "Yes") - m("Yes", "No") - m("No", "Yes") + m("No", "No")',
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- levels(d$department)[[1]]\nb_support <- coef(model_dept)["departmentSupport"]',
+      // The reference recovered from the model rather than from the data.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nreference_level <- model_dept$xlevels$department[1]\nb_support <- model_dept %>% tidy() %>% filter(term == "departmentSupport") %>% pull(estimate)',
     ],
     check: `
-      if (!has_answer("cell_means") || !has_answer("boost")) {
-        list(pass = FALSE, message = "I need both cell_means and boost.")
+      if (!has_answer("model_dept") || !has_answer("reference_level") || !has_answer("b_support")) {
+        list(pass = FALSE, message = "I need all three: model_dept, reference_level and b_support.")
       } else {
-        tbl <- answer("cell_means")
-        boost <- as.vector(answer("boost"))
+        model_dept <- answer("model_dept")
+        ref <- as.vector(answer("reference_level"))
+        b <- as.vector(answer("b_support"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        d$change <- d$engagement_t2 - d$engagement_t1
-        cells <- tapply(d$change, list(d$training, d$mentoring), mean)
-        exp_boost <- as.vector(cells["Yes", "Yes"] - cells["Yes", "No"] - cells["No", "Yes"] + cells["No", "No"])
-        corner <- as.vector(cells["Yes", "Yes"] - cells["No", "No"])
-        additive <- as.vector((cells["Yes", "No"] - cells["No", "No"]) + (cells["No", "Yes"] - cells["No", "No"]))
-        if (!is.data.frame(tbl) || nrow(tbl) != 4L) {
-          list(pass = FALSE, message = paste0("cell_means should have four rows - one per combination of two yes/no factors. Yours has ", if (is.data.frame(tbl)) nrow(tbl) else 0, ". group_by() takes both factors: group_by(training, mentoring)."))
+        reference <- lm(wellbeing ~ department, data = d)
+        exp_ref <- levels(d$department)[1]
+        exp_b <- as.vector(coef(reference)["departmentSupport"])
+        intercept <- as.vector(coef(reference)["(Intercept)"])
+        means <- tapply(d$wellbeing, d$department, mean)
+        if (!inherits(model_dept, "lm")) {
+          list(pass = FALSE, message = "model_dept is not a fitted linear model.")
+        } else if (length(coef(model_dept)) != 4L || !("departmentSupport" %in% names(coef(model_dept)))) {
+          list(pass = FALSE, message = paste0("A four-level factor costs three coefficients plus an intercept, so the model should have four in all. Yours has ", length(coef(model_dept)), ": ", paste(names(coef(model_dept)), collapse = ", "), ". If you converted department to a number, R fitted one straight line across four labels whose order carries no meaning."))
+        } else if (!is.character(ref) || length(ref) != 1L) {
+          list(pass = FALSE, message = "reference_level should be a single piece of text: the name of the level R left out of the coefficient list.")
+        } else if (!identical(ref, exp_ref)) {
+          list(pass = FALSE, message = paste0("reference_level is \\"", ref, "\\", but R takes the FIRST level of the factor, which is \\"", exp_ref, "\\". Factor levels are alphabetical unless you change them, and the reference is the one with no coefficient of its own."))
+        } else if (!is.numeric(b) || length(b) != 1L) {
+          list(pass = FALSE, message = "b_support should be a single number.")
+        } else if (isTRUE(all.equal(b, intercept, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the intercept, ", round(intercept, 2), ". With one factor and nothing else in the model the intercept is the mean of the reference department (", exp_ref, "), not of Support and not of everybody."))
+        } else if (isTRUE(all.equal(b, as.vector(means[["Support"]]), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is Support's own mean (", round(means[["Support"]], 2), "). The coefficient is a difference: Support's mean minus the reference department's, which is ", round(exp_b, 2), "."))
+        } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("b_support is ", round(b, 4), " but the departmentSupport coefficient is ", round(exp_b, 4), "."))
         } else {
-          found <- FALSE
-          for (nm in names(tbl)) {
-            value <- tbl[[nm]]
-            if (is.numeric(value) && length(value) == 4L &&
-                isTRUE(all.equal(sort(as.vector(value)), sort(as.vector(cells)), tolerance = 1e-6, check.attributes = FALSE))) found <- TRUE
-          }
-          if (!found) {
-            list(pass = FALSE, message = paste0("No column of cell_means holds the four mean change scores, which are ", paste(round(sort(as.vector(cells)), 2), collapse = ", "), ". Check that you summarised change (engagement_t2 minus engagement_t1) rather than engagement itself."))
-          } else if (!is.numeric(boost) || length(boost) != 1L) {
-            list(pass = FALSE, message = "boost should be a single number.")
-          } else if (isTRUE(all.equal(boost, corner, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = paste0("That is the whole gap between the both-interventions cell and the neither cell (", round(corner, 2), "). Most of that gap is the two interventions doing their separate jobs. Subtract both separate gains to get what is left over."))
-          } else if (isTRUE(all.equal(boost, additive, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = paste0("That is the additive prediction (", round(additive, 2), "): what the both cell would gain if the two interventions simply stacked. The boost is how far the real both cell beats that prediction."))
-          } else if (!isTRUE(all.equal(boost, exp_boost, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = paste0("boost is ", round(boost, 4), " but should be ", round(exp_boost, 4), ". The short form is mean(Yes,Yes) - mean(Yes,No) - mean(No,Yes) + mean(No,No)."))
-          } else {
-            list(pass = TRUE, message = paste0("boost = ", round(exp_boost, 2), ". The both cell gained ", round(corner, 2), " over the neither cell, but adding the two separate gains only predicts ", round(additive, 2), " - the rest is the two working together. Fit the model with a star and you will find this same number sitting on the interaction row."))
-          }
+          list(pass = TRUE, message = paste0("The reference is ", exp_ref, ", whose mean is the intercept, ", round(intercept, 2), ". b = ", round(exp_b, 2), " for Support means its mean is ", round(means[["Support"]], 2), ". Every coefficient in this model is a comparison with ", exp_ref, " - so none of them compares Marketing with Sales, which is what lesson 12-3 is for."))
         }
       }
     `,
     hints: [
-      'group_by(training, mentoring) groups on both factors at once and gives four rows.',
-      'Add .groups = "drop" to summarise() to leave the result ungrouped.',
-      'Written out fully, boost is mean(Yes,Yes) - mean(Yes,No) - mean(No,Yes) + mean(No,No).',
+      'levels(d$department) lists the levels in the order R uses; the first is the reference.',
+      'lm(wellbeing ~ department, data = d) produces three coefficients for four groups.',
+      'The coefficient names are the factor name glued to the level name: departmentSupport.',
     ],
   },
   {
     id: 'm12-2-b',
     prompt:
-      'Produce the factorial ANOVA table for the change score with type III sums of squares, correctly. Fit the model with sum-to-zero contrasts for both factors, store it in model_sum, store the car::Anova table as a data frame in aov_tbl, and store the F value for the training main effect in f_training.',
+      'Build dept_summary: one row per department with the mean, the median, the SD and the n of wellbeing. Then store in top_by_median the name of the department with the highest MEDIAN wellbeing. It is not the department with the highest mean, and working out why is the point of the exercise.',
     starterCode:
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\n\n# Type III main-effect tests are only meaningful with sum-to-zero contrasts.\nmodel_sum <- \naov_tbl <- \nf_training <- ',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\ndept_summary <- \ntop_by_median <- ',
     solution:
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d,\n                contrasts = list(training = contr.sum, mentoring = contr.sum))\naov_tbl <- as.data.frame(Anova(model_sum, type = "III"))\nf_training <- aov_tbl["training", "F value"]',
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(department) %>%\n  summarise(\n    mean_wellbeing = mean(wellbeing),\n    median_wellbeing = median(wellbeing),\n    sd_wellbeing = sd(wellbeing),\n    n = n()\n  )\ntop_by_median <- dept_summary %>%\n  arrange(desc(median_wellbeing)) %>%\n  slice(1) %>%\n  pull(department) %>%\n  as.character()',
     wrongAnswers: [
-      // The contrasts argument left off: R uses treatment contrasts, and the
-      // type III main-effect tests then answer a different question.
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d)\naov_tbl <- as.data.frame(Anova(model_sum, type = "III"))\nf_training <- aov_tbl["training", "F value"]',
-      // Type II, which ignores the interaction when testing the main effects.
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d,\n                contrasts = list(training = contr.sum, mentoring = contr.sum))\naov_tbl <- as.data.frame(Anova(model_sum, type = "II"))\nf_training <- aov_tbl["training", "F value"]',
-      // The interaction row read as the training main effect.
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d,\n                contrasts = list(training = contr.sum, mentoring = contr.sum))\naov_tbl <- as.data.frame(Anova(model_sum, type = "III"))\nf_training <- aov_tbl["training:mentoring", "F value"]',
-      // Sum-to-zero contrasts applied to only one of the two factors.
-      'library(broom)\nlibrary(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d,\n                contrasts = list(training = contr.sum))\naov_tbl <- as.data.frame(Anova(model_sum, type = "III"))\nf_training <- aov_tbl["training", "F value"]',
+      // Sorted on the mean instead of the median: the whole trap.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(department) %>%\n  summarise(mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\ntop_by_median <- dept_summary %>%\n  arrange(desc(mean_wellbeing)) %>%\n  slice(1) %>%\n  pull(department) %>%\n  as.character()',
+      // The table has no median column at all.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(department) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\ntop_by_median <- dept_summary %>%\n  arrange(desc(mean_wellbeing)) %>%\n  slice(1) %>%\n  pull(department) %>%\n  as.character()',
+      // Grouped by site rather than department.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(site) %>%\n  summarise(mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\ntop_by_median <- dept_summary %>%\n  arrange(desc(median_wellbeing)) %>%\n  slice(1) %>%\n  pull(site) %>%\n  as.character()',
+      // The lowest median rather than the highest.
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(department) %>%\n  summarise(mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\ntop_by_median <- dept_summary %>%\n  arrange(median_wellbeing) %>%\n  slice(1) %>%\n  pull(department) %>%\n  as.character()',
     ],
     alternateSolutions: [
-      // The contrasts set on the data instead of in the call: the same model.
-      'library(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\ncontrasts(d$training) <- contr.sum\ncontrasts(d$mentoring) <- contr.sum\nmodel_sum <- lm(change ~ training * mentoring, data = d)\naov_tbl <- as.data.frame(Anova(model_sum, type = "III"))\nf_training <- aov_tbl$"F value"[rownames(aov_tbl) == "training"]',
-      // The type given as the number 3, which car accepts, and the table indexed by number.
-      'library(car)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\nmodel_sum <- lm(change ~ training * mentoring, data = d,\n                contrasts = list(training = contr.sum, mentoring = contr.sum))\naov_tbl <- as.data.frame(Anova(model_sum, type = 3))\nf_training <- aov_tbl[["F value"]][which(rownames(aov_tbl) == "training")]',
+      // Base R throughout.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- aggregate(wellbeing ~ department, data = d,\n  FUN = function(x) c(mean = mean(x), median = median(x), sd = sd(x), n = length(x)))\nmedians <- tapply(d$wellbeing, d$department, median)\ntop_by_median <- names(which.max(medians))',
+      // which.max() on the summarised column instead of arrange() + slice().
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndept_summary <- d %>%\n  group_by(department) %>%\n  summarise(mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing), sd_wellbeing = sd(wellbeing), n = n())\ntop_by_median <- as.character(dept_summary$department[which.max(dept_summary$median_wellbeing)])',
     ],
     check: `
-      if (!has_answer("model_sum") || !has_answer("aov_tbl") || !has_answer("f_training")) {
-        list(pass = FALSE, message = "I need all three: model_sum, aov_tbl and f_training.")
+      if (!has_answer("dept_summary") || !has_answer("top_by_median")) {
+        list(pass = FALSE, message = "I need both dept_summary and top_by_median.")
       } else {
-        model_sum <- answer("model_sum")
-        tbl <- answer("aov_tbl")
-        f_training <- as.vector(answer("f_training"))
+        tbl <- answer("dept_summary")
+        top <- as.vector(answer("top_by_median"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        d$change <- d$engagement_t2 - d$engagement_t1
-        correct_fit <- lm(change ~ training * mentoring, data = d,
-                          contrasts = list(training = contr.sum, mentoring = contr.sum))
-        default_fit <- lm(change ~ training * mentoring, data = d)
-        correct3 <- as.data.frame(car::Anova(correct_fit, type = "III"))
-        default3 <- as.data.frame(car::Anova(default_fit, type = "III"))
-        type2 <- as.data.frame(car::Anova(correct_fit, type = "II"))
-        exp_f <- as.vector(correct3["training", "F value"])
-        exp_int <- as.vector(correct3["training:mentoring", "F value"])
-        if (!inherits(model_sum, "lm")) {
-          list(pass = FALSE, message = "model_sum is not a fitted linear model.")
-        } else if (!("trainingYes:mentoringYes" %in% names(coef(model_sum))) && !any(grepl(":", names(coef(model_sum))))) {
-          list(pass = FALSE, message = "model_sum has no interaction term. Use change ~ training * mentoring.")
-        } else if (!is.data.frame(tbl) || !("F value" %in% names(tbl))) {
-          list(pass = FALSE, message = "aov_tbl should be the car::Anova table turned into a data frame with as.data.frame(); it has columns Sum Sq, Df, F value and Pr(>F).")
-        } else if (!is.numeric(f_training) || length(f_training) != 1L) {
-          list(pass = FALSE, message = "f_training should be a single number: the F value on the training row.")
-        } else if (isTRUE(all.equal(f_training, exp_int, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the interaction's F (", round(exp_int, 2), "), on the training:mentoring row. The training main effect is on the row called training."))
-        } else if (isTRUE(all.equal(f_training, as.vector(default3["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("You fitted without sum-to-zero contrasts, so that F (", round(as.vector(default3["training", "F value"]), 2), ") is not the main effect of training. Under R's default treatment contrasts a type III main-effect test asks about training among employees with NO mentoring only - a simple effect wearing a main effect's name. With contrasts = list(training = contr.sum, mentoring = contr.sum) the same row becomes ", round(exp_f, 2), "."))
-        } else if (isTRUE(all.equal(f_training, as.vector(type2["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is the type II F (", round(as.vector(type2["training", "F value"]), 2), "). Type II tests each main effect while ignoring the interaction, which is only defensible when the interaction is negligible. This exercise asks for type III."))
-        } else if (!isTRUE(all.equal(f_training, exp_f, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("f_training is ", round(f_training, 4), " but the type III F for training with sum-to-zero contrasts is ", round(exp_f, 4), "."))
+        means <- tapply(d$wellbeing, d$department, mean)
+        medians <- tapply(d$wellbeing, d$department, median)
+        exp_top <- names(which.max(medians))
+        exp_top_mean <- names(which.max(means))
+        if (!is.data.frame(tbl) || nrow(tbl) != nlevels(d$department)) {
+          list(pass = FALSE, message = paste0("dept_summary should have one row per department, so ", nlevels(d$department), " rows. Yours has ", if (is.data.frame(tbl)) nrow(tbl) else 0, ". Check which variable you grouped by."))
         } else {
-          list(pass = TRUE, message = paste0("F for training = ", round(exp_f, 2), " and for the interaction = ", round(exp_int, 2), ". Worth knowing: the interaction's type III F is the same under either contrast coding - it is only the main-effect rows that change, which is exactly why the contrasts argument is not optional."))
+          has_median <- FALSE
+          for (value in numeric_columns(tbl)) {
+            if (length(value) == nrow(tbl) &&
+                isTRUE(all.equal(sort(value), sort(as.vector(medians)), tolerance = 1e-6, check.attributes = FALSE))) has_median <- TRUE
+          }
+          if (!has_median) {
+            list(pass = FALSE, message = "dept_summary has no column of medians. Add median_wellbeing = median(wellbeing) to your summarise() - you cannot answer the second half from means alone.")
+          } else if (!is.character(top) || length(top) != 1L) {
+            list(pass = FALSE, message = "top_by_median should be a single department name as text. pull() on a factor column gives a factor; wrap it in as.character().")
+          } else if (identical(top, exp_top_mean) && !identical(exp_top_mean, exp_top)) {
+            list(pass = FALSE, message = paste0("\\"", exp_top_mean, "\\" has the highest MEAN. The highest MEDIAN is a different department, and that is the finding: one department has both the heaviest workload and the most autonomy, so its wellbeing scores are pulled apart at both ends. Its mean lands mid-table while its typical employee is the best off in the company."))
+          } else if (!identical(top, exp_top)) {
+            list(pass = FALSE, message = paste0("top_by_median is \\"", top, "\\" but the highest median belongs to \\"", exp_top, "\\". Sort on the median column, descending."))
+          } else {
+            list(pass = TRUE, message = paste0(exp_top, " has the highest median (", round(medians[[exp_top]], 1), ") while ", exp_top_mean, " has the highest mean (", round(means[[exp_top_mean]], 1), "). A model of wellbeing on department compares MEANS, so it will rank ", exp_top_mean, " top and say nothing about this. That is why every model in Part 3 is read next to the descriptives."))
+          }
         }
       }
     `,
     hints: [
-      'Pass contrasts = list(training = contr.sum, mentoring = contr.sum) inside the lm() call, alongside data = d.',
-      'Anova() with a capital A comes from car; anova() with a lower-case a is a different function that gives sequential (type I) sums of squares.',
-      'as.data.frame() on the result lets you index it by row name: aov_tbl["training", "F value"].',
+      'group_by(department) %>% summarise(...) with both mean(wellbeing) and median(wellbeing).',
+      'arrange(desc(median_wellbeing)) %>% slice(1) puts the top row first and keeps only it.',
+      'pull(department) on a factor gives a factor; as.character() turns it into plain text.',
     ],
   },
   {
     id: 'm12-3-a',
     prompt:
-      'An interaction means the effect of one factor depends on the other, so report each effect where it actually applies. From the cell means, store the effect of training among employees with no mentoring in effect_no_mentoring, and among employees who also got mentoring in effect_yes_mentoring. Each is the Yes-minus-No difference in mean change within that half of the data.',
+      'The overall F says at least two departments differ. Find out which. Store the Tukey-adjusted pairwise comparisons in pairs_tbl as a data frame, and the number of those comparisons whose adjusted p value is below .05 in n_significant.',
     starterCode:
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\n\ncells <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), .groups = "drop")\ncells\n\neffect_no_mentoring <- \neffect_yes_mentoring <- ',
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\n\npairs_tbl <- \nn_significant <- ',
     solution:
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncells <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), .groups = "drop")\ncell <- function(t, mt) cells$mean_change[cells$training == t & cells$mentoring == mt]\neffect_no_mentoring <- cell("Yes", "No") - cell("No", "No")\neffect_yes_mentoring <- cell("Yes", "Yes") - cell("No", "Yes")',
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\ncomparisons <- emmeans(model_dept, pairwise ~ department, adjust = "tukey")\npairs_tbl <- as.data.frame(comparisons$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
     wrongAnswers: [
-      // The overall training effect used for both: the interaction erased.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\noverall <- mean(d2$change[d2$training == "Yes"]) - mean(d2$change[d2$training == "No"])\neffect_no_mentoring <- overall\neffect_yes_mentoring <- overall',
-      // Split by training instead of by mentoring: the other pair of simple effects.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncells <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), .groups = "drop")\ncell <- function(t, mt) cells$mean_change[cells$training == t & cells$mentoring == mt]\neffect_no_mentoring <- cell("No", "Yes") - cell("No", "No")\neffect_yes_mentoring <- cell("Yes", "Yes") - cell("Yes", "No")',
-      // Both differences taken the wrong way round.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\ncells <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), .groups = "drop")\ncell <- function(t, mt) cells$mean_change[cells$training == t & cells$mentoring == mt]\neffect_no_mentoring <- cell("No", "No") - cell("Yes", "No")\neffect_yes_mentoring <- cell("No", "Yes") - cell("Yes", "Yes")',
-      // Cell means of engagement at time 2 rather than of the change.
-      'library(dplyr)\nlibrary(ggplot2)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2)\ncells <- d2 %>%\n  group_by(training, mentoring) %>%\n  summarise(mean_change = mean(change), .groups = "drop")\ncell <- function(t, mt) cells$mean_change[cells$training == t & cells$mentoring == mt]\neffect_no_mentoring <- cell("Yes", "No") - cell("No", "No")\neffect_yes_mentoring <- cell("Yes", "Yes") - cell("No", "Yes")',
+      // No adjustment: six tests at .05 each, and a different p column.
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\ncomparisons <- emmeans(model_dept, pairwise ~ department, adjust = "none")\npairs_tbl <- as.data.frame(comparisons$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
+      // Bonferroni instead of Tukey: also adjusted, also not what was asked.
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\ncomparisons <- emmeans(model_dept, pairwise ~ department, adjust = "bonferroni")\npairs_tbl <- as.data.frame(comparisons$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
+      // The estimated marginal means rather than the comparisons between them.
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\ncomparisons <- emmeans(model_dept, pairwise ~ department, adjust = "tukey")\npairs_tbl <- as.data.frame(comparisons$emmeans)\nn_significant <- sum(pairs_tbl$p.value < 0.05, na.rm = TRUE)',
+      // Pairwise on the two-level factor, which gives a single comparison.
+      'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\ncomparisons <- emmeans(model_remote, pairwise ~ remote, adjust = "tukey")\npairs_tbl <- as.data.frame(comparisons$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
     ],
     alternateSolutions: [
-      // Base R via a 2 x 2 table of means.
-      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd$change <- d$engagement_t2 - d$engagement_t1\ncells <- tapply(d$change, list(d$training, d$mentoring), mean)\neffect_no_mentoring <- cells["Yes", "No"] - cells["No", "No"]\neffect_yes_mentoring <- cells["Yes", "Yes"] - cells["No", "Yes"]',
-      // Two separate models, each fitted within one half of the data. The slope
-      // of training in each is that half\'s simple effect.
-      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\neffect_no_mentoring <- coef(lm(change ~ training, data = filter(d2, mentoring == "No")))[["trainingYes"]]\neffect_yes_mentoring <- coef(lm(change ~ training, data = filter(d2, mentoring == "Yes")))[["trainingYes"]]',
+      // contrast() rather than the pairwise formula.
+      'library(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nemm <- emmeans(model_dept, ~ department)\npairs_tbl <- as.data.frame(contrast(emm, method = "pairwise", adjust = "tukey"))\nn_significant <- length(which(pairs_tbl$p.value < 0.05))',
+      // Tukey by its other name: emmeans treats "mvt"-free pairwise as Tukey by default.
+      'library(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\npairs_tbl <- as.data.frame(emmeans(model_dept, pairwise ~ department)$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
     ],
     check: `
-      if (!has_answer("effect_no_mentoring") || !has_answer("effect_yes_mentoring")) {
-        list(pass = FALSE, message = "I need both effect_no_mentoring and effect_yes_mentoring.")
+      if (!has_answer("pairs_tbl") || !has_answer("n_significant")) {
+        list(pass = FALSE, message = "I need both pairs_tbl and n_significant.")
       } else {
-        no_m <- as.vector(answer("effect_no_mentoring"))
-        yes_m <- as.vector(answer("effect_yes_mentoring"))
+        tbl <- answer("pairs_tbl")
+        n_sig <- as.vector(answer("n_significant"))
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
-        d$change <- d$engagement_t2 - d$engagement_t1
-        cells <- tapply(d$change, list(d$training, d$mentoring), mean)
-        exp_no <- as.vector(cells["Yes", "No"] - cells["No", "No"])
-        exp_yes <- as.vector(cells["Yes", "Yes"] - cells["No", "Yes"])
-        overall <- mean(d$change[d$training == "Yes"]) - mean(d$change[d$training == "No"])
-        if (!is.numeric(no_m) || length(no_m) != 1L || !is.numeric(yes_m) || length(yes_m) != 1L) {
-          list(pass = FALSE, message = "Both should be single numbers.")
-        } else if (isTRUE(all.equal(no_m, yes_m, tolerance = 1e-12, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("Your two simple effects are identical, so you have reported the overall training effect (", round(overall, 2), ") twice. The whole point of a simple effect is that it differs between the levels of the other factor - here they are ", round(exp_no, 2), " and ", round(exp_yes, 2), "."))
-        } else if (isTRUE(all.equal(no_m, -exp_no, tolerance = 1e-6, check.attributes = FALSE)) && isTRUE(all.equal(yes_m, -exp_yes, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Both of your differences run backwards. Each simple effect is the training-Yes cell minus the training-No cell within that level of mentoring.")
-        } else if (!isTRUE(all.equal(no_m, exp_no, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("effect_no_mentoring is ", round(no_m, 4), " but the training effect among employees without mentoring is ", round(exp_no, 4), ". Hold mentoring at No and take the difference across training."))
-        } else if (!isTRUE(all.equal(yes_m, exp_yes, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("effect_yes_mentoring is ", round(yes_m, 4), " but the training effect among mentored employees is ", round(exp_yes, 4), "."))
+        reference <- lm(wellbeing ~ department, data = d)
+        emm <- emmeans::emmeans(reference, ~ department)
+        tukey <- as.data.frame(emmeans::contrast(emm, method = "pairwise", adjust = "tukey"))
+        none <- as.data.frame(emmeans::contrast(emm, method = "pairwise", adjust = "none"))
+        exp_n <- sum(tukey$p.value < 0.05)
+        if (!is.data.frame(tbl)) {
+          list(pass = FALSE, message = "pairs_tbl should be a data frame. as.data.frame() on the contrasts element of the emmeans result turns it into one.")
+        } else if (!("p.value" %in% names(tbl)) || !("estimate" %in% names(tbl))) {
+          list(pass = FALSE, message = paste0("pairs_tbl has columns ", paste(names(tbl), collapse = ", "), ". The comparisons table has estimate, SE, df, t.ratio and p.value - you may have taken the emmeans element (the group means) instead of the contrasts element."))
+        } else if (nrow(tbl) != nrow(tukey)) {
+          list(pass = FALSE, message = paste0("Four departments give ", nrow(tukey), " pairwise comparisons; pairs_tbl has ", nrow(tbl), ". Check that you ran the comparisons on department."))
+        } else if (isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(none$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "Those p values are unadjusted. Six comparisons at .05 each give about a 26 % chance of at least one false positive, which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
+        } else if (!isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(tukey$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "Your p values are adjusted, but not with Tukey's method. Tukey is the one designed for all pairwise comparisons after a linear model; Bonferroni is more conservative here. Pass adjust = \\"tukey\\".")
+        } else if (!is.numeric(n_sig) || length(n_sig) != 1L) {
+          list(pass = FALSE, message = "n_significant should be a single number: how many rows of pairs_tbl have p.value below .05.")
+        } else if (!isTRUE(all.equal(as.numeric(n_sig), as.numeric(exp_n), tolerance = 1e-9, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("n_significant is ", n_sig, " but ", exp_n, " of the ", nrow(tukey), " Tukey-adjusted comparisons fall below .05."))
         } else {
-          list(pass = TRUE, message = paste0("Training is worth ", round(exp_no, 2), " points without mentoring and ", round(exp_yes, 2), " points with it - a difference of ", round(exp_yes - exp_no, 2), ", which is the interaction coefficient again. The overall training effect, ", round(overall, 2), ", is an average of these two and describes neither group. When an interaction is present, report the simple effects."))
+          biggest <- tukey[which.max(abs(tukey$estimate)), ]
+          list(pass = TRUE, message = paste0(exp_n, " of ", nrow(tukey), " comparisons survive the Tukey adjustment. The largest gap is ", as.character(biggest$contrast), ", a difference of ", round(abs(biggest$estimate), 2), " points. Report the comparison, its difference and its adjusted p - never just the overall F, which tells a reader only that something differs somewhere."))
         }
       }
     `,
     hints: [
-      'A simple effect is a difference computed inside one level of the other factor.',
-      'cells$mean_change[cells$training == "Yes" & cells$mentoring == "No"] picks out one cell mean.',
-      'Both effects are Yes minus No on training; only the level of mentoring you hold fixed changes.',
+      'emmeans(model, pairwise ~ department, adjust = "tukey") returns a list with an emmeans element and a contrasts element.',
+      'The comparisons are in the contrasts element; as.data.frame() makes it a plain table.',
+      'sum(pairs_tbl$p.value < 0.05) counts the rows below .05, because sum() over TRUE and FALSE counts the TRUEs.',
     ],
   },
 ];

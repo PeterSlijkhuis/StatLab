@@ -49,18 +49,18 @@ const BAYES = /\(bayesian\)/i;
 // from the tree must fail here.
 const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lessonId: string }[] = [
   { clicks: [...INDEPENDENT, /compare the mean/i], id: 'mean-vs-value', model: 'Intercept-only linear model', code: 'lm(I(exam_score - 70) ~ 1', lessonId: '08-3' },
-  { clicks: [...NUMERIC, /one numeric predictor/i], id: 'simple-regression', model: 'Simple linear regression', code: 'lm(wellbeing ~ autonomy, data = d)', lessonId: '09-2' },
-  { clicks: [...NUMERIC, /several predictors/i], id: 'multiple-regression', model: 'Multiple linear regression', code: 'wellbeing ~ autonomy + workload + tenure_years', lessonId: '10-1' },
-  { clicks: [...GROUPS, /with two groups/i], id: 'two-groups', model: 'Linear model with a two-group predictor', code: 'group_by(remote) %>% summarise(', lessonId: '11-1' },
-  { clicks: [...GROUPS, /three or more groups/i], id: 'several-groups', model: 'Linear model with a categorical predictor', code: 'emmeans(model, pairwise ~ department, adjust = "tukey")', lessonId: '11-2' },
-  { clicks: [...GROUPS, /covariate/i], id: 'groups-with-covariate', model: 'Linear model with a group and a covariate', code: 'lm(engagement_t2 ~ engagement_t1 + training', lessonId: '10-2' },
-  { clicks: [...GROUPS, /two grouping variables/i], id: 'factorial', model: 'Linear model with an interaction (factorial design)', code: 'contrasts = list(training = contr.sum, mentoring = contr.sum)', lessonId: '12-2' },
-  { clicks: [...REPEATED, /twice/i], id: 'before-after', model: 'Linear mixed-effects model for two time points', code: 'pivot_longer', lessonId: '13-3' },
-  { clicks: [...REPEATED, /three or more/i], id: 'repeated-measures', model: 'Linear mixed-effects model', code: 'weight ~ time + (1 | Chick)', lessonId: '13-2' },
-  { clicks: [...NUMBER, /teams, classes or sites/i], id: 'nested-groups', model: 'Linear mixed-effects model with a grouping factor', code: '(1 | site)', lessonId: '13-3' },
-  { clicks: [...YES_NO, /numbers, groups or both/i], id: 'logistic-regression', model: 'Logistic regression', code: 'family = binomial', lessonId: '14-2' },
-  { clicks: [BAYES, /one proportion/i], id: 'bayes-proportion', model: 'Bayesian estimate of a proportion (beta-binomial)', code: 'qbeta(', lessonId: '15-2' },
-  { clicks: [BAYES, /in a linear model/i], id: 'bayes-factor-models', model: 'Bayes factor from the BIC', code: 'exp((BIC(null_model) - BIC(model)) / 2)', lessonId: '15-3' },
+  { clicks: [...NUMERIC, /one numeric predictor/i], id: 'simple-regression', model: 'Simple linear regression', code: 'lm(wellbeing ~ autonomy, data = d)', lessonId: '10-2' },
+  { clicks: [...NUMERIC, /several predictors/i], id: 'multiple-regression', model: 'Multiple linear regression', code: 'wellbeing ~ autonomy + workload + tenure_years', lessonId: '11-1' },
+  { clicks: [...GROUPS, /with two groups/i], id: 'two-groups', model: 'Linear model with a two-group predictor', code: 'group_by(remote) %>% summarise(', lessonId: '12-1' },
+  { clicks: [...GROUPS, /three or more groups/i], id: 'several-groups', model: 'Linear model with a categorical predictor', code: 'emmeans(model, pairwise ~ department, adjust = "tukey")', lessonId: '12-2' },
+  { clicks: [...GROUPS, /covariate/i], id: 'groups-with-covariate', model: 'Linear model with a group and a covariate', code: 'lm(engagement_t2 ~ engagement_t1 + training', lessonId: '11-2' },
+  { clicks: [...GROUPS, /two grouping variables/i], id: 'factorial', model: 'Linear model with an interaction (factorial design)', code: 'contrasts = list(training = contr.sum, mentoring = contr.sum)', lessonId: '13-2' },
+  { clicks: [...REPEATED, /twice/i], id: 'before-after', model: 'Linear mixed-effects model for two time points', code: 'pivot_longer', lessonId: '14-3' },
+  { clicks: [...REPEATED, /three or more/i], id: 'repeated-measures', model: 'Linear mixed-effects model', code: 'weight ~ time + (1 | Chick)', lessonId: '14-2' },
+  { clicks: [...NUMBER, /teams, classes or sites/i], id: 'nested-groups', model: 'Linear mixed-effects model with a grouping factor', code: '(1 | site)', lessonId: '14-3' },
+  { clicks: [...YES_NO, /numbers, groups or both/i], id: 'logistic-regression', model: 'Logistic regression', code: 'family = binomial', lessonId: '15-2' },
+  { clicks: [BAYES, /one proportion/i], id: 'bayes-proportion', model: 'Bayesian estimate of a proportion (beta-binomial)', code: 'qbeta(', lessonId: '16-2' },
+  { clicks: [BAYES, /in a linear model/i], id: 'bayes-factor-models', model: 'Bayes factor from the BIC', code: 'exp((BIC(null_model) - BIC(model)) / 2)', lessonId: '16-3' },
 ];
 
 /** Answers beyond the course, reached by the same clicks a student would make. */
@@ -423,6 +423,6 @@ describe('lesson links', () => {
   test('a model beyond the course links to the lesson it builds on', async () => {
     renderChooser();
     await clickThrough([...REPEATED, /different rates/i]);
-    expect(screen.getByRole('link', { name: /builds on the lesson: random intercepts/i }).getAttribute('href')).toBe('/lesson/13-2');
+    expect(screen.getByRole('link', { name: /builds on the lesson: random intercepts/i }).getAttribute('href')).toBe('/lesson/14-2');
   });
 });

@@ -34,7 +34,7 @@ model3 %>% glance() %>% select(r.squared, adj.r.squared, sigma, statistic, df, d
   ]}
 />
 
-<Exercise id="m10-3-a" />
+<Exercise id="m11-3-a" />
 
 ## Comparing two models directly
 
@@ -52,7 +52,7 @@ bind_rows(
 ) %>% select(model, r.squared, adj.r.squared, sigma)`} />
 
 The *F* in that table tests the increase in *R*² against what you would expect
-from adding two arbitrary predictors. This is the same machinery Module 12 uses
+from adding two arbitrary predictors. This is the same machinery Module 13 uses
 to test an interaction: fit with, fit without, compare.
 
 ## The APA report
@@ -88,7 +88,7 @@ means in the units of the study. Conventions worth getting right the first time:
 />
 
 <Interpret
-  id="i-10-3"
+  id="i-11-3"
   question="Your model gives F(3, 476) = 61.42, p < .001, R-squared = .279; autonomy b = 2.31, SE = 0.20, t = 11.55, p < .001; workload b = -3.09, SE = 0.28, t = -11.04, p < .001; tenure b = 0.09, SE = 0.10, t = 0.90, p = .368. Which write-up is correct?"
   choices={[
     { text: 'The three predictors accounted for a significant share of the variance in wellbeing, F(3, 476) = 61.42, p < .001, R-squared = .279. Autonomy (b = 2.31, SE = 0.20, t = 11.55, p < .001) and workload (b = -3.09, SE = 0.28, t = -11.04, p < .001) were each associated with wellbeing, whereas tenure was not once the other two were in the model (b = 0.09, SE = 0.10, t = 0.90, p = .368).', correct: true, response: 'Correct. Every coefficient is reported, including the non-significant one, and "once the other two were in the model" keeps its claim conditional.' },

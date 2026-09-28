@@ -75,7 +75,7 @@ their traditional names.
     <td width="50%"><img src="docs/images/confidence-intervals.png" alt="The confidence interval simulation: a hundred intervals drawn from repeated samples, with the ones that miss the true mean shown in red."></td>
   </tr>
   <tr>
-    <td align="center"><sub>Module 9: drag a line and watch the squared residuals shrink.</sub></td>
+    <td align="center"><sub>Module 10: drag a line and watch the squared residuals shrink.</sub></td>
     <td align="center"><sub>Module 7: what "95% confidence" means across a hundred samples.</sub></td>
   </tr>
 </table>

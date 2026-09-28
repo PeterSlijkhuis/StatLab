@@ -80,14 +80,14 @@ patterns in noise.
 When the interaction is real, the honest report is one effect per level of the
 other factor.
 
-<Exercise id="m12-3-a" />
+<Exercise id="m13-3-a" />
 
 For the significance tests of those simple effects, `emmeans` — which you met in
-Module 11 — takes a vertical bar:
+Module 12 — takes a vertical bar:
 `emmeans(model, pairwise ~ training | mentoring, adjust = "tukey")` gives the
 training comparison within each level of mentoring, with the adjustment applied.
 That call needs the `emmeans` package attached, which this lesson deliberately
-does not do; go back to lesson 11-3 to run it there.
+does not do; go back to lesson 12-3 to run it there.
 
 ## An APA-ready figure
 
@@ -116,7 +116,7 @@ one would say "Error bars show +/- 1 standard error of the mean."
 />
 
 <Interpret
-  id="i-12-3"
+  id="i-13-3"
   question="Your cell means for change in engagement are: neither 0.21 (SD = 3.15), training only 1.59 (SD = 3.08), mentoring only 0.93 (SD = 3.22), both 4.47 (SD = 3.11), with the interaction F(1, 476) = 15.28, p < .001. Which write-up is correct?"
   choices={[
     { text: 'Training increased engagement by 1.38 points and mentoring by 0.72 points, and both together by 4.26 points.', response: 'The three numbers are right and the framing hides the finding: the combined gain is far more than the two separate gains added together, which is the whole result.' },

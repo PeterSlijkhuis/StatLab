@@ -55,20 +55,20 @@ c(r_squared = r_value^2, R_squared = model %>% glance() %>% pull(r.squared))`} /
 
 Both pairs should agree to every decimal R prints. This is the first of several
 places in Part 3 where two traditions give the same answer through different
-arithmetic — correlation and regression here, the *t*-test and `lm` in Module 11,
-the paired *t*-test and `lmer` in Module 13.
+arithmetic — correlation and regression here, the *t*-test and `lm` in Module 12,
+the paired *t*-test and `lmer` in Module 14.
 
 <Predict
   id="p-r2"
   question="R-squared for this model is about .21. What does that leave?"
   choices={[
     { text: 'The 79 % of employees the model gets wrong', response: 'R-squared is not a count of people. It is a share of variance, and the model is a bit wrong about nearly everybody.' },
-    { text: 'The 79 % of the variance in wellbeing that autonomy does not account for - other causes, and measurement noise', correct: true, response: 'Exactly. In Module 10 you will hand some of that 79 % to workload and tenure.' },
+    { text: 'The 79 % of the variance in wellbeing that autonomy does not account for - other causes, and measurement noise', correct: true, response: 'Exactly. In Module 11 you will hand some of that 79 % to workload and tenure.' },
     { text: 'The probability the model is wrong', response: 'R-squared is a description of fit in this sample, not a probability about the model.' },
   ]}
 />
 
-<Exercise id="m9-3-a" />
+<Exercise id="m10-3-a" />
 
 ## Assumptions, checked by eye
 
@@ -94,7 +94,7 @@ line was the wrong shape.
 
 ## The other direction
 
-<Exercise id="m9-3-b" />
+<Exercise id="m10-3-b" />
 
 ## Reporting it
 
@@ -114,7 +114,7 @@ coefficient: *F*(1, 478), *R*², then *b* with its *SE*, *t* and *p*. Never a
 />
 
 <Interpret
-  id="i-9-3"
+  id="i-10-3"
   question="Your model gives F(1, 478) = 126.30, R-squared = .209, and for autonomy b = 2.24, SE = 0.20, t(478) = 11.24, p < .001. Which write-up is correct APA 7?"
   choices={[
     { text: 'Autonomy significantly predicted wellbeing (p < .001), explaining 20.9 % of employees.', response: 'Two problems: a p value on its own is not a report, and R-squared is a share of variance, not a share of employees.' },

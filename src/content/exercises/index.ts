@@ -8,19 +8,19 @@ import { module05 } from './module-05';
 import { module06 } from './module-06';
 import { module07 } from './module-07';
 import { module08 } from './module-08';
-import { module09 } from './module-09';
 import { module10 } from './module-10';
 import { module11 } from './module-11';
 import { module12 } from './module-12';
 import { module13 } from './module-13';
 import { module14 } from './module-14';
 import { module15 } from './module-15';
+import { module16 } from './module-16';
 
 export const ALL_EXERCISES: ExerciseDef[] = [
   ...module00,
   ...module01, ...module02, ...module03, ...module04, ...module05,
-  ...module06, ...module07, ...module08, ...module09, ...module10,
-  ...module11, ...module12, ...module13, ...module14, ...module15,
+  ...module06, ...module07, ...module08, ...module10, ...module11,
+  ...module12, ...module13, ...module14, ...module15, ...module16,
 ];
 
 const byId = new Map(ALL_EXERCISES.map((exercise) => [exercise.id, exercise]));

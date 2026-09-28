@@ -48,7 +48,7 @@ export const module02: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(n_departments, nlevels(d$department), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("n_departments is ", n_departments, ", but there are ", nlevels(d$department), " departments."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees in ", nlevels(d$department), " departments (", paste(levels(d$department), collapse = ", "), "). Those four names are the levels of the factor, and R will keep them in that order everywhere - in tables, in plots, and in every model you fit from Module 9 on."))
+          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees in ", nlevels(d$department), " departments (", paste(levels(d$department), collapse = ", "), "). Those four names are the levels of the factor, and R will keep them in that order everywhere - in tables, in plots, and in every model you fit from Module 10 on."))
         }
       }
     `,
@@ -224,7 +224,7 @@ export const module02: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(mean_change, mean(expected), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("mean_change is ", round(mean_change, 3), ", but the mean of engagement_change is ", round(mean(expected), 3), "."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: engagement rose by ", round(mean(expected), 2), " points on average. Hold on to that number - Module 12 asks which of the two interventions earned it, and the answer is not what the two main effects suggest."))
+          list(pass = TRUE, message = paste0("Correct: engagement rose by ", round(mean(expected), 2), " points on average. Hold on to that number - Module 13 asks which of the two interventions earned it, and the answer is not what the two main effects suggest."))
         }
       }
     `,
@@ -281,7 +281,7 @@ export const module02: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(n_long, expected_rows, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("n_long is ", n_long, ", but long has ", nrow(long), " rows. Count the long table, not the wide one."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees times 2 time points is ", expected_rows, " rows. Every observation now has its own row, which is the shape ggplot2 wants in Module 4 and lmer() wants in Module 13."))
+          list(pass = TRUE, message = paste0("Correct: ", nrow(d), " employees times 2 time points is ", expected_rows, " rows. Every observation now has its own row, which is the shape ggplot2 wants in Module 4 and lmer() wants in Module 14."))
         }
       }
     `,
