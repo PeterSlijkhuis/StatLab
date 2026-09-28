@@ -142,7 +142,7 @@ export const module08: ExerciseDef[] = [
           # boundary is not something to grade on. One shuffle in 2000 is 5e-4,
           # so 1e-3 absorbs a boundary tie and nothing larger.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
-            list(pass = TRUE, message = paste0("Correct: p = ", format.pval(expected, digits = 3), ". Out of 2000 shuffles in which the sleep labels meant nothing at all, ", sum(abs(values) >= abs(observed)), " produced a difference at least as large as the one your study found."))
+            list(pass = TRUE, message = paste0("Correct: p = ", sub("^0", "", formatC(expected, format = "f", digits = 3)), ". Out of 2000 shuffles in which the sleep labels meant nothing at all, ", sum(abs(values) >= abs(observed)), " produced a difference at least as large as the one your study found."))
           } else if (isTRUE(all.equal(value, one_tail, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = FALSE, message = "That is the upper tail only, so it is about half of the answer. A two-tailed p-value counts shuffles that are extreme in EITHER direction: compare abs(null_diffs) with abs(observed).")
           } else if (isTRUE(all.equal(value, 1 - expected, tolerance = 1e-3, check.attributes = FALSE))) {
@@ -184,7 +184,7 @@ export const module08: ExerciseDef[] = [
     alternateSolutions: [
       // The two-vector form of the same test.
       'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\np_t <- t.test(a, b, var.equal = TRUE)$p.value',
-      // The groups the other way round: same p-value, opposite sign on the estimate.
+      // The formula form with the two-sided alternative spelled out explicitly: same p-value.
       'p_t <- t.test(exam_score ~ sleep_group, data = study, var.equal = TRUE, alternative = "two.sided")$p.value',
       // Built by hand from the pooled standard error and the t distribution.
       'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\nn1 <- length(a)\nn2 <- length(b)\npooled <- sqrt(((n1 - 1) * var(a) + (n2 - 1) * var(b)) / (n1 + n2 - 2))\nt_stat <- (mean(a) - mean(b)) / (pooled * sqrt(1 / n1 + 1 / n2))\np_t <- 2 * pt(-abs(t_stat), df = n1 + n2 - 2)',
@@ -209,7 +209,7 @@ export const module08: ExerciseDef[] = [
           welch <- as.vector(t.test(exam_score ~ sleep_group, data = study)$p.value)
           t_stat <- as.vector(pooled_test$statistic)
           if (isTRUE(all.equal(value, expected, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = TRUE, message = paste0("Correct: p = ", format.pval(expected, digits = 3), ", from t(", round(as.vector(pooled_test$parameter)), ") = ", round(t_stat, 2), ". Compare it with the p-value your 2000 shuffles gave - two entirely different routes to nearly the same number."))
+            list(pass = TRUE, message = paste0("Correct: p = ", sub("^0", "", formatC(expected, format = "f", digits = 3)), ", from t(", round(as.vector(pooled_test$parameter)), ") = ", round(t_stat, 2), ". Compare it with the p-value your 2000 shuffles gave - two entirely different routes to nearly the same number."))
           } else if (isTRUE(all.equal(value, welch, tolerance = 1e-6, check.attributes = FALSE))) {
             list(pass = FALSE, message = "That is Welch's test, which is what t.test() runs by default and which does not assume the two groups have equal variances. This exercise asks for the pooled version, so pass var.equal = TRUE. (Welch is often the better default in real work - the point here is to know which one you ran.)")
           } else if (isTRUE(all.equal(value, expected / 2, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -272,7 +272,7 @@ export const module08: ExerciseDef[] = [
           # A band, not a value: power here is estimated by simulation, and every
           # legitimate route draws its own random numbers. The true value for
           # n = 100 against mu = 70 is about .76, and 1000 replicates give a
-          # standard error of about .013, so .67 to .85 is four standard errors
+          # standard error of about .013, so .67 to .85 is about six standard errors
           # either way. The wrong answers land at about .24 (the complement),
           # .05 (alpha), .06 (the mean p-value) and .12 (n = 10).
           if (value >= 0.67 && value <= 0.85) {

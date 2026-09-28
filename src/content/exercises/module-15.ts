@@ -57,7 +57,7 @@ export const module15: ExerciseDef[] = [
         } else if (isTRUE(all.equal(as.numeric(n_imp), as.numeric(sum(d$left_company)), tolerance = 1e-9, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the number of employees who left (", sum(d$left_company), "). The question is how many PREDICTIONS the line makes that no probability could take - count the fitted values below 0 or above 1."))
         } else if (isTRUE(all.equal(as.numeric(n_imp), 0, tolerance = 1e-9)) && exp_n > 0) {
-          list(pass = FALSE, message = paste0("You found none, but there are ", exp_n, ". A fitted value is impossible if it is below 0 OR above 1, so the two tests join with |, not with &: no number is both at once. Check the range too - a predicted probability lies between 0 and 1, not between 0 and 100."))
+          list(pass = FALSE, message = paste0("You found none, but there are ", exp_n, ". A fitted value is impossible if it is below 0 OR above 1, so the two tests join with |, not with &: no number is both at once."))
         } else if (!isTRUE(all.equal(as.numeric(n_imp), as.numeric(exp_n), tolerance = 1e-9, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("n_impossible is ", n_imp, " but ", exp_n, " fitted values from lm(left_company ~ wellbeing) fall outside 0 to 1."))
         } else if (!is.data.frame(tbl) || nrow(tbl) != 3L) {
@@ -268,9 +268,9 @@ export const module15: ExerciseDef[] = [
         if (!is.matrix(tbl) && !is.data.frame(tbl)) {
           list(pass = FALSE, message = "or_table should be a table - a matrix from cbind() or a data frame - with one row per term.")
         } else if (nrow(tbl) != length(b)) {
-          list(pass = FALSE, message = paste0("or_table has ", nrow(tbl), " rows but the model has ", length(b), " terms (the intercept included). exp(confint(m)) on its own gives the interval with no estimate column; cbind the odds ratios on first."))
+          list(pass = FALSE, message = paste0("or_table has ", nrow(tbl), " rows but the model has ", length(b), " terms (the intercept included)."))
         } else if (length(numeric_cols) < 3L) {
-          list(pass = FALSE, message = paste0("or_table needs at least three numeric columns: the odds ratio and the two interval bounds. Yours has ", length(numeric_cols), "."))
+          list(pass = FALSE, message = paste0("or_table needs at least three numeric columns: the odds ratio and the two interval bounds. Yours has ", length(numeric_cols), ". exp(confint(m)) on its own gives only the bounds; cbind the odds ratios on first."))
         } else if (matches(as.vector(b), 1e-6)) {
           list(pass = FALSE, message = paste0("One of your columns holds the raw coefficients, so the table was never exponentiated. exp() the whole cbind() at once - the interval has to be built on the log-odds scale and exponentiated with the estimate, not the other way round. The wellbeing OR should be ", round(exp(b[["wellbeing"]]), 3), ", not ", round(b[["wellbeing"]], 3), "."))
         } else if (matches(as.vector(exp(coef(gaussian_fit))), 1e-6)) {

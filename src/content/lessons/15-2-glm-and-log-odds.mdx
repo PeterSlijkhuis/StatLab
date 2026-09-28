@@ -79,8 +79,8 @@ coefficient looks suspiciously small.
 of name and meaning:
 
 - **`estimate`** is the change in **log odds** per unit of the predictor.
-- **`statistic`** is a *z* value, not a *t* — the sampling distribution here is
-  normal rather than *t*, so there are no residual degrees of freedom to report.
+- **`statistic`** is a *z* value, not a *t*: in large samples it is compared with a
+  normal distribution rather than a *t*, so there are no residual degrees of freedom to report.
 
 <CodeBlock id="c-glance" code={`m_left %>% glance()`} />
 

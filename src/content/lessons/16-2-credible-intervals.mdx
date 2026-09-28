@@ -8,7 +8,7 @@ without a grid.
 A `Beta(a, b)` prior works like a head start of `a` successes and `b` failures
 (so `a + b` is roughly how many observations it is worth). Add the new data and
 the posterior is `Beta(a + successes, b + failures)`. The flat prior of the last
-lesson is `Beta(1, 1)`, the weakest head start there is.
+lesson is `Beta(1, 1)`: a head start of one success and one failure.
 
 <CodeBlock id="c-conjugate" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 
