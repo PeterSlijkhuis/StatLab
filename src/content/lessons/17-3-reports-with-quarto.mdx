@@ -1,0 +1,129 @@
+Every analysis in this course ended with a number you copied into a sentence.
+Copying is where errors creep in, and when the data change, every number has to
+be found and copied again. A **Quarto** document keeps the text, the code and
+its output in one file, so the report is rebuilt from the data every time.
+
+> **This lesson is for RStudio.** The browser cannot render Quarto documents, so
+> there is nothing to run on this page. Quarto comes with recent versions of
+> RStudio; in an older one, install it from quarto.org.
+
+## One file, three ingredients
+
+In RStudio, choose **File > New File > Quarto Document**. A `.qmd` file is plain
+text with three kinds of content.
+
+```markdown
+---
+title: "Wellbeing at work"
+author: "Your name"
+format: docx
+---
+
+## Method
+
+We analysed data from 480 employees.
+
+```
+
+That is the first two ingredients:
+
+1. The **header** between the two `---` lines, in a format called YAML. It sets
+   the title and the output: `docx` for Word, `html` for a web page, or `pdf`
+   (which needs a LaTeX installation; run `quarto install tinytex` once in the
+   Terminal).
+2. **Text** in Markdown: `##` starts a heading, `*word*` is italic, `**word**`
+   is bold, and a line starting with `-` is a bullet.
+
+The third ingredient is **code chunks**: R code between a line with three
+backticks and `{r}` and a line with three backticks.
+
+````markdown
+```{r}
+#| label: fit-model
+#| echo: false
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+model <- lm(wellbeing ~ autonomy + workload, data = d)
+```
+````
+
+Lines starting with `#|` are chunk options. `echo: false` hides the code and
+keeps its output, which is what a report for readers usually wants. `label`
+names the chunk, and figures and tables use it for cross-references.
+
+## Numbers that write themselves
+
+**Inline code** puts a result straight into a sentence: a single backtick, `r`,
+the code, and a closing backtick.
+
+```markdown
+Autonomy predicted wellbeing, *b* = `r round(coef(model)["autonomy"], 2)`.
+```
+
+When the data change, the number changes with them. This is the main reason to
+write reports in Quarto: nothing in the text can drift away from the analysis.
+
+## Rendering
+
+Press **Render** in RStudio, or run `quarto render report.qmd` in the Terminal.
+Quarto runs every chunk from the top in a fresh R session, then writes the
+document.
+
+That fresh session is a feature. If the document renders, the analysis runs
+from the data file with nothing left over from your console, which is what
+makes it reproducible. The common first error is a document that relies on an
+object you made in the console and never in a chunk: it works in your session
+and fails on Render. Module 0's advice about projects and relative paths
+matters here too, because Quarto looks for `data/workplace.csv` relative to the
+`.qmd` file.
+
+## Tables and figures
+
+A chunk that draws a plot puts the figure in the document. Chunk options add a
+caption and a label to refer to.
+
+````markdown
+```{r}
+#| label: fig-autonomy
+#| fig-cap: "Wellbeing by autonomy."
+library(ggplot2)
+ggplot(d, aes(autonomy, wellbeing)) + geom_point() + theme_classic()
+```
+
+As @fig-autonomy shows, ...
+````
+
+A label starting with `fig-` makes `@fig-autonomy` into "Figure 1", numbered for
+you. Tables work the same way with a `tbl-` label and `knitr::kable()` to print
+a data frame as a table.
+
+For APA style, extensions exist that set up the title page, headings and
+references; search for "Quarto APA" to find the current ones. References come
+from a `.bib` file listed in the header under `bibliography:`, cited in the text
+as `[@author2024]`.
+
+## A workflow that holds up
+
+- One Quarto document per analysis, in an RStudio Project, reading the raw data
+  file.
+- Every step from raw data to result in a chunk, never only in the console.
+- Render often. A document that renders is an analysis someone else can check.
+
+<Quiz
+  id="q-render-fails"
+  question="Your analysis works in the console, but Render stops with 'object d not found'. What is the most likely cause?"
+  choices={[
+    { text: 'Quarto cannot read CSV files', response: 'It can. Rendering runs the same R, in a fresh session.' },
+    { text: 'd was created in the console, not in a chunk of the document', correct: true, response: 'Right. Render starts from nothing, so every object has to be made inside the document. That is exactly the check you want.' },
+    { text: 'The output format has to be html for R code to run', response: 'Chunks run the same way for Word, PDF and HTML output.' },
+  ]}
+/>
+
+<Quiz
+  id="q-inline"
+  question="Why write b = `r round(coef(model)[2], 2)` rather than typing b = 1.34?"
+  choices={[
+    { text: 'It looks more professional', response: 'The reader sees 1.34 either way. The difference is what happens when something changes.' },
+    { text: 'The number is recomputed from the data every time the document renders, so it cannot go out of date or be mistyped', correct: true, response: 'Exactly. That is the whole argument for reproducible reports.' },
+    { text: 'Journals require it', response: 'They receive the rendered document, not the code. The benefit is to you and anyone checking the work.' },
+  ]}
+/>

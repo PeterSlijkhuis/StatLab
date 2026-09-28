@@ -1,0 +1,169 @@
+Every p-value and confidence interval in this module rests on assumptions about
+the residuals: that they are roughly normal, equally spread along the line, and
+not driven by a handful of cases. Lesson 10-3 checked them by eye in one line.
+This lesson checks them properly, and shows what a failed check can tell you.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+library(ggplot2)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+model <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+checked <- augment(model, data = d)
+
+checked %>% select(employee_id, wellbeing, .fitted, .resid, .cooksd) %>% head()`} />
+
+`augment()` adds a row per employee with the fitted value, the residual and
+Cook's distance, next to the original columns.
+
+## Residuals against fitted values
+
+If the model is right, the residuals scatter evenly around zero at every fitted
+value, with no curve and no funnel.
+
+<CodeBlock id="c-resid-fitted" code={`ggplot(checked, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth(se = FALSE, method = "loess", formula = y ~ x) +
+  labs(x = "Fitted wellbeing", y = "Residual") +
+  theme_classic()`} />
+
+No curve and no funnel, but something else: a long tail of large negative
+residuals below the cloud, and nothing like it above.
+
+## Are the residuals normal?
+
+A **Q-Q plot** puts the residuals against the values a normal distribution would
+give. Normal residuals fall on the line.
+
+<CodeBlock id="c-qq" code={`ggplot(checked, aes(sample = .resid)) +
+  stat_qq(alpha = 0.4) +
+  stat_qq_line() +
+  labs(x = "Theoretical quantiles", y = "Residuals") +
+  theme_classic()`} />
+
+<Predict
+  id="p-tail"
+  question="The Q-Q plot bends away from the line at the bottom left: a group of employees is doing far worse than the model predicts. What is the most useful next step?"
+  choices={[
+    { text: 'Delete them, because they break the normality assumption', response: 'Deleting cases because they do not fit is how a model ends up describing only the people it already describes. Find out who they are first.' },
+    { text: 'Look at who they are', correct: true, response: 'Right. A cluster of large residuals often means something the model is missing.' },
+    { text: 'Switch to a nonparametric test', response: 'That throws away the model before you know why it misfits. The residuals may be telling you something about the data.' },
+  ]}
+/>
+
+<CodeBlock id="c-who" code={`checked %>%
+  filter(.resid < -15) %>%
+  count(department)`} />
+
+Every one of them is in Engineering. Module 3 found the same thing from the
+other side: Engineering's mean sits below its median because a minority of
+engineers do very badly. The model has no variable for whatever that is (an
+on-call rotation, say), so it cannot predict it, and the misfit lands in the
+residuals.
+
+A failed check is often a finding, not a nuisance. Here it points to a missing
+predictor, and the real fix is to measure it. Adding department helps, but
+cannot remove the tail, because most engineers are not affected.
+
+<CodeBlock id="c-department" code={`with_department <- lm(wellbeing ~ autonomy + workload + tenure_years + department, data = d)
+
+bind_rows(
+  glance(model) %>% mutate(model = "without department"),
+  glance(with_department) %>% mutate(model = "with department")
+) %>% select(model, r.squared, sigma)`} />
+
+With 480 people the slopes and their intervals are still trustworthy despite
+skewed residuals: the Central Limit Theorem of Module 6 looks after the sampling
+distribution of each slope. Normality matters most in small samples.
+
+## Influential cases
+
+A case is **influential** when leaving it out moves the fitted line. **Cook's
+distance** measures that, one number per case. A common rule of thumb flags
+cases above 4 / n for a closer look.
+
+<CodeBlock id="c-cooks" code={`checked %>%
+  arrange(desc(.cooksd)) %>%
+  select(employee_id, department, autonomy, workload, wellbeing, .resid, .cooksd) %>%
+  head(5)`} />
+
+The top case has the maximum autonomy of 10 and very low wellbeing: an unusual
+position on x together with a big miss on y, which is what gives a point
+leverage over the line.
+
+<Exercise id="m11-4-a" />
+
+What to do with them is a matter of reporting, not deleting. Refit without the
+most influential case and see whether the conclusion changes. If it does not,
+say so in one sentence. If it does, report both.
+
+<Exercise id="m11-4-b" />
+
+Leaving out every flagged case at once is a different matter.
+
+<CodeBlock id="c-trim" code={`trimmed <- lm(wellbeing ~ autonomy + workload + tenure_years,
+              data = checked %>% filter(.cooksd <= 4 / n()))
+
+bind_rows(
+  tidy(model) %>% mutate(fit = "all 480"),
+  tidy(trimmed) %>% mutate(fit = "flagged cases removed")
+) %>%
+  filter(term == "autonomy") %>%
+  select(fit, estimate, std.error)`} />
+
+The autonomy slope jumps by more than half, because most of the removed cases
+are the struggling engineers, and removing them rewrites the population. Cook's
+distance tells you where to look, not what to throw away.
+
+## When the assumptions fail badly
+
+- **Curve in the residuals:** the relationship is not a straight line. Add a
+  squared term, `I(x^2)`, or transform a skewed predictor with `log()`.
+- **Funnel:** the spread grows with the fitted values. Transforming a skewed,
+  positive outcome with `log()` often fixes it, and robust standard errors
+  (the `sandwich` package, in RStudio) keep the slopes and repair their SEs.
+- **Small sample, clearly non-normal residuals:** bootstrap the interval.
+  Resample employees with replacement, refit, and take the middle 95% of the
+  slopes.
+
+<CodeBlock id="c-boot" code={`set.seed(114)
+slopes <- replicate(1000, {
+  rows <- sample(nrow(d), replace = TRUE)
+  coef(lm(wellbeing ~ autonomy + workload + tenure_years, data = d[rows, ]))[["autonomy"]]
+})
+
+rbind(
+  bootstrap = quantile(slopes, c(0.025, 0.975)),
+  usual = confint(model)["autonomy", ]
+)`} />
+
+The two intervals nearly agree, which is the Central Limit Theorem at work
+again. With 30 people they might not.
+
+For a simple comparison of two groups there are rank-based tests too:
+`wilcox.test()` for two groups and `kruskal.test()` for several. They answer a
+slightly different question (about ranks, not means), so use them when the
+question allows it, not as an automatic escape.
+
+<Quiz
+  id="q-assumptions"
+  question="Which assumption is the most important to check in a large sample?"
+  choices={[
+    { text: 'Normal residuals', response: 'With hundreds of cases the slopes are close to normally distributed anyway. Normality matters most in small samples.' },
+    { text: 'Independent observations and a model of the right shape', correct: true, response: 'Right. No sample size rescues a model with the wrong shape, or data where cases are not independent, which is what Module 14 deals with.' },
+    { text: 'That no case has a Cook\'s distance above 4 / n', response: 'In a large sample some always will. The rule points to cases worth a look, not to a violation.' },
+  ]}
+/>
+
+<Interpret
+  id="i-11-4"
+  question="Your residuals are left-skewed, all of the largest negative residuals are engineers, and the autonomy slope moves from 1.34 to 1.41 without the most influential case. What goes in the report?"
+  choices={[
+    { text: 'Residuals were negatively skewed; the largest negative residuals were all in Engineering, suggesting an unmeasured influence on wellbeing in that department. Given N = 480, inference on the coefficients is robust to this. Removing the most influential case changed the autonomy coefficient only slightly (b = 1.41 vs 1.34).', correct: true, response: 'Correct: what was checked, what was found, why the inference stands, and the sensitivity check in one sentence.' },
+    { text: 'All assumptions were met.', response: 'They were not, and a reader who reruns the model will see the skew. Say what you found and why it does not overturn the result.' },
+    { text: 'Outliers were removed using Cook\'s distance to meet the normality assumption.', response: 'That would remove the struggling engineers and change the autonomy slope from 1.34 to 2.27. Not a cleaning step, a different analysis.' },
+    { text: 'Because the residuals were not normal, the regression results are invalid.', response: 'Too strong. With 480 employees the coefficients and their intervals hold up; the skew is a finding about the data, not a fatal flaw.' },
+  ]}
+/>

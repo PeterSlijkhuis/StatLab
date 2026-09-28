@@ -92,7 +92,7 @@ file and imported on another computer.
 
 ## What's in the course
 
-**17 modules, 55 lessons, 80 checked exercises and 6 interactive simulations**,
+**18 modules, 59 lessons, 84 checked exercises and 6 interactive simulations**,
 in three parts and an advanced part. Module 0 comes first and sets students up for R on their own
 computer.
 
@@ -112,13 +112,14 @@ computer.
 | 9 | Counts and proportions | One proportion, contingency tables, the chi-square test, Cramér's V, Fisher's exact test | |
 | **The linear model** | | | |
 | 10 | Correlation and simple regression | `lm(y ~ x)`, reading model output with `tidy()` and `glance()` | Correlation, least squares |
-| 11 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F | |
+| 11 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F, checking residuals and influential cases | |
 | 12 | Categorical predictors | The t-test as `lm`, dummy coding, `emmeans` pairwise comparisons | |
 | 13 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
 | 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test | |
 | 15 | Binary outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting | |
 | **Advanced** | | | |
 | 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
+| 17 | Mediation, factors and reports | Indirect effects with bootstrap intervals, exploratory factor analysis, reproducible reports with Quarto | |
 
 Each lesson is written in MDX from a small set of blocks:
 

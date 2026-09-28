@@ -1,0 +1,126 @@
+Training employees raises their performance a little. A theory says why: training
+raises engagement, and engaged people perform better. **Mediation analysis**
+asks whether the data fit that story, by splitting the effect of training into
+the part that runs through engagement and the part that does not.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+total_model <- lm(performance ~ training, data = d)
+coef(total_model)`} />
+
+Trained employees perform about 1.6 points better. That is the **total effect**,
+called *c*.
+
+## Three regressions, four numbers
+
+The mediation model is two regressions.
+
+- The **a path**: does training predict the mediator, engagement?
+- The **b path**: does engagement predict performance, with training held constant?
+
+<CodeBlock id="c-paths" code={`path_a <- lm(engagement_t2 ~ training, data = d)
+path_b <- lm(performance ~ engagement_t2 + training, data = d)
+
+a <- coef(path_a)[["trainingYes"]]
+b <- coef(path_b)[["engagement_t2"]]
+direct <- coef(path_b)[["trainingYes"]]
+total <- coef(total_model)[["trainingYes"]]
+
+c(a = a, b = b, indirect = a * b, direct = direct, total = total)`} />
+
+- **a** = 4.07: trained employees are about 4 points more engaged.
+- **b** = 0.44: each point of engagement goes with 0.44 points of performance,
+  among people with the same training status.
+- The **indirect effect**, a × b = 1.78, is the part of training's effect that
+  runs through engagement.
+- The **direct effect**, *c′* = -0.16, is what is left.
+
+For linear models fitted to the same rows, indirect plus direct is exactly the
+total: 1.78 - 0.16 = 1.62. Here nearly all of the effect runs through
+engagement.
+
+<Predict
+  id="p-mediation-test"
+  question="How should you decide whether the indirect effect of 1.78 is more than chance?"
+  choices={[
+    { text: 'Check that a and b are both significant', response: 'That was the old Baron and Kenny approach. It never tests the product itself, and it has less power than testing a × b directly.' },
+    { text: 'Divide it by its standard error and compare with a normal distribution (the Sobel test)', response: 'The Sobel test assumes a × b is normally distributed, and a product of two estimates usually is not. It is no longer recommended.' },
+    { text: 'Bootstrap a confidence interval for a × b', correct: true, response: 'Right. Resampling makes no assumption about the shape of the product, and it is the current standard.' },
+  ]}
+/>
+
+## A bootstrap interval for the indirect effect
+
+Resample employees with replacement, refit both paths, multiply, and repeat.
+The middle 95% of the products is the interval.
+
+<CodeBlock id="c-boot" code={`set.seed(171)
+indirect_boot <- replicate(1000, {
+  s <- d[sample(nrow(d), replace = TRUE), ]
+  coef(lm(engagement_t2 ~ training, data = s))[["trainingYes"]] *
+    coef(lm(performance ~ engagement_t2 + training, data = s))[["engagement_t2"]]
+})
+
+quantile(indirect_boot, c(0.025, 0.975))`} />
+
+The interval, about [1.19, 2.40], excludes zero, so the indirect effect is
+supported.
+
+<Exercise id="m17-1-a" />
+
+## What mediation can and cannot show
+
+Mediation is a causal story, and the statistics cannot make it true.
+
+- **Order in time.** The predictor should come before the mediator, and the
+  mediator before the outcome. Engagement here was measured after training,
+  which helps. Performance was not measured later still.
+- **No hidden common cause.** If some third thing, such as a good manager, raised
+  both engagement and performance, the b path would be inflated, and randomising
+  training does not protect against that.
+- **Consistent with, not proof of.** With data from one study, write that the
+  pattern is consistent with mediation.
+
+## In RStudio: lavaan
+
+The `lavaan` package fits both paths as one model and bootstraps the indirect
+effect for you. It needs numbers, so training becomes 0 and 1.
+
+```r
+library(lavaan)
+d$trained <- as.numeric(d$training == "Yes")
+
+model <- "
+  engagement_t2 ~ a * trained
+  performance ~ b * engagement_t2 + c * trained
+  indirect := a * b
+  total := c + a * b
+"
+set.seed(1)
+fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000)
+parameterEstimates(fit, boot.ci.type = "perc")
+```
+
+The `indirect` row gives the same a × b with its bootstrap interval. The PROCESS
+macro for SPSS, model 4, fits the same model.
+
+<Quiz
+  id="q-full-mediation"
+  question="The direct effect of training is -0.16 and not significant. Does that prove engagement is the only route from training to performance?"
+  choices={[
+    { text: 'Yes, that is what full mediation means', response: 'A non-significant direct effect is not evidence of a zero one, and other mediators could share the credit with engagement.' },
+    { text: 'No: other mediators correlated with engagement could carry part of it, and a non-significant direct effect is not a zero one', correct: true, response: 'Exactly. Many methodologists now avoid the labels full and partial mediation for this reason and report the effects with their intervals.' },
+    { text: 'No, because the total effect was small', response: 'The size of the total effect does not decide how it splits between routes.' },
+  ]}
+/>
+
+<Interpret
+  id="i-17-1"
+  question="a = 4.07, b = 0.44, indirect = 1.78 with 95% bootstrap CI [1.19, 2.40], direct = -0.16 (p = .82), total = 1.62. Which report is correct?"
+  choices={[
+    { text: 'Training was associated with higher engagement (a = 4.07), which in turn was associated with higher performance (b = 0.44). The indirect effect was 1.78, 95% bootstrap CI [1.19, 2.40], based on 1000 resamples; the direct effect was small and non-significant (c′ = -0.16, p = .82). The pattern is consistent with engagement mediating the effect of training.', correct: true, response: 'Correct: every path, the indirect effect with its interval and how it was computed, and a causal claim no stronger than the design allows.' },
+    { text: 'Training caused higher performance through engagement (Sobel test, p < .001).', response: 'The Sobel test is no longer recommended, and "caused" overstates what these data can show.' },
+    { text: 'Because the direct effect was not significant, training does not affect performance.', response: 'The total effect of training is 1.62 and significant. The point of mediation is that it runs through engagement.' },
+    { text: 'Both a and b were significant, so there was mediation.', response: 'That is the old steps approach. Report and test the indirect effect itself, with its interval.' },
+  ]}
+/>

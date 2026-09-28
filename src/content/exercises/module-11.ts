@@ -258,4 +258,109 @@ export const module11: ExerciseDef[] = [
       'df.residual is n minus the number of estimated coefficients, the intercept included.',
     ],
   },
+  {
+    id: 'm11-4-a',
+    prompt:
+      'How many employees are influential by the usual rule of thumb? Fit wellbeing ~ autonomy + workload + tenure_years, then count the employees whose Cook\'s distance is above 4 / n. Store the count in n_influential.',
+    starterCode:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\n\ncooks <- cooks.distance(model)\n\nn_influential <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nn_influential <- sum(cooks.distance(model) > 4 / nrow(d))',
+    wrongAnswers: [
+      // The stricter cut-off of 1, which nobody in this dataset reaches.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nn_influential <- sum(cooks.distance(model) > 1)',
+      // Large residuals, which is a different question from influence.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nn_influential <- sum(abs(rstandard(model)) > 2)',
+      // The distances themselves instead of how many cross the line.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nn_influential <- cooks.distance(model)[cooks.distance(model) > 4 / nrow(d)]',
+    ],
+    alternateSolutions: [
+      // Counting with length() and which().
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\ncooks <- cooks.distance(model)\nn_influential <- length(which(cooks > 4 / length(cooks)))',
+    ],
+    check: `
+      d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+      model <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+      cooks <- cooks.distance(model)
+      target <- sum(cooks > 4 / nrow(d))
+      variant <- sum(cooks > 4 / df.residual(model))
+      if (!has_answer("n_influential")) {
+        list(pass = FALSE, message = "I could not find an object called n_influential.")
+      } else {
+        got <- suppressWarnings(as.numeric(answer("n_influential")))
+        if (length(got) != 1L) {
+          list(pass = FALSE, message = paste0("n_influential holds ", length(got), " values. Count them: sum() of the TRUE/FALSE comparison gives one number."))
+        } else if (is.na(got)) {
+          list(pass = FALSE, message = "n_influential should be one whole number.")
+        } else if (got == 0) {
+          list(pass = FALSE, message = "Nobody is above 1, the old strict cut-off, so it finds nothing. The rule of thumb for spotting cases worth a look is 4 / n.")
+        } else if (got == sum(abs(rstandard(model)) > 2)) {
+          list(pass = FALSE, message = "That counts large residuals. Influence is about how much the fitted line moves when a case is left out, which is what cooks.distance() measures.")
+        } else if (got != target && got != variant) {
+          list(pass = FALSE, message = paste0("n_influential is ", got, ", but ", target, " employees have a Cook's distance above 4 / ", nrow(d), "."))
+        } else {
+          list(pass = TRUE, message = paste0("Correct: ", got, " employees are above the line. That is a list of cases to look at, not a list of cases to delete."))
+        }
+      }
+    `,
+    hints: [
+      'cooks.distance(model) gives one number per employee.',
+      'Compare them with 4 / nrow(d); the result is TRUE or FALSE per employee.',
+      'sum() counts the TRUEs: n_influential <- sum(cooks.distance(model) > 4 / nrow(d))',
+    ],
+  },
+  {
+    id: 'm11-4-b',
+    prompt:
+      'A sensitivity check: refit the same model without the single most influential employee, the one with the largest Cook\'s distance, and store the new autonomy slope in slope_without.',
+    starterCode:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\n\nmost <- which.max(cooks.distance(model))\n\nslope_without <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nmost <- which.max(cooks.distance(model))\nrefit <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d[-most, ])\nslope_without <- coef(refit)["autonomy"]',
+    wrongAnswers: [
+      // The slope of the original model, nobody left out.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nslope_without <- coef(model)["autonomy"]',
+      // Left out the largest residual, not the most influential case.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nrefit <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d[-which.max(abs(resid(model))), ])\nslope_without <- coef(refit)["autonomy"]',
+      // Left out every case above 4 / n.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nrefit <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d[cooks.distance(model) <= 4 / nrow(d), ])\nslope_without <- coef(refit)["autonomy"]',
+    ],
+    alternateSolutions: [
+      // update() with a subset.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)\nkeep <- seq_len(nrow(d)) != which.max(cooks.distance(model))\nslope_without <- coef(update(model, subset = keep))[["autonomy"]]',
+    ],
+    check: `
+      d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+      f <- wellbeing ~ autonomy + workload + tenure_years
+      model <- lm(f, data = d)
+      slope_of <- function(rows) unname(coef(lm(f, data = d[rows, ]))["autonomy"])
+      target <- slope_of(-which.max(cooks.distance(model)))
+      original <- unname(coef(model)["autonomy"])
+      by_residual <- slope_of(-which.max(abs(resid(model))))
+      trimmed <- slope_of(cooks.distance(model) <= 4 / nrow(d))
+      if (!has_answer("slope_without")) {
+        list(pass = FALSE, message = "I could not find an object called slope_without.")
+      } else {
+        got <- suppressWarnings(as.numeric(answer("slope_without")))
+        if (length(got) != 1L || is.na(got)) {
+          list(pass = FALSE, message = "slope_without should be one number: the autonomy coefficient of the refitted model.")
+        } else if (abs(got - original) < 1e-6) {
+          list(pass = FALSE, message = "That is the slope with everyone still in. Refit on the data without the row which.max(cooks.distance(model)) points to.")
+        } else if (abs(got - by_residual) < 1e-6) {
+          list(pass = FALSE, message = "You left out the employee with the largest residual. The most influential one is a different person: the largest Cook's distance.")
+        } else if (abs(got - trimmed) < 1e-6) {
+          list(pass = FALSE, message = paste0("You left out everyone above 4 / n, and the slope jumped to ", round(trimmed, 2), ". That is exactly why nobody should do it: the question was about one employee."))
+        } else if (abs(got - target) > 1e-6) {
+          list(pass = FALSE, message = paste0("slope_without is ", round(got, 3), ", but without the most influential employee the autonomy slope is ", round(target, 3), "."))
+        } else {
+          list(pass = TRUE, message = paste0("Correct: ", round(original, 2), " with everyone, ", round(target, 2), " without the most influential employee. The conclusion survives, and saying so is the whole point of a sensitivity check."))
+        }
+      }
+    `,
+    hints: [
+      'd[-most, ] is the data without row most.',
+      'Fit the same formula to that data, then take coef(refit)["autonomy"].',
+      'refit <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d[-most, ])',
+    ],
+  },
 ];
