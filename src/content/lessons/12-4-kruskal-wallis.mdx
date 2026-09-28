@@ -34,6 +34,9 @@ where *k* is the number of groups.
 
 <CodeBlock id="c-kw" code={`kruskal.test(wellbeing ~ department, data = d)`} />
 
+R prints it as Kruskal-Wallis chi-squared, and the textbook reports it as
+χ²(3, N = 480) = 25.55; *H*(3) = 25.55 is the same result.
+
 The formula is the same one you would give `lm()`. What changes is the question:
 not "do the means differ?" but "do the groups tend to sit at different places in
 the order?"

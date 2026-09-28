@@ -29,7 +29,7 @@ everything in this module is those four numbers in different arrangements.
   choices={[
     { text: 'About 2.2 points - the two added together', correct: true, response: 'That is the additive prediction. Compare it with the both-interventions cell above: the real gain is larger, and the excess is the interaction.' },
     { text: 'About 1.3 points - whichever is bigger wins', response: 'Effects do not compete for the outcome. Under a plus-sign model they add.' },
-    { text: 'About 0.98 points - they multiply', response: 'Effects on a raw score add. Multiplication comes in for odds ratios in Module 15.' },
+    { text: 'About 1.2 points: they multiply', response: 'Effects on a raw score add. Multiplication comes in for odds ratios in Module 15.' },
     { text: 'Nothing predictable', response: 'An additive model makes a perfectly definite prediction, which is what makes it testable.' },
   ]}
 />
@@ -57,7 +57,7 @@ Four coefficients now, and in this coding each one has a precise meaning:
 - **`trainingYes:mentoringYes`** — how much more training is worth when mentoring
   is also present. Equivalently, how much more mentoring is worth with training.
 
-That third bullet is the one that catches people. With an interaction in the
+The middle two bullets are the ones that catch people. With an interaction in the
 model and treatment coding, `trainingYes` is **not** the overall training effect.
 It is a simple effect at one level of the other factor.
 

@@ -32,7 +32,7 @@ what makes `emmeans` worth learning rather than just averaging by hand.
   question="Four departments give six pairwise comparisons. If you tested each at the .05 level with no adjustment, what is the chance of at least one false positive when no department really differs?"
   choices={[
     { text: 'Still 5 %, because each test is at 5 %', response: 'Each test is, but you are running six of them. The chance that at least one misfires is much higher.' },
-    { text: 'About 26 %', correct: true, response: 'Right: 1 - .95 to the power of 6 is about .26. One comparison in four studies would look real and be noise.' },
+    { text: 'About 26 %', correct: true, response: 'Right, as a first approximation: 1 - .95 to the power of 6 is about .26 if the six tests were independent. They share groups, so the true figure is a little lower (about .21 here), still four times the 5 % you intended.' },
     { text: 'About 30 %, which is six times 5 %', response: 'Close to the right ballpark but by the wrong arithmetic - probabilities of independent events do not add.' },
     { text: '100 %, because you tested everything', response: 'Testing more raises the risk, it does not guarantee a false positive.' },
   ]}
@@ -70,7 +70,7 @@ move. Adjustment changes what counts as surprising, not what was measured.
 <CodeBlock id="c-ci" code={`confint(comparisons$contrasts)`} />
 
 A difference of 3.2 points with an interval from 0.4 to 6.0 and a difference of
-3.2 points with an interval from 2.9 to 3.5 have the same *p*-value story and
+3.2 points with an interval from 2.9 to 3.5 have the same verdict at .05 and
 completely different scientific ones. Report the interval.
 
 <Quiz
@@ -78,7 +78,7 @@ completely different scientific ones. Report the interval.
   question="A reviewer asks why you used Tukey rather than simply reporting all six unadjusted tests."
   choices={[
     { text: 'Because Tukey gives smaller p values, so more results are significant', response: 'The opposite: adjusted p values are always larger. Adjustment costs power and buys control of the error rate.' },
-    { text: 'Because six tests at .05 each give roughly a one-in-four chance of at least one false positive, and Tukey holds that risk near .05 across the whole family', correct: true, response: 'Correct, and that is exactly how to phrase it to a reviewer.' },
+    { text: 'Because six tests at .05 each give roughly a one-in-four chance of at least one false positive if the tests were independent (a little less here, because they share groups), and Tukey holds that risk near .05 across the whole family', correct: true, response: 'Correct, and that is exactly how to phrase it to a reviewer.' },
     { text: 'Because the data are not normally distributed', response: 'Tukey adjusts for multiplicity. It has nothing to do with the shape of the data.' },
     { text: 'Because the overall F was significant, which requires a post-hoc test', response: 'A significant F does not require anything. It tells you a difference exists; you then decide which comparisons your question needs.' },
   ]}
