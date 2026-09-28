@@ -104,7 +104,7 @@ cloud of heights, which is exactly what the next lesson fixes.
 
 <Interpret
   id="i-14-1"
-  question="A colleague stacked the two measurements into 960 rows, ran lm(engagement ~ time), and reports b = 1.31, SE = 0.42, t(958) = 3.12, p = .002. What should you tell them?"
+  question="A colleague stacked the two measurements into 960 rows, ran lm(engagement ~ time), and reports b = 1.73, SE = 0.47, t(958) = 3.68, p < .001. What should you tell them?"
   choices={[
     { text: 'The analysis is fine; 960 observations is a good sample.', response: 'There are 480 independent units, not 960. Counting each person twice overstates the information available.' },
     { text: 'The estimate of the change is unbiased, but the model treats each employee as two unrelated people, so the standard error and the degrees of freedom are wrong. A mixed model with a random intercept per employee, or a paired t-test, is the correct analysis.', correct: true, response: 'Correct on both counts: the point estimate survives, the inference does not.' },

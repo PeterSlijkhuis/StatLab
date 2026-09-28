@@ -98,11 +98,11 @@ predictors that bought you nothing.
 
 <Interpret
   id="i-11-1"
-  question="In a model with autonomy alone the autonomy slope is b = 2.24; with workload added it is b = 2.31. A colleague writes: 'Adding workload proved that autonomy has a causal effect of 2.31 on wellbeing.' Which reading is right?"
+  question="In a model with autonomy alone the autonomy slope is b = 1.05; with workload added it is b = 1.37. A colleague writes: 'Adding workload proved that autonomy has a causal effect of 1.37 on wellbeing.' Which reading is right?"
   choices={[
     { text: 'The colleague is right: controlling for workload removes the confounding.', response: 'Adjusting for one measured variable removes that variable, not confounding in general. Everything unmeasured is still in there.' },
-    { text: 'With workload in the model, b = 2.31 is the predicted difference in wellbeing per point of autonomy among employees with the same workload. It is an adjusted association, not a causal effect, because workload is the only confounder that has been accounted for.', correct: true, response: 'Correct. "Holding constant" is arithmetic about this model and these variables, not a substitute for an experiment.' },
-    { text: 'The coefficient barely changed, so autonomy and workload measure the same thing.', response: 'A coefficient that barely moves means the two predictors are close to independent - the opposite of measuring the same thing.' },
-    { text: 'The change from 2.24 to 2.31 means workload suppresses the effect of autonomy, which should be reported as the main finding.', response: 'A shift that small is not a finding on its own. Report both coefficients and let the reader see the shift.' },
+    { text: 'With workload in the model, b = 1.37 is the predicted difference in wellbeing per point of autonomy among employees with the same workload. It is an adjusted association, not a causal effect, because workload is the only confounder that has been accounted for.', correct: true, response: 'Correct. "Holding constant" is arithmetic about this model and these variables, not a substitute for an experiment.' },
+    { text: 'The coefficient changed, so autonomy and workload measure the same thing.', response: 'Two measures of the same thing would be almost perfectly correlated. A slope that moves only shows that the two predictors overlap somewhat.' },
+    { text: 'The change from 1.05 to 1.37 means workload suppresses the effect of autonomy, which should be reported as the main finding.', response: 'The shift is worth showing, but it describes how these two predictors overlap, not a finding about autonomy on its own. Report both coefficients and let the reader see the shift.' },
   ]}
 />

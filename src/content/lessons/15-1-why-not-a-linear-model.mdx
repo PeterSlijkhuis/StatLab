@@ -98,7 +98,7 @@ fits it.
 
 <Interpret
   id="i-15-1"
-  question="A colleague fits lm(left_company ~ wellbeing) and reports b = -0.011, SE = 0.002, t(478) = -5.42, p < .001, concluding that each extra point of wellbeing reduces the probability of leaving by 1.1 percentage points. What should you say?"
+  question="A colleague fits lm(left_company ~ wellbeing) and reports b = -0.011, SE = 0.002, t(478) = -6.07, p < .001, concluding that each extra point of wellbeing reduces the probability of leaving by 1.1 percentage points. What should you say?"
   choices={[
     { text: 'The conclusion is fine; a linear probability model is a standard approach.', response: 'It is used in some fields, but not without the caveats - and none of them appears here.' },
     { text: 'The direction is right and the model is the wrong shape: it predicts probabilities outside 0 to 1 at the extremes of wellbeing, and its standard errors assume a constant residual spread that a 0/1 outcome cannot have. Refit with glm(..., family = binomial).', correct: true, response: 'Correct: the finding survives, the model and its inference do not.' },

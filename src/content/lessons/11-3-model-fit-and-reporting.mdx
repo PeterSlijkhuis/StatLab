@@ -26,7 +26,7 @@ model3 %>% glance() %>% select(r.squared, adj.r.squared, sigma, statistic, df, d
 
 <Predict
   id="p-f"
-  question="The model F is highly significant, but one of the three coefficients has p = .38. What follows?"
+  question="Suppose a model F is highly significant, but one of its three coefficients has p = .38. What follows?"
   choices={[
     { text: 'The model is invalid and the non-significant predictor must be removed', response: 'Neither. The F test and the individual t tests answer different questions, and dropping predictors by their p values is a good way to get an unreplicable model.' },
     { text: 'The predictors together account for variance, and that one predictor adds little once the others are in the model', correct: true, response: 'Right, and the second half is the careful phrasing: a coefficient is always conditional on the rest of the model.' },
@@ -61,13 +61,13 @@ A multiple regression is reported in two moves. First the model:
 
 > A multiple linear regression with autonomy, workload and tenure as predictors
 > accounted for a significant share of the variance in wellbeing, *F*(3, 476) =
-> 61.42, *p* < .001, *R*² = .279, adjusted *R*² = .274.
+> 63.89, *p* < .001, *R*² = .287, adjusted *R*² = .283.
 
 Then each coefficient, with its *SE*, *t* and *p*, and a sentence saying what it
 means in the units of the study. Conventions worth getting right the first time:
 
 - Drop the leading zero from statistics that cannot exceed 1: *p* = .032,
-  *R*² = .279. Keep it where a value can: *b* = 0.35.
+  *R*² = .287. Keep it where a value can: *b* = 0.35.
 - Two decimals for *b*, *SE*, *t* and *F*; three for *p*, down to *p* < .001.
 - Never *p* = .000.
 - Report *b* and its *SE* or its 95 % CI, not a *p* value on its own.
@@ -80,20 +80,20 @@ means in the units of the study. Conventions worth getting right the first time:
   id="q-apa"
   question="Which of these is written correctly for an APA 7 results section?"
   choices={[
-    { text: 'F(3, 476) = 61.42, p = .000, R2 = 0.279', response: 'Three errors: p is never .000, R-squared drops its leading zero, and the superscript matters.' },
-    { text: 'F(3, 476) = 61.42, p < .001, R-squared = .279', correct: true, response: 'Correct: both degrees of freedom, p at its floor, and no leading zero on a statistic bounded by 1.' },
-    { text: 'F(476) = 61.42, p < .001, R-squared = .279', response: 'An F test has two degrees of freedom and both are reported.' },
+    { text: 'F(3, 476) = 63.89, p = .000, R2 = 0.287', response: 'Three errors: p is never .000, R-squared drops its leading zero, and the superscript matters.' },
+    { text: 'F(3, 476) = 63.89, p < .001, R-squared = .287', correct: true, response: 'Correct: both degrees of freedom, p at its floor, and no leading zero on a statistic bounded by 1.' },
+    { text: 'F(476) = 63.89, p < .001, R-squared = .287', response: 'An F test has two degrees of freedom and both are reported.' },
     { text: 'The regression was significant (p < .05).', response: 'No statistics, no degrees of freedom, no effect size. A reader can do nothing with this.' },
   ]}
 />
 
 <Interpret
   id="i-11-3"
-  question="Your model gives F(3, 476) = 61.42, p < .001, R-squared = .279; autonomy b = 2.31, SE = 0.20, t = 11.55, p < .001; workload b = -3.09, SE = 0.28, t = -11.04, p < .001; tenure b = 0.09, SE = 0.10, t = 0.90, p = .368. Which write-up is correct?"
+  question="Your model gives F(3, 476) = 63.89, p < .001, R-squared = .287; autonomy b = 1.34, SE = 0.19, t = 7.23, p < .001; workload b = -3.63, SE = 0.30, t = -11.96, p < .001; tenure b = 0.27, SE = 0.07, t = 4.17, p < .001. Which write-up is correct?"
   choices={[
-    { text: 'The three predictors accounted for a significant share of the variance in wellbeing, F(3, 476) = 61.42, p < .001, R-squared = .279. Autonomy (b = 2.31, SE = 0.20, t = 11.55, p < .001) and workload (b = -3.09, SE = 0.28, t = -11.04, p < .001) were each associated with wellbeing, whereas tenure was not once the other two were in the model (b = 0.09, SE = 0.10, t = 0.90, p = .368).', correct: true, response: 'Correct. Every coefficient is reported, including the non-significant one, and "once the other two were in the model" keeps its claim conditional.' },
-    { text: '... Tenure had no effect on wellbeing (p = .368).', response: 'A p of .368 does not establish the absence of an effect. Its confidence interval almost certainly includes values that would matter.' },
-    { text: '... The model explains 27.9 % of employees, F(3, 476) = 61.42, p < .001.', response: 'R-squared is a share of variance, not a share of people.' },
-    { text: 'Autonomy was the strongest predictor of wellbeing because it had the largest t value, t = 11.55.', response: 'Workload actually has the larger coefficient on the same scale, and a t value compares an estimate with its own precision - it does not rank importance.' },
+    { text: 'The three predictors accounted for a significant share of the variance in wellbeing, F(3, 476) = 63.89, p < .001, R-squared = .287. Holding the other two constant, higher autonomy (b = 1.34, SE = 0.19, t = 7.23, p < .001) and longer tenure (b = 0.27, SE = 0.07, t = 4.17, p < .001) were associated with higher wellbeing, and higher workload with lower wellbeing (b = -3.63, SE = 0.30, t = -11.96, p < .001).', correct: true, response: 'Correct. Every coefficient is reported with its direction, and "holding the other two constant" keeps each claim conditional on the model.' },
+    { text: '... Tenure mattered least, because its coefficient (0.27) is the smallest.', response: 'Tenure is measured in years and the other two on 1-10 scales. Coefficients in different units cannot be ranked by size.' },
+    { text: '... The model explains 28.7 % of employees, F(3, 476) = 63.89, p < .001.', response: 'R-squared is a share of variance, not a share of people.' },
+    { text: 'Workload was the most important predictor of wellbeing because it had the largest t value, t = -11.96.', response: 'A t value compares an estimate with its own precision. It measures how clearly a coefficient differs from zero, not how important the predictor is.' },
   ]}
 />
