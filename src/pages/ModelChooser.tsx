@@ -242,9 +242,10 @@ export default function ModelChooser() {
         computation, interpretation, report. The chooser also covers methods beyond the course, and says so.
       </p>
       <p className="model-chooser-legend">
-        Every snippet runs as it is in the <Link to="/workspace">R Workspace</Link>. It reads workplace.csv or
-        wellbeing-population.csv, the course data the workspace already has, or a dataset built into R when the course data
-        has nothing that fits. For your own data, change the file name in read.csv() and the column names.
+        Most snippets run as they are in the <Link to="/workspace">R Workspace</Link>, and the ones that need RStudio say
+        so. Each reads workplace.csv or wellbeing-population.csv, the course data the workspace already has, or a dataset
+        built into R when the course data has nothing that fits. For your own data, change the file name in read.csv() and
+        the column names.
       </p>
 
       {path.length > 0 && (

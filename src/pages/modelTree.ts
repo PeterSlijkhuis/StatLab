@@ -592,23 +592,51 @@ exp(cbind(OR = coef(model), confint(model)))`,
             },
           },
           {
-            label: 'Ordered categories (a single Likert item, a grade, a stage)',
+            label: 'Ordered categories (a grade, a stage, a rating with only 3 or 4 levels)',
             group: 'Categorical outcomes',
             next: {
-              kind: 'answer',
-              id: 'ordinal-regression',
-              model: 'Ordinal logistic regression (proportional odds)',
-              when: 'An outcome with a few ordered categories where the distances between them are not equal or not known, such as never, sometimes, often.',
-              rCode: `library(MASS)
+              kind: 'question',
+              text: 'What is the question about the ordered outcome?',
+              options: [
+                {
+                  label: 'Whether groups differ, or two variables go together (rank tests)',
+                  next: {
+                    kind: 'answer',
+                    id: 'rank-tests',
+                    model: 'Rank-based tests',
+                    when: 'An ordered outcome, or a numeric one that is clearly skewed or has extreme outliers, and the question is whether groups differ or whether two variables go together.',
+                    rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+wilcox.test(wellbeing ~ remote, data = d)
+kruskal.test(wellbeing ~ department, data = d)
+cor.test(~ autonomy + wellbeing, data = d, method = "spearman", exact = FALSE)`,
+                    check:
+                      'Independent cases, each counted once. The group tests compare whole distributions; read them as a difference in medians only when the groups have a similar shape and spread. When the same people are measured more than once, rank within each person instead: the Wilcoxon signed-rank test for two measurements, wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE), and the Friedman test for three or more.',
+                    traditional:
+                      "The Mann-Whitney test, the Kruskal-Wallis test and Spearman's rank correlation. After a significant Kruskal-Wallis test, pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = \"holm\", exact = FALSE) compares every pair of groups.",
+                    note: 'wilcox.test() compares two groups, kruskal.test() three or more, and cor.test() with method = "spearman" gives rho, the correlation between the ranks; method = "kendall" gives Kendall\'s tau instead. These tests work on ranks, so report each group\'s median alongside them. To add predictors or covariates, use ordinal regression.',
+                    lessonId: '12-4',
+                  },
+                },
+                {
+                  label: 'Several predictors at once (ordinal regression)',
+                  next: {
+                    kind: 'answer',
+                    id: 'ordinal-regression',
+                    model: 'Ordinal logistic regression (proportional odds)',
+                    when: 'An outcome with a few ordered categories where the distances between them are not equal or not known, such as never, sometimes, often.',
+                    rCode: `library(MASS)
 # The course data has no ordered ratings, so this uses housing from MASS: how satisfied 1681 tenants were (low, medium, high).
 model <- polr(Sat ~ Infl + Type, data = housing, weights = Freq, Hess = TRUE)
 summary(model)
 exp(cbind(OR = coef(model), confint(model)))`,
-              check:
-                'Proportional odds: each predictor shifts the odds of being above any cut-off by the same amount. The ordinal package tests it: ordinal::nominal_test(ordinal::clm(Sat ~ Infl + Type, data = housing, weights = Freq)), where a small p flags a predictor that breaks the assumption. A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
-              note: 'Each row of housing is one combination of answers, and Freq says how many tenants gave it, hence weights = Freq; with one row per person, leave it out. Your own outcome needs to be a factor with its levels in order: factor(x, levels = c("low", "medium", "high"), ordered = TRUE). An odds ratio above 1 means that predictor goes with higher categories of the outcome. The intercepts (the zeta values in the output) are the cut-offs between adjacent categories.',
-              buildsOn: '15-2',
-              further: 'Alan Agresti, Analysis of Ordinal Categorical Data, and the ordinal package\'s vignettes.',
+                    check:
+                      'Proportional odds: each predictor shifts the odds of being above any cut-off by the same amount. The ordinal package tests it: ordinal::nominal_test(ordinal::clm(Sat ~ Infl + Type, data = housing, weights = Freq)), where a small p flags a predictor that breaks the assumption. A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
+                    note: 'Each row of housing is one combination of answers, and Freq says how many tenants gave it, hence weights = Freq; with one row per person, leave it out. Your own outcome needs to be a factor with its levels in order: factor(x, levels = c("low", "medium", "high"), ordered = TRUE). An odds ratio above 1 means that predictor goes with higher categories of the outcome. The intercepts (the zeta values in the output) are the cut-offs between adjacent categories.',
+                    buildsOn: '15-2',
+                    further: 'Alan Agresti, Analysis of Ordinal Categorical Data, and the ordinal package\'s vignettes.',
+                  },
+                },
+              ],
             },
           },
           {

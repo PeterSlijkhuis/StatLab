@@ -48,7 +48,6 @@ const BAYES = /\(bayesian\)/i;
 // Written out by hand, not derived from TREE: a path that silently disappears
 // from the tree must fail here.
 const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lessonId: string }[] = [
-  { clicks: [...INDEPENDENT, /compare the mean/i], id: 'mean-vs-value', model: 'Intercept-only linear model', code: 'lm(I(exam_score - 70) ~ 1', lessonId: '08-3' },
   { clicks: [...NUMERIC, /one numeric predictor/i], id: 'simple-regression', model: 'Simple linear regression', code: 'lm(wellbeing ~ autonomy, data = d)', lessonId: '10-2' },
   { clicks: [...NUMERIC, /several predictors/i], id: 'multiple-regression', model: 'Multiple linear regression', code: 'wellbeing ~ autonomy + workload + tenure_years', lessonId: '11-1' },
   { clicks: [...GROUPS, /with two groups/i], id: 'two-groups', model: 'Linear model with a two-group predictor', code: 'group_by(remote) %>% summarise(', lessonId: '12-1' },
@@ -56,7 +55,7 @@ const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lesson
   { clicks: [...GROUPS, /covariate/i], id: 'groups-with-covariate', model: 'Linear model with a group and a covariate', code: 'lm(engagement_t2 ~ engagement_t1 + training', lessonId: '11-2' },
   { clicks: [...GROUPS, /two grouping variables/i], id: 'factorial', model: 'Linear model with an interaction (factorial design)', code: 'contrasts = list(training = contr.sum, mentoring = contr.sum)', lessonId: '13-2' },
   { clicks: [...REPEATED, /twice/i], id: 'before-after', model: 'Linear mixed-effects model for two time points', code: 'pivot_longer', lessonId: '14-3' },
-  { clicks: [...REPEATED, /three or more/i], id: 'repeated-measures', model: 'Linear mixed-effects model', code: 'weight ~ time + (1 | Chick)', lessonId: '14-2' },
+  { clicks: [...REPEATED, /three or more/i], id: 'repeated-measures', model: 'Linear mixed-effects model', code: 'weight ~ time + (1 | Chick)', lessonId: '14-4' },
   { clicks: [...NUMBER, /teams, classes or sites/i], id: 'nested-groups', model: 'Linear mixed-effects model with a grouping factor', code: '(1 | site)', lessonId: '14-3' },
   { clicks: [...REPEATED, /also in different groups/i], id: 'time-by-group', model: 'Linear mixed-effects model with a time-by-group interaction', code: 'time * training', lessonId: '14-4' },
   { clicks: [TO_OUTCOME, /a count of events/i, /start here/i], id: 'poisson-regression', model: 'Poisson regression', code: 'family = poisson', lessonId: '15-4' },
@@ -69,18 +68,21 @@ const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lesson
   { clicks: [...YES_NO, /cross-table/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
   { clicks: [...YES_NO, /one proportion/i], id: 'proportion-vs-value', model: 'Exact binomial test', code: 'binom.test(', lessonId: '09-1' },
   { clicks: [TO_OUTCOME, /no order/i, /one other categorical variable/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [TO_OUTCOME, /ordered categories/i, /rank tests/i], id: 'rank-tests', model: 'Rank-based tests', code: 'kruskal.test(wellbeing ~ department, data = d)', lessonId: '12-4' },
+  { clicks: [BAYES, /prior on each coefficient/i], id: 'bayesian-regression', model: 'Bayesian linear regression (brms)', code: 'brm(', lessonId: '16-4' },
 ];
 
 /** Answers beyond the course, reached by the same clicks a student would make. */
 const BEYOND: { clicks: RegExp[]; id: string; code: string }[] = [
+  { clicks: [...INDEPENDENT, /compare the mean/i], id: 'mean-vs-value', code: 'lm(I(exam_score - 70) ~ 1' },
   { clicks: [...NUMERIC, /curved/i], id: 'curved-relationship', code: 'poly(sleep_hours, 2)' },
-  { clicks: [...NUMERIC, /moderator/i], id: 'continuous-moderation', code: 'workload_c * autonomy_c' },
+  { clicks: [...NUMERIC, /moderation/i], id: 'continuous-moderation', code: 'workload_c * autonomy_c' },
   { clicks: [...GROUPS, /several outcomes/i], id: 'several-outcomes', code: 'manova(' },
   { clicks: [...REPEATED, /different rates/i], id: 'growth-curve', code: '(Time | Chick)' },
   { clicks: [...REPEATED, /many items or stimuli/i], id: 'crossed-random-effects', code: '(1 | lecturer)' },
   { clicks: [TO_OUTCOME, /^yes or no/i, /more than once, or grouped/i], id: 'repeated-binary', code: 'glmer(' },
   { clicks: [TO_OUTCOME, /^yes or no/i, /trials per row/i], id: 'successes-of-trials', code: 'cbind(left, staff - left)' },
-  { clicks: [TO_OUTCOME, /ordered categories/i], id: 'ordinal-regression', code: 'polr(' },
+  { clicks: [TO_OUTCOME, /ordered categories/i, /ordinal regression/i], id: 'ordinal-regression', code: 'polr(' },
   { clicks: [TO_OUTCOME, /no order/i, /predicted from other variables/i], id: 'multinomial-regression', code: 'multinom(' },
   { clicks: [TO_OUTCOME, /no order/i, /expected shares/i], id: 'goodness-of-fit', code: 'chisq.test(counts, p =' },
   { clicks: [TO_OUTCOME, /a count of events/i, /overdispersion/i], id: 'negative-binomial', code: 'glm.nb(' },
@@ -96,7 +98,6 @@ const BEYOND: { clicks: RegExp[]; id: string; code: string }[] = [
   { clicks: [/predict new cases/i, /only the useful predictors/i], id: 'lasso', code: 'cv.glmnet(' },
   { clicks: [/predict new cases/i, /hard to read/i], id: 'random-forest', code: 'randomForest(' },
   { clicks: [BAYES, /two groups/i], id: 'bayes-t-test', code: 'ttestBF(' },
-  { clicks: [BAYES, /prior on each coefficient/i], id: 'bayesian-regression', code: 'brm(' },
 ];
 
 async function clickThrough(clicks: RegExp[]) {
@@ -262,7 +263,7 @@ describe('links and the index', () => {
 
   test('the index lists every answer once, in sections, and opens the one picked', async () => {
     renderChooser();
-    const index = screen.getByRole('region', { name: /browse all 44 models/i });
+    const index = screen.getByRole('region', { name: /browse all 45 models/i });
     const listed = [...index.querySelectorAll('.model-card button')].map((button) => button.textContent);
     expect([...listed].sort()).toEqual(answers().map((answer) => answer.model).sort());
     expect(index.querySelectorAll('.model-index-section h3').length).toBe(SECTIONS.length);
@@ -286,6 +287,7 @@ describe('links and the index', () => {
     await userEvent.type(search, 'kruskal');
     expect([...index.querySelectorAll('.model-card button')].map((button) => button.textContent)).toEqual([
       'Linear model with a categorical predictor',
+      'Rank-based tests',
     ]);
 
     await userEvent.clear(search);
@@ -376,8 +378,9 @@ describe('where each snippet runs', () => {
     expect(document.querySelector('.model-chooser-answer')?.textContent).toContain('this site does not have brms');
   });
 
-  test('every answer the course teaches runs in the R Workspace', () => {
-    for (const answer of answers().filter((candidate) => candidate.lessonId)) {
+  test('every answer the course teaches runs in the R Workspace, unless its lesson says to use RStudio', () => {
+    // Lesson 16-4 teaches brms in RStudio: no browser can compile its Stan models.
+    for (const answer of answers().filter((candidate) => candidate.lessonId && candidate.id !== 'bayesian-regression')) {
       expect(packagesMissingHere(answer), answer.id).toEqual([]);
     }
   });
@@ -423,6 +426,6 @@ describe('lesson links', () => {
   test('a model beyond the course links to the lesson it builds on', async () => {
     renderChooser();
     await clickThrough([...REPEATED, /different rates/i]);
-    expect(screen.getByRole('link', { name: /builds on the lesson: random intercepts/i }).getAttribute('href')).toBe('/lesson/14-2');
+    expect(screen.getByRole('link', { name: /builds on the lesson: change over time/i }).getAttribute('href')).toBe('/lesson/14-4');
   });
 });
