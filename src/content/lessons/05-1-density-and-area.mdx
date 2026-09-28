@@ -83,7 +83,7 @@ below 60; the population itself says about 15 per cent. Close, not identical —
 which is what "the data are approximately normal" means in practice.
 
 Notice also what the area of a single point must be. A point has no width, so
-`pnorm(73.3) - pnorm(73.3)` is exactly zero: the probability of scoring
+`pnorm(73.3, mu, sigma) - pnorm(73.3, mu, sigma)` is exactly zero: the probability of scoring
 *exactly* 73.3 is zero under a continuous model. That is not a paradox. It is
 the price of modelling a score as a real number rather than as a count.
 
@@ -112,9 +112,9 @@ at 1 however wide the curve spreads.
   id="i-5-1"
   question="You are writing up the distribution of exam scores for a methods report. Which sentence reports what you have actually computed?"
   choices={[
-    { text: 'Exam scores were approximately normally distributed (M = 73.31, SD = 12.36). Under this model, 14% of students are expected to score below 60.', correct: true, response: 'Correct. It names the model, gives the two parameters in APA form, and reports the tail area as an expected proportion rather than as a claim about any one student.' },
+    { text: 'Exam scores were approximately normally distributed (μ = 73.31, σ = 12.36). Under this model, 14% of students are expected to score below 60.', correct: true, response: 'Correct. It names the model, gives the two parameters in APA form, and reports the tail area as an expected proportion rather than as a claim about any one student.' },
     { text: 'The density of exam scores at 60 was .018, so 1.8% of students scored 60.', response: 'That is dnorm(60), a height. Heights are not probabilities, and no student scores exactly 60 under a continuous model.' },
     { text: 'The probability that a student scored exactly 60 was .14.', response: '.14 is the area to the LEFT of 60, covering every score below it. The probability of any exact score under a continuous model is zero.' },
-    { text: 'Exam scores were normally distributed (M = 73.31, SD = 12.36), so 14% of students scored below 60.', response: 'Two problems. "Were normally distributed" overstates it — the fit is close, not exact — and the 14% is what the model expects, while the population itself holds about 15%.' },
+    { text: 'Exam scores were normally distributed (μ = 73.31, σ = 12.36), so 14% of students scored below 60.', response: 'Two problems. "Were normally distributed" overstates it — the fit is close, not exact — and the 14% is what the model expects, while the population itself holds about 15%.' },
   ]}
 />
