@@ -1,0 +1,112 @@
+Pearson's *r* measures how well a **straight line** describes two variables. When
+the pattern is curved but still steadily rising or falling, or when a few extreme
+points pull the line around, a rank correlation is the safer description. It asks
+a simpler question: when one variable goes up, does the other tend to go up too?
+
+<CodeBlock id="c-load" code={`library(dplyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(
+  median_workload = median(workload),
+  median_wellbeing = median(wellbeing),
+  n = n()
+)
+
+c(
+  pearson = cor(d$workload, d$wellbeing),
+  spearman = cor(d$workload, d$wellbeing, method = "spearman"),
+  kendall = cor(d$workload, d$wellbeing, method = "kendall")
+)`} />
+
+Three numbers, three definitions, one story: busier employees report lower
+wellbeing. The sizes differ because the three coefficients measure different
+things, so never compare a Spearman value from one study with a Kendall value from
+another.
+
+## Spearman is Pearson on ranks
+
+Replace every score by its rank (1 for the lowest, 480 for the highest, ties share
+the average rank) and compute an ordinary Pearson correlation. That is all
+Spearman's *ρ* (rho) is.
+
+<CodeBlock id="c-ranks" code={`c(
+  spearman = cor(d$workload, d$wellbeing, method = "spearman"),
+  pearson_on_ranks = cor(rank(d$workload), rank(d$wellbeing))
+)`} />
+
+Because only the order is kept, the exact distances between scores no longer
+matter. A score of 9.9 and a score of 99 are both simply "the highest".
+
+## Kendall counts pairs
+
+Kendall's *τ* (tau) takes every pair of employees and asks whether they are in the
+same order on both variables (a **concordant** pair) or in opposite orders (a
+**discordant** pair). *τ* is the surplus of concordant over discordant pairs, as a
+share of all pairs. A *τ* of −.28 means that, for a randomly chosen pair, the one
+with more workload has lower wellbeing more often than not, by roughly 28 percentage
+points. Kendall's *τ* is usually smaller than Spearman's *ρ* for the same data.
+
+## What one extreme point does
+
+<CodeBlock id="c-outlier" code={`set.seed(104)
+x <- round(runif(12, 1, 10))
+y <- round(x + rnorm(12, 0, 1.5), 1)
+
+x2 <- c(x, 10)
+y2 <- c(y, -20)
+
+round(c(
+  pearson = cor(x2, y2),
+  spearman = cor(x2, y2, method = "spearman"),
+  kendall = cor(x2, y2, method = "kendall")
+), 3)`} />
+
+Twelve points on a clear rising pattern, plus one far below the rest. Pearson's *r*
+drops to about zero and even turns negative. The rank correlations still see the
+rise, because the odd point is only one rank out of place, however far away it is.
+
+<Predict
+  id="p-rank-outlier"
+  question="Why does one extreme point hurt Pearson's r so much more than Spearman's rho?"
+  choices={[
+    { text: 'Spearman ignores outliers', response: 'It does not ignore them: the point still gets a rank. It just cannot be further away than last place.' },
+    { text: 'Pearson works with the distances themselves, so one far-away point carries a huge squared deviation; ranks cap how far away any point can be', correct: true, response: 'Exactly. On the rank scale the extreme point is simply the lowest, one step below the next.' },
+    { text: 'Spearman needs a larger sample', response: 'The sample size is the same for both. The difference is what each coefficient does with the scores.' },
+  ]}
+/>
+
+<Exercise id="m10-4-a" />
+
+## Testing and reporting
+
+`cor.test()` takes the same `method` argument. With 480 employees and some tied
+scores an exact *p* value cannot be computed, so ask for the normal approximation
+with `exact = FALSE`, which is what R would fall back on anyway.
+
+<CodeBlock id="c-test" code={`cor.test(d$workload, d$wellbeing, method = "spearman", exact = FALSE)`} />
+
+Report *r*<sub>s</sub> (Spearman) or *τ* (Kendall), the sample size and the *p*
+value. A rank correlation has no slope and no *R*², so there is nothing to predict
+with: it describes an ordering, and only that.
+
+<Quiz
+  id="q-when-rank"
+  question="Which situation calls most clearly for a rank correlation instead of Pearson's r?"
+  choices={[
+    { text: 'Two normally distributed variables with a straight-line pattern', response: 'That is exactly where Pearson\'s r is the best description. Ranks would throw information away.' },
+    { text: 'A pattern that rises steadily but bends, or a few extreme scores, or a variable measured only as an order (such as a ranking of candidates)', correct: true, response: 'Right. Ranks only assume that higher means more, which is all these situations can promise.' },
+    { text: 'Any sample smaller than 30', response: 'Sample size alone does not decide it. A small sample with a clean straight pattern is still Pearson territory.' },
+  ]}
+/>
+
+<Interpret
+  id="i-10-4"
+  question={'cor.test(..., method = "spearman") gives rho = -0.404, p < 2.2e-16, for workload and wellbeing in 480 employees. Which write-up is correct APA 7?'}
+  choices={[
+    { text: 'Workload and wellbeing were negatively related, rs = -.40, p < .001, n = 480: employees with more workload tended to report lower wellbeing.', correct: true, response: 'Correct. The coefficient is named, its sign is read in words, and the claim stays at "tended to", which an ordering supports.' },
+    { text: 'Each extra point of workload lowered wellbeing by 0.40 points, rs = -.40, p < .001.', response: 'A correlation is not a slope, and a rank correlation least of all: it has no units, so it cannot say "by how many points".' },
+    { text: 'Workload explained 40 % of the variance in wellbeing, rs = -.40, p < .001.', response: 'A share of variance would be a squared correlation from a linear model. rho describes an ordering and has no variance-explained reading.' },
+    { text: 'There was a significant correlation, p < 2.2e-16.', response: 'The coefficient and its direction are missing, and APA reports p < .001 rather than R\'s printing limit.' },
+  ]}
+/>

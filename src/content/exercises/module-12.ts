@@ -318,4 +318,53 @@ export const module12: ExerciseDef[] = [
       'sum(pairs_tbl$p.value < 0.05) counts the rows below .05, because sum() over TRUE and FALSE counts the TRUEs.',
     ],
   },
+  {
+    id: 'm12-4-a',
+    prompt:
+      'Compare the four departments on wellbeing using ranks. Run a Kruskal-Wallis test and store its test statistic H, as a single number, in h.',
+    starterCode:
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nd %>% group_by(department) %>% summarise(n = n(), median_wellbeing = median(wellbeing))\n\nh <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(wellbeing ~ department, data = d)$statistic',
+    wrongAnswers: [
+      // The F from the linear model: the means route, not the ranks route.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- anova(lm(wellbeing ~ department, data = d))$"F value"[1]',
+      // The wrong grouping variable.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(wellbeing ~ site, data = d)$statistic',
+      // The p value stored instead of the statistic.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(wellbeing ~ department, data = d)$p.value',
+    ],
+    alternateSolutions: [
+      // The two-vector form.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(d$wellbeing, d$department)$statistic',
+      // Unname()d, so nothing but the number is left.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nkw <- kruskal.test(wellbeing ~ department, data = d)\nh <- unname(kw$statistic)',
+    ],
+    check: `
+      if (!has_answer("h")) {
+        list(pass = FALSE, message = "I need h, the Kruskal-Wallis statistic.")
+      } else {
+        h <- as.vector(answer("h"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        kw <- kruskal.test(wellbeing ~ department, data = d)
+        expected <- as.vector(kw$statistic)
+        f_value <- anova(lm(wellbeing ~ department, data = d))$"F value"[1]
+        if (!is.numeric(h) || length(h) != 1L) {
+          list(pass = FALSE, message = "h should be a single number. kruskal.test(...)$statistic gives it.")
+        } else if (isTRUE(all.equal(h, f_value, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the F from the linear model, which compares means. kruskal.test() compares the groups on ranks.")
+        } else if (isTRUE(all.equal(h, kw$p.value, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That is the p value. Store the statistic: kruskal.test(...)$statistic.")
+        } else if (!isTRUE(all.equal(h, expected, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("h is ", round(h, 2), ", but H for wellbeing by department is ", round(expected, 2), ". Check the grouping variable after the tilde."))
+        } else {
+          list(pass = TRUE, message = paste0("H(", kw$parameter, ") = ", round(expected, 2), ", p = ", signif(kw$p.value, 3), ". The departments differ in where their employees fall in the wellbeing order."))
+        }
+      }
+    `,
+    hints: [
+      'kruskal.test() takes the same formula as lm(): outcome ~ group.',
+      'The statistic is in the $statistic part of the result.',
+    ],
+  },
 ];

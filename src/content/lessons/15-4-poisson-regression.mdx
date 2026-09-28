@@ -1,0 +1,111 @@
+Some outcomes are counts: sick days, errors, visits, complaints. A count cannot be
+negative, it comes in whole numbers, and its spread grows with its mean: people
+who average one sick day vary less than people who average ten. The generalised
+linear model from Lesson 15-2 handles this with a different family and the same
+idea: put the linear part on a scale where a straight line makes sense.
+
+The workplace data has no count, so this lesson adds one to the real employees:
+sick days over a year, simulated so that they rise with workload and fall with
+remote work.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+set.seed(154)
+d$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))
+
+d %>% summarise(mean_sick = mean(sick_days), var_sick = var(sick_days), min = min(sick_days), max = max(sick_days))`} />
+
+## The log link
+
+Poisson regression models the **logarithm** of the expected count as a straight
+line. Transforming back, each coefficient multiplies the expected count instead of
+adding to it.
+
+<CodeBlock id="c-fit" code={`m_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)
+
+m_sick %>% tidy()
+m_sick %>% tidy(exponentiate = TRUE, conf.int = TRUE)`} />
+
+The first table is on the log scale, where 0 means no effect. The second is
+exponentiated: these are **rate ratios**, where 1 means no effect.
+
+- **`workload`**: about 1.20. Each extra point of workload goes with about 20 %
+  more sick days.
+- **`remoteYes`**: about 0.68. Remote workers have about two thirds of the sick
+  days of office workers with the same workload, 32 % fewer.
+
+Because the effects multiply, the same one-point increase in workload adds more
+sick days at the high end than at the low end:
+
+<CodeBlock id="c-predict" code={`predict(m_sick, newdata = data.frame(workload = c(2, 8), remote = "No"), type = "response")`} />
+
+<Predict
+  id="p-rate-ratio"
+  question="The rate ratio for workload is 1.20. What do three extra points of workload do to the expected number of sick days?"
+  choices={[
+    { text: 'Add 0.60 sick days', response: 'Rate ratios multiply, they do not add. The number of days added depends on where you start.' },
+    { text: 'Multiply them by about 1.20 × 1.20 × 1.20, which is about 1.73', correct: true, response: 'Right. On the log scale the three steps add up; transformed back, they multiply.' },
+    { text: 'Multiply them by 3.60', response: 'That treats the ratio as something to scale linearly. Each step multiplies by 1.20 again.' },
+  ]}
+/>
+
+<Exercise id="m15-4-a" />
+
+## Checking the Poisson assumption
+
+A Poisson distribution has its variance equal to its mean. Real counts often vary
+more than that, which is called **overdispersion**, and it makes the standard errors
+too small. Estimate it from the Pearson residuals:
+
+<CodeBlock id="c-dispersion" code={`sum(residuals(m_sick, type = "pearson")^2) / df.residual(m_sick)`} />
+
+Near 1 is fine, as it is here. Clearly above 1, say 1.5 or more, and a negative
+binomial model is the better choice; the model chooser shows how.
+
+## The chi-square test is a Poisson model
+
+In Module 9 you tested whether leaving the company depended on department with a
+chi-square test. The same question can be asked of the **counts** in the table:
+fit a Poisson model in which department and leaving each affect the counts but do
+not interact, and ask how badly it misses.
+
+<CodeBlock id="c-counts" code={`counts <- as.data.frame(table(department = d$department, left_company = d$left_company))
+counts
+
+m_independent <- glm(Freq ~ department + left_company, data = counts, family = poisson)
+
+c(deviance = deviance(m_independent), df = df.residual(m_independent),
+  p = pchisq(deviance(m_independent), df.residual(m_independent), lower.tail = FALSE))
+
+chisq.test(table(d$department, d$left_company))`} />
+
+The model without an interaction **is** the hypothesis of independence. Its
+deviance is a likelihood-ratio chi-square, and it lands almost exactly on
+Pearson's chi-square, with the same degrees of freedom. Adding the
+`department:left_company` interaction would fit the table perfectly, so testing
+whether that interaction is needed is the chi-square test. Once again, a classic
+test turns out to be a question about a model.
+
+<Quiz
+  id="q-counts"
+  question="Which outcome calls for Poisson regression rather than logistic regression?"
+  choices={[
+    { text: 'Whether an employee left within a year', response: 'Yes or no is a binary outcome: logistic regression.' },
+    { text: 'The number of times an employee was late in a year', correct: true, response: 'Right: a count of events per person.' },
+    { text: 'An employee\'s wellbeing score from 0 to 100', response: 'A continuous score with no count structure goes in a linear model.' },
+  ]}
+/>
+
+<Interpret
+  id="i-15-4"
+  question="The Poisson model gives rate ratios of 1.20 for workload (95 % CI 1.15 to 1.25, p < .001) and 0.68 for remote work (95 % CI 0.61 to 0.77, p < .001). Which write-up is correct APA 7?"
+  choices={[
+    { text: 'A Poisson regression showed that sick days rose with workload, RR = 1.20, 95 % CI [1.15, 1.25], p < .001, and were fewer for remote workers, RR = 0.68, 95 % CI [0.61, 0.77], p < .001: about 20 % more sick days per point of workload, and 32 % fewer when working remotely.', correct: true, response: 'Correct. Rate ratios with their intervals, and a plain reading of each as a percentage change.' },
+    { text: 'Each point of workload added 1.20 sick days, and remote work removed 0.68 days, both p < .001.', response: 'Rate ratios multiply the expected count. They are not numbers of days to add or remove.' },
+    { text: 'Remote work lowered the odds of sick days, OR = 0.68, p < .001.', response: 'These are rate ratios from a count model, not odds ratios from a binary one.' },
+    { text: 'Workload and remote work significantly predicted sick days, p < .001.', response: 'No estimates, no intervals: a reader learns nothing about how large the effects are.' },
+  ]}
+/>

@@ -51,8 +51,8 @@
     <!-- stat chips -->
     <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#1e1b4b" text-anchor="middle">
       <g transform="translate(64 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">18</text><text x="80" y="56">modules</text></g>
-      <g transform="translate(236 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">59</text><text x="80" y="56">lessons</text></g>
-      <g transform="translate(408 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">84</text><text x="80" y="56">exercises</text></g>
+      <g transform="translate(236 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">64</text><text x="80" y="56">lessons</text></g>
+      <g transform="translate(408 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">89</text><text x="80" y="56">exercises</text></g>
       <g transform="translate(580 312)"><rect width="160" height="68" rx="16" fill="#ffffff"/><text x="80" y="32" font-size="28" fill="#4f46e5">0</text><text x="80" y="56">installs</text></g>
     </g>
   </g>

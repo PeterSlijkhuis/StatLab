@@ -71,6 +71,50 @@ you prefer.
 
 <Exercise id="m11-2-b" />
 
+## When the sign flips: Simpson's paradox
+
+Holding a variable constant can do more than shrink a slope. It can turn it
+around. Here is a small simulated example: 1,000 employees, their neuroticism
+score, their salary, and their level of education (0, 1 or 2).
+
+<CodeBlock id="c-simpson" code={`set.seed(417)
+n <- 1000
+education <- sample(0:2, n, replace = TRUE)
+neuroticism <- pmin(7, pmax(0, round(1 + 1.5 * education + rnorm(n, 0, 1), 1)))
+salary <- round(50000 - 3000 * neuroticism + 21000 * education + rnorm(n, 0, 8000))
+pay <- data.frame(education = factor(education), neuroticism, salary)
+
+lm(salary ~ neuroticism, data = pay) %>% tidy()
+lm(salary ~ neuroticism + education, data = pay) %>% tidy()`} />
+
+On its own, neuroticism goes with a **higher** salary: about 5,750 more per point.
+Hold education constant and the slope is about 3,270 **lower** per point. Both
+numbers are correct; they answer different questions. In this simulation the
+better educated employees happen to score higher on neuroticism and also earn much
+more, so across all employees neuroticism rides along with education. Within any
+one level of education, more neurotic employees earn less.
+
+<CodeBlock id="c-simpson-groups" code={`pay %>%
+  group_by(education) %>%
+  summarise(slope = coef(lm(salary ~ neuroticism))[2], mean_neuroticism = mean(neuroticism), mean_salary = mean(salary))`} />
+
+The slope is negative in every education group, and positive when the groups are
+thrown together. That reversal is called **Simpson's paradox**. It is not a flaw
+in the arithmetic. It is the clearest demonstration that a relationship in pooled
+data can be the opposite of the relationship inside every group, so the question of
+which variables to hold constant has to come from what you know about the
+situation.
+
+<Predict
+  id="p-simpson"
+  question="Which slope for neuroticism should a report give?"
+  choices={[
+    { text: 'The positive one, because it uses all the data without adjustment', response: 'Both models use all the data. The unadjusted slope mixes neuroticism with education, which is exactly what makes it misleading here.' },
+    { text: 'The one that answers the research question: if the question is about employees with the same education, the adjusted, negative slope', correct: true, response: 'Right. The statistics cannot pick for you; the question and what you know about the causal structure do.' },
+    { text: 'Neither, because the results contradict each other', response: 'They do not contradict each other. They are answers to two different questions.' },
+  ]}
+/>
+
 ## What the phrase does not mean
 
 1. **Not causal.** Adjusting for workload removes workload. It does nothing about

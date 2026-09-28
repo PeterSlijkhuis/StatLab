@@ -296,4 +296,59 @@ export const module15: ExerciseDef[] = [
       'confint() on a glm prints "Waiting for profiling to be done..." - that is a message, not an error.',
     ],
   },
+  {
+    id: 'm15-4-a',
+    prompt:
+      'Fit a Poisson regression of sick_days on workload and remote, and store the rate ratio for workload, as a single number, in rr_workload.',
+    starterCode:
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\n# Counts: which family?\nm_sick <- \nrr_workload <- ',
+    solution:
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)\nrr_workload <- exp(coef(m_sick)["workload"])',
+    wrongAnswers: [
+      // The coefficient left on the log scale.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)\nrr_workload <- coef(m_sick)["workload"]',
+      // No family: a linear model, exponentiated anyway.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ workload + remote, data = d)\nrr_workload <- exp(coef(m_sick)["workload"])',
+      // Workload alone, without holding remote work constant.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ workload, data = d, family = poisson)\nrr_workload <- exp(coef(m_sick)["workload"])',
+    ],
+    alternateSolutions: [
+      // broom, exponentiated in tidy().
+      'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)\nrr_workload <- m_sick %>% tidy(exponentiate = TRUE) %>% filter(term == "workload") %>% pull(estimate)',
+      // The family written out in full.
+      'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nset.seed(154)\nd$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))\nm_sick <- glm(sick_days ~ remote + workload, data = d, family = poisson(link = "log"))\nrr_workload <- exp(coef(m_sick)[["workload"]])',
+    ],
+    check: `
+      if (!has_answer("rr_workload")) {
+        list(pass = FALSE, message = "I need rr_workload, the rate ratio for workload.")
+      } else {
+        rr <- as.vector(answer("rr_workload"))
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        set.seed(154)
+        d$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))
+        b <- coef(glm(sick_days ~ workload + remote, data = d, family = poisson))[["workload"]]
+        b_gaussian <- coef(glm(sick_days ~ workload + remote, data = d))[["workload"]]
+        b_alone <- coef(glm(sick_days ~ workload, data = d, family = poisson))[["workload"]]
+        if (has_answer("m_sick") && inherits(answer("m_sick"), "glm") && family(answer("m_sick"))$family != "poisson") {
+          list(pass = FALSE, message = paste0("m_sick uses the ", family(answer("m_sick"))$family, " family. Counts need family = poisson."))
+        } else if (!is.numeric(rr) || length(rr) != 1L) {
+          list(pass = FALSE, message = "rr_workload should be a single number.")
+        } else if (isTRUE(all.equal(rr, b, tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That is the coefficient on the log scale, ", round(b, 3), ". exp() turns it into a rate ratio."))
+        } else if (isTRUE(all.equal(rr, exp(b_gaussian), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That comes from a linear model: glm() without a family is gaussian. Add family = poisson.")
+        } else if (isTRUE(all.equal(rr, exp(b_alone), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "That model has workload alone. Add remote, so the rate ratio holds remote work constant.")
+        } else if (!isTRUE(all.equal(rr, exp(b), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("rr_workload is ", round(rr, 3), ", but the rate ratio is ", round(exp(b), 3), "."))
+        } else {
+          list(pass = TRUE, message = paste0("RR = ", sprintf("%.2f", exp(b)), ": each extra point of workload goes with about ", round(100 * (exp(b) - 1)), " % more sick days, for employees with the same remote status."))
+        }
+      }
+    `,
+    hints: [
+      'glm(sick_days ~ workload + remote, data = d, family = poisson).',
+      'Coefficients are on the log scale; exp() turns them into rate ratios.',
+    ],
+  },
 ];
