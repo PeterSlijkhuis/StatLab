@@ -1,3 +1,5 @@
+import type { MouseEvent } from 'react';
+import { addBonusPoint } from '../state/progress';
 import './Credits.css';
 
 // Logo files are picked up from src/assets/logos by name, so adding
@@ -14,13 +16,31 @@ function logoFor(key: string) {
   return path ? LOGO_FILES[path] : undefined;
 }
 
-export const AUTHORS = ['dr. P.J.H. Slijkhuis', 'dr. V.d.C. Resendez Gomez'] as const;
 export const SOURCE_MATERIALS_BY = 'dr. S.J. Watson';
 
 export const PARTNERS = [
   { key: 'utwente', name: 'University of Twente', href: 'https://www.utwente.nl/en/' },
   { key: 'bmslab', name: 'The BMS Lab', href: 'https://bmslab.utwente.nl/' },
 ] as const;
+
+/** A surname in the credit line. */
+function Name({ children }: { children: string }) {
+  function click(event: MouseEvent<HTMLSpanElement>) {
+    addBonusPoint();
+    const plus = document.createElement('span');
+    plus.className = 'credits-plus';
+    plus.textContent = '+1';
+    plus.style.left = `${event.clientX}px`;
+    plus.style.top = `${event.clientY}px`;
+    document.body.appendChild(plus);
+    setTimeout(() => plus.remove(), 900);
+  }
+  return (
+    <span className="credits-name" onClick={click}>
+      {children}
+    </span>
+  );
+}
 
 type Props = {
   /** Compact sits at the foot of the sidebar; full closes the home page. */
@@ -31,7 +51,8 @@ export default function Credits({ variant = 'full' }: Props) {
   return (
     <footer className={`credits credits-${variant}`}>
       <p className="credits-authors">
-        Made by {AUTHORS.join(' and ')}, based on materials provided by {SOURCE_MATERIALS_BY}.
+        Made by dr. P.J.H. <Name>Slijkhuis</Name> and dr. V.d.C. <Name>Resendez Gomez</Name>, based on materials provided by{' '}
+        {SOURCE_MATERIALS_BY}.
       </p>
       <ul className="credits-partners">
         {PARTNERS.map((partner) => {

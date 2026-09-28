@@ -4,7 +4,7 @@ import RStatus from './components/RStatus';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import Toaster from './components/Toaster';
-import { prefersReducedMotion } from './components/celebrate';
+import { confetti, prefersReducedMotion, showToast } from './components/celebrate';
 import Home from './pages/Home';
 import Lesson from './pages/Lesson';
 import RWorkspace from './pages/RWorkspace';
@@ -23,6 +23,21 @@ export default function App() {
     // Not swallowing: prepareSession's own catch has already set the error
     // status that RStatus renders. This only stops an unhandled rejection.
     void getWebR().then((r) => prepareSession(r, fetchDataset)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const code = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let at = 0;
+    function onKey(event: KeyboardEvent) {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      at = key === code[at] ? at + 1 : key === code[0] ? 1 : 0;
+      if (at < code.length) return;
+      at = 0;
+      showToast('Cheat code accepted', 'You found a secret. There are more.', 'milestone');
+      confetti(null, 80);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
   // Below the desktop breakpoint the sidebar is a drawer behind the menu
