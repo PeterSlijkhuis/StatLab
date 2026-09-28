@@ -130,7 +130,7 @@ export const module14: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-4, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("b_time is ", round(b, 4), " but the fixed effect of time is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("Engagement rose by ", round(exp_b, 2), " points from time 1 to time 2. Because each employee has their own intercept, that estimate is built from within-employee changes rather than from the difference between two piles of scores - which is why it is the right model for data where the same people were measured twice."))
+          list(pass = TRUE, message = paste0("Engagement rose by ", round(exp_b, 2), " points from time 1 to time 2. Because each employee has their own intercept, the standard error of that estimate is built from within-employee changes rather than from the spread of two piles of scores, which is why it is the right model for data where the same people were measured twice."))
         }
       }
     `,

@@ -359,7 +359,7 @@ export const module12: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(h, expected, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("h is ", round(h, 2), ", but H for wellbeing by department is ", round(expected, 2), ". Check the grouping variable after the tilde."))
         } else {
-          list(pass = TRUE, message = paste0("H(", kw$parameter, ") = ", round(expected, 2), ", p = ", signif(kw$p.value, 3), ". The departments differ in where their employees fall in the wellbeing order."))
+          list(pass = TRUE, message = paste0("H(", kw$parameter, ") = ", round(expected, 2), ", p ", if (kw$p.value < .001) "< .001" else paste("=", signif(kw$p.value, 3)), ". The departments differ in where their employees fall in the wellbeing order."))
         }
       }
     `,
