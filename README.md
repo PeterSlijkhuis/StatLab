@@ -92,8 +92,8 @@ file and imported on another computer.
 
 ## What's in the course
 
-**15 modules, 46 lessons, 67 checked exercises and 6 interactive simulations**,
-in three parts. Module 0 comes first and sets students up for R on their own
+**17 modules, 55 lessons, 80 checked exercises and 6 interactive simulations**,
+in three parts and an advanced part. Module 0 comes first and sets students up for R on their own
 computer.
 
 | | Module | What it covers | Simulation |
@@ -102,20 +102,23 @@ computer.
 | 0 | Before you start | RStudio Projects, files, folders and paths, and what R's symbols mean, with a cheat sheet | |
 | 1 | First steps in R | Objects, functions, help, packages and `library()` | |
 | 2 | Working with data | `read.csv`, factors, the pipe, `select`, `filter`, `mutate`, wide and long data | |
-| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary | |
+| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha | |
 | 4 | Visualising data | ggplot2 as layers, facets, and an APA-ready figure | |
 | **Inference** | | | |
 | 5 | The normal distribution | Density, z-scores and probabilities | Distribution |
 | 6 | Sampling | Sampling error, sampling distributions, the Central Limit Theorem | Central Limit Theorem |
 | 7 | Estimation | Standard errors, confidence intervals, SD, SE and CI error bars | Confidence intervals |
-| 8 | Hypothesis testing | Null distributions, p-values, Type I and II errors, power | p-values and power |
+| 8 | Hypothesis testing | Null distributions, p-values, Type I and II errors, power, effect sizes and sample-size planning | p-values and power |
+| 9 | Counts and proportions | One proportion, contingency tables, the chi-square test, Cramér's V, Fisher's exact test | |
 | **The linear model** | | | |
-| 9 | Correlation and simple regression | `lm(y ~ x)`, reading model output with `tidy()` and `glance()` | Correlation, least squares |
-| 10 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F | |
-| 11 | Categorical predictors | The t-test as `lm`, dummy coding, `emmeans` pairwise comparisons | |
-| 12 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
-| 13 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test | |
-| 14 | Binary outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting | |
+| 10 | Correlation and simple regression | `lm(y ~ x)`, reading model output with `tidy()` and `glance()` | Correlation, least squares |
+| 11 | Multiple regression | Several predictors, each slope holding the others constant, reporting R² and F | |
+| 12 | Categorical predictors | The t-test as `lm`, dummy coding, `emmeans` pairwise comparisons | |
+| 13 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
+| 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test | |
+| 15 | Binary outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting | |
+| **Advanced** | | | |
+| 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
 
 Each lesson is written in MDX from a small set of blocks:
 

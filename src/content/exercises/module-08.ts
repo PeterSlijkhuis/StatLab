@@ -295,4 +295,106 @@ export const module08: ExerciseDef[] = [
       'A study "rejects" when its p-value is below .05, and mean() of 1000 TRUE/FALSE values is the proportion that did.',
     ],
   },
+  {
+    id: 'm8-4-a',
+    prompt:
+      'The 60-student study found a difference in mean exam score between the two sleep groups. Express it as Cohen\'s d, the difference in means divided by the pooled standard deviation, and store it in d.',
+    starterCode:
+      '# study is already in your environment.\na <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\n\n# The pooled SD weights each group\'s variance by its degrees of freedom.\npooled_sd <- \nd <- ',
+    setupCode: STUDY_60,
+    solution:
+      'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\npooled_sd <- sqrt(((length(a) - 1) * var(a) + (length(b) - 1) * var(b)) / (length(a) + length(b) - 2))\nd <- (mean(a) - mean(b)) / pooled_sd',
+    wrongAnswers: [
+      // The raw difference in points, never standardised.
+      'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\nd <- mean(a) - mean(b)',
+      // The SD of everyone together, which includes the gap itself.
+      'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\nd <- (mean(a) - mean(b)) / sd(study$exam_score)',
+      // Divided by the standard error: that is t, not d.
+      'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\nd <- unname(t.test(a, b, var.equal = TRUE)$statistic)',
+    ],
+    alternateSolutions: [
+      // From t: d = t * sqrt(1 / n1 + 1 / n2).
+      'a <- study$exam_score[study$sleep_group == "7 or more"]\nb <- study$exam_score[study$sleep_group == "under 7"]\nd <- unname(t.test(a, b, var.equal = TRUE)$statistic) * sqrt(1 / length(a) + 1 / length(b))',
+    ],
+    check: `
+      if (!has_answer("study")) {
+        list(pass = FALSE, message = "The study object has gone missing. Press Reset and try again.")
+      } else if (!has_answer("d")) {
+        list(pass = FALSE, message = "I could not find an object called d.")
+      } else {
+        study <- answer("study")
+        a <- study$exam_score[study$sleep_group == "7 or more"]
+        b <- study$exam_score[study$sleep_group == "under 7"]
+        diff_ab <- mean(a) - mean(b)
+        pooled <- sqrt(((length(a) - 1) * var(a) + (length(b) - 1) * var(b)) / (length(a) + length(b) - 2))
+        target <- diff_ab / pooled
+        got <- suppressWarnings(as.numeric(answer("d")))
+        if (length(got) != 1L || is.na(got)) {
+          list(pass = FALSE, message = "d should be a single number.")
+        } else if (abs(abs(got) - abs(diff_ab)) < 1e-6) {
+          list(pass = FALSE, message = paste0("That is the difference in points, ", round(diff_ab, 2), ". Cohen's d divides it by the pooled SD, so it reads in standard deviations and compares across studies with different scales."))
+        } else if (abs(abs(got) - abs(diff_ab / sd(study$exam_score))) < 1e-6) {
+          list(pass = FALSE, message = "You divided by the SD of all 60 students together, which is inflated by the very gap you are measuring. Pool the two groups' own variances instead.")
+        } else if (abs(abs(got) - abs(target / sqrt(1 / length(a) + 1 / length(b)))) < 1e-6) {
+          list(pass = FALSE, message = "That is the t statistic: the difference divided by its standard error. It grows with the sample size; d does not. Divide by the pooled SD.")
+        } else if (abs(abs(got) - abs(target)) > 1e-6) {
+          list(pass = FALSE, message = paste0("d is ", round(got, 3), ", but it should be ", round(target, 3), ". Check the pooled SD: each group's variance times its n - 1, added, divided by n1 + n2 - 2, then the square root."))
+        } else {
+          list(pass = TRUE, message = paste0("Correct: d = ", format(round(abs(target), 2), nsmall = 2), ". The whole population's d is 0.50, so this significant small study overestimates the effect, as significant small studies tend to."))
+        }
+      }
+    `,
+    hints: [
+      'The difference in means is mean(a) - mean(b).',
+      'pooled_sd <- sqrt(((length(a) - 1) * var(a) + (length(b) - 1) * var(b)) / (length(a) + length(b) - 2))',
+      'd <- (mean(a) - mean(b)) / pooled_sd',
+    ],
+  },
+  {
+    id: 'm8-4-b',
+    prompt:
+      'You plan a new study of sleep and exam scores and expect d = 0.5. How many students per group do you need for 90% power at alpha = .05, in a two-sided two-group comparison? Use power.t.test() and store the answer, rounded UP to a whole student, in n_per_group.',
+    starterCode:
+      '# With sd = 1, delta is the effect in standard deviations: Cohen\'s d.\npower.t.test(delta = 0.5, sd = 1, power = 0.8)\n\nn_per_group <- ',
+    solution: 'n_per_group <- ceiling(power.t.test(delta = 0.5, sd = 1, power = 0.9)$n)',
+    wrongAnswers: [
+      // 80% power, the starter code's example, not the 90% asked for.
+      'n_per_group <- ceiling(power.t.test(delta = 0.5, sd = 1, power = 0.8)$n)',
+      // Rounded to the nearest student, which leaves the study just short of 90%.
+      'n_per_group <- round(power.t.test(delta = 0.5, sd = 1, power = 0.9)$n)',
+      // The total for both groups.
+      'n_per_group <- 2 * ceiling(power.t.test(delta = 0.5, sd = 1, power = 0.9)$n)',
+    ],
+    alternateSolutions: [
+      // The same effect in points: 5 points on an SD of 10 is d = 0.5.
+      'n_per_group <- ceiling(power.t.test(delta = 5, sd = 10, power = 0.9, sig.level = 0.05)$n)',
+    ],
+    check: `
+      if (!has_answer("n_per_group")) {
+        list(pass = FALSE, message = "I could not find an object called n_per_group.")
+      } else {
+        exact <- power.t.test(delta = 0.5, sd = 1, power = 0.9)$n
+        at80 <- power.t.test(delta = 0.5, sd = 1, power = 0.8)$n
+        got <- suppressWarnings(as.numeric(answer("n_per_group")))
+        if (length(got) != 1L || is.na(got)) {
+          list(pass = FALSE, message = "n_per_group should be one number of students.")
+        } else if (got == ceiling(at80)) {
+          list(pass = FALSE, message = paste0(got, " per group gives 80% power. The question asks for 90%, which costs more students."))
+        } else if (got == 2 * ceiling(exact)) {
+          list(pass = FALSE, message = "That is the total for both groups. power.t.test() reports n per group, which is what the question asks for.")
+        } else if (got == floor(exact)) {
+          list(pass = FALSE, message = paste0("power.t.test() says ", round(exact, 2), ". Rounding down to ", floor(exact), " leaves the study just short of 90% power, so always round up: ceiling()."))
+        } else if (got != ceiling(exact)) {
+          list(pass = FALSE, message = paste0("n_per_group is ", got, ". Ask power.t.test() for delta = 0.5, sd = 1 and power = 0.9, then round its n up."))
+        } else {
+          list(pass = TRUE, message = paste0("Correct: ", ceiling(exact), " students per group, ", 2 * ceiling(exact), " in all. At 20 per group, the design in the last lesson's quiz, power is barely a third."))
+        }
+      }
+    `,
+    hints: [
+      'Leave out n and give power instead: power.t.test() then solves for n.',
+      'power.t.test(delta = 0.5, sd = 1, power = 0.9)$n is the exact n per group.',
+      'ceiling() rounds up: n_per_group <- ceiling(power.t.test(delta = 0.5, sd = 1, power = 0.9)$n)',
+    ],
+  },
 ];

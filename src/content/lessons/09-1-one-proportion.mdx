@@ -1,0 +1,91 @@
+Everything since Module 5 has been about the mean of a number. Plenty of questions
+are not about numbers at all. Did the employee leave? Do they work remotely?
+Did the student pass? The answer is yes or no, and what you summarise is how
+often it is yes.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+table(d$left_company)`} />
+
+## A proportion is a mean
+
+`left_company` is coded 0 for stayed and 1 for left. The mean of a column of
+zeros and ones is the share of ones, so the proportion who left is one line.
+
+<CodeBlock id="c-mean" code={`mean(d$left_company)
+
+sum(d$left_company) / nrow(d)`} />
+
+About 23% of these 480 employees left. The same question about the whole
+company, or about next year, is the population question, and the sample answer
+comes with sampling error, exactly as a sample mean did in Module 6.
+
+<Predict
+  id="p-se"
+  question="The standard error of a proportion is sqrt(p * (1 - p) / n). With the same 480 people, which proportion would be pinned down most precisely?"
+  choices={[
+    { text: 'A proportion near 50%', response: 'That is the least precise one. p * (1 - p) is largest at p = .5, so the standard error is too.' },
+    { text: 'A proportion near 5%', correct: true, response: 'Right. When nearly everyone gives the same answer there is little room to vary, and p * (1 - p) is small.' },
+    { text: 'They are all equally precise, because n is the same', response: 'n is the same, but the formula has p in it too. The spread of a yes-or-no answer depends on how evenly the answers split.' },
+  ]}
+/>
+
+## The interval
+
+The recipe from Module 7 carries over: estimate, plus and minus about two
+standard errors.
+
+<CodeBlock id="c-by-hand" code={`p <- mean(d$left_company)
+n <- nrow(d)
+se <- sqrt(p * (1 - p) / n)
+
+c(lower = p - 1.96 * se, upper = p + 1.96 * se)`} />
+
+`prop.test()` does the same job with a small correction that behaves better
+when the proportion is close to 0 or 1 or the sample is small. Give it the
+number of yes answers and the number of cases.
+
+<CodeBlock id="c-prop-test" code={`prop.test(sum(d$left_company), nrow(d))$conf.int`} />
+
+The two intervals agree to about a percentage point. With a sample this size the
+correction hardly matters; with 30 people it would.
+
+<Exercise id="m9-1-a" />
+
+## Testing against a known value
+
+Suppose the sector reports that 30% of staff leave within the period this
+dataset covers. Is this company different? `prop.test()` takes the value to
+test against as `p`.
+
+<CodeBlock id="c-benchmark" code={`prop.test(sum(d$left_company), nrow(d), p = 0.30)`} />
+
+The logic is the null distribution of Module 8. If the true rate were 30%,
+samples of 480 would rarely produce 23%, so the p-value is small. The test
+statistic is called X-squared here, and the next two lessons explain why.
+
+For small samples, `binom.test()` gives the exact answer instead of an
+approximation. Its arguments are the same.
+
+<CodeBlock id="c-binom" code={`binom.test(sum(d$left_company), nrow(d), p = 0.30)`} />
+
+<Quiz
+  id="q-proportion-mean"
+  question="Why does mean(d$left_company) give the proportion who left?"
+  choices={[
+    { text: 'Because R treats 0-1 columns specially', response: 'R does nothing special. It is ordinary arithmetic.' },
+    { text: 'Because the sum of the ones counts the leavers, and dividing by n turns the count into a share', correct: true, response: 'Exactly. That is also why a proportion inherits everything you know about means, sampling distribution included.' },
+    { text: 'It does not; it gives the proportion who stayed', response: 'Leaving is coded 1, so the ones are the leavers.' },
+  ]}
+/>
+
+<Interpret
+  id="i-9-1"
+  question="109 of 480 employees left, and prop.test() against the sector rate of 30% gives X-squared(1) = 11.81, p < .001, 95% CI [.19, .27]. Which sentence reports it correctly?"
+  choices={[
+    { text: 'Of the 480 employees, 22.7% left, 95% CI [19.1%, 26.8%], which is lower than the sector rate of 30%, chi-square(1, N = 480) = 11.81, p < .001.', correct: true, response: 'Correct: the proportion with its interval, the benchmark named, and the test with its degrees of freedom and N.' },
+    { text: 'The company is significantly better than the sector at keeping staff (p < .001).', response: 'The p-value alone hides the size of the gap, and "better" reads more into a leaving rate than the data say.' },
+    { text: 'There is a 95% chance that the true leaving rate is between 19% and 27%.', response: 'A confidence interval is a statement about the method: 95% of intervals built this way contain the true value. Module 7 has the details.' },
+    { text: 'Leaving did not differ from 30%, p < .001.', response: 'A small p-value is evidence that it did differ.' },
+  ]}
+/>

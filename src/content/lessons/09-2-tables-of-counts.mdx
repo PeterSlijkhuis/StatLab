@@ -1,0 +1,88 @@
+One proportion answers "how often". The more interesting question is usually
+"how often, for whom": do some departments lose more people than others? That
+takes two categorical variables at once, and the tool is a table of counts.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+counts <- table(d$department, d$left_company)
+counts`} />
+
+Each cell counts the people with that combination: Engineering and stayed,
+Engineering and left, and so on. The first variable you give `table()` goes
+down the side, the second across the top. This is a **contingency table**, or a
+cross-table.
+
+## Totals
+
+<CodeBlock id="c-margins" code={`addmargins(counts)`} />
+
+The row totals are the department sizes and the column totals are how many
+stayed and left overall. All the margins add up to 480.
+
+<Predict
+  id="p-compare"
+  question="Engineering lost 33 people and Marketing 18. Does Engineering have the bigger leaving problem?"
+  choices={[
+    { text: 'Yes, 33 is almost twice 18', response: 'Only if the two departments were the same size. Engineering has 128 people and Marketing 100, so the counts are not comparable yet.' },
+    { text: 'Not yet known: the counts have to be turned into rates first', correct: true, response: 'Right. Counts compare departments of different sizes, and rates take the size out.' },
+    { text: 'No, because the difference is not significant', response: 'Nothing has been tested yet. The first step is simply putting the departments on the same footing.' },
+  ]}
+/>
+
+## Proportions, and which way to divide
+
+`prop.table()` turns counts into proportions, and its `margin` argument decides
+what adds up to 1. The choice is the whole analysis.
+
+<CodeBlock id="c-rows" code={`# margin = 1: each ROW adds up to 1. Of each department, what share left?
+round(prop.table(counts, margin = 1), 3)`} />
+
+<CodeBlock id="c-columns" code={`# margin = 2: each COLUMN adds up to 1. Of the leavers, which department were they in?
+round(prop.table(counts, margin = 2), 3)`} />
+
+The two tables answer different questions. Rows give each department's leaving
+rate: Support loses about 31% of its people, Sales about 16%. Columns describe
+the leavers: a third of everyone who left came from Support. Put the variable
+that might do the influencing, department, in the rows and divide by rows, and
+the table reads as a comparison of rates.
+
+<Exercise id="m9-2-a" />
+
+## A picture of it
+
+A stacked bar where every bar reaches 100% shows the row proportions. Map the
+outcome to `fill` and ask `geom_bar()` for `position = "fill"`.
+
+<CodeBlock id="c-plot" code={`library(ggplot2)
+
+d$left <- factor(d$left_company, levels = c(0, 1), labels = c("Stayed", "Left"))
+
+ggplot(d, aes(x = department, fill = left)) +
+  geom_bar(position = "fill") +
+  labs(x = "Department", y = "Proportion of employees", fill = NULL) +
+  theme_classic()`} />
+
+The "Left" segment is visibly taller in Engineering and Support. Whether a
+difference that size could come from sampling alone is the question of the next
+lesson.
+
+<Quiz
+  id="q-margin"
+  question="A report says: 'Of all employees who left, 34% worked in Support, so Support has a 34% leaving rate.' What went wrong?"
+  choices={[
+    { text: 'Nothing, 34% is correct', response: '34% is a column proportion: a share of the leavers. The leaving rate is a share of Support, which is a row proportion.' },
+    { text: 'It divided by the wrong margin: 34% is the share of leavers from Support, while the leaving rate is the share of Support who left', correct: true, response: 'Exactly. The same cell divided by a different total answers a different question.' },
+    { text: 'It should have used counts instead of percentages', response: 'Percentages are the right idea. The problem is which total they are a percentage of.' },
+  ]}
+/>
+
+<Interpret
+  id="i-9-2"
+  question="Your row proportions show leaving rates of 25.8% in Engineering, 18.0% in Marketing, 15.9% in Sales and 30.8% in Support. What can you write before any test?"
+  choices={[
+    { text: 'Leaving rates ranged from 15.9% in Sales to 30.8% in Support (Table 1). Whether this variation exceeds what sampling alone would produce is tested below.', correct: true, response: 'Correct. It describes the rates accurately and leaves the inference to the test.' },
+    { text: 'Support employees are twice as likely to leave as Sales employees because of their working conditions.', response: 'The table describes; it does not explain. Nothing here says why.' },
+    { text: 'Department significantly affects leaving.', response: 'No test has been run, and "affects" claims a cause the data cannot show.' },
+    { text: 'Most people who left came from Support.', response: 'A third did, which is not most. And that is a column proportion, not what these row rates say.' },
+  ]}
+/>

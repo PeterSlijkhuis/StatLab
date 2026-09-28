@@ -259,7 +259,7 @@ describe('lesson content', () => {
   test('every inferential lesson closes with an Interpret block', () => {
     // Spec §4.1. Modules 1-4 teach tools rather than inference, so they are out.
     // The Bayesian module is inference too, so it is in.
-    const inferential = /^(05|0[78]|09|1[0-5])-/;
+    const inferential = /^(05|0[789]|1[0-6])-/;
     for (const module of MODULES) {
       for (const lesson of module.lessons) {
         if (!inferential.test(lesson.id)) continue;
@@ -339,9 +339,9 @@ describe('lesson content', () => {
     expect(source, '02-1 uses the pipe before it has been taught').not.toMatch(/%>%/);
   });
 
-  test('Module 3 defines exactly its five exercises, in order', () => {
+  test('Module 3 defines exactly its seven exercises, in order', () => {
     expect(module03.map((exercise) => exercise.id)).toEqual([
-      'm3-1-a', 'm3-1-b', 'm3-2-a', 'm3-2-b', 'm3-3-a',
+      'm3-1-a', 'm3-1-b', 'm3-2-a', 'm3-2-b', 'm3-3-a', 'm3-4-a', 'm3-4-b',
     ]);
   });
 
@@ -350,7 +350,8 @@ describe('lesson content', () => {
     // The Engineering surprise survives that, because it comes from the department
     // profiles rather than the seed - but which department has the highest mean can
     // move. A check that spelled a department name would then fail a correct answer.
-    for (const exercise of module03) {
+    // Lesson 03-4 builds its own survey, so its checks are out.
+    for (const exercise of module03.filter((candidate) => !candidate.id.startsWith('m3-4-'))) {
       expect(exercise.check, `${exercise.id} names a department`).not.toMatch(
         /\b(Sales|Engineering|Support|Marketing)\b/,
       );

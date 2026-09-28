@@ -1,0 +1,133 @@
+Wellbeing, engagement and stress are not things you can measure with one
+question. A questionnaire asks several, each answered on a scale such as 1 to 5,
+and the score is the average of the answers. Before you average them, two
+things need checking: that every item points the same way, and that the items
+agree with each other well enough to be added up at all.
+
+The course datasets hold finished scale scores, not the separate answers, so
+this lesson builds a small survey of its own: five items, 200 people.
+
+<CodeBlock id="c-survey" code={`set.seed(34)
+n <- 200
+trait <- rnorm(n)
+likert <- function(x) pmin(5, pmax(1, round(3 + x)))
+survey <- data.frame(
+  q1 = likert(0.9 * trait + rnorm(n, 0, 0.6)),
+  q2 = likert(0.8 * trait + rnorm(n, 0, 0.7)),
+  q3 = likert(-0.8 * trait + rnorm(n, 0, 0.7)),
+  q4 = likert(0.7 * trait + rnorm(n, 0, 0.8)),
+  q5 = likert(0.1 * trait + rnorm(n, 0, 1))
+)
+
+head(survey)`} />
+
+Imagine the items read like this, answered from 1, strongly disagree, to 5,
+strongly agree:
+
+| Item | Wording |
+| --- | --- |
+| q1 | I feel energetic at work. |
+| q2 | I look forward to my working day. |
+| q3 | I feel drained at the end of the day. |
+| q4 | My work gives me satisfaction. |
+| q5 | I like the coffee at work. |
+
+## Items that point the wrong way
+
+<CodeBlock id="c-cor" code={`round(cor(survey), 2)`} />
+
+q1, q2 and q4 correlate positively with each other. q3 correlates negatively with
+all of them, because agreeing with it means *low* wellbeing. Questionnaires mix
+directions like this on purpose, so that people who agree with everything stand
+out. Before averaging, a **reverse-worded** item has to be turned round.
+
+On a 1 to 5 scale, 1 should become 5, 2 become 4, and so on: the reversed
+value is (lowest + highest) minus the answer, here `6 - q3`.
+
+<CodeBlock id="c-reverse" code={`survey$q3_r <- 6 - survey$q3
+
+table(survey$q3, survey$q3_r)`} />
+
+<Predict
+  id="p-reverse"
+  question="A 0 to 10 item needs reversing. What do you subtract it from?"
+  choices={[
+    { text: '11', response: 'That would turn 0 into 11, off the scale. The rule is lowest plus highest.' },
+    { text: '10', correct: true, response: 'Right: 0 + 10 = 10, so 0 becomes 10 and 10 becomes 0.' },
+    { text: '9', response: 'Then 10 would become -1. Add the lowest and highest possible answers.' },
+  ]}
+/>
+
+## The scale score
+
+With every item pointing the same way, the score is the mean of the items for
+each person. The mean rather than the sum keeps the score on the scale the
+items were answered on, so 4 still means "agree".
+
+<CodeBlock id="c-score" code={`survey$score <- rowMeans(survey[, c("q1", "q2", "q3_r", "q4", "q5")])
+
+summary(survey$score)`} />
+
+<Exercise id="m3-4-a" />
+
+## Do the items belong together?
+
+A scale score assumes the items measure one thing. If they do, people who score
+high on one item tend to score high on the others, and the items' variation adds
+up: the total varies much more than the items would if they were unrelated.
+**Cronbach's alpha** turns that into one number between 0 and 1.
+
+<CodeBlock id="c-alpha" code={`items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]
+k <- ncol(items)
+
+item_variances <- sum(apply(items, 2, var))
+total_variance <- var(rowSums(items))
+
+k / (k - 1) * (1 - item_variances / total_variance)`} />
+
+Alpha is 0.74. Rough conventions call .70 acceptable and .80 good for research
+use. Alpha also rises with the number of items, so a long scale can reach .80
+with items that agree only weakly.
+
+<Exercise id="m3-4-b" />
+
+## Which item is the weak one?
+
+Recompute alpha with each item left out in turn. An item whose removal raises
+alpha is not measuring what the others measure.
+
+<CodeBlock id="c-drop" code={`alpha_of <- function(items) {
+  k <- ncol(items)
+  k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))
+}
+
+sapply(names(items), function(item) alpha_of(items[, names(items) != item]))`} />
+
+Dropping any of q1 to q4 lowers alpha. Dropping q5 raises it to 0.82, and its
+correlations with the other items were close to zero. The coffee question does
+not belong in a wellbeing scale. With a real questionnaire, you would look at
+the wording before you drop anything, and you would report which items you
+removed and why.
+
+In RStudio, `psych::alpha(items)` does all of this in one call, and it warns
+you when an item looks as if it still needs reversing.
+
+<Quiz
+  id="q-alpha"
+  question="You forget to reverse q3 and compute alpha on the original five items. What happens?"
+  choices={[
+    { text: 'Nothing much, alpha only looks at variances', response: 'The total variance depends on how the items move together, and an unreversed item moves against the rest.' },
+    { text: 'Alpha collapses towards zero, because q3 cancels the other items out', correct: true, response: 'Right. Here it drops from 0.74 to 0.02. A suspiciously low alpha is often an item nobody reversed.' },
+    { text: 'Alpha goes up, because there is more variation', response: 'The items vary as much as before, but the total varies less, because q3 pulls against the others. Alpha goes down.' },
+  ]}
+/>
+
+<Quiz
+  id="q-alpha-meaning"
+  question="A scale has alpha = .90. What does that tell you?"
+  choices={[
+    { text: 'That the scale measures what it claims to measure', response: 'That is validity. Alpha says the items agree with each other, which five questions about the wrong construct can do just as well.' },
+    { text: 'That its items are consistent with each other, so averaging them is reasonable', correct: true, response: 'Exactly. Reliability is necessary for a useful score, but it is not the same as measuring the right thing.' },
+    { text: 'That 90% of the answers are correct', response: 'Alpha is not a percentage of anything. It is a ratio of variances.' },
+  ]}
+/>

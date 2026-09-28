@@ -24,7 +24,9 @@ export type ModuleMeta = {
 
 /**
  * The curriculum as planned: spec §7, Module 0 and the fourteen modules after
- * it, then the advanced Module 16 on Bayesian statistics, ids frozen. A module appears in MODULES below only once every one of its
+ * it, Module 9 on counts and proportions (inserted later, which moved the old
+ * Modules 9 to 15 up one; see migrate() in src/state/progress.ts), then the
+ * advanced Module 16 on Bayesian statistics. A module appears in MODULES below only once every one of its
  * lesson files exists, so this list can be complete while the course is still
  * being written.
  */
@@ -136,6 +138,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'When the mean misleads',
         file: '03-3-mean-vs-median',
         exercises: ['m3-3-a'],
+      },
+      {
+        id: '03-4',
+        title: 'Scales and reliability',
+        file: '03-4-scales-and-reliability',
+        exercises: ['m3-4-a', 'm3-4-b'],
       },
     ],
   },
@@ -264,6 +272,37 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Two errors, and power',
         file: '08-3-errors-and-power',
         exercises: ['m8-3-a'],
+      },
+      {
+        id: '08-4',
+        title: 'Effect sizes, and planning a study',
+        file: '08-4-effect-sizes-and-planning',
+        exercises: ['m8-4-a', 'm8-4-b'],
+      },
+    ],
+  },
+  {
+    id: 'module-09',
+    number: 9,
+    title: 'Counts and proportions',
+    lessons: [
+      {
+        id: '09-1',
+        title: 'One proportion',
+        file: '09-1-one-proportion',
+        exercises: ['m9-1-a'],
+      },
+      {
+        id: '09-2',
+        title: 'Tables of counts',
+        file: '09-2-tables-of-counts',
+        exercises: ['m9-2-a'],
+      },
+      {
+        id: '09-3',
+        title: 'The chi-square test',
+        file: '09-3-chi-square-test',
+        exercises: ['m9-3-a', 'm9-3-b'],
       },
     ],
   },
