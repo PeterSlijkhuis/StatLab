@@ -104,7 +104,7 @@ export const module05: ExerciseDef[] = [
           # denominator N gives 0.946612, which rounds identically at two decimals.
           # The wrong answers are 11.69, 6.88 and -0.95.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
-            list(pass = TRUE, message = paste0("Correct: z = ", round(expected, 2), ". That student is just under one standard deviation above the mean, which puts them at about the ", round(100 * pnorm(expected)), "th percentile."))
+            list(pass = TRUE, message = paste0("Correct: z = ", round(expected, 2), ". That student is just under one standard deviation above the mean, which puts them above about ", round(100 * pnorm(expected)), " per cent of students."))
           } else if (isTRUE(all.equal(value, -expected, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = FALSE, message = "The sign is the wrong way round. z = (score - mean) / SD, so a score above the mean gives a positive z.")
           } else if (isTRUE(all.equal(value, 85 - mu, tolerance = 1e-3, check.attributes = FALSE))) {
@@ -164,7 +164,7 @@ export const module05: ExerciseDef[] = [
           if (ok_exam && ok_sleep) {
             list(pass = TRUE, message = paste0("Correct: z_exam = ", round(want_exam, 2), " and z_sleep = ", round(want_sleep, 2), ". The sleep figure is the more unusual of the two, even though 9.1 is a much smaller number than 85 - which is exactly what standardising is for."))
           } else if (ok_exam && isTRUE(all.equal(z_sleep, (9.1 - mean(population$exam_score)) / sd(population$exam_score), tolerance = 1e-3, check.attributes = FALSE))) {
-            list(pass = FALSE, message = "z_sleep was standardised against the exam scale. Nine hours is not 5 SDs below anything - it is below the EXAM mean. Use mean(population$sleep_hours) and sd(population$sleep_hours).")
+            list(pass = FALSE, message = "z_sleep was standardised against the exam scale, which puts 9.1 hours about 5 SDs below the average EXAM score, a comparison that means nothing. Use mean(population$sleep_hours) and sd(population$sleep_hours).")
           } else if (ok_exam && isTRUE(all.equal(z_sleep, 9.1 - mean(population$sleep_hours), tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = FALSE, message = "z_sleep is still in hours: you subtracted the mean but did not divide by sd(population$sleep_hours).")
           } else if (isTRUE(all.equal(z_exam, want_sleep, tolerance = 1e-3, check.attributes = FALSE)) || isTRUE(all.equal(z_sleep, want_exam, tolerance = 1e-3, check.attributes = FALSE))) {

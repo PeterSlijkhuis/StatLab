@@ -1,4 +1,4 @@
-From here to the end of the course you will work with one dataset: a fictional
+For most of this course you will work with one dataset: a fictional
 workplace study of 480 employees at a company with six sites. It was designed so
 that every question this course teaches you to ask has an honest answer in it.
 
@@ -63,8 +63,8 @@ nlevels(employees$department)
 
 levels(employees$remote)`} />
 
-The `$` picks one column out of a data frame, and what comes back is a plain
-vector of the kind you met in Module 1.
+The `$` picks one column out of a data frame, and what comes back is a single
+vector, here a factor, like the ones you met in Module 1.
 
 Notice the order of the levels of `remote`: **No** then **Yes**. Levels are
 alphabetical unless you say otherwise, and they are not in the order the column
@@ -79,8 +79,9 @@ against.
 table(employees$department, employees$remote)`} />
 
 `table()` counts each level; given two factors it counts every combination. And
-`summary()` adapts to what it is given — counts for a factor, five numbers for a
-numeric column.
+`summary()` adapts to what it is given: counts for a factor, and six numbers for a
+numeric column (the minimum, the two quartiles, the median, the mean and the
+maximum).
 
 <CodeBlock id="summary" code={`summary(employees$department)
 

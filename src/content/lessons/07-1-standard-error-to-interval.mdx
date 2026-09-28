@@ -54,8 +54,9 @@ error in this module:
 
 Module 5 found 1.96: the point with 2.5 per cent of a normal curve beyond it.
 That number is correct when you *know* σ. When you have estimated it, the right
-curve is Student's **t** with `n − 1` degrees of freedom — same shape, fatter
-tails — and its 97.5th percentile is bigger.
+curve is Student's **t** with `n − 1` degrees of freedom, which is bell-shaped
+and symmetric like the normal but has fatter tails, and its 97.5th percentile is
+bigger.
 
 <CodeBlock id="tvsz" code={`qnorm(0.975)            # if sigma were known
 qt(0.975, df = 49)      # 50 students, sigma estimated

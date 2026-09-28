@@ -222,8 +222,7 @@ export default function LeastSquares() {
 
       <p className="leastsquares-note">
         The orange squares are the thing being minimised: each one is the vertical distance from a
-        point to your line, squared. Not the perpendicular distance, and not the line through the
-        middle of the cloud.
+        point to your line, squared. Not the perpendicular distance, and not the horizontal one.
       </p>
     </div>
   );

@@ -82,10 +82,12 @@ other factor.
 
 <Exercise id="m13-3-a" />
 
-For the significance tests of those simple effects, `emmeans` — which you met in
-Module 12 — takes a vertical bar:
+For the significance tests of those simple effects, `emmeans`, which you met in
+Module 12, takes a vertical bar:
 `emmeans(model, pairwise ~ training | mentoring, adjust = "tukey")` gives the
-training comparison within each level of mentoring, with the adjustment applied.
+training comparison within each level of mentoring. With only two training levels
+there is one comparison per level of mentoring, so the adjustment changes nothing
+here; it matters when the factor has three or more levels.
 That call needs the `emmeans` package attached, which this lesson deliberately
 does not do; go back to lesson 12-3 to run it there.
 
@@ -96,7 +98,7 @@ does not do; go back to lesson 12-3 to run it there.
   geom_errorbar(aes(ymin = mean_change - se, ymax = mean_change + se), width = 0.08) +
   geom_point(size = 3) +
   geom_line() +
-  scale_y_continuous(limits = c(0, NA)) +
+  expand_limits(y = 0) +
   labs(x = "Training programme", y = "Mean change in engagement", shape = "Mentoring") +
   theme_classic()`} />
 

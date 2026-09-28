@@ -72,13 +72,16 @@ the paired *t*-test and `lmer` in Module 14.
 
 ## Assumptions, checked by eye
 
-Step 2 of the chain. For a linear model, four things, in the order they go wrong:
+Step 2 of the chain. For a linear model, four assumptions:
 
-1. **Linearity** — the pattern is roughly straight. Check on the scatterplot.
-2. **Similar spread** — the residuals do not fan out. Check on a residuals-versus-fitted plot.
-3. **No extreme outliers** — a handful of far-out points can carry the slope.
-4. **Roughly normal residuals** — matters mainly at small *n*; at 480 the
+1. **Independence**: each case is a separate person, measured once (Module 14
+   handles data where this fails).
+2. **Linearity**: the pattern is roughly straight. Check on the scatterplot.
+3. **Equal spread**: the residuals do not fan out. Check on a residuals-versus-fitted plot.
+4. **Roughly normal residuals**: matters mainly at small *n*; at 480 the
    Central Limit Theorem from Module 6 does the work.
+
+Also look for a handful of far-out points that carry the slope.
 
 <CodeBlock id="c-assumptions" code={`model %>%
   augment() %>%

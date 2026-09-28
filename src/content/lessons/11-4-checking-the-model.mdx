@@ -14,8 +14,8 @@ checked <- augment(model, data = d)
 
 checked %>% select(employee_id, wellbeing, .fitted, .resid, .cooksd) %>% head()`} />
 
-`augment()` adds a row per employee with the fitted value, the residual and
-Cook's distance, next to the original columns.
+`augment()` returns one row per employee, with the fitted value, the residual and
+Cook's distance added as columns next to the original ones.
 
 ## Residuals against fitted values
 
@@ -90,8 +90,8 @@ cases above 4 / n for a closer look.
   head(5)`} />
 
 The top case has the maximum autonomy of 10 and very low wellbeing: an unusual
-position on x together with a big miss on y, which is what gives a point
-leverage over the line.
+position on x (leverage) together with a big miss on y, which is what gives a
+point influence over the line.
 
 <Exercise id="m11-4-a" />
 

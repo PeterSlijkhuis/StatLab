@@ -64,9 +64,11 @@ easy to miss: the term you were most interested in looks fine.
   ]}
 />
 
-Note also that the model's fit is untouched: the fitted values, residuals, *R*²
-and the interaction coefficient are identical under both codings. Contrasts
-change the questions, not the fit.
+Note also that the model's fit is untouched: the fitted values, residuals and
+*R*² are identical under both codings, and so are the interaction's *t* and *p*.
+The interaction coefficient itself is rescaled (with two-level sum-to-zero coding
+it is a quarter of the treatment-coded value), because it now describes a
+different contrast. Contrasts change the questions, not the fit.
 
 <CodeBlock id="c-same-fit" code={`c(
   r2_wrong = summary(wrong)$r.squared,

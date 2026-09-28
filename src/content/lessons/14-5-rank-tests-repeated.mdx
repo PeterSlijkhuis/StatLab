@@ -1,5 +1,5 @@
-The rank tests of Lessons 10-4 and 12-4 assume every score comes from a different
-person. When the same people are measured more than once, the ranks have to be
+The rank tests of Lesson 12-4, Mann-Whitney and Kruskal-Wallis, assume every score
+comes from a different person. When the same people are measured more than once, the ranks have to be
 taken **within** each person, just as the mixed model removes each person's own
 level. Two tests do this: the Wilcoxon signed-rank test for two measurements, and
 the Friedman test for three or more.
@@ -16,7 +16,7 @@ d %>% summarise(median_change = median(change), mean_change = mean(change), n = 
 ## Two measurements: the Wilcoxon signed-rank test
 
 Take each employee's change, rank the changes by their size while ignoring the
-sign, then add up the ranks of the positive changes. That sum is *V*. If nothing
+sign, then add up the ranks of the positive changes. That sum is *V* (the textbook calls it *T*+). If nothing
 changed on average, the positive and negative changes would carry about equal rank
 sums, and *V* would be near half of the total.
 

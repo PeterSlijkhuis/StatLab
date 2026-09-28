@@ -54,8 +54,10 @@ even chances, which is why zero is the null value on this scale.
 
 m_left %>% tidy()`} />
 
-The formula is the same as always. `family = binomial` is the whole difference,
-and leaving it out is the single most common mistake in this module: `glm()`
+The formula is the same as always. `family = binomial` is the whole difference.
+It tells `glm()` that the outcome is a yes/no (Bernoulli) variable and that the
+linear part predicts its log odds, also called the logit; the book calls this a
+generalised linear model with a logit link function. Leaving it out is the single most common mistake in this module: `glm()`
 without a family fits an ordinary linear model, prints a perfectly plausible
 table, and answers a different question.
 
@@ -86,10 +88,16 @@ There is no *R*². `glance()` gives the null and residual deviance and the AIC
 instead. Deviance is the logistic analogue of a residual sum of squares: lower is
 better, and the drop from null to residual is what the model bought.
 
-<CodeBlock id="c-lrtest" code={`anova(m_left, test = "LRT") %>% tidy()`} />
+<CodeBlock id="c-lrtest" code={`m_null <- glm(left_company ~ 1, data = d, family = binomial)
 
-That likelihood-ratio test is the closest thing to the model *F* of Module 11: it
-asks whether the predictors together explain more than chance.
+anova(m_null, m_left, test = "LRT") %>% tidy()`} />
+
+That likelihood-ratio test compares the model with a null model that has only an
+intercept. It is the closest thing to the model *F* of Module 11: it asks whether
+the predictors together explain more than chance. Its statistic is the drop in
+deviance, 514.30 - 451.47 = 62.83, on 2 degrees of freedom.
+`anova(m_left, test = "LRT")` on the model alone answers a different question: it
+tests each predictor in turn, in the order of the formula.
 
 <Exercise id="m15-2-b" />
 

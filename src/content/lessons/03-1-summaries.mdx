@@ -82,11 +82,11 @@ max(employees$wellbeing) - min(employees$wellbeing)`} />
 
 <Quiz
   id="q-3-1"
-  question="One employee's wellbeing score is corrected from 71 to 17. Which summary of the 480 scores changes least?"
+  question="One employee's wellbeing score of 46 is mistyped as 460. Which summary of the 480 scores changes least?"
   choices={[
-    { text: 'The mean', response: 'The mean uses every score, so it moves - only a little with 480 people, but it moves.' },
-    { text: 'The standard deviation', response: 'The SD is built from distances to the mean, and a score 54 points lower than before adds a large one.' },
-    { text: 'The interquartile range', correct: true, response: 'Right. The IQR depends only on the two quartiles. Moving one score from one tail to the other leaves the middle half almost exactly where it was.' },
-    { text: 'The range', response: 'The range is the most sensitive of all: if 17 is now the lowest score in the company, the range changes by the full amount.' },
+    { text: 'The mean', response: 'The mean uses every score, so it moves by almost a full point.' },
+    { text: 'The standard deviation', response: 'The SD is built from distances to the mean, and one score 414 points away roughly doubles it, from 10.5 to 21.6.' },
+    { text: 'The interquartile range', correct: true, response: 'Right. The IQR depends only on the two quartiles, and one extreme score barely moves them: it changes by a few hundredths.' },
+    { text: 'The range', response: 'The range is the most sensitive of all: it jumps from 64.9 to 454.3.' },
   ]}
 />

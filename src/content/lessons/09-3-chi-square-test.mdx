@@ -57,10 +57,10 @@ test$expected`} />
 X-squared = 9.94 with 3 degrees of freedom, p = .019: department and leaving
 are related in this sample by more than chance would usually produce.
 
-The residuals show where. Each is (observed - expected) / sqrt(expected), and
-values beyond about ±2 mark the cells that drive the result.
+`chisq.test()` also returns standardized residuals: the gap between observed and
+expected, scaled so that under independence each behaves roughly like a z-score. Values beyond about ±2 mark the cells that drive the result.
 
-<CodeBlock id="c-residuals" code={`round(test$residuals, 2)`} />
+<CodeBlock id="c-residuals" code={`round(test$stdres, 2)`} />
 
 Support lost more people than independence predicts, and Sales fewer.
 
@@ -92,7 +92,8 @@ on the field.
 
 The chi-square distribution is an approximation, and it needs enough data.
 The usual rule is an **expected** count of at least 5 in every cell, or at least
-in 80% of them, none below 1. `chisq.test()` warns you when the rule is broken.
+in 80% of them, none below 1. `chisq.test()` warns you ("Chi-squared approximation may be incorrect") as soon
+as any expected count is below 5, which is stricter than the 80% rule.
 Then use Fisher's exact test, which makes no such approximation.
 
 <CodeBlock id="c-fisher" code={`small <- d[d$site == "Hengelo" & d$department %in% c("Marketing", "Sales"), ]

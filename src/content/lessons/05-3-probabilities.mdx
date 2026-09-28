@@ -1,6 +1,6 @@
 Two questions come up constantly, and they run in opposite directions.
 
-1. *A student scored 85. What proportion of students did better?* You have a
+1. *A student scored 85. What proportion of students scored lower?* You have a
    score and you want a probability. That is `pnorm()`.
 2. *What score do you need to be in the top 10 per cent?* You have a probability
    and you want a score. That is `qnorm()`.
@@ -41,8 +41,8 @@ qnorm(0.10, mean = mu, sd = sigma, lower.tail = FALSE)
 # Check it against the population the model describes.
 mean(population$exam_score > qnorm(0.90, mean = mu, sd = sigma))`} />
 
-The model puts the distinction cut-off at 89.1, and just under 10 per cent of
-the actual 5000 students clear it. Two numbers — a mean and an SD — were enough
+The model puts the distinction cut-off at 89.1, and 504 of the actual 5000
+students, just over 10 per cent, clear it. Two numbers, a mean and an SD, were enough
 to answer a question nobody had asked when the data were collected.
 
 <Exercise id="m5-3-a" />
@@ -67,9 +67,10 @@ the standard normal curve with 2.5 per cent of the area beyond it, and if you
 wanted the middle 99 per cent instead you would ask for `qnorm(0.995)` and get
 2.58.
 
-Drag the shaded region in the simulation until it holds the middle 95 per cent,
-and read the z values off the axis. They will be about ±1.96 whatever mean and
-SD you set, because in z units the curve is always the same curve.
+Move the cut-off slider in the simulation until the area to the left reads about
+0.975, and read the z-score of the cut. It will be about 1.96 whatever mean and
+SD you set, because in z units the curve is always the same curve; by symmetry,
+the cut with 0.025 to its left sits at about -1.96.
 
 <Simulation name="distribution" />
 

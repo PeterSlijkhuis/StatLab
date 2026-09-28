@@ -106,7 +106,7 @@ export const module11: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(b_adjusted, exp_adjusted, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("b_adjusted is ", round(b_adjusted, 4), " but the model with autonomy, workload and tenure_years gives ", round(exp_adjusted, 4), ". Check that all three predictors are in it and that you did not standardise anything - a scaled coefficient is in SD units, which is a change of scale rather than an adjustment."))
         } else {
-          list(pass = TRUE, message = paste0("Alone: ", round(exp_simple, 3), ". Alongside workload and tenure: ", round(exp_adjusted, 3), " - a change of ", round(exp_adjusted - exp_simple, 3), ". The coefficient moved because autonomy is not independent of the others; how far it moves is how much of its apparent effect they account for."))
+          list(pass = TRUE, message = paste0("Alone: ", round(exp_simple, 3), ". Alongside workload and tenure: ", round(exp_adjusted, 3), " - a change of ", round(exp_adjusted - exp_simple, 3), ". The coefficient moved because autonomy is not independent of the others. Here it grew: among employees with the same workload and tenure, a point of autonomy goes with a larger difference in wellbeing than it does across everyone."))
         }
       }
     `,
@@ -119,7 +119,7 @@ export const module11: ExerciseDef[] = [
   {
     id: 'm11-2-b',
     prompt:
-      'Add remote working to the model. Store the fitted model in model_remote, its remote coefficient in b_remote, and the group means and SDs in remote_means, one row per level of remote. The coefficient and the means have to tell the same story - make sure you can see that they do.',
+      'Add remote working to the model. Store the fitted model in model_remote, its remote coefficient in b_remote, and the group means and SDs in remote_means, one row per level of remote. Then compare the coefficient with the raw gap between the means: they answer different questions, so check whether they point the same way.',
     starterCode:
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlevels(d$remote)\n\nmodel_remote <- \nb_remote <- \nremote_means <- ',
     solution:
@@ -182,7 +182,7 @@ export const module11: ExerciseDef[] = [
             if (!found_means) {
               list(pass = FALSE, message = paste0("No column of remote_means holds the two mean wellbeing scores, which are ", round(raw[["No"]], 1), " for office-based and ", round(raw[["Yes"]], 1), " for remote."))
             } else {
-              list(pass = TRUE, message = paste0("b = ", round(exp_b, 2), ": remote employees score ", round(exp_b, 2), " points higher than office-based employees with the same autonomy and workload. The raw gap in the means is ", round(raw_gap, 2), " - the same direction, a different size, because the raw gap does not hold anything constant. When those two disagree in sign, believe the means first and go looking for what changed."))
+              list(pass = TRUE, message = paste0("b = ", round(exp_b, 2), ": remote employees score ", round(exp_b, 2), " points higher than office-based employees with the same autonomy and workload. The raw gap in the means is ", round(raw_gap, 2), " - the same direction, a different size, because the raw gap does not hold anything constant. If the two ever disagree in sign, report both and explain why the adjustment reverses the comparison; which one answers your question depends on the question, not on which is unadjusted."))
             }
           }
         }

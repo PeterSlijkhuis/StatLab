@@ -65,7 +65,7 @@ turns them into a proper table:
 `predict()` runs the model forwards. Give it autonomy values, get predicted
 wellbeing back.
 
-<CodeBlock id="c-predict" code={`new_people <- data.frame(autonomy = c(3, 5, 8))
+<CodeBlock id="c-predict" code={`new_people <- data.frame(autonomy = c(3, 5, 7))
 
 new_people %>%
   mutate(predicted_wellbeing = predict(model, newdata = new_people))`} />

@@ -1,6 +1,6 @@
-Module 10 ended with a model that accounted for about a fifth of the variance in
-wellbeing. That is a fifth explained and four fifths not, and some of those four
-fifths are sitting in the dataset in plain sight.
+Module 10 ended with a model in which autonomy accounted for about 5% of the
+variance in wellbeing. That leaves 95% unexplained, and some of it is sitting in
+the dataset in plain sight.
 
 <CodeBlock id="c-load" code={`library(dplyr)
 library(broom)
@@ -67,8 +67,9 @@ Predictors that barely correlate with each other barely move each other's
 coefficients. Predictors that correlate strongly — above about .8, say — start to
 compete for the same variance, their standard errors inflate, and the individual
 *b*s become unstable even while the model as a whole fits well. That is
-**multicollinearity**, and the first sign of it is a coefficient that flips sign
-when you add a variable.
+**multicollinearity**. Its signs are large standard errors and coefficients that
+swing, sometimes even flipping sign, when a strongly correlated predictor is added
+or removed.
 
 <Exercise id="m11-1-a" />
 

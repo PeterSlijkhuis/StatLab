@@ -26,7 +26,8 @@ population %>%
 ## A curve instead of bars
 
 A histogram depends on how you chose the bins. Make them narrower and the bars
-get shorter; make them wider and it gets lumpier. A **density curve** is what a
+get shorter and more ragged; make them wider and the shape gets blockier and
+hides detail. A **density curve** is what a
 histogram settles down to when the bins get very narrow and the vertical axis is
 rescaled so that the total area under it is exactly 1.
 
@@ -50,7 +51,7 @@ rest of this module treats it as if it were the truth.
 
 <Predict
   id="p-height"
-  question="dnorm(73.3, mean = 73.3, sd = 12.4) returns 0.0323. What does that number tell you?"
+  question="dnorm(73.3, mean = 73.3, sd = 12.4) returns 0.0322. What does that number tell you?"
   choices={[
     { text: 'About 3.2% of students score exactly 73.3', response: 'No student scores *exactly* 73.3 in any meaningful sense, and a density is not a percentage. Read on — this is the confusion the lesson exists to clear up.' },
     { text: 'The height of the curve at 73.3, which only becomes a probability once you multiply it by a width', correct: true, response: 'Exactly. A density is a height. Probability is height times width, which is to say area.' },

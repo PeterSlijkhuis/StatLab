@@ -159,7 +159,7 @@ export const module01: ExerciseDef[] = [
       }
     `,
     hints: [
-      'args(mean) shows the arguments mean() accepts. One of them is about missing values.',
+      'args(mean.default) shows the arguments mean() accepts. One of them is about missing values.',
       'mean(scores, na.rm = TRUE) drops the NA and averages what is left.',
       'round() takes a second argument: round(mean_score, 1) keeps one decimal.',
     ],
@@ -169,7 +169,7 @@ export const module01: ExerciseDef[] = [
     prompt:
       'A questionnaire is scored from 0 to 100 in steps of 10. Use seq() to build that vector of scale points in scale_points, and store how many points it has in n_points.',
     starterCode:
-      '# seq() builds a regular sequence. Check its arguments with args(seq).\nscale_points <- \nn_points <- ',
+      '# seq() builds a regular sequence. Check its arguments with args(seq.default).\nscale_points <- \nn_points <- ',
     solution:
       'scale_points <- seq(from = 0, to = 100, by = 10)\nn_points <- length(scale_points)',
     wrongAnswers: [
@@ -213,7 +213,7 @@ export const module01: ExerciseDef[] = [
       }
     `,
     hints: [
-      'args(seq) lists the arguments: from, to, by and length.out among them.',
+      'args(seq.default) lists the arguments: from, to, by and length.out among them.',
       'by = 10 sets the step size; length.out sets how many values you get. You want the step.',
       'length() counts the values in a vector, so you never have to count them yourself.',
     ],
@@ -225,7 +225,7 @@ export const module01: ExerciseDef[] = [
     starterCode:
       'library(dplyr)\n\n# team is already here. Keep the rows where hours is above 35.\nbusy <- \nn_busy <- ',
     setupCode:
-      'team <- data.frame(\n  name = c("Ada", "Bram", "Chen", "Dana", "Eva", "Finn"),\n  hours = c(32, 41, 38, 29, 35, 44),\n  stringsAsFactors = TRUE\n)',
+      'team <- data.frame(\n  name = c("Ada", "Bram", "Chen", "Dani", "Eva", "Finn"),\n  hours = c(32, 41, 38, 29, 35, 44),\n  stringsAsFactors = TRUE\n)',
     solution:
       'library(dplyr)\nbusy <- team %>% filter(hours > 35)\nn_busy <- nrow(busy)',
     wrongAnswers: [

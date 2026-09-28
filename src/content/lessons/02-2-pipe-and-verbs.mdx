@@ -26,7 +26,7 @@ difference between code you can read and code you cannot.
   choices={[
     { text: 'It runs faster', response: 'It does not. The pipe is about the person reading the code, not the machine running it.' },
     { text: 'It keeps steps in the order they happen, instead of nesting them inside out', correct: true, response: 'Yes. arrange(select(filter(d, ...), ...), ...) has to be read from the middle outwards; the piped version reads top to bottom, like a recipe.' },
-    { text: 'It avoids having to attach dplyr', response: 'The opposite: the pipe comes from the tidyverse packages, so dplyr has to be attached before you can use it.' },
+    { text: 'It avoids having to attach dplyr', response: 'The opposite: %>% comes with dplyr, so dplyr has to be attached before you can use it. R\'s built-in |> needs no package, but the verbs around it still do.' },
   ]}
 />
 
@@ -62,8 +62,8 @@ A minus sign drops instead of keeps: `select(-site)` returns everything except
   select(employee_id, engagement_t1, engagement_t2, engagement_change) %>%
   head(4)`} />
 
-`mutate()` does the arithmetic row by row, and the new column is as long as the
-table. Nothing has been saved yet: every block on this page has printed a new
+`mutate()` works on whole columns at once, so every row gets its own result and
+the new column is as long as the table. Nothing has been saved yet: every block on this page has printed a new
 table and thrown it away. Storing it takes the arrow.
 
 <Exercise id="m2-2-a" />

@@ -105,12 +105,13 @@ export const module12: ExerciseDef[] = [
         reference <- summary(lm(wellbeing ~ remote, data = d))
         exp_t <- as.vector(reference$coefficients["remoteYes", "t value"])
         int_t <- as.vector(reference$coefficients["(Intercept)", "t value"])
+        exp_p <- as.vector(reference$coefficients["remoteYes", "Pr(>|t|)"])
         welch <- as.vector(t.test(wellbeing ~ remote, data = d)$statistic)
         if (!is.numeric(t_model) || length(t_model) != 1L || !is.numeric(t_ttest) || length(t_ttest) != 1L) {
           list(pass = FALSE, message = "Both should be single numbers.")
         } else if (isTRUE(all.equal(t_model, int_t, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "t_model is the intercept's t, which tests whether the office-based mean differs from zero - true of every wellbeing score in the study and of no interest. Filter tidy() to the remoteYes row.")
-        } else if (abs(t_model) < 1e-3 || abs(t_ttest) < 1e-3) {
+        } else if (isTRUE(all.equal(t_model, exp_p, tolerance = 1e-6, check.attributes = FALSE)) || isTRUE(all.equal(t_ttest, exp_p, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "One of your two values looks like a p value rather than a t statistic. In tidy() the t is the statistic column; from t.test() it is the $statistic element.")
         } else if (!isTRUE(all.equal(abs(t_model), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("t_model is ", round(t_model, 4), " but the remoteYes t is ", round(exp_t, 4), "."))
@@ -120,7 +121,7 @@ export const module12: ExerciseDef[] = [
           list(pass = FALSE, message = paste0("t_ttest is ", round(t_ttest, 4), " but the equal-variance t-test on wellbeing by remote gives ", round(abs(exp_t), 4), " in size. Check that you compared the two remote groups and not something else."))
         } else {
           same_sign <- if (t_model * t_ttest > 0) "the same sign" else "opposite signs"
-          list(pass = TRUE, message = paste0("Both are ", round(abs(exp_t), 4), " in size, and yours have ", same_sign, ". t.test(y ~ g) subtracts the first level from the second, and lm codes the second relative to the first, so the sign flips whenever you write them in that order. The test is the same test; only the direction of the subtraction differs."))
+          list(pass = TRUE, message = paste0("Both are ", round(abs(exp_t), 4), " in size, and yours have ", same_sign, ". t.test(y ~ g) subtracts the second level from the first, and lm codes the second relative to the first, so the sign flips whenever you write them in that order. The test is the same test; only the direction of the subtraction differs."))
         }
       }
     `,

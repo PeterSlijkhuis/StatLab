@@ -25,6 +25,9 @@ t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)`} />
 Same *t*, same degrees of freedom, same *p*. With exactly two time points and
 nobody missing a measurement, the random intercept does precisely what a paired
 *t*-test does: it removes each employee's own level before looking at the change.
+This exact match holds for lmer's default REML fit. The textbook recommends
+`REML = FALSE`; with maximum likelihood the degrees of freedom are 480 rather than
+479, so the *t* differs from the paired *t* in the second decimal.
 
 <CodeBlock id="c-differences" code={`differences <- d$engagement_t2 - d$engagement_t1
 
@@ -81,9 +84,10 @@ summary(m_site)
 
 as.data.frame(VarCorr(m_site))`} />
 
-`(1 | site)` gives each site its own baseline wellbeing, so the autonomy and
-workload coefficients are estimated from comparisons **within** sites rather than
-being partly driven by differences between them. The site SD in the `VarCorr`
+`(1 | site)` gives each site its own baseline wellbeing, so the model knows which
+employees share a site and its standard errors allow for it. The autonomy and
+workload coefficients still combine comparisons within and between sites; if you
+need purely within-site estimates, add site as a fixed factor instead. The site SD in the `VarCorr`
 table is how much the six baselines differ.
 
 <CodeBlock id="c-ranef" code={`ranef(m_site)$site`} />
@@ -102,6 +106,10 @@ nest: a measurement is inside an employee, an employee is inside a site.
 
 as.data.frame(VarCorr(m_nested))
 coef(summary(m_nested))`} />
+
+Expect lmer to print `boundary (singular) fit` here. It means the site variance
+was estimated as zero: these six sites differ in baseline engagement no more than
+chance would produce. The model is still usable, and the fixed effect is unchanged.
 
 `(1 | site/employee_id)` is shorthand for `(1 | site) + (1 | site:employee_id)`:
 a random intercept for each site, and another for each employee within a site.
