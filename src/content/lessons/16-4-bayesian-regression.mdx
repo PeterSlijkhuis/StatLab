@@ -4,7 +4,7 @@ distribution for each coefficient, with a prior you choose on purpose.
 
 ## The slope as an unknown
 
-Take the model of wellbeing on autonomy from lesson 10.2.
+Take the model of wellbeing on autonomy from lesson 10-2.
 
 <CodeBlock id="c-lm" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 
@@ -15,7 +15,7 @@ b_hat <- coef(m_autonomy)[["autonomy"]]
 se_hat <- summary(m_autonomy)$coefficients["autonomy", "Std. Error"]
 c(b_hat = b_hat, se_hat = se_hat)`} />
 
-The slope is the unknown now, as the leaving rate was in lesson 16.1. With a few
+The slope is the unknown now, as the leaving rate was in lesson 16-1. With a few
 hundred cases, what the data say about it is summed up very well by a normal
 curve centred on the estimate, with the standard error as its spread. That curve
 is the likelihood, so the grid method works exactly as before.
@@ -141,11 +141,11 @@ computed here, since the normal shortcut is very accurate with 480 cases.
 
 <Interpret
   id="i-16-4"
-  question="A Bayesian regression of wellbeing on autonomy with a Normal(0, 0.5) prior on the slope gives a posterior mean of 0.89, 95 % CrI [0.50, 1.27], and P(slope > 0) > .999. Which write-up is correct?"
+  question="A Bayesian regression of wellbeing on autonomy with a Normal(0, 0.5) prior on the slope gives a posterior mean of 0.89, 95% CrI [0.50, 1.27], and P(slope > 0) > .999. Which write-up is correct?"
   choices={[
-    { text: 'With a Normal(0, 0.5) prior on the slope, each additional point of autonomy was associated with 0.89 points higher wellbeing, 95 % CrI [0.50, 1.27]. The posterior probability of a positive association exceeded .999.', correct: true, response: 'Correct: the prior is stated, the estimate has its credible interval, and the probability is of the claim itself.' },
+    { text: 'With a Normal(0, 0.5) prior on the slope, each additional point of autonomy was associated with 0.89 points higher wellbeing, 95% CrI [0.50, 1.27]. The posterior probability of a positive association exceeded .999.', correct: true, response: 'Correct: the prior is stated, the estimate has its credible interval, and the probability is of the claim itself.' },
     { text: 'Autonomy significantly predicted wellbeing, b = 0.89, p < .001.', response: 'A Bayesian analysis gives no p-value. Report the credible interval and posterior probabilities instead, and name the prior.' },
-    { text: 'Autonomy increases wellbeing by 0.89 points, 95 % CrI [0.50, 1.27].', response: '"Increases" is a causal claim, and this is observational data. Say "was associated with". The prior is missing too.' },
+    { text: 'Autonomy increases wellbeing by 0.89 points, 95% CrI [0.50, 1.27].', response: '"Increases" is a causal claim, and this is observational data. Say "was associated with". The prior is missing too.' },
     { text: 'There is a 95 % probability that the true slope is 0.89.', response: 'The probability belongs to the interval, 0.50 to 1.27. The chance of any single exact value is zero.' },
   ]}
 />

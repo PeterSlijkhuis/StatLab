@@ -48,7 +48,7 @@ export const module14: ExerciseDef[] = [
         } else if (length(unique(as.character(long_d$time))) != 2L) {
           list(pass = FALSE, message = "time should take exactly two values, one per measurement.")
         } else {
-          labels <- sort(unique(as.character(long_d$time)))
+          labels <- if (is.factor(long_d$time)) levels(droplevels(long_d$time)) else sort(unique(as.character(long_d$time)))
           first_label <- labels[1]
           means_by_time <- tapply(long_d$engagement, as.character(long_d$time), mean)
           if (!isTRUE(all.equal(as.vector(means_by_time[[labels[1]]]), exp_m1, tolerance = 1e-6, check.attributes = FALSE))) {
