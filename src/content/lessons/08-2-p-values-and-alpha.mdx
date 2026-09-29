@@ -99,8 +99,8 @@ simulating it and one by looking it up.
 
 ## Reporting it
 
-APA 7 wants the test, its degrees of freedom, the statistic, the p-value and an
-interval. Report the exact `p` to two or three decimals with no leading zero, and
+APA 7 wants the test, its degrees of freedom, the statistic, the p-value, an
+interval and an effect size (Lesson 8-4 adds that last one). Report the exact `p` to two or three decimals with no leading zero, and
 when it is smaller than .001 write `p < .001`, never `p = 0`. A simulation with 2000
 shuffles cannot distinguish a p-value of .0004 from one of .00000001, and
 neither can a reader.
@@ -120,7 +120,7 @@ neither can a reader.
   id="i-8-2"
   question="Your test gave t(58) = 2.46, p = .017, with a 95% CI for the difference of [1.3, 12.8]. Which sentence belongs in the results section?"
   choices={[
-    { text: 'Students sleeping seven hours or more scored higher on the exam than those sleeping less, t(58) = 2.46, p = .017, 95% CI [1.3, 12.8].', correct: true, response: 'Correct APA 7: direction of the effect, the test with its degrees of freedom, the exact p to three decimals with no leading zero, and the interval for the difference.' },
+    { text: 'Students sleeping seven hours or more scored higher on the exam than those sleeping less, t(58) = 2.46, p = .017, 95% CI [1.3, 12.8].', correct: true, response: 'Correct APA 7: direction of the effect, the test with its degrees of freedom, the exact p to three decimals with no leading zero, and the interval for the difference. Lesson 8-4 adds the effect size that completes it.' },
     { text: 'There is a 1.7% probability that the null hypothesis is true, t(58) = 2.46, p = .017.', response: 'The p-value is computed assuming the null is true, so it cannot be the probability that the null is true. This is the single most common misreading in the literature.' },
     { text: 'There is a 98.3% probability that the effect is real, t(58) = 2.46, p = .017.', response: 'The same error inverted. 1 - p is not the probability that an effect exists.' },
     { text: 'Sleep had a significant effect on exam scores, p = .017, proving that sleep improves performance.', response: 'Two problems: "proving" overstates any single p-value, and this is an observational comparison, so it cannot establish that sleep caused the difference.' },

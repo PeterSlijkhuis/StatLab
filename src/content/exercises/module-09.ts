@@ -118,7 +118,7 @@ export const module09: ExerciseDef[] = [
   {
     id: 'm9-3-a',
     prompt:
-      'Remote workers left at 18% and office workers at 26%. Is that more than chance? Run a chi-square test of independence on the remote by left_company table and store the result in remote_test.',
+      'Remote workers left at 18.1% and office workers at 25.5%. Is that more than chance? Run a chi-square test of independence on the remote by left_company table and store the result in remote_test.',
     starterCode: `${LOAD}\n\nremote_counts <- table(d$remote, d$left_company)\nremote_counts\n\nremote_test <- `,
     solution: `${LOAD}\nremote_counts <- table(d$remote, d$left_company)\nremote_test <- chisq.test(remote_counts)`,
     wrongAnswers: [

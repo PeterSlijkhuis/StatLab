@@ -57,7 +57,7 @@ export default function Home() {
           <p className="hero-eyebrow"><Logo size={18} /> University of Twente</p>
           <h1>StatLab</h1>
           <p className="home-tagline">Data analysis and statistics in R for psychology and business students, in short, hands-on lessons.</p>
-          <p className="hero-sub">Everything runs in your browser. Nothing is installed, nothing is uploaded, and your progress stays on this computer.</p>
+          <p className="hero-sub">Everything runs in your browser. Nothing is installed, files you open stay in your browser and are never sent anywhere, and your progress stays on this computer.</p>
           {target && (
             <Link to={`/lesson/${target.id}`} className="button-primary hero-cta home-resume">
               {resume ? 'Continue' : 'Start the course'}: {target.title}

@@ -64,12 +64,15 @@ distribution is, and they disagree on purpose.
     largest = max(wellbeing)
   )`} />
 
-- The **standard deviation** is roughly the average distance from the mean. It
-  uses every score, so a single extreme person moves it.
+- The **standard deviation** is a typical distance from the mean. It uses every
+  score, so a single extreme person moves it. R's `sd()` divides the sum of
+  squared deviations by n − 1, not by n as in the textbook's definition. The
+  n − 1 version is the usual estimate of the population value from a sample;
+  with 480 people the two differ only in the second decimal.
 - The **interquartile range** is the width of the middle half of the company: the
   distance from the 25th to the 75th percentile. It ignores the tails entirely.
 - The **range** — largest minus smallest — is built from exactly two people, so
-  it is the least stable number in statistics and the easiest to quote.
+  it is the least stable of the three and the easiest to quote.
 
 Watch out for R's `range()`: it returns the two endpoints, not the distance
 between them.

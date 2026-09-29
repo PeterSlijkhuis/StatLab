@@ -191,7 +191,7 @@ export const module03: ExerciseDef[] = [
           } else if (!isTRUE(all.equal(as.vector(got$n), as.vector(counts[key]), tolerance = 1e-6, check.attributes = FALSE))) {
             list(pass = FALSE, message = paste0("n should be the size of each department (", paste(as.vector(counts), collapse = ", "), "), not the size of the company. n() counts the rows in the group it is called on."))
           } else {
-            list(pass = TRUE, message = paste0("Correct - four departments, ", paste(as.vector(counts), collapse = ", "), " employees. The departments differ by ", round(max(as.vector(means)) - min(as.vector(means)), 1), " points at the extremes, and the SDs tell you how much of that could be individual variation. Lesson 3-3 asks whether the means are telling the truth."))
+            list(pass = TRUE, message = paste0("Correct - four departments, ", paste(as.vector(counts), collapse = ", "), " employees. The departments differ by ", round(max(as.vector(means)) - min(as.vector(means)), 1), " points at the extremes, while individuals within each department differ by far more than that, as the SDs show. Lesson 3-3 asks whether the means are telling the truth."))
           }
         }
       }

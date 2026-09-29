@@ -23,7 +23,7 @@ model_dept %>% glance() %>% select(statistic, df, df.residual, p.value)`} />
 emm`} />
 
 With department as the only predictor these match the raw group means exactly.
-They stop matching as soon as the model contains anything else — then they are
+They usually stop matching as soon as the model contains anything else; then they are
 the predicted means with the other predictors held at their average, which is
 what makes `emmeans` worth learning rather than just averaging by hand.
 
@@ -32,7 +32,7 @@ what makes `emmeans` worth learning rather than just averaging by hand.
   question="Four departments give six pairwise comparisons. If you tested each at the .05 level with no adjustment, what is the chance of at least one false positive when no department really differs?"
   choices={[
     { text: 'Still 5%, because each test is at 5%', response: 'Each test is, but you are running six of them. The chance that at least one misfires is much higher.' },
-    { text: 'About 26%', correct: true, response: 'Right, as a first approximation: 1 - .95 to the power of 6 is about .26 if the six tests were independent. They share groups, so the true figure is a little lower (about .21 here), still four times the 5% you intended.' },
+    { text: 'About 26%', correct: true, response: 'Right, as a first approximation: 1 - .95 to the power of 6 is about .26 if the six tests were independent. They share groups, so the true figure is a little lower (about .20 here), still four times the 5% you intended.' },
     { text: 'About 30%, which is six times 5%', response: 'Close to the right ballpark but by the wrong arithmetic - probabilities of independent events do not add.' },
     { text: '100%, because you tested everything', response: 'Testing more raises the risk, it does not guarantee a false positive.' },
   ]}

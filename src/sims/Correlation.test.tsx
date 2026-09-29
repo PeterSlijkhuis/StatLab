@@ -40,4 +40,26 @@ describe('Correlation', () => {
     }
     expect(screen.getByTestId('rounds').textContent).toBe('3');
   });
+
+  test('the verdict names underestimation, only after three moderate rs guessed too low', () => {
+    render(<Correlation />);
+    const actuals: number[] = [];
+    let shown = 0;
+    for (let i = 0; i < 9; i += 1) {
+      // The guess stays at 0, so every nonzero r is underestimated.
+      fireEvent.click(screen.getByRole('button', { name: /Reveal/ }));
+      actuals.push(Math.abs(Number(screen.getByTestId('actual-r').textContent)));
+      const last3 = actuals.slice(-3);
+      const expected = last3.length === 3 && last3.every((r) => r >= 0.25 && r <= 0.75 && r > 0.1);
+      const verdict = screen.queryByTestId('verdict');
+      expect(verdict !== null).toBe(expected);
+      if (verdict) {
+        expect(verdict.textContent).toMatch(/underestimated/);
+        shown += 1;
+      }
+      fireEvent.click(screen.getByRole('button', { name: /Next scatterplot/ }));
+    }
+    expect(screen.queryByText(/overestimated/)).toBeNull();
+    expect(shown).toBeGreaterThan(0);
+  });
 });

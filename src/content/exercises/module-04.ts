@@ -249,7 +249,7 @@ export const module04: ExerciseDef[] = [
                          identical(labels$x, "autonomy") || identical(labels$y, "wellbeing")) {
                 list(pass = FALSE, message = "The axes are still labelled with the column names. A figure has to be readable on its own, by someone who has never seen your data frame: labs(x = \\"Autonomy (1 to 10)\\", y = \\"Wellbeing (0 to 100)\\").")
               } else if (!inherits(p$theme$panel.grid, "element_blank")) {
-                list(pass = FALSE, message = "The grey panel and its grid lines are still there. APA figures are drawn on white, with axis lines and no grid: add + theme_classic().")
+                list(pass = FALSE, message = "The grey panel and its grid lines are still there. APA figures leave out decoration that carries no information, and this exercise asks for the plain white style with axis lines and no grid: add + theme_classic().")
               } else {
                 list(pass = TRUE, message = "That figure could go in a report as it stands: the points show every employee, the line shows the model, the axes say what they mean, and nothing is drawn that carries no information. Module 10 fits exactly this line with lm() and tells you whether its slope is worth believing.")
               }

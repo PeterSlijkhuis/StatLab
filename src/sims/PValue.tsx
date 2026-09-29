@@ -3,6 +3,10 @@ import { histogram, makeRng, mean, normalPdf, sd } from './rng';
 import './PValue.css';
 
 const REPLICATIONS = 4000;
+
+// A simulation cannot resolve p below 1 / REPLICATIONS, so never print p = 0.
+const formatP = (p: number, extreme: number) =>
+  extreme === 0 ? `< ${1 / REPLICATIONS} (none of ${REPLICATIONS})` : p.toFixed(3);
 const BINS = 45;
 const WIDTH = 640;
 const HEIGHT = 220;
@@ -134,7 +138,7 @@ export default function PValue() {
         aria-label={
           `The null distribution of ${REPLICATIONS} differences in means, centred on zero. ` +
           `${study.extremeCount} of them are at least as extreme as the observed difference of ${observed.toFixed(1)}, ` +
-          `giving a ${tails}-tailed p of ${study.p.toFixed(3)}.`
+          `giving a ${tails}-tailed p of ${formatP(study.p, study.extremeCount)}.`
         }
       >
         {view.counts.map((count, index) => {
@@ -167,7 +171,7 @@ export default function PValue() {
             <th scope="row">out of</th>
             <td data-testid="replications">{REPLICATIONS}</td>
             <th scope="row">p</th>
-            <td data-testid="p-value">{study.p.toFixed(6)}</td>
+            <td data-testid="p-value">{formatP(study.p, study.extremeCount)}</td>
           </tr>
         </tbody>
       </table>

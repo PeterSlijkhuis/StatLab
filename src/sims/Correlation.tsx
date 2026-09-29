@@ -55,10 +55,14 @@ export default function Correlation() {
     ? history.reduce((total, h) => total + Math.abs(h.guess - h.actual), 0) / history.length
     : 0;
 
-  // The standard bias, named only when this student is actually showing it.
-  const recentWeak = history.slice(-3).filter((h) => Math.abs(h.actual) < 0.45);
-  const overestimating =
-    recentWeak.length === 3 && recentWeak.every((h) => Math.abs(h.guess) > Math.abs(h.actual) + 0.1);
+  // The documented bias (Lesson 10-1): moderate correlations read as weaker
+  // than they are. Named only when this student is actually showing it. The
+  // band is a little wider than .3 to .7 because the sample r wobbles around
+  // the ladder's target.
+  const recent = history.slice(-3);
+  const underestimating =
+    recent.length === 3 &&
+    recent.every((h) => Math.abs(h.actual) >= 0.25 && Math.abs(h.actual) <= 0.75 && Math.abs(h.guess) < Math.abs(h.actual) - 0.1);
 
   function reveal() {
     if (revealed) return;
@@ -148,13 +152,13 @@ export default function Correlation() {
 
       <p className="correlation-score">
         Rounds completed: <span data-testid="rounds">{history.length}</span>
-        {history.length > 0 && <> · mean error so far {meanAbsError.toFixed(2)}</>}
+        {history.length > 0 && <> · mean absolute error so far {meanAbsError.toFixed(2)}</>}
       </p>
 
-      {overestimating && (
-        <p className="correlation-verdict">
-          You have overestimated the last three weak correlations. A cloud that looks slightly
-          tilted is usually an r below .3.
+      {underestimating && (
+        <p className="correlation-verdict" data-testid="verdict">
+          You have underestimated the last three moderate correlations. Most people do: a cloud
+          that looks only slightly tilted is often an r of .4 or .5.
         </p>
       )}
     </div>

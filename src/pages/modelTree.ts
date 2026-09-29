@@ -177,7 +177,7 @@ model %>% glance()`,
                                 check:
                                   "A scatterplot with geom_smooth(method = lm) shows a roughly straight-line pattern; no extreme outliers; residuals with similar spread along the whole line; residuals roughly normal, which matters mainly in small samples. For a curved-but-consistent pattern, ranks or outliers, Spearman's correlation: cor.test(d$wellbeing, d$autonomy, method = \"spearman\").",
                                 traditional: "Pearson correlation: cor.test(d$wellbeing, d$autonomy). Its t and p match the slope's.",
-                                note: 'The slope b is the change in the outcome (here wellbeing) for each one-unit increase in the predictor (autonomy).',
+                                note: 'The slope b is the difference in predicted outcome (here wellbeing) between people who differ by one unit on the predictor (autonomy).',
                                 lessonId: '10-2',
                               },
                             },
@@ -198,7 +198,7 @@ model %>% tidy()
 model %>% glance()`,
                                 check:
                                   'Roughly linear relationships; no extreme outliers; residuals with similar spread across the fitted values; residuals roughly normal (mainly a concern in small samples); predictors not almost perfectly correlated with each other.',
-                                note: 'Each b is the change in the outcome for a one-unit increase in that predictor, holding the other predictors constant. Report R², F and each b with its SE, t and p. Predictors can be numbers or groups: a factor enters the formula the same way, as + remote would.',
+                                note: 'Each b is the difference in predicted outcome for a one-unit higher value of that predictor, with the other predictors held constant. Report R², F and each b with its SE, t and p. Predictors can be numbers or groups: a factor enters the formula the same way, as + remote would.',
                                 lessonId: '11-1',
                               },
                             },
@@ -532,7 +532,7 @@ summary(model)`,
 d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 model <- lmer(wellbeing ~ autonomy + workload + (1 | site), data = d)
 summary(model)`,
-                    check: 'Enough groups to estimate how they vary: a handful at the very least, and ideally twenty or more. Residuals roughly normal, which matters mainly in small samples.',
+                    check: 'Enough groups to estimate how they vary: a handful at the very least, and ideally twenty or more. The 6 sites here are few, which is why Lesson 14-3 finds SD_site near 0. Residuals roughly normal, which matters mainly in small samples.',
                     note: 'Employees at the same site are more alike than employees at different sites; (1 | site) accounts for that. If people are also measured repeatedly, nest them: (1 | site/employee_id). If a predictor\'s effect may differ between sites, add a random slope: (autonomy | site).',
                     lessonId: '14-3',
                   },
@@ -677,7 +677,7 @@ wilcox.test(wellbeing ~ remote, data = d)
 kruskal.test(wellbeing ~ department, data = d)
 cor.test(~ autonomy + wellbeing, data = d, method = "spearman", exact = FALSE)`,
                     check:
-                      'Independent cases, each counted once. The group tests compare whole distributions; read them as a difference in medians only when the groups have a similar shape and spread. When the same people are measured more than once, rank within each person instead: the Wilcoxon signed-rank test for two measurements, wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE), and the Friedman test for three or more.',
+                      'Independent cases, each counted once. The group tests compare whole distributions; read them as a difference in medians only when the groups have a similar shape and spread. When the same people are measured more than once, use a test built on within-person comparisons instead: the Wilcoxon signed-rank test (which ranks each person\'s difference) for two measurements, wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE), and the Friedman test (which ranks within each person) for three or more.',
                     traditional:
                       "The Mann-Whitney test, the Kruskal-Wallis test and Spearman's rank correlation. After a significant Kruskal-Wallis test, pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = \"holm\", exact = FALSE) compares every pair of groups.",
                     note: 'wilcox.test() compares two groups, kruskal.test() three or more, and cor.test() with method = "spearman" gives rho, the correlation between the ranks; method = "kendall" gives Kendall\'s tau instead. These tests work on ranks, so report each group\'s median alongside them. To add predictors or covariates, use ordinal regression.',
@@ -867,7 +867,7 @@ fit <- survfit(Surv(tenure_years, left_company) ~ remote, data = d)
 summary(fit)$table
 survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                     check:
-                      'Censoring unrelated to the outcome: cases that leave early are not more or less at risk than those who stay. The log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
+                      'Censoring unrelated to the outcome: cases whose follow-up ends early (censored, here still employed when the data were collected) are no more or less likely to have the event than cases followed for longer. The log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
                     traditional: 'The log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "breslow"))$sctest.',
                     note: 'Surv(tenure_years, left_company) pairs each employee\'s years at the company with whether they left (1) or still work there, which makes them censored (0). summary(fit)$table gives each group\'s median time to the event; survdiff() is the log-rank test; plot(fit) draws the curves.',
                     further: 'Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, and the survival package\'s vignettes.',
@@ -875,7 +875,7 @@ survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                 },
                 {
                   label: 'What makes it happen sooner or later?',
-                  example: 'Do workload and autonomy predict how soon people leave?',
+                  example: 'Do wellbeing and working remotely predict how soon people leave?',
                   tech: 'Cox regression',
                   next: {
                     kind: 'answer',
@@ -1111,7 +1111,7 @@ model <- arima(series, order = c(2, 0, 0), xreg = time(series) - 1920)
 model
 predict(model, n.ahead = 10, newxreg = 1973:1982 - 1920)`,
               check:
-                'Equally spaced observations with no gaps. A trend or a seasonal pattern needs differencing or a seasonal term first; plot(series) and acf(series) show both. In RStudio, forecast::auto.arima(series) chooses the orders for you.',
+                'Equally spaced observations with no gaps. A trend or a seasonal pattern needs differencing, a trend regressor (as xreg does here) or a seasonal term; plot(series) and acf(series) show both. In RStudio, forecast::auto.arima(series) chooses the orders for you.',
               note: 'order = c(p, d, q) sets the autoregressive terms, the number of differences and the moving-average terms. xreg adds a straight-line trend in years, centred on 1920; predict() needs the future years in newxreg. predict() gives forecasts with standard errors, which grow the further ahead you look. Compare candidate orders by AIC: lower is better. For your own data, ts(d$value, start = c(2020, 1), frequency = 12) turns a column of monthly values into a series.',
               further: 'Hyndman and Athanasopoulos, Forecasting: Principles and Practice (free online at otexts.com), which uses the fable package.',
             },
@@ -1128,7 +1128,8 @@ predict(model, n.ahead = 10, newxreg = 1973:1982 - 1920)`,
               rCode: `library(dplyr)
 library(broom)
 # The course data is not a time series, so this uses Nile, built into R: the river's yearly flow from 1871 to 1970.
-# The flow drops after 1898, the year work began on the first Aswan dam.
+# The flow drops after 1898. The change is usually attributed to a shift in rainfall, although work on the
+# first Aswan dam also began that year: an ITS alone cannot tell which change caused it.
 d <- data.frame(year = 1871:1970, flow = as.numeric(Nile)) %>%
   mutate(time = year - 1870, after = as.numeric(year >= 1899), time_after = pmax(0, year - 1899))
 model <- lm(flow ~ time + after + time_after, data = d)
@@ -1249,7 +1250,7 @@ bf10 <- exp((BIC(null_model) - BIC(model)) / 2)
 c(BF10 = bf10, BF01 = 1 / bf10)`,
               check:
                 'Both models fitted to the same rows: drop cases with missing values first, or BIC() compares different data. The approximation implies a wide prior on the effect, worth about one observation; say you used the BIC approximation.',
-              note: 'BF10 above 1 favours the effect, below 1 favours no effect, and BF01 is its reverse. Rough labels: 3 to 10 moderate, 10 to 30 strong, above 30 very strong. Here BF01 is about 21: strong evidence that mentoring makes no difference to wellbeing. It works for any pair of nested models, glm() models included.',
+              note: 'BF10 above 1 favours the effect, below 1 favours no effect, and BF01 is its reverse. Rough labels: 3 to 10 moderate, 10 to 30 strong, 30 to 100 very strong, above 100 extreme. Here BF01 is about 21: strong evidence that mentoring makes no difference to wellbeing. It works for any pair of nested models, glm() models included.',
               lessonId: '16-3',
             },
           },

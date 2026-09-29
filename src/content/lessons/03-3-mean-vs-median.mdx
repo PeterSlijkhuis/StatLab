@@ -57,10 +57,13 @@ department is made of:
   )`} />
 
 Engineering has the highest workload **and** the highest autonomy in the
-company. Higher autonomy goes with higher wellbeing and higher workload with lower wellbeing, so the department
-contains both the best-off people in the company and a heavy tail of people who
-are not coping. The typical engineer is doing well — that is the median. The
-average engineer is dragged down by the tail — that is the mean.
+company, and its top tenth is the best off anywhere. But its bottom tenth sits
+far below every other department's. Workload and autonomy shift the whole
+department up or down; they do not explain why a minority of engineers report
+very low wellbeing. Whatever causes that is not recorded in the data (an on-call
+rotation, say; Module 11 comes back to it). The typical engineer is doing well:
+that is the median. The average engineer is dragged down by the tail: that is
+the mean.
 
 <CodeBlock id="tail" code={`cutoff <- quantile(employees$wellbeing, 0.10)
 

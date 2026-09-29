@@ -101,7 +101,9 @@ fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000)
 parameterEstimates(fit, boot.ci.type = "perc")
 ```
 
-The `indirect` row gives the same a × b with its bootstrap interval. The PROCESS
+The `indirect` row gives the same a × b estimate with a bootstrap interval of its
+own. Expect that interval to be close to, not identical with, the one above: it
+comes from different resamples. The PROCESS
 macro for SPSS, model 4, fits the same model.
 
 <Quiz

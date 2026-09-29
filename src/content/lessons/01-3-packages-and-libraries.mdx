@@ -19,9 +19,10 @@ will only ever type the second line.
 If a message about objects being masked appears, it is not an error. R shows
 it only the first time dplyr is attached in a session, so you may not see it
 here. It is R telling you
-that `dplyr::filter` has taken the name `filter` from a function of the same
-name in the stats package, which R attaches at start-up. From now on, `filter()`
-means dplyr's version, which is the one you want.
+that dplyr has functions with the same names as some in the stats and base
+packages, which R attaches at start-up: `filter` and `lag` from stats, and the
+set functions `intersect`, `setdiff`, `setequal` and `union` from base. From now
+on, `filter()` means dplyr's version, which is the one you want.
 
 ## Something to use it on
 
@@ -77,7 +78,7 @@ own `library()`):
 
 You will see that line in almost every tutorial and in most R scripts written in
 the last ten years, and in RStudio it is what you should write. StatLab does not
-use it, for one practical reason: the meta-package pulls in about 34 MB of
+use it, for one practical reason: the meta-package pulls in dozens of
 packages this course never touches, and everything here downloads into your
 browser. So each lesson attaches exactly what it needs, by name. The functions
 are identical either way.
@@ -89,6 +90,6 @@ are identical either way.
     { text: 'Run library(ggplot2) twice', response: 'Attaching a package that is not installed fails however many times you try it.' },
     { text: 'Install the package once with install.packages("ggplot2"), then attach it', correct: true, response: 'Right. The error is about the package not being on the machine; library() can only attach what is already there.' },
     { text: 'Remove the library() line, because the functions are built into R', response: 'ggplot2 is not part of base R. Without attaching it, ggplot() does not exist.' },
-    { text: 'Put install.packages("ggplot2") at the top of the script instead', response: 'That works once, then re-downloads the package every time the script runs. Install in the console, attach in the script.' },
+    { text: 'Put install.packages("ggplot2") at the top of the script instead', response: 'It works, but it re-downloads the package every time the script runs, and fails without an internet connection. Install in the console, attach in the script.' },
   ]}
 />
