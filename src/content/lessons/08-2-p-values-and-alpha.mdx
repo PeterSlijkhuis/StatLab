@@ -25,7 +25,7 @@ observed`} />
   id="p-tail"
   question="You are about to count the shuffles that were 'at least as extreme' as the observed difference. Which shuffles count?"
   choices={[
-    { text: 'Only those with a difference larger than the observed one, in the same direction', response: 'That is a one-tailed count, and it halves the answer. You would only use it if you had committed to a direction before collecting data.' },
+    { text: 'Only those with a difference larger than the observed one, in the same direction', response: 'That is a one-tailed count, and it roughly halves the answer. You would only use it if you had committed to a direction before collecting data.' },
     { text: 'Those at least as far from zero as the observed difference, in either direction', correct: true, response: 'Yes. Unless you predicted the direction in advance, a difference of the same size the other way is equally surprising, so both tails count.' },
     { text: 'All of them, since every shuffle is a possible result', response: 'Then the answer would always be 1. The point is to count the extreme ones.' },
   ]}

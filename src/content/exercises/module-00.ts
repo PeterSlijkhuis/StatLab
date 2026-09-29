@@ -62,8 +62,8 @@ export const module00: ExerciseDef[] = [
       }
     `,
     hints: [
-      'file.path("data", "workplace.csv") gives the text "data/workplace.csv".',
       'A relative path starts from the working directory, which getwd() shows.',
+      'file.path("data", "workplace.csv") gives the text "data/workplace.csv".',
       'file.exists() takes a path and answers TRUE or FALSE: found <- file.exists(path).',
     ],
   },
@@ -80,7 +80,7 @@ export const module00: ExerciseDef[] = [
       'old_path <- "C:/Users/sam/Documents/survey-analysis/data/survey.csv"\nrel_path <- "survey-analysis/data/survey.csv"',
       // The data folder forgotten.
       'old_path <- "C:/Users/sam/Documents/survey-analysis/data/survey.csv"\nrel_path <- "survey.csv"',
-      // A Windows backslash, which R reads as the start of a special character.
+      // A Windows backslash (escaped here so the line runs). R style is a forward slash on every computer.
       'old_path <- "C:/Users/sam/Documents/survey-analysis/data/survey.csv"\nrel_path <- "data\\\\survey.csv"',
       // Left as it was.
       'old_path <- "C:/Users/sam/Documents/survey-analysis/data/survey.csv"\nrel_path <- old_path',

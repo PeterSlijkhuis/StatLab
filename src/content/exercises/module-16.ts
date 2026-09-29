@@ -46,7 +46,7 @@ export const module16: ExerciseDef[] = [
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- p_grid[which.max(posterior_eng)]`,
     ],
     alternateSolutions: [
-      // The beta shortcut of lesson 16-2, evaluated on the grid.
+      // The beta shortcut of Lesson 16-2, evaluated on the grid.
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nposterior_eng <- dbeta(p_grid, 3 + left_eng, 17 + n_eng - left_eng)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- (3 + left_eng) / (3 + 17 + n_eng)`,
       // Counted inline, with weighted.mean() for the posterior mean.
       `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\np_grid <- seq(0, 1, length.out = 1001)\nlikelihood <- dbinom(33, 128, p_grid)\nunnormalised <- dbeta(p_grid, 3, 17) * likelihood\nposterior_eng <- unnormalised / sum(unnormalised)\neng_mean <- weighted.mean(p_grid, posterior_eng)`,
@@ -103,14 +103,14 @@ export const module16: ExerciseDef[] = [
   {
     id: 'm16-2-a',
     prompt:
-      'Give a 95 % credible interval for Engineering\'s leaving rate, with a flat Beta(1, 1) prior. Store it in ci_engineering: two numbers, the lower bound first.',
+      'Give a 95% credible interval for Engineering\'s leaving rate, with a flat Beta(1, 1) prior. Store it in ci_engineering: two numbers, the lower bound first.',
     starterCode:
       `${ENGINEERING}\nc(left = left_eng, employees = n_eng)\n\n# Posterior: Beta(1 + leavers, 1 + stayers). qbeta() gives its percentiles.\nci_engineering <- `,
     solution: `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng - left_eng)`,
     wrongAnswers: [
       // Forgot the prior's 1 + 1, which is Beta(0, 0), not flat.
       `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), left_eng, n_eng - left_eng)`,
-      // A 90 % interval.
+      // A 90% interval.
       `${ENGINEERING}\nci_engineering <- qbeta(c(0.05, 0.95), 1 + left_eng, 1 + n_eng - left_eng)`,
       // The second shape parameter given the headcount instead of the stayers.
       `${ENGINEERING}\nci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng)`,
@@ -120,7 +120,7 @@ export const module16: ExerciseDef[] = [
     alternateSolutions: [
       // Each bound on its own.
       `${ENGINEERING}\nlower <- qbeta(0.025, 1 + left_eng, 1 + n_eng - left_eng)\nupper <- qbeta(0.975, 1 + left_eng, 1 + n_eng - left_eng)\nci_engineering <- c(lower = lower, upper = upper)`,
-      // Read off a fine grid, as in lesson 16-1.
+      // Read off a fine grid, as in Lesson 16-1.
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 100001)\npost <- dbinom(left_eng, n_eng, p_grid)\npost <- post / sum(post)\ncdf <- cumsum(post)\nci_engineering <- c(p_grid[which(cdf >= 0.025)[1]], p_grid[which(cdf >= 0.975)[1]])`,
     ],
     check: `
@@ -141,19 +141,19 @@ export const module16: ExerciseDef[] = [
         } else if (close(ci, qbeta(c(0.025, 0.975), k, n - k))) {
           list(pass = FALSE, message = "Close, but Beta(left_eng, n_eng - left_eng) is the posterior from a Beta(0, 0) prior, not a flat one. A flat prior is Beta(1, 1), so add 1 to each shape: Beta(1 + left_eng, 1 + n_eng - left_eng).")
         } else if (close(ci, qbeta(c(0.05, 0.95), 1 + k, 1 + n - k))) {
-          list(pass = FALSE, message = "That is a 90 % interval. A 95 % interval leaves 2.5 % in each tail: qbeta(c(0.025, 0.975), ...).")
+          list(pass = FALSE, message = "That is a 90% interval. A 95% interval leaves 2.5% in each tail: qbeta(c(0.025, 0.975), ...).")
         } else if (close(ci, binom.test(k, n)$conf.int)) {
           list(pass = FALSE, message = "That is the frequentist confidence interval from binom.test(). Here the interval should come from the posterior, with qbeta().")
         } else if (!close(ci, expected)) {
           list(pass = FALSE, message = paste0("ci_engineering is [", paste(round(ci, 3), collapse = ", "), "]. The posterior is Beta(1 + ", k, ", 1 + ", n - k, "): leavers in the first shape, stayers in the second."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: [", paste(round(expected, 3), collapse = ", "), "]. Given these data and a flat prior, there is a 95 % probability that Engineering's leaving rate lies in this range. It is wider than the company's, because it rests on 128 people instead of 480."))
+          list(pass = TRUE, message = paste0("Correct: [", paste(round(expected, 3), collapse = ", "), "]. Given these data and a flat prior, there is a 95% probability that Engineering's leaving rate lies in this range. It is wider than the company's, because it rests on 128 people instead of 480."))
         }
       }
     `,
     hints: [
       'With a Beta(1, 1) prior the posterior is Beta(1 + left_eng, 1 + n_eng - left_eng).',
-      'The middle 95 % runs from the 2.5th to the 97.5th percentile.',
+      'The middle 95% runs from the 2.5th to the 97.5th percentile.',
       'ci_engineering <- qbeta(c(0.025, 0.975), 1 + left_eng, 1 + n_eng - left_eng)',
     ],
   },
@@ -274,7 +274,7 @@ export const module16: ExerciseDef[] = [
   {
     id: 'm16-4-a',
     prompt:
-      'Each extra point of workload goes with about 3.3 points lower wellbeing. Combine that estimate with a sceptical Normal(0, 1) prior on the slope. Store the posterior mean in post_mean_b and a 95 % credible interval, lower bound first, in cri_b.',
+      'Each extra point of workload goes with about 3.3 points lower wellbeing. Combine that estimate with a sceptical Normal(0, 1) prior on the slope. Store the posterior mean in post_mean_b and a 95% credible interval, lower bound first, in cri_b.',
     starterCode:
       `${WORKLOAD}\nc(b_hat = b_hat, se_hat = se_hat)\n\nprior_sd <- 1\n# Weight each source by its precision, 1 / variance.\npost_mean_b <- \ncri_b <- `,
     solution:
@@ -327,7 +327,7 @@ export const module16: ExerciseDef[] = [
         } else if (close(ci, qnorm(c(0.025, 0.975), exp_mean, se))) {
           list(pass = FALSE, message = "The mean is right, but the interval uses the standard error. The posterior is narrower than the data alone: its SD is sqrt(1 / (w_data + w_prior)).")
         } else if (!close(ci, exp_ci, 2e-3)) {
-          list(pass = FALSE, message = paste0("cri_b is [", paste(round(ci, 3), collapse = ", "), "], but the 95 % credible interval is [", paste(round(exp_ci, 3), collapse = ", "), "]. Use qnorm() with the posterior mean and the posterior SD."))
+          list(pass = FALSE, message = paste0("cri_b is [", paste(round(ci, 3), collapse = ", "), "], but the 95% credible interval is [", paste(round(exp_ci, 3), collapse = ", "), "]. Use qnorm() with the posterior mean and the posterior SD."))
         } else {
           list(pass = TRUE, message = paste0("Correct: ", round(exp_mean, 2), ", 95% CrI [", paste(round(exp_ci, 2), collapse = ", "), "]. The prior pulled the estimate from ", round(b, 2), " towards zero even though the data are precise, because an effect this large is far out in a Normal(0, 1) prior. A sceptical prior has to be one you can defend."))
         }

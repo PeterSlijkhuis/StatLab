@@ -75,7 +75,7 @@ export const module07: ExerciseDef[] = [
   {
     id: 'm7-1-b',
     prompt:
-      'Turn that estimate into a 95 % confidence interval for the population mean exam score. Store the two endpoints in ci_95, lower first.',
+      'Turn that estimate into a 95% confidence interval for the population mean exam score. Store the two endpoints in ci_95, lower first.',
     starterCode:
       '# study is already in your environment.\nsample_mean <- mean(study$exam_score)\nse_mean <- sd(study$exam_score) / sqrt(nrow(study))\n\n# The multiplier comes from the t distribution with n - 1 degrees of freedom.\nci_95 <- ',
     setupCode: STUDY_50,
@@ -146,7 +146,7 @@ export const module07: ExerciseDef[] = [
   {
     id: 'm7-2-a',
     prompt:
-      'Run 100 studies of 40 students each, build a 95 % confidence interval from every one of them, and count how many of those 100 intervals contain the true population mean mu. Store the count in captured.',
+      'Run 100 studies of 40 students each, build a 95% confidence interval from every one of them, and count how many of those 100 intervals contain the true population mean mu. Store the count in captured.',
     starterCode:
       '# population and mu are already in your environment.\nmu\n\n# Each study: draw 40 exam scores, build an interval, ask whether it contains mu.\ncaptured <- ',
     setupCode:
@@ -190,13 +190,13 @@ export const module07: ExerciseDef[] = [
           if (value > 0 && value < 1) {
             list(pass = FALSE, message = paste0("That is the PROPORTION (", round(value, 2), "). The exercise asks for the count out of 100, so use sum() rather than mean()."))
           } else if (isTRUE(all.equal(value, 100, tolerance = 1e-9))) {
-            list(pass = FALSE, message = "All 100 intervals captured it, which cannot happen by chance with a 95 per cent procedure. You almost certainly compared each interval against its own sample mean, which sits in the middle of it by construction. Compare against mu, the population mean.")
+            list(pass = FALSE, message = "All 100 intervals captured it, which cannot happen by chance with a 95 per cent procedure. Either you compared each interval against its own sample mean, which sits in the middle of it by construction, or you built it from the SD instead of the standard error, which makes it far too wide. Compare against mu, the population mean, and use sd(s) / sqrt(40).")
           } else if (value >= 86 && value <= 99) {
             list(pass = TRUE, message = paste0(value, " of your 100 intervals contained mu. It will rarely be exactly 95, but it lands close, and over enough studies the proportion settles on 95 per cent. The 95 per cent describes the PROCEDURE, not any one interval."))
           } else if (value <= 14) {
             list(pass = FALSE, message = paste0("Only ", value, " intervals captured mu. If you counted the ones that MISSED, take 100 minus your count - the misses are the 5 per cent, not the 95."))
           } else {
-            list(pass = FALSE, message = paste0(value, " of 100 is too few for a 95 per cent procedure. Check the value you are testing against (it should be mu, the population mean) and the quantile in qt() (0.975, not 0.95)."))
+            list(pass = FALSE, message = paste0(value, " of 100 is too few for a 95 per cent procedure. Check the value you are testing against (it should be mu, the population mean) and that the standard error is multiplied by qt(0.975, df = 39), not used on its own."))
           }
         }
       }
@@ -210,7 +210,7 @@ export const module07: ExerciseDef[] = [
   {
     id: 'm7-3-a',
     prompt:
-      'Build the summary table an error-bar figure needs. From study, produce summary_table with one row per programme and the columns mean_exam, sd_exam, n, se and ci, where ci is the half-width of a 95 % confidence interval.',
+      'Build the summary table an error-bar figure needs. From study, produce summary_table with one row per programme and the columns mean_exam, sd_exam, n, se and ci, where ci is the half-width of a 95% confidence interval.',
     starterCode:
       'library(dplyr)\n\n# study is already in your environment: 120 students.\nsummary_table <- study %>%\n  group_by(programme) %>%\n  summarise(mean_exam = mean(exam_score), sd_exam = sd(exam_score), n = n()) %>%\n  mutate(se = , ci = )',
     setupCode:

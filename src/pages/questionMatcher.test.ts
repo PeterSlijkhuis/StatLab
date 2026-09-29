@@ -47,6 +47,54 @@ const QUESTIONS: { q: string; top?: string; inTop2?: string }[] = [
   { q: 'Are there distinct types of customers based on their shopping habits?', top: 'cluster-analysis' },
   { q: 'Does more sleep help exam scores only up to a point?', top: 'curved-relationship' },
   { q: 'Does age predict how people travel to work: car, bike or train?', top: 'multinomial-regression' },
+  // Misread before: test names, lists, pairs, outcome words and "reduce" as a verb.
+  { q: 'I want to do an ANOVA on wellbeing with department as factor', top: 'several-groups' },
+  { q: 'one way anova stress per programme', top: 'several-groups' },
+  { q: 'Do students from psychology, economics and law differ in stress?', top: 'several-groups' },
+  { q: 'Is the mean stress score above the midpoint of the scale (5)?', top: 'mean-vs-value' },
+  { q: 'What predicts wellbeing: workload, autonomy or tenure?', top: 'multiple-regression' },
+  { q: 'Multiple regression with stress and sleep predicting exam scores', top: 'multiple-regression' },
+  { q: 'Did engagement change between t1 and t2?', top: 'before-after' },
+  { q: 'paired t-test engagement time 1 vs time 2', top: 'before-after' },
+  { q: 'Do twins differ in IQ? (matched pairs)', top: 'before-after' },
+  { q: 'What is the difference between the scores of students before and after the lecture?', top: 'before-after' },
+  { q: 'Do students sleep fewer hours during exam weeks than before?', top: 'before-after' },
+  { q: 'Does wellbeing change over 4 measurement waves?', top: 'repeated-measures' },
+  { q: 'repeated measures anova with 3 time points on stress', top: 'repeated-measures' },
+  { q: 'Did the trained group improve more from pre to post than the control group?', top: 'time-by-group' },
+  { q: 'Do participants differ in how fast their symptoms improve over 6 weeks?', top: 'growth-curve' },
+  { q: 'Logistic regression for passing the exam with study hours as predictor', top: 'logistic-regression' },
+  { q: 'chi square test remote and left_company', top: 'cross-table' },
+  { q: 'Is more than half of the students satisfied with the course?', top: 'proportion-vs-value' },
+  { q: 'Did the same employees say yes more often after the training than before?', top: 'repeated-binary' },
+  { q: 'Do patients answer yes or no at 3 visits, does it change?', top: 'repeated-binary' },
+  { q: 'Do the programmes differ on a 5 point likert item about satisfaction?', top: 'rank-tests' },
+  { q: 'Mann Whitney U test for stress between two groups', top: 'rank-tests' },
+  { q: 'nonparametric test for skewed income between men and women', top: 'rank-tests' },
+  { q: 'Is the effect of age on income different for men and women?', top: 'continuous-moderation' },
+  { q: 'What factors underlie the 30 items of my questionnaire?', top: 'exploratory-factors' },
+  { q: 'CFA to confirm the 3 factor structure of the scale', top: 'confirmatory-factors' },
+  { q: 'I want to reduce 15 variables into a few components', top: 'principal-components' },
+  { q: 'Does training affect both wellbeing and performance?', top: 'several-outcomes' },
+  { q: 'Does the new law reduce monthly accidents?', top: 'interrupted-time-series' },
+  { q: 'How does the number of hours studied relate to the grade?', top: 'simple-regression' },
+  // Read right before and after: kept as a guard.
+  { q: 't-test for wellbeing remote vs office', top: 'two-groups' },
+  { q: 'Do remote workers have more stress than office workers?', top: 'two-groups' },
+  { q: 'Is there a correlation between stress and sleep hours?', top: 'simple-regression' },
+  { q: 'The more hours students study, the higher their grade?', top: 'simple-regression' },
+  { q: 'ANCOVA: do departments differ in wellbeing when you adjust for workload?', top: 'groups-with-covariate' },
+  { q: 'Does autonomy moderate the relationship between workload and wellbeing?', top: 'continuous-moderation' },
+  { q: 'Is the effect of training on performance mediated by engagement?', top: 'mediation' },
+  { q: 'Multilevel model of wellbeing with employees nested in teams', top: 'nested-groups' },
+  { q: 'Do departments differ in the percentage of employees who left?', top: 'cross-table' },
+  { q: 'one sample t-test: is IQ in our sample different from 100?', top: 'mean-vs-value' },
+  { q: 'Does workload predict time until employees quit?', top: 'cox-regression' },
+  { q: 'Kruskal-Wallis for satisfaction ranks across departments', top: 'rank-tests' },
+  { q: 'Does stress predict satisfaction measured as low, medium or high?', top: 'ordinal-regression' },
+  { q: 'Do students choose between psychology, law and economics equally often?', top: 'goodness-of-fit' },
+  { q: 'Bayesian t-test for remote vs office wellbeing', top: 'bayes-t-test' },
+  { q: 'is ther a diffrence in welbeing between remote and non remote employes', top: 'two-groups' },
 ];
 
 describe('matchQuestion', () => {
@@ -87,6 +135,23 @@ describe('matchQuestion', () => {
     expect(matchQuestion(q).suggestions[0].id).toBe('time-by-group');
     expect(matchQuestion(q, { moderation: false, groups: false }).suggestions[0].id).toBe('before-after');
     expect(matchQuestion('Does autonomy predict wellbeing?', { clustered: true }).suggestions[0].id).toBe('nested-groups');
+  });
+
+  test('"reduce" as a verb is not dimension reduction', () => {
+    expect(detectCues('Does training reduce stress?')).not.toContain('reduce');
+  });
+
+  test('alternatives keep to the kind of outcome and question asked', () => {
+    const ids = matchQuestion('Does autonomy predict wellbeing?').suggestions.map((s) => s.id);
+    expect(ids).not.toContain('cox-regression');
+    expect(ids).not.toContain('ordinal-regression');
+    expect(ids).not.toContain('bayesian-regression');
+  });
+
+  test('odd input gives no suggestion and does not throw', () => {
+    for (const q of ['   ', '12345', '\u{1F600}\u{1F4CA}', '<script>alert(1)</script>', 'x'.repeat(2000), 'a, b, c and '.repeat(200)]) {
+      expect(matchQuestion(q).suggestions).toEqual([]);
+    }
   });
 
   test('nothing useful gives no suggestion', () => {

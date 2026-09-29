@@ -83,8 +83,8 @@ because that lowest y belongs to one of the highest x values.
 ## Testing and reporting
 
 `cor.test()` takes the same `method` argument. With 480 employees and some tied
-scores an exact *p* value cannot be computed, so ask for the normal approximation
-with `exact = FALSE`, which is what R would fall back on anyway.
+scores an exact *p* value cannot be computed, so ask for the large-sample
+approximation with `exact = FALSE`, which is what R would fall back on anyway.
 
 <CodeBlock id="c-test" code={`cor.test(d$workload, d$wellbeing, method = "spearman", exact = FALSE)`} />
 
@@ -108,7 +108,7 @@ with: it describes an ordering, and only that.
   choices={[
     { text: 'Workload and wellbeing were negatively related, rs = -.40, p < .001, n = 480: employees with more workload tended to report lower wellbeing.', correct: true, response: 'Correct. The coefficient is named, its sign is read in words, and the claim stays at "tended to", which an ordering supports.' },
     { text: 'Each extra point of workload lowered wellbeing by 0.40 points, rs = -.40, p < .001.', response: 'A correlation is not a slope, and a rank correlation least of all: it has no units, so it cannot say "by how many points".' },
-    { text: 'Workload explained 40 % of the variance in wellbeing, rs = -.40, p < .001.', response: 'A share of variance would be a squared correlation from a linear model. rho describes an ordering and has no variance-explained reading.' },
+    { text: 'Workload explained 40% of the variance in wellbeing, rs = -.40, p < .001.', response: 'A share of variance would be a squared correlation from a linear model. rho describes an ordering and has no variance-explained reading.' },
     { text: 'There was a significant correlation, p < 2.2e-16.', response: 'The coefficient and its direction are missing, and APA reports p < .001 rather than R\'s printing limit.' },
   ]}
 />

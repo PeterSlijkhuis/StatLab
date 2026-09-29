@@ -77,7 +77,7 @@ export const module15: ExerciseDef[] = [
           if (!found) {
             list(pass = FALSE, message = paste0("No column of rate_by_third holds the three leaving rates, which are ", paste(round(exp_rates, 3), collapse = ", "), " from the lowest third of wellbeing to the highest. Split on wellbeing, not on left_company."))
           } else {
-            list(pass = TRUE, message = paste0(exp_n, " of the ", nrow(d), " fitted values are impossible probabilities. And the descriptives say the effect is real: ", round(100 * shown[1], 1), " % of the least happy third left, against ", round(100 * shown[3], 1), " % of the happiest. A model that predicts a negative probability for the very employees it should be most confident about is the wrong shape, not the wrong data."))
+            list(pass = TRUE, message = paste0(exp_n, " of the ", nrow(d), " fitted values are impossible probabilities. And the descriptives say the effect is real: ", round(100 * shown[1], 1), "% of the least happy third left, against ", round(100 * shown[3], 1), "% of the happiest. A model that predicts a negative probability for the very employees it should be most confident about is the wrong shape, not the wrong data."))
           }
         }
       }
@@ -85,7 +85,7 @@ export const module15: ExerciseDef[] = [
     hints: [
       'fitted(lpm) gives the predicted value for every employee.',
       'sum() over a logical vector counts the TRUEs: sum(fitted(lpm) < 0 | fitted(lpm) > 1).',
-      'mean() of a 0/1 column is the proportion of 1s, so summarise(rate = mean(left_company)) is the leaving rate.',
+      'mutate(third = ntile(wellbeing, 3)) splits the employees into thirds of wellbeing; group_by(third), then summarise(rate = mean(left_company)), because the mean of a 0/1 column is the proportion of 1s.',
     ],
   },
   {
@@ -126,7 +126,7 @@ export const module15: ExerciseDef[] = [
         exp_tenure <- as.vector(coef(reference)["tenure_years"])
         exp_intercept <- as.vector(coef(reference)["(Intercept)"])
         if (!inherits(m_left, "glm")) {
-          list(pass = FALSE, message = "m_left is not a glm. lm() fits a straight line to the 0/1 outcome, which is the model lesson 15-1 showed predicting impossible probabilities. Use glm().")
+          list(pass = FALSE, message = "m_left is not a glm. lm() fits a straight line to the 0/1 outcome, which is the model Lesson 15-1 showed predicting impossible probabilities. Use glm().")
         } else if (!identical(family(m_left)$family, "binomial")) {
           list(pass = FALSE, message = paste0("m_left is a glm, but its family is \\"", family(m_left)$family, "\\", not binomial. Without family = binomial, glm() fits an ordinary linear model - it runs, it prints a coefficient table, and it is not logistic regression. The family is what puts the outcome on the log-odds scale."))
         } else if (!("wellbeing" %in% names(coef(m_left)))) {
@@ -134,7 +134,7 @@ export const module15: ExerciseDef[] = [
         } else if (!is.numeric(b) || length(b) != 1L) {
           list(pass = FALSE, message = "b_wellbeing should be a single number.")
         } else if (isTRUE(all.equal(b, exp(exp_b), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("You exponentiated. exp(b) = ", round(exp(exp_b), 4), " is the odds ratio, which lesson 15-3 is about. The coefficient itself, on the log-odds scale, is ", round(exp_b, 4), ", and the sign is the quickest check: below zero on the log-odds scale means lower odds of leaving, and after exponentiating the same thing shows up as an odds ratio below one."))
+          list(pass = FALSE, message = paste0("You exponentiated. exp(b) = ", round(exp(exp_b), 4), " is the odds ratio, which Lesson 15-3 is about. The coefficient itself, on the log-odds scale, is ", round(exp_b, 4), ", and the sign is the quickest check: below zero on the log-odds scale means lower odds of leaving, and after exponentiating the same thing shows up as an odds ratio below one."))
         } else if (isTRUE(all.equal(b, exp_tenure, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the tenure coefficient (", round(exp_tenure, 4), "). Filter tidy() to the wellbeing row."))
         } else if (isTRUE(all.equal(b, exp_intercept, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -142,7 +142,7 @@ export const module15: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("b_wellbeing is ", round(b, 4), " but the wellbeing coefficient is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("b = ", round(exp_b, 4), " log odds per point of wellbeing. Negative, so higher wellbeing goes with a lower chance of leaving - which is the direction the leaving rates by third showed in the last lesson. Log odds are not readable as they stand; exp() fixes that in lesson 15-3."))
+          list(pass = TRUE, message = paste0("b = ", round(exp_b, 4), " log odds per point of wellbeing. Negative, so higher wellbeing goes with a lower chance of leaving - which is the direction the leaving rates by third showed in the last lesson. Log odds are not readable as they stand; exp() fixes that in Lesson 15-3."))
         }
       }
     `,
@@ -217,7 +217,7 @@ export const module15: ExerciseDef[] = [
   {
     id: 'm15-3-a',
     prompt:
-      'Build the table that goes in the results section: odds ratios with their 95 % confidence intervals, for every term in the model including the intercept. Store it in or_table, with the odds ratio in a column called OR and the interval bounds beside it.',
+      'Build the table that goes in the results section: odds ratios with their 95% confidence intervals, for every term in the model including the intercept. Store it in or_table, with the odds ratio in a column called OR and the interval bounds beside it.',
     starterCode:
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nm_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)\n\n# Build the interval on the log-odds scale first, then exponentiate the whole thing.\nor_table <- ',
     solution:
@@ -281,9 +281,9 @@ export const module15: ExerciseDef[] = [
         # bounds by iterative root-finding, so two runs agree to several decimals
         # rather than to machine precision. Wald bounds are accepted as well.
         } else if (!matches(as.vector(exp(profile[, 1])), 1e-4) && !matches(as.vector(exp(wald[, 1])), 1e-4)) {
-          list(pass = FALSE, message = "No column of or_table holds the lower bounds of the 95 % intervals. confint(m) gives profile-likelihood bounds on the log-odds scale; exponentiate them together with the estimates.")
+          list(pass = FALSE, message = "No column of or_table holds the lower bounds of the 95% intervals. confint(m) gives profile-likelihood bounds on the log-odds scale; exponentiate them together with the estimates.")
         } else if (!matches(as.vector(exp(profile[, 2])), 1e-4) && !matches(as.vector(exp(wald[, 2])), 1e-4)) {
-          list(pass = FALSE, message = "No column of or_table holds the upper bounds of the 95 % intervals.")
+          list(pass = FALSE, message = "No column of or_table holds the upper bounds of the 95% intervals.")
         } else {
           kind <- if (matches(as.vector(exp(profile[, 1])), 1e-4)) "profile-likelihood" else "Wald"
           list(pass = TRUE, message = paste0("Your intervals are ", kind, " bounds, which is fine - say which kind you used. Wellbeing: OR = ", round(exp(b[["wellbeing"]]), 3), ", 95% CI [", round(exp(profile[["wellbeing", 1]]), 3), ", ", round(exp(profile[["wellbeing", 2]]), 3), "]. The test of no effect is whether that interval contains 1, not 0 - exponentiating moved the null value with everything else."))
@@ -342,7 +342,7 @@ export const module15: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(rr, exp(b), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("rr_workload is ", round(rr, 3), ", but the rate ratio is ", round(exp(b), 3), "."))
         } else {
-          list(pass = TRUE, message = paste0("RR = ", sprintf("%.2f", exp(b)), ": each extra point of workload goes with about ", round(100 * (exp(b) - 1)), " % more sick days, for employees with the same remote status."))
+          list(pass = TRUE, message = paste0("RR = ", sprintf("%.2f", exp(b)), ": each extra point of workload goes with about ", round(100 * (exp(b) - 1)), "% more sick days, for employees with the same remote status."))
         }
       }
     `,

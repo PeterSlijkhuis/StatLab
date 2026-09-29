@@ -3,7 +3,7 @@ Every interval and p-value in this course so far answered one kind of question:
 statistics turns that round. It asks: *given the data I have, how plausible is
 each possible true value?*
 
-Answering that needs one extra ingredient, which lesson 8-2 warned you about: a
+Answering that needs one extra ingredient, which Lesson 8-2 warned you about: a
 **prior**, a statement of how plausible each value was before you looked. The
 data then update the prior into a **posterior**. This whole module is about that
 one step, done three ways.
@@ -47,9 +47,9 @@ a binomial probability, and `dbinom()` computes it for the whole grid at once.
   id="p-likelihood-peak"
   question="Which candidate rate makes 3 leavers out of 20 most probable?"
   choices={[
-    { text: '0.03', response: 'At 3 % you would expect fewer than one leaver in twenty, so three is unusually many.' },
+    { text: '0.03', response: 'At 3% you would expect fewer than one leaver in twenty, so three is unusually many.' },
     { text: '0.15', correct: true, response: 'Yes: 3 out of 20 is 0.15, and the rate that matches the data best is the observed proportion itself.' },
-    { text: '0.50', response: 'At 50 % you would expect about ten leavers. Three is possible, but unlikely.' },
+    { text: '0.50', response: 'At 50% you would expect about ten leavers. Three is possible, but unlikely.' },
   ]}
 />
 
@@ -77,7 +77,7 @@ sum(p_grid * posterior)`} />
 
 The peak sits at 0.15, the observed proportion. The posterior mean is a little
 higher, about 0.18, because the curve has a long right tail: with only twenty
-people, rates of 30 % or more are still quite believable.
+people, rates of 30% or more are still quite believable.
 
 ## More data, narrower posterior
 
@@ -103,7 +103,7 @@ and it plays the part that a shrinking standard error played in Module 7.
 ## A prior that knows something
 
 A flat prior is a choice too, and rarely the most honest one. Suppose HR knows
-from sector reports that leaving rates are usually around 15 %. A **beta
+from sector reports that leaving rates are usually around 15%. A **beta
 distribution** can say that: `dbeta(p, 3, 17)` peaks near 0.11, has its mean at
 3 / (3 + 17) = 0.15, and carries about as much information as twenty employees
 would.
@@ -141,9 +141,9 @@ matters a lot, which is exactly when you should say which one you used and why.
   id="i-16-1"
   question="With a flat prior and all 480 employees, the posterior for the leaving rate peaks at 0.227 and has its mean at 0.228. Which sentence describes it correctly?"
   choices={[
-    { text: 'Given these data and a flat prior, leaving rates close to 23 % are the most plausible, and rates much below 19 % or above 27 % have become very unlikely.', correct: true, response: 'Correct: a Bayesian result is a statement about how plausible each value of the rate is, and it names the prior it rests on.' },
-    { text: 'If the true rate were 23 %, data like these would turn up 95 % of the time.', response: 'That is the frequentist reading of a sampling distribution. The posterior is about the rate, not about repeated samples.' },
-    { text: 'Exactly 22.8 % of employees will leave next year.', response: 'The posterior is a whole distribution of plausible rates, not one number, and it describes these employees, not a forecast for next year.' },
+    { text: 'Given these data and a flat prior, leaving rates close to 23% are the most plausible, and rates much below 19% or above 27% have become very unlikely.', correct: true, response: 'Correct: a Bayesian result is a statement about how plausible each value of the rate is, and it names the prior it rests on.' },
+    { text: 'If the true rate were 23%, data like these would turn up 95% of the time.', response: 'That is the frequentist reading of a sampling distribution. The posterior is about the rate, not about repeated samples.' },
+    { text: 'Exactly 22.8% of employees will leave next year.', response: 'The posterior is a whole distribution of plausible rates, not one number, and it describes these employees, not a forecast for next year.' },
     { text: 'The prior was flat, so this result involves no assumptions.', response: 'A flat prior is an assumption too: that every rate from 0 to 1 was equally plausible beforehand. It is a mild one, not no assumption at all.' },
   ]}
 />

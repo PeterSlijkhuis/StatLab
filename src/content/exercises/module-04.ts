@@ -74,7 +74,7 @@ export const module04: ExerciseDef[] = [
     solution:
       'library(dplyr)\nlibrary(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndepartment_plot <- ggplot(employees, aes(x = department, y = wellbeing)) +\n  geom_boxplot()',
     wrongAnswers: [
-      // The two axes the other way round: one box per wellbeing value is not the plot.
+      // The two axes the other way round: the boxes come out horizontal, with wellbeing on x.
       'library(dplyr)\nlibrary(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndepartment_plot <- ggplot(employees, aes(x = wellbeing, y = department)) +\n  geom_boxplot()',
       // Bars of summed wellbeing, which is a number with no meaning.
       'library(dplyr)\nlibrary(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\ndepartment_plot <- ggplot(employees, aes(x = department, y = wellbeing)) +\n  geom_col()',

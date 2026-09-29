@@ -248,7 +248,7 @@ export const module11: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(df_resid, exp_den, tolerance = 1e-9, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("df_resid is ", df_resid, " but should be ", exp_den, "."))
         } else {
-          list(pass = TRUE, message = paste0("F(", exp_num, ", ", exp_den, ") = ", round(exp_f, 2), ", R-squared = ", round(exp_r2, 3), ". Those are the three numbers the first sentence of an APA regression report needs; the coefficients go in the sentences after it."))
+          list(pass = TRUE, message = paste0("F(", exp_num, ", ", exp_den, ") = ", round(exp_f, 2), ", R-squared = ", sub("0.", ".", round(exp_r2, 3), fixed = TRUE), ". Those are the three numbers the first sentence of an APA regression report needs; the coefficients go in the sentences after it."))
         }
       }
     `,

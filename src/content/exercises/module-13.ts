@@ -12,8 +12,8 @@ export const module13: ExerciseDef[] = [
     wrongAnswers: [
       // A plus sign: no interaction term at all, so nothing to read.
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training + mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
-      // A colon without the main effects: the interaction term is there but means
-      // something different, because the main effects are not partialled out.
+      // A colon without the main effects: R codes the four cells differently and
+      // the trainingYes:mentoringYes coefficient comes out NA (aliased).
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t2 - engagement_t1)\nmodel_int <- lm(change ~ training:mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',
       // The change score computed backwards.
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nd2 <- d %>% mutate(change = engagement_t1 - engagement_t2)\nmodel_int <- lm(change ~ training * mentoring, data = d2)\nb_int <- model_int %>% tidy() %>% filter(term == "trainingYes:mentoringYes") %>% pull(estimate)',

@@ -261,7 +261,7 @@ function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
   const [overrides, setOverrides] = useState<Overrides>({});
   const match = useMemo(() => matchQuestion(text, overrides), [text, overrides]);
   const shown = match.suggestions.slice(0, 3);
-  const chips = CUES.filter((cue) => match.detected.includes(cue.id) || cue.id in overrides);
+  const chips = CUES.filter((cue) => match.detected.includes(cue.id) || match.cues.includes(cue.id) || cue.id in overrides);
   const addable = CUES.filter((cue) => !chips.includes(cue));
   const typed = text.trim().length > 0;
 
@@ -307,18 +307,22 @@ function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
         {shown.length > 0 ? `Best match: ${ANSWERS.get(shown[0].id)!.model}` : typed ? 'No clear match yet.' : ''}
       </p>
 
-      {chips.length > 0 && (
+      {(chips.length > 0 || typed) && (
         <div className="mc-cues">
-          <p className="mc-cues-title">What we read in your question. Tap one to switch it off if it is wrong.</p>
-          <ul>
-            {chips.map((cue) => (
-              <li key={cue.id}>
-                <button type="button" className="mc-chip" aria-pressed={match.cues.includes(cue.id)} onClick={() => toggle(cue.id)}>
-                  {cue.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <p className="mc-cues-title">
+            {chips.length > 0 ? 'What we read in your question. Tap one to switch it off if it is wrong.' : 'We found no cue in your question yet. You can add one yourself.'}
+          </p>
+          {chips.length > 0 && (
+            <ul>
+              {chips.map((cue) => (
+                <li key={cue.id}>
+                  <button type="button" className="mc-chip" aria-pressed={match.cues.includes(cue.id)} onClick={() => toggle(cue.id)}>
+                    {cue.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <details className="mc-add">
             <summary>Missed something? Add it</summary>
             <ul>

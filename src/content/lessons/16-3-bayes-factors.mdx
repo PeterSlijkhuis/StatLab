@@ -1,5 +1,5 @@
 A p-value can tell you that the data would be surprising if nothing were going
-on. It can never tell you that nothing *is* going on: lesson 8-2 showed that a
+on. It can never tell you that nothing *is* going on: Lesson 8-2 showed that a
 large p is not evidence for the null. A **Bayes factor** can. It compares two
 hypotheses directly and says which one the data support, and by how much.
 
@@ -18,11 +18,11 @@ written BF01 = 5. Unlike a p-value, it can point either way.
 
 ## A first Bayes factor, by hand
 
-HR's target is a leaving rate of 20 %. Take two hypotheses:
+HR's target is a leaving rate of 20%. Take two hypotheses:
 
 - **H0**: the rate is exactly 0.20.
 - **H1**: the rate could be anything, with every value from 0 to 1 equally
-  plausible beforehand (the flat prior of lesson 16-1).
+  plausible beforehand (the flat prior of Lesson 16-1).
 
 <CodeBlock id="c-bf-by-hand" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 left_all <- sum(d$left_company)
@@ -41,10 +41,10 @@ c(BF10 = bf10, BF01 = 1 / bf10)
 # The frequentist test of the same null, for comparison.
 binom.test(left_all, n_all, p = 0.20)$p.value`} />
 
-The p-value, .14, says only that 20 % has not been ruled out. The Bayes factor
-says more: the data are about 7 times as probable under "exactly 20 %" as under
+The p-value, .14, says only that 20% has not been ruled out. The Bayes factor
+says more: the data are about 7 times as probable under "exactly 20%" as under
 "anything from 0 to 1". Why? Because H1 wasted most of its prediction on rates
-like 60 % or 90 %, which these data make absurd. That shows the catch with Bayes
+like 60% or 90%, which these data make absurd. That shows the catch with Bayes
 factors: **they depend on what the alternative hypothesis predicts**, so a vague
 alternative is easy to beat. Always say what H1 was.
 
@@ -141,7 +141,7 @@ JASP does the same through menus.
   id="q-bf-meaning"
   question="A study reports BF10 = 0.25 for a new intervention. What does that mean?"
   choices={[
-    { text: 'The intervention has a 25 % probability of working', response: 'A Bayes factor compares how well two hypotheses predicted the data. Turning it into a probability needs prior odds as well.' },
+    { text: 'The intervention has a 25% probability of working', response: 'A Bayes factor compares how well two hypotheses predicted the data. Turning it into a probability needs prior odds as well.' },
     { text: 'The data were 4 times as probable if the intervention has no effect as if it has one', correct: true, response: 'Right: BF10 = 0.25 is BF01 = 4, moderate evidence for the null.' },
     { text: 'The result is not significant, so nothing can be concluded', response: 'That is the p-value habit. A Bayes factor below 1 is evidence in its own right, here for no effect.' },
     { text: 'The effect size is 0.25', response: 'A Bayes factor is a ratio of evidence, not an effect size. Report the estimate separately.' },
@@ -154,7 +154,7 @@ JASP does the same through menus.
   choices={[
     { text: 'Wellbeing did not differ between employees with and without mentoring, b = -0.25, SE = 0.96, p = .79. A Bayes factor from the BIC approximation showed strong evidence for no difference, BF01 = 21.1.', correct: true, response: 'Correct: the estimate and test, then the Bayes factor with its method, read as evidence for the null.' },
     { text: 'Mentoring had no effect on wellbeing, p = .79, which proves the null hypothesis.', response: 'A p-value cannot support the null, and nothing proves it. The Bayes factor is what quantifies the support.' },
-    { text: 'There is a 21.1 % chance that mentoring works, BF01 = 21.1.', response: 'A Bayes factor is a ratio, not a percentage, and BF01 favours the null.' },
+    { text: 'There is a 21.1% chance that mentoring works, BF01 = 21.1.', response: 'A Bayes factor is a ratio, not a percentage, and BF01 favours the null.' },
     { text: 'The evidence for a mentoring effect was strong, BF01 = 21.1.', response: 'The subscript matters: BF01 is the evidence for H0 over H1. It is strong evidence for NO effect.' },
   ]}
 />

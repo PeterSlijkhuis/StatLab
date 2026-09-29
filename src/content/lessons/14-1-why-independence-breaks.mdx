@@ -110,6 +110,6 @@ cloud of heights, which is exactly what the next lesson fixes.
     { text: 'The analysis is fine; 960 observations is a good sample.', response: 'There are 480 independent units, not 960. Counting each person twice overstates the information available.' },
     { text: 'The estimate of the change is unbiased, but the model treats each employee as two unrelated people, so the standard error and the degrees of freedom are wrong. A mixed model with a random intercept per employee, or a paired t-test, is the correct analysis.', correct: true, response: 'Correct on both counts: the point estimate survives, the inference does not.' },
     { text: 'They should report it as t(479) instead, since there are 480 employees.', response: 'Changing the degrees of freedom by hand does not fix the standard error, which was computed from the wrong residual variance.' },
-    { text: 'The p value is too small and should be doubled to be safe.', response: 'Inference is not repaired by inventing a correction. Fit the model that matches the design.' },
+    { text: 'The p-value is too small and should be doubled to be safe.', response: 'Inference is not repaired by inventing a correction. Fit the model that matches the design.' },
   ]}
 />

@@ -3,7 +3,7 @@ questionnaire is meant to measure several things at once, and the question is
 which items belong together. **Exploratory factor analysis** finds the few
 underlying factors that explain how a set of items correlate.
 
-As in lesson 3-4, the course data has scale scores rather than items, so this
+As in Lesson 3-4, the course data has scale scores rather than items, so this
 lesson builds six items of its own, answered from 1 to 7 by 300 people.
 
 <CodeBlock id="c-items" code={`set.seed(172)
@@ -20,8 +20,8 @@ round(cor(items), 2)`} />
 
 The first three items ask about deadlines, overtime and having too much to do.
 The last three ask whether a manager helps, listens and gives feedback. In the
-correlation table they form two blocks: strong correlations within each set of
-three, weak ones between them.
+correlation table they form two blocks: moderate correlations (about .4 to .5)
+within each set of three, weak ones between them.
 
 ## How many factors?
 

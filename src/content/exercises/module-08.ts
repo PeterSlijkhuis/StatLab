@@ -89,7 +89,7 @@ export const module08: ExerciseDef[] = [
       }
     `,
     hints: [
-      'Under the null, which group a score belongs to is arbitrary - so shuffling the labels should change nothing systematic.',
+      'Under the null, which group a score belongs to is arbitrary - so shuffling the scores across the groups should change nothing systematic.',
       'Inside replicate(), sample(study$exam_score) reorders all 60 scores. The sleep_group column stays where it is.',
       'Then take the same difference as before, but from shuffled rather than from study$exam_score.',
     ],
@@ -142,7 +142,7 @@ export const module08: ExerciseDef[] = [
           # boundary is not something to grade on. One shuffle in 2000 is 5e-4,
           # so 1e-3 absorbs a boundary tie and nothing larger.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
-            list(pass = TRUE, message = paste0("Correct: p = ", sub("^0", "", formatC(expected, format = "f", digits = 3)), ". Out of 2000 shuffles in which the sleep labels meant nothing at all, ", sum(abs(values) >= abs(observed)), " produced a difference at least as large as the one your study found."))
+            list(pass = TRUE, message = paste0("Correct: p = ", sub("^0", "", formatC(expected, format = "f", digits = 3)), ". Out of 2000 shuffles in which the sleep labels meant nothing at all, ", sum(abs(values) >= abs(observed)), " produced a difference at least as far from zero as the one your study found."))
           } else if (isTRUE(all.equal(value, one_tail, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = FALSE, message = "That is the upper tail only, so it is about half of the answer. A two-tailed p-value counts shuffles that are extreme in EITHER direction: compare abs(null_diffs) with abs(observed).")
           } else if (isTRUE(all.equal(value, 1 - expected, tolerance = 1e-3, check.attributes = FALSE))) {

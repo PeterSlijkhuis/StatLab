@@ -156,7 +156,7 @@ export const module09: ExerciseDef[] = [
           } else if (abs(stat - yates) > 1e-6 && abs(stat - plain) > 1e-6) {
             list(pass = FALSE, message = "That is a chi-square test, but not of remote by left_company. Give chisq.test() the two-way table of both variables; a table of remote alone only asks whether remote and office workers are equally common.")
           } else {
-            list(pass = TRUE, message = paste0("Correct: chi-square(1, N = ", nrow(d), ") = ", round(stat, 2), ", p = ", format(round(got$p.value, 3), nsmall = 3), ". A 7-point gap in leaving rates, and this sample cannot tell it from chance at the .05 level."))
+            list(pass = TRUE, message = paste0("Correct: chi-square(1, N = ", nrow(d), ") = ", round(stat, 2), ", p = ", sub("0.", ".", format(round(got$p.value, 3), nsmall = 3), fixed = TRUE), ". A 7-point gap in leaving rates, and this sample cannot tell it from chance at the .05 level."))
           }
         }
       }
@@ -203,7 +203,7 @@ export const module09: ExerciseDef[] = [
         } else if (abs(got - target) > 1e-4) {
           list(pass = FALSE, message = paste0("v is ", round(got, 3), ", but Cramer's V here is ", round(target, 3), ". Divide chi-square by N, the ", nrow(d), " employees, times the smaller dimension minus 1."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: V = ", format(round(target, 2), nsmall = 2), ". Significant, and small: department explains little of who leaves, which is exactly what the p-value alone would never have told you."))
+          list(pass = TRUE, message = paste0("Correct: V = ", sub("0.", ".", format(round(target, 2), nsmall = 2), fixed = TRUE), ". Significant, and small: department explains little of who leaves, which is exactly what the p-value alone would never have told you."))
         }
       }
     `,

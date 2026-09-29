@@ -49,7 +49,7 @@ export const module10: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(r_w, exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("r_workload is ", round(r_w, 3), ", but cor(d$workload, d$wellbeing) is ", round(exp_w, 3), ". Check that you correlated workload with wellbeing, and not with autonomy."))
         } else {
-          list(pass = TRUE, message = paste0("Autonomy r = ", round(exp_a, 3), "; workload r = ", round(exp_w, 3), ". Same outcome, opposite directions. A correlation is only ever a description of these 480 employees - it is not evidence that giving someone autonomy would raise their wellbeing."))
+          list(pass = TRUE, message = paste0("Autonomy r = ", sub("0.", ".", round(exp_a, 3), fixed = TRUE), "; workload r = ", sub("0.", ".", round(exp_w, 3), fixed = TRUE), ". Same outcome, opposite directions. A correlation is only ever a description of these 480 employees - it is not evidence that giving someone autonomy would raise their wellbeing."))
         }
       }
     `,
@@ -177,7 +177,7 @@ export const module10: ExerciseDef[] = [
   {
     id: 'm10-3-a',
     prompt:
-      'Read the model output into three numbers: the t statistic for the autonomy slope in t_slope, its p value in p_slope, and the proportion of variance the model explains in r2.',
+      'Read the model output into three numbers: the t statistic for the autonomy slope in t_slope, its p-value in p_slope, and the proportion of variance the model explains in r2.',
     starterCode:
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel <- lm(wellbeing ~ autonomy, data = d)\n\nmodel %>% tidy()\nmodel %>% glance()\n\nt_slope <- \np_slope <- \nr2 <- ',
     solution:
@@ -225,11 +225,11 @@ export const module10: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(t_value, exp_t, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("t_slope is ", round(t_value, 3), " but should be ", round(exp_t, 3), "."))
         } else if (!isTRUE(all.equal(p_value, exp_p, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "p_slope is not the p value of the autonomy row. In tidy() that column is called p.value.")
+          list(pass = FALSE, message = "p_slope is not the p-value of the autonomy row. In tidy() that column is called p.value.")
         } else if (!isTRUE(all.equal(r2, exp_r2, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("r2 is ", round(r2, 4), " but glance()'s r.squared is ", round(exp_r2, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("t(", reference$df[2], ") = ", round(exp_t, 2), ", p ", if (exp_p < 0.001) "< .001" else paste0("= ", format(round(exp_p, 3), nsmall = 3)), ", R-squared = ", round(exp_r2, 3), ". In a simple regression that t and the model F test say exactly the same thing, because there is only one predictor to test."))
+          list(pass = TRUE, message = paste0("t(", reference$df[2], ") = ", round(exp_t, 2), ", p ", if (exp_p < 0.001) "< .001" else paste0("= ", format(round(exp_p, 3), nsmall = 3)), ", R-squared = ", sub("0.", ".", round(exp_r2, 3), fixed = TRUE), ". In a simple regression that t and the model F test say exactly the same thing, because there is only one predictor to test."))
         }
       }
     `,
@@ -354,7 +354,7 @@ export const module10: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(tau, exp_tau, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("tau is ", round(tau, 3), ", but Kendall's tau is ", round(exp_tau, 3), "."))
         } else {
-          list(pass = TRUE, message = paste0("rho = ", round(exp_rho, 3), " and tau = ", round(exp_tau, 3), ", against Pearson's r = ", round(pearson, 3), ". All three agree on the direction; tau is smaller because it counts pairs rather than correlating ranks."))
+          list(pass = TRUE, message = paste0("rho = ", sub("0.", ".", round(exp_rho, 3), fixed = TRUE), " and tau = ", sub("0.", ".", round(exp_tau, 3), fixed = TRUE), ", against Pearson's r = ", sub("0.", ".", round(pearson, 3), fixed = TRUE), ". All three agree on the direction; tau is smaller because it counts pairs rather than correlating ranks."))
         }
       }
     `,

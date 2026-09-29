@@ -235,7 +235,7 @@ export const PLANNED_MODULES: ModuleMeta[] = [
       },
       {
         id: '07-2',
-        title: 'What 95 % actually means',
+        title: 'What 95% actually means',
         file: '07-2-what-95-percent-means',
         exercises: ['m7-2-a'],
       },
