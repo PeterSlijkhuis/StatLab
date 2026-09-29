@@ -76,6 +76,11 @@ export default function Credits({ variant = 'full' }: Props) {
       )}
       {variant === 'full' && (
         <p className="credits-book">
+          StatLab is licensed under{' '}
+          <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
+            CC BY-NC-SA 4.0
+          </a>
+          . The University of Twente and BMS Lab logos are theirs and are not covered by that licence.
           RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with or endorsed by Posit.
         </p>
       )}

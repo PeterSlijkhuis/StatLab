@@ -42,6 +42,8 @@ describe('Credits', () => {
     const licence = screen.getByRole('link', { name: 'Creative Commons BY-NC-SA licence' });
     expect(licence.getAttribute('href')).toBe('https://creativecommons.org/licenses/by-nc-sa/4.0/');
     expect(screen.getByText(/not affiliated with or endorsed by Posit/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'CC BY-NC-SA 4.0' }).getAttribute('href'))
+      .toBe('https://creativecommons.org/licenses/by-nc-sa/4.0/');
   });
 
   // The home page is not the only way in: a student following a shared lesson

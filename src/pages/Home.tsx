@@ -115,6 +115,7 @@ export default function Home() {
         {hasStorageFailed()
           ? <p role="alert">This browser is not saving your progress, so it will be lost when you close the tab. Export it now to keep it.</p>
           : <p>Progress is saved only in this browser. Export it to move to another computer, or to hand in as evidence of completion.</p>}
+        <p>StatLab has no accounts, cookies or tracking. To run R, your browser downloads webR and R packages from r-wasm.org, which, like any website, sees your IP address when it does.</p>
         <div className="home-save-actions">
           <button type="button" className="button-secondary" onClick={() => download(exportProgress())}>Export progress</button>
           <label className="home-import button-secondary">
