@@ -9,7 +9,7 @@ import { expect, test, type Page } from '@playwright/test';
 test.use({ reducedMotion: 'reduce' });
 
 const LESSONS = [...readFileSync('src/content/manifest.ts', 'utf8').matchAll(/id: '(\d\d-\d)'/g)].map((m) => m[1]);
-const PAGES = ['./', './workspace', './which-model', './avatar', ...LESSONS.map((id) => `./lesson/${id}`)];
+const PAGES = ['./', './workspace', './which-model', './sample-size', './avatar', ...LESSONS.map((id) => `./lesson/${id}`)];
 
 async function violations(page: Page) {
   const results = await new AxeBuilder({ page })

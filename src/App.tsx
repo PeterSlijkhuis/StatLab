@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Lesson from './pages/Lesson';
 import RWorkspace from './pages/RWorkspace';
 import ModelChooser from './pages/ModelChooser';
+import SampleSize from './pages/SampleSize';
 import AvatarStudio from './pages/AvatarStudio';
 import { fetchDataset, prepareSession } from './r/session';
 import { getWebR } from './r/webrClient';
@@ -109,12 +110,14 @@ export default function App() {
           <Route path="/lesson/:lessonId" element={<Lesson />} />
           <Route path="/workspace" element={<RWorkspace />} />
           <Route path="/which-model" element={<ModelChooser />} />
+          <Route path="/sample-size" element={<SampleSize />} />
           <Route path="/avatar" element={<AvatarStudio />} />
           {/* The page was called "which test" until the curriculum settled on
               teaching one model under many names. Kept so links already shared
               with students, and any bookmark, still land somewhere. */}
           <Route path="/which-test" element={<Navigate to="/which-model" replace />} />
           <Route path="/playground" element={<Navigate to="/workspace" replace />} />
+          <Route path="/power" element={<Navigate to="/sample-size" replace />} />
           <Route path="*" element={<Home />} />
         </Routes>
         </div>
