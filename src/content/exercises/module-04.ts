@@ -194,7 +194,7 @@ export const module04: ExerciseDef[] = [
     starterCode:
       'library(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\napa_plot <- ggplot(employees, aes(x = autonomy, y = wellbeing)) +\n  ',
     solution:
-      'library(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\napa_plot <- ggplot(employees, aes(x = autonomy, y = wellbeing)) +\n  geom_point(alpha = 0.5) +\n  geom_smooth(method = lm) +\n  labs(\n    x = "Autonomy (self-reported, 1 to 10)",\n    y = "Wellbeing (0 to 100)"\n  ) +\n  theme_classic()',
+      'library(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\napa_plot <- ggplot(employees, aes(x = autonomy, y = wellbeing)) +\n  geom_point(alpha = 0.4) +\n  geom_smooth(method = lm) +\n  labs(\n    x = "Autonomy (self-reported, 1 to 10)",\n    y = "Wellbeing (0 to 100)"\n  ) +\n  theme_classic()',
     wrongAnswers: [
       // No labs(): the axes still carry the raw column names.
       'library(ggplot2)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\napa_plot <- ggplot(employees, aes(x = autonomy, y = wellbeing)) +\n  geom_point(alpha = 0.5) +\n  geom_smooth(method = lm) +\n  theme_classic()',
@@ -259,7 +259,7 @@ export const module04: ExerciseDef[] = [
       }
     `,
     hints: [
-      'Two layers: geom_point() for the employees and geom_smooth(method = lm) for the line.',
+      'Two layers: geom_point(alpha = 0.4) for the employees, so overlapping points stay visible, and geom_smooth(method = lm) for the line.',
       'labs(x = "...", y = "...") replaces the column names with something a reader understands.',
       'theme_classic() removes the grey panel and the grid, leaving the two axis lines.',
     ],

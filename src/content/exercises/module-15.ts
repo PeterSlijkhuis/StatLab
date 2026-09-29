@@ -286,7 +286,8 @@ export const module15: ExerciseDef[] = [
           list(pass = FALSE, message = "No column of or_table holds the upper bounds of the 95% intervals.")
         } else {
           kind <- if (matches(as.vector(exp(profile[, 1])), 1e-4)) "profile-likelihood" else "Wald"
-          list(pass = TRUE, message = paste0("Your intervals are ", kind, " bounds, which is fine - say which kind you used. Wellbeing: OR = ", round(exp(b[["wellbeing"]]), 3), ", 95% CI [", round(exp(profile[["wellbeing", 1]]), 3), ", ", round(exp(profile[["wellbeing", 2]]), 3), "]. The test of no effect is whether that interval contains 1, not 0 - exponentiating moved the null value with everything else."))
+          bounds <- if (kind == "Wald") wald else profile
+          list(pass = TRUE, message = paste0("Your intervals are ", kind, " bounds, which is fine - say which kind you used. Wellbeing: OR = ", round(exp(b[["wellbeing"]]), 3), ", 95% CI [", round(exp(bounds[["wellbeing", 1]]), 3), ", ", round(exp(bounds[["wellbeing", 2]]), 3), "]. The test of no effect is whether that interval contains 1, not 0 - exponentiating moved the null value with everything else."))
         }
       }
     `,

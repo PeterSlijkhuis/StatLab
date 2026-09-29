@@ -113,7 +113,7 @@ export const module11: ExerciseDef[] = [
     hints: [
       'Fit two models and keep both: one with autonomy alone, one with all three predictors.',
       'Pull the autonomy row out of each with filter(term == "autonomy") %>% pull(estimate).',
-      'Do not standardise anything. Both numbers should be in the original units.',
+      'The second model is lm(wellbeing ~ autonomy + workload + tenure_years, data = d). Do not standardise anything: both numbers stay in the original units.',
     ],
   },
   {
@@ -255,7 +255,7 @@ export const module11: ExerciseDef[] = [
     hints: [
       'glance() returns one row for the whole model, with r.squared, statistic, p.value and df.residual among its columns.',
       'The model F is the statistic column of glance() - not a t from tidy().',
-      'df.residual is n minus the number of estimated coefficients, the intercept included.',
+      'Pull each one from glance(): pull(r.squared), pull(statistic) and pull(df.residual). df.residual is n minus the number of estimated coefficients, the intercept included.',
     ],
   },
   {

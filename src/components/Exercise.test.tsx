@@ -99,16 +99,16 @@ describe('Exercise', () => {
     });
     const { container } = renderExercise();
     await userEvent.click(screen.getByRole('button', { name: /check/i }));
-    await waitFor(() => expect(container.querySelector('.avatar-tip')).not.toBeNull());
-    expect(container.querySelector('.avatar-tip')!.textContent).toMatch(/anything called "mn"/);
+    await waitFor(() => expect(container.querySelector('.avatar-tip-error')).not.toBeNull());
+    expect(container.querySelector('.avatar-tip-error')!.textContent).toMatch(/anything called "mn"/);
   });
 
   test('the avatar gives the reason for a wrong answer and points to a hint', async () => {
     runExercise.mockResolvedValue({ status: 'fail', message: 'm is 0 but should be 5.', run: emptyRun });
     const { container } = renderExercise();
     await userEvent.click(screen.getByRole('button', { name: /check/i }));
-    await waitFor(() => expect(container.querySelector('.avatar-tip')).not.toBeNull());
-    expect(container.querySelector('.avatar-tip')!.textContent).toMatch(/should be 5.*Show a hint/);
+    await waitFor(() => expect(container.querySelector('.avatar-tip-wrong')).not.toBeNull());
+    expect(container.querySelector('.avatar-tip-wrong')!.textContent).toMatch(/should be 5.*Show a hint/);
   });
 
   test('a broken check blames the exercise, never the student', async () => {
@@ -117,6 +117,20 @@ describe('Exercise', () => {
     await userEvent.click(screen.getByRole('button', { name: /check/i }));
     await waitFor(() => expect(screen.getByText(/problem with this exercise/i)).toBeDefined());
     expect(getProgress().lessons['06-1']?.exercises['m6-e1']).toBeUndefined();
+  });
+
+  test('the avatar sets the task, gives hints, praises a pass and shows the solution', async () => {
+    runExercise.mockResolvedValue({ status: 'pass', message: 'Correct.', run: emptyRun });
+    const { container } = renderExercise();
+    const task = container.querySelector('.avatar-tip-coach');
+    expect(task?.textContent).toMatch(/Your task.*Assign the mean of x to m/);
+    await userEvent.click(screen.getByRole('button', { name: /hint/i }));
+    expect(screen.getByText('Hint 1 of 2')).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    await waitFor(() => expect(container.querySelector('.avatar-tip-right')?.textContent).toMatch(/Correct\./));
+    await userEvent.click(screen.getByRole('button', { name: /solution/i }));
+    const solution = container.querySelector('.exercise-solution');
+    expect(solution?.closest('.avatar-tip')?.textContent).toMatch(/one way to write it/);
   });
 
   test('hints reveal one at a time', async () => {

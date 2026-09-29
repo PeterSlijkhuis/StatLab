@@ -66,19 +66,25 @@ export default function ChoiceBlock({ id, kind, question, choices }: Props) {
           </li>
         ))}
       </ul>
-      {/* A wrong answer is explained by the student's own avatar. Predictions
-          are never wrong, so they keep the plain response. */}
+      {/* The student's own avatar answers every choice. Predictions are never
+          wrong, so the avatar just says what actually happens. */}
+      {selection && kind === 'predict' && (
+        <AvatarTip tone="coach" title="Let's see">
+          <p>{selection.response}</p>
+        </AvatarTip>
+      )}
       {selection && kind !== 'predict' && !selection.correct && (
         <AvatarTip tone="wrong">
           <p><strong>Not quite. </strong>{selection.response}</p>
         </AvatarTip>
       )}
-      {selection && (kind === 'predict' || selection.correct) && (
-        <div className={`choice-response ${selection.correct ? 'right' : 'wrong'}`}>
-          {kind !== 'predict' && <strong>{selection.correct ? 'Correct. ' : 'Not quite. '}</strong>}
-          {selection.response}
-          {kind !== 'predict' && selection.correct && <span className="points-pop" aria-hidden="true">+{POINTS.quiz}</span>}
-        </div>
+      {selection && kind !== 'predict' && selection.correct && (
+        <AvatarTip tone="right" className="choice-right">
+          <p>
+            <strong>Correct. </strong>{selection.response}
+            <span className="points-pop" aria-hidden="true">+{POINTS.quiz}</span>
+          </p>
+        </AvatarTip>
       )}
     </section>
   );

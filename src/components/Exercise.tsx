@@ -78,7 +78,12 @@ export default function Exercise({ id }: { id: string }) {
   return (
     <section className={`exercise${outcome?.status === 'pass' ? ' exercise-passed' : ''}`}>
       <p className="exercise-label"><span aria-hidden="true">🎯</span> Exercise</p>
-      <p className="exercise-prompt">{definition.prompt}</p>
+      {/* The student's avatar leads the exercise: it sets the task, gives the
+          hints, reacts to each check and walks through the solution. */}
+      <AvatarTip tone="coach" title="Your task" className="exercise-task">
+        <p className="exercise-prompt">{definition.prompt}</p>
+        {!attempted && <p className="exercise-advice">Write your code in the editor, then press "Check my answer" and I'll tell you what I see.</p>}
+      </AvatarTip>
 
       <REditor value={source} onChange={edit} />
 
@@ -110,11 +115,13 @@ export default function Exercise({ id }: { id: string }) {
       <FileUpload compact />
 
       {hintsShown > 0 && (
-        <ul className="exercise-hints">
-          {definition.hints.slice(0, hintsShown).map((hint) => (
-            <li key={hint}>{hint}</li>
-          ))}
-        </ul>
+        <AvatarTip tone="coach" title={`Hint ${hintsShown} of ${definition.hints.length}`}>
+          <ul className="exercise-hints">
+            {definition.hints.slice(0, hintsShown).map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        </AvatarTip>
       )}
 
       {crashed && (
@@ -123,14 +130,16 @@ export default function Exercise({ id }: { id: string }) {
         </div>
       )}
 
-      {(outcome?.status === 'pass' || outcome?.status === 'broken-check') && (
-        <div className={`exercise-outcome outcome-${outcome.status}`}>
-          {outcome.status === 'pass' && <p>{outcome.message}</p>}
-          {outcome.status === 'broken-check' && (
-            <p>
-              There is a problem with this exercise itself, not with your answer. Please report it.
-            </p>
-          )}
+      {outcome?.status === 'pass' && (
+        <AvatarTip tone="right" title="Well done" className="exercise-outcome-pass">
+          <p>{outcome.message}</p>
+        </AvatarTip>
+      )}
+      {outcome?.status === 'broken-check' && (
+        <div className="exercise-outcome outcome-broken-check">
+          <p>
+            There is a problem with this exercise itself, not with your answer. Please report it.
+          </p>
         </div>
       )}
 
@@ -154,9 +163,15 @@ export default function Exercise({ id }: { id: string }) {
       )}
 
       {showSolution && (
-        <pre className="exercise-solution">
-          <code>{definition.solution}</code>
-        </pre>
+        <AvatarTip tone="coach" title="Solution">
+          <p>
+            Here is one way to write it. Compare it with yours line by line: a different route to the
+            same result is also correct.
+          </p>
+          <pre className="exercise-solution">
+            <code>{definition.solution}</code>
+          </pre>
+        </AvatarTip>
       )}
     </section>
   );

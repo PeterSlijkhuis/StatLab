@@ -13,3 +13,10 @@
 .avatar-tip-bubble p { margin: 0; }
 .avatar-tip-bubble p + p { margin-top: 0.4rem; }
 @media (prefers-reduced-motion: reduce) { .avatar-tip-bubble { animation: none; } }
+.avatar-tip-coach .avatar-tip-bubble { border-color: #99f6e4; background: #f0fdfa; color: var(--ink); }
+.avatar-tip-right .avatar-tip-bubble { border-color: #86efac; background: #f0fdf4; color: #14532d; }
+.avatar-tip-title { font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
+.avatar-tip-bubble ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
+.avatar-tip-bubble li + li { margin-top: 0.3rem; }
+.avatar-tip-bubble pre { margin: 0.5rem 0 0; }
+.avatar-tip-bubble .avatar-tip-title + * { margin-top: 0.15rem; }

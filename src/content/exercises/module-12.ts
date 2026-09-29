@@ -314,7 +314,7 @@ export const module12: ExerciseDef[] = [
       }
     `,
     hints: [
-      'emmeans(model, pairwise ~ department, adjust = "tukey") returns a list with an emmeans element and a contrasts element.',
+      'emmeans(model_dept, pairwise ~ department, adjust = "tukey") returns a list with an emmeans element and a contrasts element.',
       'The comparisons are in the contrasts element; as.data.frame() makes it a plain table.',
       'sum(pairs_tbl$p.value < 0.05) counts the rows below .05, because sum() over TRUE and FALSE counts the TRUEs.',
     ],
