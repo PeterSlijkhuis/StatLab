@@ -80,6 +80,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <a href="#main" className="skip-link">Skip to content</a>
       <header className="topbar">
         <button
           ref={menuButton}
@@ -100,7 +101,7 @@ export default function App() {
       </header>
       <Sidebar open={navOpen} />
       {navOpen && <div className="nav-backdrop" aria-hidden="true" onClick={() => setNavOpen(false)} />}
-      <main className="app-main">
+      <main id="main" tabIndex={-1} className="app-main">
         <RStatus />
         <div ref={page} className={`page page-${pathname.split('/')[1] || 'home'}`}>
         <Routes>
