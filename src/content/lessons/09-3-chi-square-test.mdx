@@ -115,7 +115,7 @@ the models that handle repeated answers.
   question="Two studies find chi-square(1) = 12.0. One had 100 people, the other 10,000. What do you know about the strength of the association?"
   choices={[
     { text: 'It is the same in both, because the statistic is the same', response: 'The statistic grows with N, so the same value means very different effects at different sample sizes.' },
-    { text: 'It is much weaker in the study of 10,000: V is .35 there against .03', response: 'The numbers are right but the other way round. V = sqrt(12 / N): .35 for 100 people, .03 for 10,000.' },
+    { text: 'It is much stronger in the study of 10,000: V = .35 against .03', response: 'The other way round. V = sqrt(12 / N): .35 for 100 people, .03 for 10,000. The same statistic from more people means a weaker association.' },
     { text: 'It is much stronger in the study of 100: V = .35 against .03', correct: true, response: 'Correct. The large study found a real but negligible association; the small one found a substantial one.' },
   ]}
 />

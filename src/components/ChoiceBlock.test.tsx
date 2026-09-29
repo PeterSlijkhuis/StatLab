@@ -65,9 +65,16 @@ describe('ChoiceBlock', () => {
     expect(tip?.textContent).toMatch(/Not quite\..*more data means/);
   });
 
-  test('a right answer and a prediction keep the plain response, without the avatar', async () => {
+  test('the avatar also confirms a right answer and reveals a prediction', async () => {
     const { container } = wrap(<ChoiceBlock id="q4" kind="quiz" question="Q" choices={choices} />);
     await userEvent.click(screen.getByRole('button', { name: /it gets narrower/i }));
-    expect(container.querySelector('.avatar-tip')).toBeNull();
+    expect(container.querySelector('.avatar-tip-right')?.textContent).toMatch(/^Correct\./);
+  });
+
+  test('the avatar reveals a prediction without calling it wrong', async () => {
+    const { container } = wrap(<Predict id="p4" question="Q" choices={choices} />);
+    await userEvent.click(screen.getByRole('button', { name: /it gets wider/i }));
+    expect(container.querySelector('.avatar-tip-coach')).not.toBeNull();
+    expect(container.textContent).not.toMatch(/Not quite/);
   });
 });

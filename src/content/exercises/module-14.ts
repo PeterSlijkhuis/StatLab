@@ -71,8 +71,8 @@ export const module14: ExerciseDef[] = [
       }
     `,
     hints: [
-      'pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement").',
       'names_to names the new column that holds the OLD column names; values_to names the column that holds the numbers.',
+      'pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement").',
       'factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")) fixes both the order and the labels.',
     ],
   },
@@ -135,8 +135,8 @@ export const module14: ExerciseDef[] = [
       }
     `,
     hints: [
-      'lmer(engagement ~ time + (1 | employee_id), data = long_d) - the fixed part before the plus, the random part in brackets.',
       'The vertical bar reads "grouped by": (1 | employee_id) is an intercept for each employee.',
+      'lmer(engagement ~ time + (1 | employee_id), data = long_d) - the fixed part before the plus, the random part in brackets.',
       'fixef(m_time) returns the fixed effects; the one you want is the second, named after the second level of time.',
     ],
   },
@@ -200,7 +200,7 @@ export const module14: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(icc, exp_icc, tolerance = 1e-4, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("icc is ", round(icc, 4), " but should be ", round(exp_icc, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("Between employees SD = ", round(exp_sd_e, 2), ", within-employee residual SD = ", round(exp_sd_r, 2), ", ICC = ", round(exp_icc, 3), ". So about ", round(100 * exp_icc), " % of the variation in engagement is stable differences between people. That is exactly the dependence an ordinary lm would have ignored, and the reason its standard error for time would be wrong."))
+          list(pass = TRUE, message = paste0("Between employees SD = ", round(exp_sd_e, 2), ", within-employee residual SD = ", round(exp_sd_r, 2), ", ICC = ", round(exp_icc, 3), ". So about ", round(100 * exp_icc), "% of the variation in engagement is stable differences between people. That is exactly the dependence an ordinary lm would have ignored, and the reason its standard error for time would be wrong."))
         }
       }
     `,
@@ -282,9 +282,9 @@ export const module14: ExerciseDef[] = [
   {
     id: 'm14-4-a',
     prompt:
-      'Did engagement rise more for employees who received training? Fit the mixed model with a time by training interaction and a random intercept per employee, and store the interaction coefficient, as a single number, in b_interaction.',
+      'Did engagement rise more for employees who received training? Fit the mixed model with a time by training interaction and a random intercept per employee, store it in m_mixed, and store the interaction coefficient, as a single number, in b_interaction.',
     starterCode:
-      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\n\nlong_d %>% group_by(training, time) %>% summarise(mean_engagement = mean(engagement), .groups = "drop")\n\nb_interaction <- ',
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\n\nlong_d %>% group_by(training, time) %>% summarise(mean_engagement = mean(engagement), .groups = "drop")\n\nm_mixed <- \nb_interaction <- ',
     solution:
       'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_mixed <- lmer(engagement ~ time * training + (1 | employee_id), data = long_d)\nb_interaction <- fixef(m_mixed)["timet2:trainingYes"]',
     wrongAnswers: [

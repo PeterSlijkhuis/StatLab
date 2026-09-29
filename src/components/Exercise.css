@@ -16,7 +16,7 @@
 .exercise-actions button.secondary { background: var(--surface); color: #0f766e; border-color: #99f6e4; }
 .exercise-actions button.secondary:hover:not(:disabled) { background: var(--teal-soft); }
 .exercise-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
-.exercise-hints { margin: 0.5rem 0; padding: 0.6rem 0.9rem 0.6rem 2rem; border-radius: var(--radius-sm); background: var(--warn-soft); color: #78350f; }
+.exercise-hints { margin: 0; }
 .exercise-hints li { animation: pop-in var(--medium) var(--ease) both; }
 .exercise-outcome { padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); margin: 0.7rem 0; animation: pop-in var(--medium) var(--ease) both; }
 .exercise-outcome p { margin: 0; }
@@ -28,3 +28,5 @@
 .exercise-solution { background: #0f172a; color: #e2e8f0; padding: 0.8rem; border-radius: var(--radius-sm); overflow-x: auto; font-family: var(--mono); font-size: 0.86rem; animation: pop-in var(--medium) var(--ease) both; }
 .exercise-missing { color: var(--danger); font-weight: 600; }
 @keyframes nudge { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.exercise-task .exercise-prompt { margin: 0; }
+.exercise-advice { font-size: 0.9rem; color: var(--muted); }
