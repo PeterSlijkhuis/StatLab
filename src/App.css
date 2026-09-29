@@ -12,7 +12,7 @@
   --surface-2: #f1f3f9;
   --ink: #0f172a;
   --ink-2: #334155;
-  --muted: #64748b;
+  --muted: #56627a;
   --line: #e4e7ef;
   --line-strong: #cbd2df;
 
@@ -59,7 +59,10 @@ h1 { font-size: clamp(1.75rem, 1.2rem + 2vw, 2.4rem); font-weight: 800; }
 h2 { font-size: 1.45rem; font-weight: 750; }
 a { color: var(--brand-2); text-underline-offset: 2px; }
 a:hover { color: var(--brand); }
-:focus-visible { outline: 3px solid rgba(79, 70, 229, 0.45); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+.skip-link { position: absolute; left: 0.75rem; top: -4rem; z-index: 100; padding: 0.6rem 1rem; border-radius: var(--radius-sm); background: var(--brand); color: #fff; font-weight: 650; text-decoration: none; }
+.skip-link:focus { top: 0.75rem; }
+.app-main:focus { outline: none; }
 ::selection { background: #c7d2fe; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -170,7 +173,7 @@ button { font: inherit; }
   background: var(--danger-soft); color: #991b1b; border: 1px solid #fecaca;
 }
 .r-status.error p { margin: 0 0 0.5rem; }
-.r-status-detail { font-family: var(--mono); font-size: 0.75rem; word-break: break-all; opacity: 0.85; }
+.r-status-detail { font-family: var(--mono); font-size: 0.75rem; word-break: break-all; }
 .r-status button {
   margin-left: auto; padding: 0.25rem 0.75rem; border-radius: 999px; border: 1px solid currentColor;
   background: transparent; color: inherit; cursor: pointer; font-size: 0.8rem; font-weight: 600;

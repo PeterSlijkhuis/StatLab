@@ -66,7 +66,7 @@ export default function LeastSquares() {
       <svg
         ref={svgRef}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        role="img"
+        role="group"
         className="leastsquares-svg"
         aria-label={
           `Twelve points and a line you control. The squared vertical distances from the points to ` +
