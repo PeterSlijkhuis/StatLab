@@ -24,7 +24,7 @@
 
 <p align="center">
   Built for psychology and business students at the <strong>University of Twente</strong>.<br>
-  <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson.</sub>
+  <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson. Theory and terminology follow Analysing Data Using Linear Models by S.M. van den Berg (5th ed., University of Twente, 2021).</sub>
 </p>
 
 ## See it in action
