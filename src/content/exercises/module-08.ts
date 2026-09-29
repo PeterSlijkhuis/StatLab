@@ -271,7 +271,7 @@ export const module08: ExerciseDef[] = [
         } else {
           # A band, not a value: power here is estimated by simulation, and every
           # legitimate route draws its own random numbers. The true value for
-          # n = 100 against mu = 70 is about .76, and 1000 replicates give a
+          # n = 100 against mu = 70 is about .75, and 1000 replicates give a
           # standard error of about .013, so .67 to .85 is about six standard errors
           # either way. The wrong answers land at about .24 (the complement),
           # .05 (alpha), .06 (the mean p-value) and .12 (n = 10).

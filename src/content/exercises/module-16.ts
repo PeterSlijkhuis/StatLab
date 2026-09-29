@@ -46,7 +46,7 @@ export const module16: ExerciseDef[] = [
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nprior <- dbeta(p_grid, 3, 17)\nposterior_eng <- prior * dbinom(left_eng, size = n_eng, prob = p_grid)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- p_grid[which.max(posterior_eng)]`,
     ],
     alternateSolutions: [
-      // The beta shortcut of lesson 16.2, evaluated on the grid.
+      // The beta shortcut of lesson 16-2, evaluated on the grid.
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 1001)\nposterior_eng <- dbeta(p_grid, 3 + left_eng, 17 + n_eng - left_eng)\nposterior_eng <- posterior_eng / sum(posterior_eng)\neng_mean <- (3 + left_eng) / (3 + 17 + n_eng)`,
       // Counted inline, with weighted.mean() for the posterior mean.
       `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\np_grid <- seq(0, 1, length.out = 1001)\nlikelihood <- dbinom(33, 128, p_grid)\nunnormalised <- dbeta(p_grid, 3, 17) * likelihood\nposterior_eng <- unnormalised / sum(unnormalised)\neng_mean <- weighted.mean(p_grid, posterior_eng)`,
@@ -120,7 +120,7 @@ export const module16: ExerciseDef[] = [
     alternateSolutions: [
       // Each bound on its own.
       `${ENGINEERING}\nlower <- qbeta(0.025, 1 + left_eng, 1 + n_eng - left_eng)\nupper <- qbeta(0.975, 1 + left_eng, 1 + n_eng - left_eng)\nci_engineering <- c(lower = lower, upper = upper)`,
-      // Read off a fine grid, as in lesson 16.1.
+      // Read off a fine grid, as in lesson 16-1.
       `${ENGINEERING}\np_grid <- seq(0, 1, length.out = 100001)\npost <- dbinom(left_eng, n_eng, p_grid)\npost <- post / sum(post)\ncdf <- cumsum(post)\nci_engineering <- c(p_grid[which(cdf >= 0.025)[1]], p_grid[which(cdf >= 0.975)[1]])`,
     ],
     check: `
@@ -329,7 +329,7 @@ export const module16: ExerciseDef[] = [
         } else if (!close(ci, exp_ci, 2e-3)) {
           list(pass = FALSE, message = paste0("cri_b is [", paste(round(ci, 3), collapse = ", "), "], but the 95 % credible interval is [", paste(round(exp_ci, 3), collapse = ", "), "]. Use qnorm() with the posterior mean and the posterior SD."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: ", round(exp_mean, 2), ", 95 % CrI [", paste(round(exp_ci, 2), collapse = ", "), "]. The prior pulled the estimate from ", round(b, 2), " towards zero even though the data are precise, because an effect this large is far out in a Normal(0, 1) prior. A sceptical prior has to be one you can defend."))
+          list(pass = TRUE, message = paste0("Correct: ", round(exp_mean, 2), ", 95% CrI [", paste(round(exp_ci, 2), collapse = ", "), "]. The prior pulled the estimate from ", round(b, 2), " towards zero even though the data are precise, because an effect this large is far out in a Normal(0, 1) prior. A sceptical prior has to be one you can defend."))
         }
       }
     `,

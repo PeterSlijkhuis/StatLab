@@ -33,7 +33,7 @@ predictor**.
   id="p-move"
   question="Compare the autonomy coefficient in model2 with the one in model1. What will have happened to it?"
   choices={[
-    { text: 'Exactly the same number: adding a predictor cannot change another one', response: 'It can, and it almost always does. It stays the same only when the two predictors are perfectly uncorrelated.' },
+    { text: 'Exactly the same number: adding a predictor cannot change another one', response: 'It can, and it almost always does. It stays exactly the same only when the two predictors are perfectly uncorrelated, or when the added predictor has no relationship at all with the outcome once the first is in the model.' },
     { text: 'A bit different, because autonomy and workload are not independent of each other', correct: true, response: 'Right. The size of the shift depends on how strongly the two predictors go together in this sample, and on how strongly the added predictor is related to wellbeing.' },
     { text: 'Reduced to zero, because workload is the real cause', response: 'A coefficient can shrink substantially, but here both predictors carry their own information.' },
   ]}
