@@ -94,7 +94,7 @@ export const module06: ExerciseDef[] = [
   {
     id: 'm6-2-a',
     prompt:
-      'Build a sampling distribution: take 1000 samples of size 10 from `population$stress`, and store the 1000 sample means in `means`.',
+      'Build a sampling distribution: take 1000 samples of size 10 from population$stress, and store the 1000 sample means in means.',
     starterCode:
       'library(dplyr)\npopulation <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)\nset.seed(42)\n\nmeans <- replicate(1000, )\n',
     setupCode: 'set.seed(42)',

@@ -61,8 +61,8 @@ the paired *t*-test and `lmer` in Module 14.
   id="p-r2"
   question="R-squared for this model is about .05. What does that leave?"
   choices={[
-    { text: 'The 95 % of employees the model gets wrong', response: 'R-squared is not a count of people. It is a share of variance, and the model is a bit wrong about nearly everybody.' },
-    { text: 'The 95 % of the variance in wellbeing that autonomy does not account for - other causes, and measurement noise', correct: true, response: 'Exactly. In Module 11 you will hand some of that 95 % to workload and tenure.' },
+    { text: 'The 95% of employees the model gets wrong', response: 'R-squared is not a count of people. It is a share of variance, and the model is a bit wrong about nearly everybody.' },
+    { text: 'The 95% of the variance in wellbeing that autonomy does not account for - other causes, and measurement noise', correct: true, response: 'Exactly. In Module 11 you will hand some of that 95% to workload and tenure.' },
     { text: 'The probability the model is wrong', response: 'R-squared is a description of fit in this sample, not a probability about the model.' },
   ]}
 />
@@ -106,11 +106,11 @@ coefficient: *F*(1, 478), *R*², then *b* with its *SE*, *t* and *p*. Never a
 
 <Quiz
   id="q-p-meaning"
-  question="The autonomy slope has p < .001. Which statement is a correct reading of that p value?"
+  question="The autonomy slope has p < .001. Which statement is a correct reading of that p-value?"
   choices={[
-    { text: 'There is less than a 0.1 % chance that autonomy is unrelated to wellbeing.', response: 'That is a probability about the hypothesis. A p value is a probability about data, computed while assuming the null is true.' },
-    { text: 'If the true slope were zero, a slope at least this far from zero would turn up in fewer than 1 in 1000 samples.', correct: true, response: 'Correct - a statement about data under an assumed null, which is all a p value ever is.' },
-    { text: 'The result will replicate more than 99.9 % of the time.', response: 'Replication probability depends on the true effect size and the new study\'s power, not on this p value.' },
+    { text: 'There is less than a 0.1% chance that autonomy is unrelated to wellbeing.', response: 'That is a probability about the hypothesis. A p-value is a probability about data, computed while assuming the null is true.' },
+    { text: 'If the true slope were zero, a slope at least this far from zero would turn up in fewer than 1 in 1000 samples.', correct: true, response: 'Correct - a statement about data under an assumed null, which is all a p-value ever is.' },
+    { text: 'The result will replicate more than 99.9% of the time.', response: 'Replication probability depends on the true effect size and the new study\'s power, not on this p-value.' },
     { text: 'The effect of autonomy is large.', response: 'p answers "how surprising under the null", not "how big". With n = 480, a small slope can reach p < .001.' },
   ]}
 />
@@ -119,7 +119,7 @@ coefficient: *F*(1, 478), *R*², then *b* with its *SE*, *t* and *p*. Never a
   id="i-10-3"
   question="Your model gives F(1, 478) = 24.37, R-squared = .049, and for autonomy b = 1.05, SE = 0.21, t(478) = 4.94, p < .001. Which write-up is correct APA 7?"
   choices={[
-    { text: 'Autonomy significantly predicted wellbeing (p < .001), explaining 4.9 % of employees.', response: 'Two problems: a p value on its own is not a report, and R-squared is a share of variance, not a share of employees.' },
+    { text: 'Autonomy significantly predicted wellbeing (p < .001), explaining 4.9% of employees.', response: 'Two problems: a p-value on its own is not a report, and R-squared is a share of variance, not a share of employees.' },
     { text: 'A simple linear regression showed that autonomy significantly predicted wellbeing, F(1, 478) = 24.37, p < .001, R-squared = .049. Each additional point of autonomy was associated with a 1.05-point increase in wellbeing, b = 1.05, SE = 0.21, t(478) = 4.94, p < .001.', correct: true, response: 'Correct. The model test, the fit and the coefficient are all there, and "was associated with" keeps the claim at the level the design supports.' },
     { text: 'Autonomy caused a 1.05-point increase in wellbeing, b = 1.05, SE = 0.21, t(478) = 4.94, p < .001.', response: 'The statistics are right and the verb is not. Nothing was manipulated or randomised, so the design cannot support "caused".' },
     { text: 'There was a strong relationship between autonomy and wellbeing, R-squared = .049, p < .001.', response: 'The coefficient is missing, and with R-squared = .049 the relationship is weak. A reader cannot recover the slope or its precision from this sentence.' },

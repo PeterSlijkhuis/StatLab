@@ -70,15 +70,15 @@ variation has nothing to do with your question, and that an ordinary
   question="The ICC comes out around .88. What does that imply for an ordinary lm on the same 960 rows?"
   choices={[
     { text: 'The lm would have given the same answer', response: 'The same estimate of the change, yes. Not the same standard error, and so not the same t or p.' },
-    { text: 'The lm would put that 88 % into its residual variance, inflating the standard error of time and losing most of the power', correct: true, response: 'Exactly. The mixed model removes that variance from the comparison, which is why its t is so much larger.' },
+    { text: 'The lm would put that 88% into its residual variance, inflating the standard error of time and losing most of the power', correct: true, response: 'Exactly. The mixed model removes that variance from the comparison, which is why its t is so much larger.' },
     { text: 'The ICC has no bearing on the lm', response: 'It is the exact quantity the lm cannot see and the mixed model removes.' },
-    { text: 'The lm would have been anti-conservative, giving too small a p value', response: 'For a within-person effect it goes the other way: the naive lm is too conservative. Ignoring clustering is anti-conservative for a BETWEEN-cluster predictor, and that difference is worth knowing.' },
+    { text: 'The lm would have been anti-conservative, giving too small a p-value', response: 'For a within-person effect it goes the other way: the naive lm is too conservative. Ignoring clustering is anti-conservative for a BETWEEN-cluster predictor, and that difference is worth knowing.' },
   ]}
 />
 
 <Exercise id="m14-2-b" />
 
-## Where the p values come from
+## Where the p-values come from
 
 `lme4` deliberately reports no *p* values for fixed effects, because the
 denominator degrees of freedom for a mixed model are not a settled question.
@@ -98,7 +98,7 @@ as such: *t*(478.0) or *t*(942.7), rounded to one decimal.
     { text: 'A separate coefficient for every employee, reported in the output', response: 'The deviations are estimated but not reported as fixed coefficients. What is reported is their standard deviation.' },
     { text: 'One extra parameter: the standard deviation of employees\' own starting levels, which lets the model know which rows belong to the same person', correct: true, response: 'Correct - one parameter for 480 employees, which is what makes the approach practical.' },
     { text: 'An interaction between employee and time', response: 'That would be a random slope, written (1 + time | employee_id). This is an intercept only.' },
-    { text: 'A correction applied to the p value after fitting', response: 'Nothing is corrected afterwards. The dependence is part of the model from the start.' },
+    { text: 'A correction applied to the p-value after fitting', response: 'Nothing is corrected afterwards. The dependence is part of the model from the start.' },
   ]}
 />
 

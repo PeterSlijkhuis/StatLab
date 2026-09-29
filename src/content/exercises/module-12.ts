@@ -4,7 +4,7 @@ export const module12: ExerciseDef[] = [
   {
     id: 'm12-1-a',
     prompt:
-      'Fit wellbeing on remote as the only predictor. Store the model in model_remote, the remote coefficient in b_remote, and the two group means, SDs and group sizes in group_means. Then satisfy yourself that b_remote is exactly the difference between the two means in your table, in that order.',
+      'Fit wellbeing on remote as the only predictor. Store the model in model_remote, the remote coefficient in b_remote, and the two group means, SDs and group sizes in group_means. Then satisfy yourself that b_remote is exactly the remote mean minus the office-based mean in your table.',
     starterCode:
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\nlevels(d$remote)\n\nmodel_remote <- \nb_remote <- \ngroup_means <- ',
     solution:
@@ -82,7 +82,7 @@ export const module12: ExerciseDef[] = [
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(statistic)\nt_ttest <- t.test(wellbeing ~ remote, data = d)$statistic',
       // The intercept row read as the group comparison.
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% slice(1) %>% pull(statistic)\nt_ttest <- t.test(wellbeing ~ remote, data = d, var.equal = TRUE)$statistic',
-      // The p value handed in where the t statistic was asked for.
+      // The p-value handed in where the t statistic was asked for.
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_remote <- lm(wellbeing ~ remote, data = d)\nt_model <- model_remote %>% tidy() %>% filter(term == "remoteYes") %>% pull(p.value)\nt_ttest <- t.test(wellbeing ~ remote, data = d, var.equal = TRUE)$p.value',
       // A paired test on two unrelated groups of different sizes would error, so
       // instead: the one-sample test against zero, which runs and means nothing here.
@@ -112,7 +112,7 @@ export const module12: ExerciseDef[] = [
         } else if (isTRUE(all.equal(t_model, int_t, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "t_model is the intercept's t, which tests whether the office-based mean differs from zero - true of every wellbeing score in the study and of no interest. Filter tidy() to the remoteYes row.")
         } else if (isTRUE(all.equal(t_model, exp_p, tolerance = 1e-6, check.attributes = FALSE)) || isTRUE(all.equal(t_ttest, exp_p, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "One of your two values looks like a p value rather than a t statistic. In tidy() the t is the statistic column; from t.test() it is the $statistic element.")
+          list(pass = FALSE, message = "One of your two values looks like a p-value rather than a t statistic. In tidy() the t is the statistic column; from t.test() it is the $statistic element.")
         } else if (!isTRUE(all.equal(abs(t_model), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("t_model is ", round(t_model, 4), " but the remoteYes t is ", round(exp_t, 4), "."))
         } else if (isTRUE(all.equal(abs(t_ttest), abs(welch), tolerance = 1e-9, check.attributes = FALSE)) && !isTRUE(all.equal(abs(welch), abs(exp_t), tolerance = 1e-6, check.attributes = FALSE))) {
@@ -184,7 +184,7 @@ export const module12: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("b_support is ", round(b, 4), " but the departmentSupport coefficient is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("The reference is ", exp_ref, ", whose mean is the intercept, ", round(intercept, 2), ". b = ", round(exp_b, 2), " for Support means its mean is ", round(means[["Support"]], 2), ". Every coefficient in this model is a comparison with ", exp_ref, " - so none of them compares Marketing with Sales, which is what lesson 12-3 is for."))
+          list(pass = TRUE, message = paste0("The reference is ", exp_ref, ", whose mean is the intercept, ", round(intercept, 2), ". b = ", round(exp_b, 2), " for Support means its mean is ", round(means[["Support"]], 2), ". Every coefficient in this model is a comparison with ", exp_ref, " - so none of them compares Marketing with Sales, which is what Lesson 12-3 is for."))
         }
       }
     `,
@@ -260,7 +260,7 @@ export const module12: ExerciseDef[] = [
   {
     id: 'm12-3-a',
     prompt:
-      'The overall F says at least two departments differ. Find out which. Store the Tukey-adjusted pairwise comparisons in pairs_tbl as a data frame, and the number of those comparisons whose adjusted p value is below .05 in n_significant.',
+      'The overall F says at least two departments differ. Find out which. Store the Tukey-adjusted pairwise comparisons in pairs_tbl as a data frame, and the number of those comparisons whose adjusted p-value is below .05 in n_significant.',
     starterCode:
       'library(broom)\nlibrary(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\n\npairs_tbl <- \nn_significant <- ',
     solution:
@@ -278,7 +278,7 @@ export const module12: ExerciseDef[] = [
     alternateSolutions: [
       // contrast() rather than the pairwise formula.
       'library(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\nemm <- emmeans(model_dept, ~ department)\npairs_tbl <- as.data.frame(contrast(emm, method = "pairwise", adjust = "tukey"))\nn_significant <- length(which(pairs_tbl$p.value < 0.05))',
-      // Tukey by its other name: emmeans treats "mvt"-free pairwise as Tukey by default.
+      // No adjust argument: pairwise comparisons in emmeans default to Tukey.
       'library(emmeans)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_dept <- lm(wellbeing ~ department, data = d)\npairs_tbl <- as.data.frame(emmeans(model_dept, pairwise ~ department)$contrasts)\nn_significant <- sum(pairs_tbl$p.value < 0.05)',
     ],
     check: `
@@ -300,9 +300,9 @@ export const module12: ExerciseDef[] = [
         } else if (nrow(tbl) != nrow(tukey)) {
           list(pass = FALSE, message = paste0("Four departments give ", nrow(tukey), " pairwise comparisons; pairs_tbl has ", nrow(tbl), ". Check that you ran the comparisons on department."))
         } else if (isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(none$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Those p values are unadjusted. Six comparisons at .05 each give about a 26 % chance of at least one false positive if the tests were independent (about 21 % here, since they share groups), which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
+          list(pass = FALSE, message = "Those p-values are unadjusted. Six comparisons at .05 each give about a 26% chance of at least one false positive if the tests were independent (about 21% here, since they share groups), which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
         } else if (!isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(tukey$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Your p values are adjusted, but not with Tukey's method. Tukey is the one designed for all pairwise comparisons after a linear model; Bonferroni is more conservative here. Pass adjust = \\"tukey\\".")
+          list(pass = FALSE, message = "Your p-values are adjusted, but not with Tukey's method. Tukey is the one designed for all pairwise comparisons after a linear model; Bonferroni is more conservative here. Pass adjust = \\"tukey\\".")
         } else if (!is.numeric(n_sig) || length(n_sig) != 1L) {
           list(pass = FALSE, message = "n_significant should be a single number: how many rows of pairs_tbl have p.value below .05.")
         } else if (!isTRUE(all.equal(as.numeric(n_sig), as.numeric(exp_n), tolerance = 1e-9, check.attributes = FALSE))) {
@@ -332,7 +332,7 @@ export const module12: ExerciseDef[] = [
       'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- anova(lm(wellbeing ~ department, data = d))$"F value"[1]',
       // The wrong grouping variable.
       'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(wellbeing ~ site, data = d)$statistic',
-      // The p value stored instead of the statistic.
+      // The p-value stored instead of the statistic.
       'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nh <- kruskal.test(wellbeing ~ department, data = d)$p.value',
     ],
     alternateSolutions: [
@@ -355,7 +355,7 @@ export const module12: ExerciseDef[] = [
         } else if (isTRUE(all.equal(h, f_value, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "That is the F from the linear model, which compares means. kruskal.test() compares the groups on ranks.")
         } else if (isTRUE(all.equal(h, kw$p.value, tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "That is the p value. Store the statistic: kruskal.test(...)$statistic.")
+          list(pass = FALSE, message = "That is the p-value. Store the statistic: kruskal.test(...)$statistic.")
         } else if (!isTRUE(all.equal(h, expected, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("h is ", round(h, 2), ", but H for wellbeing by department is ", round(expected, 2), ". Check the grouping variable after the tilde."))
         } else {

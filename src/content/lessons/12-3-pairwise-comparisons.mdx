@@ -31,10 +31,10 @@ what makes `emmeans` worth learning rather than just averaging by hand.
   id="p-multiple"
   question="Four departments give six pairwise comparisons. If you tested each at the .05 level with no adjustment, what is the chance of at least one false positive when no department really differs?"
   choices={[
-    { text: 'Still 5 %, because each test is at 5 %', response: 'Each test is, but you are running six of them. The chance that at least one misfires is much higher.' },
-    { text: 'About 26 %', correct: true, response: 'Right, as a first approximation: 1 - .95 to the power of 6 is about .26 if the six tests were independent. They share groups, so the true figure is a little lower (about .21 here), still four times the 5 % you intended.' },
-    { text: 'About 30 %, which is six times 5 %', response: 'Close to the right ballpark but by the wrong arithmetic - probabilities of independent events do not add.' },
-    { text: '100 %, because you tested everything', response: 'Testing more raises the risk, it does not guarantee a false positive.' },
+    { text: 'Still 5%, because each test is at 5%', response: 'Each test is, but you are running six of them. The chance that at least one misfires is much higher.' },
+    { text: 'About 26%', correct: true, response: 'Right, as a first approximation: 1 - .95 to the power of 6 is about .26 if the six tests were independent. They share groups, so the true figure is a little lower (about .21 here), still four times the 5% you intended.' },
+    { text: 'About 30%, which is six times 5%', response: 'Close to the right ballpark but by the wrong arithmetic - probabilities of independent events do not add.' },
+    { text: '100%, because you tested everything', response: 'Testing more raises the risk, it does not guarantee a false positive.' },
   ]}
 />
 
@@ -65,7 +65,7 @@ move. Adjustment changes what counts as surprising, not what was measured.
 
 <Exercise id="m12-3-a" />
 
-## Confidence intervals, which report better than p values
+## Confidence intervals, which report better than p-values
 
 <CodeBlock id="c-ci" code={`confint(comparisons$contrasts)`} />
 
@@ -77,7 +77,7 @@ completely different scientific ones. Report the interval.
   id="q-tukey"
   question="A reviewer asks why you used Tukey rather than simply reporting all six unadjusted tests."
   choices={[
-    { text: 'Because Tukey gives smaller p values, so more results are significant', response: 'The opposite: adjusted p values are always larger. Adjustment costs power and buys control of the error rate.' },
+    { text: 'Because Tukey gives smaller p-values, so more results are significant', response: 'The opposite: adjusted p-values are always larger. Adjustment costs power and buys control of the error rate.' },
     { text: 'Because six tests at .05 each give roughly a one-in-four chance of at least one false positive if the tests were independent (a little less here, because they share groups), and Tukey holds that risk near .05 across the whole family', correct: true, response: 'Correct, and that is exactly how to phrase it to a reviewer.' },
     { text: 'Because the data are not normally distributed', response: 'Tukey adjusts for multiplicity. It has nothing to do with the shape of the data.' },
     { text: 'Because the overall F was significant, which requires a post-hoc test', response: 'A significant F does not require anything. It tells you a difference exists; you then decide which comparisons your question needs.' },
@@ -89,8 +89,8 @@ completely different scientific ones. Report the interval.
   question="Your Tukey table shows Marketing - Support = 4.70, SE = 1.40, t(476) = 3.36, adjusted p = .005, and Marketing - Sales = 0.57, SE = 1.37, t(476) = 0.41, adjusted p = .976. Which write-up is correct APA 7?"
   choices={[
     { text: 'Tukey-adjusted pairwise comparisons showed that wellbeing was higher in Marketing than in Support, M difference = 4.70, SE = 1.40, t(476) = 3.36, p = .005, whereas Marketing and Sales did not differ reliably, M difference = 0.57, SE = 1.37, t(476) = 0.41, p = .976.', correct: true, response: 'Correct: the adjustment is named, both comparisons are reported with their statistics, and the null result is described as "did not differ reliably" rather than as equality.' },
-    { text: 'Marketing scored significantly higher than Support (p = .005) and Marketing and Sales were equal (p = .976).', response: 'Two problems: bare p values with no differences or SEs, and "equal", which a non-significant comparison never establishes.' },
+    { text: 'Marketing scored significantly higher than Support (p = .005) and Marketing and Sales were equal (p = .976).', response: 'Two problems: bare p-values with no differences or SEs, and "equal", which a non-significant comparison never establishes.' },
     { text: 'All pairwise comparisons were conducted; Marketing differed from Support, t(476) = 3.36, p < .05.', response: 'The adjustment is not named, the difference and its SE are missing, and an adjusted p of .005 should be reported exactly.' },
-    { text: 'Marketing had the highest wellbeing of the four departments, t(476) = 3.36, p = .005.', response: 'One comparison against one department does not make Marketing highest overall - and the medians in lesson 12-2 tell a different story about "highest" anyway.' },
+    { text: 'Marketing had the highest wellbeing of the four departments, t(476) = 3.36, p = .005.', response: 'One comparison against one department does not make Marketing highest overall - and the medians in Lesson 12-2 tell a different story about "highest" anyway.' },
   ]}
 />

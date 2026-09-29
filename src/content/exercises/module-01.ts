@@ -105,7 +105,7 @@ export const module01: ExerciseDef[] = [
       }
     `,
     hints: [
-      'An operation on a vector happens to every element: marks / 90 gives five results.',
+      'An operation on a vector happens to every element: marks / 90 * 100 gives five percentages.',
       'percent > 85 gives five TRUE or FALSE values, one per student.',
       'sum() of TRUE and FALSE counts the TRUEs, because R treats TRUE as 1.',
     ],
@@ -237,7 +237,7 @@ export const module01: ExerciseDef[] = [
       'library(dplyr)\nbusy <- team %>% filter(hours > 35)\nn_busy <- length(busy)',
     ],
     alternateSolutions: [
-      // Base R subsetting: the route Module 1 says dplyr is an alternative to.
+      // Base R subsetting with [ , ], as in Lesson 0-4.
       'busy <- team[team$hours > 35, ]\nn_busy <- nrow(busy)',
       // Same rows, different order. The people are what matters, not their order.
       'library(dplyr)\nbusy <- team %>% filter(hours > 35) %>% arrange(name)\nn_busy <- nrow(busy)',

@@ -5,7 +5,7 @@ const LOAD = 'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)';
 /**
  * Six made-up questionnaire items answered on a 1 to 7 scale by 300 people:
  * three about work pressure and three about support from a manager. The course
- * datasets hold no items, so lesson 17-2 and its exercise build this one.
+ * datasets hold no items, so Lesson 17-2 and its exercise build this one.
  */
 const ITEMS =
   'set.seed(172)\n' +
@@ -59,7 +59,7 @@ export const module17: ExerciseDef[] = [
         } else if (abs(got - a * b) > 1e-6) {
           list(pass = FALSE, message = paste0("indirect is ", round(got, 3), ", but a times b is ", round(a * b, 3), "."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: a = ", round(a, 2), ", b = ", round(b, 2), ", indirect = ", round(a * b, 2), ". The total effect is ", round(total, 2), " and the indirect effect ", round(a * b, 2), " is even larger, because the direct effect, ", round(direct, 2), ", points the other way and is small: workload's link with performance runs through wellbeing."))
+          list(pass = TRUE, message = paste0("Correct: a = ", round(a, 2), ", b = ", round(b, 2), ", indirect = ", round(a * b, 2), ". The total effect is ", round(total, 2), " and the indirect effect ", round(a * b, 2), " is even larger in size, because the direct effect, ", round(direct, 2), ", points the other way and is small: workload's link with performance runs through wellbeing."))
         }
       }
     `,

@@ -94,7 +94,7 @@ the means whenever they disagree, and say which one your conclusion rests on.
   question="You refit the model after relevel(d$department, ref = 'Support'). What changes?"
   choices={[
     { text: 'The overall F and R-squared change', response: 'Neither moves. Recoding a factor rewrites the same fitted values in different coordinates.' },
-    { text: 'The coefficients and their p values change, because they now compare each department with Support', correct: true, response: 'Correct - and the model fit, the fitted values and the residuals are all identical.' },
+    { text: 'The coefficients and their p-values change, because they now compare each department with Support', correct: true, response: 'Correct - and the model fit, the fitted values and the residuals are all identical.' },
     { text: 'Nothing changes at all', response: 'The coefficient table changes completely. Only the fit is invariant.' },
     { text: 'The model becomes invalid because Support is not alphabetically first', response: 'Any level can be the reference. Alphabetical is a default, not a rule.' },
   ]}
@@ -106,7 +106,7 @@ the means whenever they disagree, and say which one your conclusion rests on.
   choices={[
     { text: 'Wellbeing differed across departments, F(3, 476) = 4.86, p = .002, R-squared = .030. Marketing did not differ significantly from the reference department, Engineering, b = 2.30, SE = 1.38, t(476) = 1.67, p = .096.', correct: true, response: 'Correct. The omnibus test and the single comparison are reported separately, and the comparison names its reference group.' },
     { text: 'Marketing employees have the same wellbeing as Engineering employees, p = .096.', response: 'A non-significant comparison is not evidence of equality. The confidence interval here spans roughly -0.4 to +5.0, which is not "the same".' },
-    { text: 'Department explains 3.0 % of wellbeing, and Marketing is the best department, b = 2.30.', response: 'R-squared is a share of variance, not of wellbeing, and one non-significant coefficient relative to one reference group does not rank the four departments.' },
-    { text: 'Wellbeing differed across departments, F(3, 476) = 4.86, p = .002, so every department differs from every other.', response: 'The omnibus F says at least one difference exists somewhere. Which ones is the question lesson 12-3 answers.' },
+    { text: 'Department explains 3.0% of wellbeing, and Marketing is the best department, b = 2.30.', response: 'R-squared is a share of variance, not of wellbeing, and one non-significant coefficient relative to one reference group does not rank the four departments.' },
+    { text: 'Wellbeing differed across departments, F(3, 476) = 4.86, p = .002, so every department differs from every other.', response: 'The omnibus F says at least one difference exists somewhere. Which ones is the question Lesson 12-3 answers.' },
   ]}
 />

@@ -454,6 +454,22 @@ describe('research question', () => {
     expect(screen.getByText(/no clear match yet\. try/i)).toBeTruthy();
   });
 
+  test('with no cue found, a cue can still be added by hand', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'Does mindfulness help my students?');
+    expect(document.querySelector('.mc-suggestion')).toBeNull();
+    const add = document.querySelector<HTMLElement>('.mc-add')!;
+    await userEvent.click(within(add).getByRole('button', { name: 'Compares groups' }));
+    expect(document.querySelector('.mc-suggestion')).not.toBeNull();
+  });
+
+  test('HTML typed into the question box is shown as text, never run', async () => {
+    renderChooser();
+    await userEvent.type(box(), '<img src=x onerror=alert(1)> does autonomy predict wellbeing');
+    expect(document.querySelector('.model-chooser img')).toBeNull();
+    expect(best()).toBe('Simple linear regression');
+  });
+
   test('clicking an example fills the box', async () => {
     renderChooser();
     const example = 'Do remote workers report higher wellbeing than office workers?';

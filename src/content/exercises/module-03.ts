@@ -3,7 +3,7 @@ import type { ExerciseDef } from '../../r/checker';
 /**
  * A made-up five-item survey of 200 people, answered on a 1 to 5 scale. q3 is
  * worded the other way round and q5 barely measures the same thing. The course
- * datasets hold scale scores rather than items, so lesson 03-4 and its two
+ * datasets hold scale scores rather than items, so lesson 3-4 and its two
  * exercises build this one the same way.
  */
 const SURVEY =
@@ -59,7 +59,7 @@ export const module03: ExerciseDef[] = [
         } else if (nrow(got) != 1L) {
           list(pass = FALSE, message = paste0("wellbeing_summary has ", nrow(got), " rows, but a summary of one column is a single row."))
         } else if (!all(needed %in% names(got))) {
-          list(pass = FALSE, message = paste0("wellbeing_summary is missing the column(s): ", paste(setdiff(needed, names(got)), collapse = ", "), ". A summary without n does not say how many people it describes, which is why every APA table has one."))
+          list(pass = FALSE, message = paste0("wellbeing_summary is missing the column(s): ", paste(setdiff(needed, names(got)), collapse = ", "), ".", if (!("n" %in% names(got))) " A summary without n does not say how many people it describes, which is why every APA table has one." else ""))
         } else if (!isTRUE(all.equal(as.vector(got$mean_wellbeing), mean(d$wellbeing), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("mean_wellbeing is ", round(as.vector(got$mean_wellbeing), 3), ", but the mean of the wellbeing column is ", round(mean(d$wellbeing), 3), "."))
         } else if (isTRUE(all.equal(as.vector(got$sd_wellbeing), var(d$wellbeing), tolerance = 1e-6, check.attributes = FALSE))) {
@@ -191,7 +191,7 @@ export const module03: ExerciseDef[] = [
           } else if (!isTRUE(all.equal(as.vector(got$n), as.vector(counts[key]), tolerance = 1e-6, check.attributes = FALSE))) {
             list(pass = FALSE, message = paste0("n should be the size of each department (", paste(as.vector(counts), collapse = ", "), "), not the size of the company. n() counts the rows in the group it is called on."))
           } else {
-            list(pass = TRUE, message = paste0("Correct - four departments, ", paste(as.vector(counts), collapse = ", "), " employees. The departments differ by ", round(max(as.vector(means)) - min(as.vector(means)), 1), " points at the extremes, and the SDs tell you how much of that could be individual variation. Lesson 3 asks whether the means are telling the truth."))
+            list(pass = TRUE, message = paste0("Correct - four departments, ", paste(as.vector(counts), collapse = ", "), " employees. The departments differ by ", round(max(as.vector(means)) - min(as.vector(means)), 1), " points at the extremes, and the SDs tell you how much of that could be individual variation. Lesson 3-3 asks whether the means are telling the truth."))
           }
         }
       }
@@ -247,7 +247,7 @@ export const module03: ExerciseDef[] = [
             list(pass = FALSE, message = "The remote column should hold No and Yes.")
           } else if (isTRUE(all.equal(as.vector(got$mean_wellbeing), as.vector(medians[key]), tolerance = 1e-6, check.attributes = FALSE)) &&
                      !isTRUE(all.equal(as.vector(medians[key]), as.vector(means[key]), tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = FALSE, message = "Those are the medians. The column is called mean_wellbeing, and lesson 3 is about how much the choice between them can change a story - so it is worth being exact about which one you computed.")
+            list(pass = FALSE, message = "Those are the medians. The column is called mean_wellbeing, and lesson 3-3 is about how much the choice between them can change a story - so it is worth being exact about which one you computed.")
           } else if (!isTRUE(all.equal(as.vector(got$mean_wellbeing), as.vector(means[key]), tolerance = 1e-6, check.attributes = FALSE))) {
             list(pass = FALSE, message = "mean_wellbeing does not match the mean wellbeing of the two groups.")
           } else if (!isTRUE(all.equal(as.vector(got$n), as.vector(counts[key]), tolerance = 1e-6, check.attributes = FALSE))) {
@@ -267,7 +267,7 @@ export const module03: ExerciseDef[] = [
     hints: [
       'group_by(remote) then summarise() gives one row per level of remote.',
       'n() inside summarise counts the rows of the current group; nrow(employees) would ignore the grouping.',
-      'To pick one row of the result, index by the level name: mean_wellbeing[remote == "Yes"].',
+      'To pick one row of the result, index by the level name: with(by_remote, mean_wellbeing[remote == "Yes"]) is the remote mean.',
     ],
   },
   {

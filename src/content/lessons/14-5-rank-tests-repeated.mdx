@@ -34,7 +34,7 @@ changes instead.
   question="What goes wrong if you leave out paired = TRUE?"
   choices={[
     { text: 'Nothing: R works out that the columns belong together', response: 'R has no way to know that row 1 of one column is the same person as row 1 of the other.' },
-    { text: 'R runs the Mann-Whitney test, which treats the two columns as 960 different people and ignores that each employee is compared with themselves', correct: true, response: 'Right, the same mistake as an unpaired t-test in Lesson 14-3, and it throws away the power of the design.' },
+    { text: 'R runs the Mann-Whitney test, which treats the two columns as 960 different people and ignores that each employee is compared with themselves', correct: true, response: 'Right, the same mistake as the stacked lm() on 960 rows in Lesson 14-1, and it throws away the power of the design.' },
     { text: 'The test refuses to run', response: 'It runs, and prints W instead of V. That silent switch is the danger.' },
   ]}
 />
