@@ -198,6 +198,8 @@ on wellbeing).
   passes.
 - **Private by design.** A static site with no backend, no accounts and no
   tracking. Uploaded data and progress never leave the student's browser.
+  The only outside requests are the browser downloading webR and R packages
+  from r-wasm.org.
 
 ## Credits
 
@@ -212,6 +214,16 @@ written independently.
 
 RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with
 or endorsed by Posit.
+
+## Licence
+
+StatLab (lessons, exercises, datasets and code) is licensed under
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0](LICENSE), the same
+licence as the textbook it follows. You may share and adapt it for
+non-commercial use if you credit the authors and share your version under the
+same licence. The University of Twente and BMS Lab logos belong to their owners
+and are not covered by this licence. Third-party packages keep their own
+licences.
 
 <p>
   <a href="https://www.utwente.nl/en/"><img src="src/assets/logos/utwente.png" alt="University of Twente" height="56"></a>
