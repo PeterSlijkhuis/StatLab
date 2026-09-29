@@ -1,12 +1,9 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import AvatarTip from '../components/AvatarTip';
 import { pnorm } from '../stats/distributions';
-import {
-  dFromMeans, dzFromD, f2FromR2, fFromEta2, fFromMeans, HAS_SIDES, minN, PER_GROUP, powerAt, rCode,
-  solveEffect, solveN, totalN, wFromV, type DesignId, type Plan,
-} from '../stats/power';
-import { DESIGNS, designById, type Design } from './sampleSizeDesigns';
+import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, totalN, type DesignId, type Plan } from '../stats/power';
+import { DESIGNS, designById, effectInputs, presets, type Design, type EffectRoute } from './sampleSizeDesigns';
 import './ModelChooser.css';
 import './SampleSize.css';
 
@@ -67,88 +64,6 @@ function tool(design: Design): string {
   return design.id === 'proportions' ? 'the power.prop.test() function in R' : 'the pwr package in R (Champely, 2020)';
 }
 
-/** A small calculator that turns what a student knows into the effect size. */
-function EffectHelper({ design, onUse }: { design: Design; onUse: (value: number) => void }) {
-  const [a, setA] = useState('');
-  const [b, setB] = useState('');
-  const [c, setC] = useState('');
-  const id = useId();
-  useEffect(() => { setA(''); setB(''); setC(''); }, [design.id]);
-
-  let fields: { label: string; value: string; set: (v: string) => void; hint?: string }[] = [];
-  let result = NaN;
-  switch (design.id) {
-    case 'two-groups':
-    case 'one-sample':
-      fields = [
-        { label: design.id === 'two-groups' ? 'Difference between the means that matters' : 'Expected mean minus the fixed value', value: a, set: setA, hint: 'in the outcome\'s own units, e.g. 3 points' },
-        { label: 'Standard deviation within the groups', value: b, set: setB, hint: 'from earlier studies or the scale\'s norms' },
-      ];
-      result = Math.abs(dFromMeans(parse(a), parse(b)));
-      break;
-    case 'paired':
-      fields = [
-        { label: 'Cohen\'s d between the two measurements', value: a, set: setA, hint: 'mean change divided by the SD at one time point, assuming the SD is about the same at both' },
-        { label: 'Correlation between the two measurements', value: b, set: setB, hint: 'test-retest correlations are often .5 to .8' },
-      ];
-      result = Math.abs(dzFromD(parse(a), parse(b)));
-      break;
-    case 'anova':
-      fields = [
-        { label: 'Expected group means, separated by spaces', value: a, set: setA, hint: 'e.g. 44 46 48 50' },
-        { label: 'Standard deviation within the groups', value: b, set: setB },
-        { label: 'Or: eta squared (η²) from earlier studies', value: c, set: setC, hint: 'leave the fields above empty to use this' },
-      ];
-      {
-        const means = a.trim().split(/[\s;]+/).map(parse).filter((x) => !Number.isNaN(x));
-        result = a.trim() !== '' && means.length >= 2 ? fFromMeans(means, parse(b)) : fFromEta2(parse(c));
-      }
-      break;
-    case 'regression':
-      fields = [{ label: 'Expected R² of the whole model', value: a, set: setA, hint: 'e.g. .13' }];
-      result = f2FromR2(parse(a));
-      break;
-    case 'r2-change':
-      fields = [
-        { label: 'Expected R² change from the added predictors', value: a, set: setA, hint: 'e.g. .05' },
-        { label: 'Expected R² of the full model', value: b, set: setB, hint: 'with all predictors, e.g. .30' },
-      ];
-      result = f2FromR2(parse(a), parse(b));
-      break;
-    case 'chi-square':
-      fields = [
-        { label: 'Cramér\'s V from earlier studies', value: a, set: setA },
-        { label: 'Rows in the table', value: b, set: setB },
-        { label: 'Columns in the table', value: c, set: setC },
-      ];
-      result = wFromV(parse(a), parse(b), parse(c));
-      break;
-    default:
-      return null;
-  }
-  const ok = Number.isFinite(result) && result > 0;
-  return (
-    <details className="ss-helper">
-      <summary>Work out {design.symbol} from what you know</summary>
-      <div className="ss-helper-fields">
-        {fields.map((field, i) => (
-          <label key={field.label} htmlFor={`${id}-${i}`}>
-            <span>{field.label}</span>
-            <input id={`${id}-${i}`} inputMode="decimal" value={field.value} onChange={(e) => field.set(e.target.value)} />
-            {field.hint && <small>{field.hint}</small>}
-          </label>
-        ))}
-      </div>
-      <p className="ss-helper-result">
-        {ok ? <>That is {design.symbol} = <strong>{formatEffect(design, result)}</strong>. </> : 'Fill in the fields to see the effect size. '}
-        <button type="button" className="button-secondary" disabled={!ok} onClick={() => onUse(Number(formatEffect(design, result).replace(/^\./, '0.')))}>
-          Use this value
-        </button>
-      </p>
-    </details>
-  );
-}
-
 /** Power against sample size (or against effect size when n is fixed). */
 function PowerCurve({ points, xLabel, target, mark, markLabel }: {
   points: [number, number][];
@@ -184,88 +99,183 @@ function PowerCurve({ points, xLabel, target, mark, markLabel }: {
   );
 }
 
+type StepId = 'design' | 'mode' | 'n' | 'k' | 'predictors' | 'added' | 'table' | 'p1' | 'route' | 'effect' | 'power' | 'alpha' | 'tests' | 'sides' | 'dropout';
+type AlphaChoice = 'standard' | 'strict' | 'bonferroni';
+
+type Answers = {
+  design?: DesignId;
+  mode?: Mode;
+  route?: EffectRoute;
+  effect?: number;
+  power?: number;
+  alpha?: AlphaChoice;
+  sides?: 1 | 2;
+  dropout?: number;
+  /** Everything typed into a text box, by field name. */
+  text: Record<string, string>;
+};
+
+const START: Answers = { text: { n: '100', k: '3', predictors: '3', added: '1', rows: '2', cols: '2', p1: '30', tests: '3' } };
+
+function stepsFor(a: Answers): StepId[] {
+  const steps: StepId[] = ['design'];
+  if (!a.design) return steps;
+  steps.push('mode');
+  if (!a.mode) return steps;
+  if (a.mode === 'effect') steps.push('n');
+  if (a.design === 'anova') steps.push('k');
+  if (a.design === 'regression' || a.design === 'r2-change') steps.push('predictors');
+  if (a.design === 'r2-change') steps.push('added');
+  if (a.design === 'chi-square') steps.push('table');
+  if (a.design === 'proportions') steps.push('p1');
+  if (a.mode === 'n') steps.push(...(a.design === 'proportions' ? ['effect' as const] : ['route' as const, 'effect' as const]));
+  steps.push('power', 'alpha');
+  if (a.alpha === 'bonferroni') steps.push('tests');
+  if (HAS_SIDES[a.design]) steps.push('sides');
+  if (a.mode === 'n') steps.push('dropout');
+  return steps;
+}
+
+const alphaOf = (a: Answers) => (a.alpha === 'strict' ? 0.01 : a.alpha === 'bonferroni' ? 0.05 / parse(a.text.tests) : 0.05);
+const alphaLabel = (x: number) => noZero(String(Number(x.toPrecision(3))));
+
+function unitLabel(design: Design): string {
+  if (design.id === 'paired') return 'people, each measured twice';
+  return PER_GROUP[design.id] ? 'people per group' : 'people in total';
+}
+
+/** The question each text-box step asks, its fields, and whether the answer can be used. */
+function inputStep(step: StepId, a: Answers, design: Design): { fields: { key: string; label: string; hint?: string }[]; error?: string } | null {
+  const t = a.text;
+  const whole = (key: string, lo: number, hi: number) => Number.isInteger(parse(t[key])) && parse(t[key]) >= lo && parse(t[key]) <= hi;
+  switch (step) {
+    case 'n':
+      return { fields: [{ key: 'n', label: `Number of ${unitLabel(design)}` }], error: whole('n', 2, 1_000_000) ? undefined : 'Enter a whole number of people.' };
+    case 'k':
+      return { fields: [{ key: 'k', label: 'Number of groups' }], error: whole('k', 2, 50) ? undefined : 'Enter a whole number from 2 to 50.' };
+    case 'predictors':
+      return { fields: [{ key: 'predictors', label: 'Number of predictors' }], error: whole('predictors', 1, 100) ? undefined : 'Enter a whole number from 1 to 100.' };
+    case 'added':
+      return { fields: [{ key: 'added', label: 'Number of predictors you test' }], error: whole('added', 1, parse(t.predictors)) ? undefined : `Enter a whole number from 1 to ${t.predictors}.` };
+    case 'table':
+      return {
+        fields: [{ key: 'rows', label: 'Rows (categories of one variable)' }, { key: 'cols', label: 'Columns (categories of the other)' }],
+        error: whole('rows', 2, 50) && whole('cols', 2, 50) ? undefined : 'Enter whole numbers of at least 2.',
+      };
+    case 'p1':
+      return { fields: [{ key: 'p1', label: 'Percentage "yes" in the first group' }], error: parse(t.p1) > 0 && parse(t.p1) < 100 ? undefined : 'Enter a percentage between 0 and 100.' };
+    case 'tests':
+      return { fields: [{ key: 'tests', label: 'Number of tests' }], error: whole('tests', 2, 100) ? undefined : 'Enter a whole number from 2 to 100.' };
+    default:
+      return null;
+  }
+}
+
+const INPUT_TEXT: Partial<Record<StepId, { question: string; help: string }>> = {
+  n: { question: 'How many people will you have?', help: 'Count the people you expect to have complete data for, not everyone you invite.' },
+  k: { question: 'How many groups will you compare?', help: 'For example 3 for three training programmes. The plan assumes groups of about equal size.' },
+  predictors: { question: 'How many predictors will the model have?', help: 'Count every term in the model, control variables included. A numeric predictor counts once; a categorical predictor with g categories counts g − 1 times, because R turns it into g − 1 dummy variables (Lesson 12-2).' },
+  added: { question: 'How many of those predictors are you testing?', help: 'Usually 1: the predictor your question is about, with the others as controls. With one tested predictor, this is the same test as that predictor\'s t-test in summary().' },
+  table: { question: 'How big is your table of counts?', help: 'Rows are the categories of one variable, columns those of the other: department (4) by remote work (2) is a 4 × 2 table. For a goodness-of-fit test of one variable, enter its number of categories as rows and 2 as columns; that gives the right degrees of freedom.' },
+  p1: { question: 'What percentage says "yes" in the first group?', help: 'The comparison or control group. Take it from records, earlier studies or national figures. The same difference in percentage points is harder to detect near 50% than near 0% or 100%.' },
+  tests: { question: 'How many tests will you correct for?', help: 'Bonferroni divides α by the number of tests you correct for together, so each test needs a smaller p-value, and the study needs more people.' },
+};
+
+type Option<T> = { value: T; label: string; note: string; tag?: string };
+
+function Choice<T>({ options, chosen, onPick }: { options: Option<T>[]; chosen: T | undefined; onPick: (value: T) => void }) {
+  const id = useId();
+  return (
+    <ul className="model-chooser-options">
+      {options.map((option, i) => {
+        const earlier = chosen !== undefined && option.value === chosen;
+        return (
+          <li key={option.label}>
+            <button type="button" className={earlier ? 'flagged' : undefined} aria-labelledby={`${id}-${i}-label`} aria-describedby={`${id}-${i}-more`} onClick={() => onPick(option.value)}>
+              <span className="mc-option-label" id={`${id}-${i}-label`}>{option.label}</span>
+              <span id={`${id}-${i}-more`} className="mc-option-more">
+                {earlier && <span className="mc-flag">Your earlier choice</span>}
+                {option.tag && <span className="ss-tag">{option.tag}</span>}
+                <span className="ss-option-note">{option.note}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function SampleSize() {
-  const [designId, setDesignId] = useState<DesignId>('two-groups');
-  const design = designById(designId);
-  const [mode, setMode] = useState<Mode>('n');
-  const [effect, setEffect] = useState(String(design.defaultEffect));
-  const [p1, setP1] = useState('30');
-  const [p2, setP2] = useState('45');
-  const [k, setK] = useState('3');
-  const [predictors, setPredictors] = useState('3');
-  const [added, setAdded] = useState('1');
-  const [df, setDf] = useState('1');
-  const [alpha, setAlpha] = useState('0.05');
-  const [target, setTarget] = useState('0.8');
-  const [sides, setSides] = useState<1 | 2>(2);
-  const [dropout, setDropout] = useState('10');
-  const [nFixed, setNFixed] = useState('50');
+  const [answers, setAnswers] = useState<Answers>(START);
+  const [at, setAt] = useState(0);
   const [copied, setCopied] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const moveFocus = useRef(false);
   const ids = useId();
 
-  function pick(id: DesignId) {
-    setDesignId(id);
-    setEffect(String(designById(id).defaultEffect));
-    setCopied(false);
+  const steps = stepsFor(answers);
+  const step: StepId | 'result' = at < steps.length ? steps[at] : 'result';
+  const design = designById(answers.design ?? 'two-groups');
+
+  useEffect(() => {
+    if (!moveFocus.current) return;
+    moveFocus.current = false;
+    headingRef.current?.focus();
+  }, [at, step]);
+
+  function go(index: number) {
+    moveFocus.current = true;
+    setAt(index);
+  }
+  function answer(patch: Partial<Answers>) {
+    moveFocus.current = true;
+    setAnswers((prev) => ({ ...prev, ...patch }));
+    setAt((i) => i + 1);
+  }
+  function type(key: string, value: string) {
+    setAnswers((prev) => ({ ...prev, text: { ...prev.text, [key]: value } }));
   }
 
-  const power = Number(target);
-  const built = useMemo((): { plan: Plan } | { error: string } => {
-    const a = parse(alpha);
-    if (!(a > 0 && a < 0.5)) return { error: 'α has to be between 0 and .5, usually .05.' };
-    const plan: Plan = { design: designId, effect: parse(effect), alpha: a, sides: HAS_SIDES[designId] ? sides : 2 };
-    if (designId === 'proportions') {
-      plan.p1 = parse(p1) / 100;
-      plan.effect = parse(p2) / 100;
-      if (!(plan.p1 > 0 && plan.p1 < 1)) return { error: 'The first group\'s percentage has to be between 0 and 100.' };
-      if (mode === 'n' && !(plan.effect > 0 && plan.effect < 1)) return { error: 'The second group\'s percentage has to be between 0 and 100.' };
-      if (mode === 'n' && plan.effect === plan.p1) return { error: 'The two percentages are the same, so there is no difference to detect.' };
-    }
-    if (designId === 'anova') {
-      plan.k = parse(k);
-      if (!(Number.isInteger(plan.k) && plan.k >= 2 && plan.k <= 50)) return { error: 'The number of groups has to be a whole number from 2 to 50.' };
-    }
-    if (designId === 'regression' || designId === 'r2-change') {
-      plan.predictors = parse(predictors);
-      if (!(Number.isInteger(plan.predictors) && plan.predictors >= 1 && plan.predictors <= 100)) return { error: 'The number of predictors has to be a whole number from 1 to 100.' };
-    }
-    if (designId === 'r2-change') {
-      plan.added = parse(added);
-      if (!(Number.isInteger(plan.added) && plan.added >= 1 && plan.added <= (plan.predictors ?? 1))) return { error: 'The added predictors have to be a whole number from 1 up to the predictors in the full model.' };
-    }
-    if (designId === 'chi-square') {
-      plan.df = parse(df);
-      if (!(Number.isInteger(plan.df) && plan.df >= 1 && plan.df <= 100)) return { error: 'The degrees of freedom have to be a whole number of at least 1.' };
-    }
-    if (mode === 'n' && designId !== 'proportions') {
-      const max = designId === 'correlation' ? 1 : Infinity;
-      if (!(plan.effect > 0 && plan.effect < max)) return { error: `${design.effectName} has to be above 0${designId === 'correlation' ? ' and below 1' : ''}. Use the size of the effect, without a minus sign.` };
-    }
-    return { plan };
-  }, [designId, design, mode, effect, p1, p2, k, predictors, added, df, alpha, sides]);
+  const plan = useMemo((): Plan | null => {
+    const a = answers;
+    if (!a.design || !a.mode || !a.power || !a.alpha) return null;
+    if (a.mode === 'n' && a.effect === undefined) return null;
+    const t = a.text;
+    return {
+      design: a.design,
+      effect: a.effect ?? 0,
+      alpha: alphaOf(a),
+      sides: HAS_SIDES[a.design] ? (a.sides ?? 2) : 2,
+      k: parse(t.k),
+      predictors: parse(t.predictors),
+      added: parse(t.added),
+      df: (parse(t.rows) - 1) * (parse(t.cols) - 1),
+      p1: parse(t.p1) / 100,
+    };
+  }, [answers]);
 
-  const nNumber = parse(nFixed);
+  const power = answers.power ?? 0.8;
   const result = useMemo(() => {
-    if ('error' in built) return null;
-    const plan = built.plan;
-    if (mode === 'n') {
+    if (step !== 'result' || !plan) return null;
+    if (answers.mode === 'n') {
       const n = solveN(plan, power);
       if (n === null) return { kind: 'too-small' as const };
-      const drop = Math.min(Math.max(parse(dropout) || 0, 0), 90) / 100;
+      const drop = (answers.dropout ?? 0) / 100;
       const recruitUnit = Math.ceil(n / (1 - drop));
       const hi = Math.max(n * 2, minN(plan) + 10);
-      const step = Math.max(1, Math.round((hi - minN(plan)) / 48));
+      const stepSize = Math.max(1, Math.round((hi - minN(plan)) / 48));
       const points: [number, number][] = [];
-      for (let x = minN(plan); x <= hi; x += step) points.push([totalN(plan, x), powerAt(plan, x)]);
+      for (let x = minN(plan); x <= hi; x += stepSize) points.push([totalN(plan, x), powerAt(plan, x)]);
       const smaller = [0.75, 0.5].map((f) => {
         const e = plan.design === 'proportions' ? (plan.p1 ?? 0) + (plan.effect - (plan.p1 ?? 0)) * f : plan.effect * f;
         const m = solveN({ ...plan, effect: e }, power);
         return { f, e, total: m === null ? null : totalN(plan, m) };
       });
-      return { kind: 'n' as const, plan, n, achieved: powerAt(plan, n), drop, recruit: totalN(plan, recruitUnit), recruitUnit, points, smaller };
+      return { kind: 'n' as const, plan, n, achieved: powerAt(plan, n), drop, recruitUnit, points, smaller };
     }
-    const n = nNumber;
-    if (!(Number.isInteger(n) && n >= minN(plan))) return { kind: 'bad-n' as const, min: minN(plan) };
+    const n = parse(answers.text.n);
+    if (n < minN(plan)) return { kind: 'bad-n' as const, min: minN(plan) };
     const e = solveEffect(plan, n, power);
     if (e === null) return { kind: 'none' as const };
     const lo = plan.design === 'proportions' ? (plan.p1 ?? 0) : 0;
@@ -276,11 +286,9 @@ export default function SampleSize() {
       points.push([x, powerAt({ ...plan, effect: x }, n)]);
     }
     return { kind: 'effect' as const, plan, n, effect: e, points };
-  }, [built, mode, power, dropout, nNumber]);
+  }, [step, plan, answers.mode, answers.dropout, answers.text.n, power]);
 
-  const code = result && (result.kind === 'n' || result.kind === 'effect')
-    ? rCode(result.plan, mode, power, result.kind === 'effect' ? result.n : undefined)
-    : '';
+  const code = result && (result.kind === 'n' || result.kind === 'effect') ? rCode(result.plan, answers.mode ?? 'n', power, result.kind === 'effect' ? result.n : undefined) : '';
   useEffect(() => setCopied(false), [code]);
   async function copy() {
     try {
@@ -291,8 +299,209 @@ export default function SampleSize() {
     }
   }
 
-  const unitLabel = design.id === 'paired' ? 'People (each measured twice)' : PER_GROUP[design.id] ? 'People per group' : 'People in total';
-  const alphaText = noZero(String(parse(alpha)));
+  /** The trail's label for an answered step. */
+  function summary(s: StepId): string {
+    const t = answers.text;
+    switch (s) {
+      case 'design': return design.title;
+      case 'mode': return answers.mode === 'n' ? 'Plan a new study' : 'Sample size is fixed';
+      case 'n': return `${t.n} ${unitLabel(design)}`;
+      case 'k': return `${t.k} groups`;
+      case 'predictors': return `${t.predictors} predictors`;
+      case 'added': return `${t.added} tested`;
+      case 'table': return `${t.rows} × ${t.cols} table`;
+      case 'p1': return `${t.p1}% yes in group 1`;
+      case 'route': return { matter: 'Smallest effect that matters', research: 'Earlier research', unknown: 'A typical value' }[answers.route ?? 'matter'];
+      case 'effect': return design.id === 'proportions' ? `${pct(answers.effect ?? 0, 1)} yes in group 2` : `${design.symbol} = ${formatEffect(design, answers.effect ?? 0)}`;
+      case 'power': return `${pct(power)} power`;
+      case 'alpha': return `α = ${alphaLabel(alphaOf(answers))}`;
+      case 'tests': return `${t.tests} tests`;
+      case 'sides': return answers.sides === 1 ? 'One-sided' : 'Two-sided';
+      case 'dropout': return `${answers.dropout}% dropout`;
+    }
+  }
+
+  const alphaText = alphaLabel(alphaOf(answers));
+  let question: ReactNode = null;
+  let help: ReactNode = null;
+  let body: ReactNode = null;
+
+  const input = step === 'result' ? null : inputStep(step, answers, design);
+  if (input) {
+    question = INPUT_TEXT[step as StepId]!.question;
+    help = INPUT_TEXT[step as StepId]!.help;
+    body = (
+      <form className="ss-input-step" onSubmit={(e) => { e.preventDefault(); if (!input.error) answer({}); }}>
+        <div className="ss-fields">
+          {input.fields.map((field) => (
+            <label key={field.key} className="ss-field">
+              <span>{field.label}</span>
+              <input inputMode="decimal" value={answers.text[field.key] ?? ''} onChange={(e) => type(field.key, e.target.value)} />
+            </label>
+          ))}
+        </div>
+        {step === 'table' && !input.error && <p className="ss-meaning">Degrees of freedom: ({answers.text.rows} − 1) × ({answers.text.cols} − 1) = {(parse(answers.text.rows) - 1) * (parse(answers.text.cols) - 1)}.</p>}
+        {step === 'tests' && !input.error && <p className="ss-meaning">Each test then uses α = .05 / {answers.text.tests} = {alphaLabel(0.05 / parse(answers.text.tests))}.</p>}
+        {input.error && <p className="ss-error">{input.error}</p>}
+        <button type="submit" className="button-primary" disabled={!!input.error}>Next</button>
+      </form>
+    );
+  } else if (step === 'design') {
+    question = 'What will you test?';
+    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. Mixed models, logistic regression and mediation are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does, or with the simr package for mixed models.</>;
+    body = (
+      <Choice
+        options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: `e.g. ${d.example} Analysis: ${d.test}.` }))}
+        chosen={answers.design}
+        onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'means', 'eta2', 'r2', 'dr2', 'v', 'p2'].map((k) => [k, ''])) } })}
+      />
+    );
+  } else if (step === 'mode') {
+    question = 'What do you want to find out?';
+    help = 'Most people use a power analysis to plan a new study. If your data already exist, or the number of people is fixed (one class, one company), turn the question around.';
+    body = (
+      <Choice<Mode>
+        options={[
+          { value: 'n', label: 'How many people do I need?', note: 'For a study you are still planning. This is the usual question.', tag: 'Most common' },
+          { value: 'effect', label: 'What can my sample detect?', note: 'The number of people is already fixed. This tells you the smallest effect your study can reliably find.' },
+        ]}
+        chosen={answers.mode}
+        onPick={(value) => answer({ mode: value })}
+      />
+    );
+  } else if (step === 'route') {
+    question = 'How will you decide how big the effect is?';
+    help = (
+      <>
+        The effect size is the size of the difference or relationship you want to be able to find. For this design it is {design.effectName}: {design.effectMeaning}
+        {design.id === 'paired' && ' Think of it as how consistent the change is: a small change that nearly everyone shows gives a large dz.'}
+        {' '}It is the choice that matters most: halve it and you need about four times as many people.
+      </>
+    );
+    body = (
+      <Choice<EffectRoute>
+        options={[
+          { value: 'matter', label: 'The smallest effect that would matter', note: 'You decide what size of effect would be worth finding, in your outcome\'s own units. The strongest basis for a plan.', tag: 'Recommended' },
+          { value: 'research', label: 'An effect size from earlier research', note: 'From a meta-analysis or similar studies. One study\'s effect is usually too optimistic: replications find on average about half the original effect (Open Science Collaboration, 2015).' },
+          { value: 'unknown', label: 'I have nothing to go on yet', note: 'Start from a typical value, and say in your report that it is a convention, not an estimate.' },
+        ]}
+        chosen={answers.route}
+        onPick={(value) => answer({ route: value })}
+      />
+    );
+  } else if (step === 'effect' && answers.route === 'unknown') {
+    question = `Which ${design.effectName} will you plan for?`;
+    help = (
+      <>
+        {design.effectName} is {design.effectMeaning} Without any information, pick a conventional value.
+        {presets(design).some((p) => p.recommended)
+          ? ' The typical value from published research is the honest choice. Cohen\'s "medium" is common in student projects, but real effects are often smaller, so a study planned for it can easily miss them.'
+          : ' Cohen\'s "medium" is the usual choice here. Real effects are often smaller, so if you can afford more people, plan for something between small and medium.'}
+        {design.id === 'paired' && ' Cohen wrote these conventions for d, not dz, so they are rougher still here.'}
+      </>
+    );
+    body = (
+      <Choice
+        options={presets(design).map((p) => ({ value: p.value, label: p.label, note: p.note, tag: p.recommended ? 'Recommended' : undefined }))}
+        chosen={answers.effect}
+        onPick={(value) => answer({ effect: value })}
+      />
+    );
+  } else if (step === 'effect') {
+    const route = design.id === 'proportions' ? 'matter' : (answers.route as 'matter' | 'research');
+    const { fields, compute } = effectInputs(design.id, route);
+    const values = Object.fromEntries(Object.entries(answers.text).map(([k, v]) => [k, parse(v)]));
+    const missing = fields.some((f) => !f.optional && Number.isNaN(values[f.key]));
+    const effect = missing ? NaN : compute(values, answers.text);
+    const p1 = parse(answers.text.p1) / 100;
+    let error: string | undefined;
+    if (missing) error = undefined;
+    else if (design.id === 'proportions') error = effect > 0 && effect < 1 && effect !== p1 ? undefined : 'Enter a percentage between 0 and 100 that differs from the first group\'s.';
+    else if (!(Number.isFinite(effect) && effect > 0)) error = 'These numbers do not give a usable effect size. Check that standard deviations are above 0 and correlations and R² values are between 0 and 1.';
+    else if (design.id === 'correlation' && effect >= 1) error = 'A correlation has to be below 1.';
+    question = design.id === 'proportions' ? 'What percentage do you expect in the second group?' : route === 'matter' ? 'What is the smallest effect that would matter?' : 'What did earlier research find?';
+    help = design.id === 'proportions'
+      ? 'Take the smallest difference from the first group that would matter to you, or what earlier studies found.'
+      : route === 'matter'
+        ? 'Fill in what you know; the page turns it into the effect size.'
+        : 'If it comes from a single study, a common precaution is to plan for a smaller value than it reports.';
+    body = (
+      <form className="ss-input-step" onSubmit={(e) => { e.preventDefault(); if (!missing && !error) answer({ effect: Number(design.id === 'proportions' ? effect.toFixed(4) : formatEffect(design, effect).replace(/^\./, '0.')) }); }}>
+        <div className="ss-fields ss-fields-wide">
+          {fields.map((field) => (
+            <label key={field.key} className="ss-field">
+              <span>{field.label}</span>
+              <input inputMode="decimal" placeholder={field.placeholder} value={answers.text[field.key] ?? ''} onChange={(e) => type(field.key, e.target.value)} />
+              <small>{field.hint}</small>
+            </label>
+          ))}
+        </div>
+        {!missing && !error && (
+          <p className="ss-meaning">
+            {design.id === 'proportions' ? <>That is a difference of {(100 * Math.abs(effect - p1)).toFixed(1)} percentage points.</> : <>That is {design.symbol} = <strong>{formatEffect(design, effect)}</strong>. {meaning(design, effect, 0)}</>}
+          </p>
+        )}
+        {error && <p className="ss-error">{error}</p>}
+        <button type="submit" className="button-primary" disabled={missing || !!error}>Next</button>
+      </form>
+    );
+  } else if (step === 'power') {
+    question = 'How much power do you want?';
+    help = 'Power is the chance that your study finds the effect (p below α) if the effect is really as large as you said. The rest is the chance of wrongly concluding there is nothing. Below 80% a study is generally considered underpowered.';
+    body = (
+      <Choice
+        options={[
+          { value: 0.8, label: '80%', note: 'A one-in-five chance of missing a real effect of this size. Cohen\'s convention, accepted by most supervisors and journals.', tag: 'Most common: the usual minimum' },
+          { value: 0.9, label: '90%', note: 'Halves the risk of missing it, to one in ten, for roughly a third more people.', tag: 'Recommended if you can afford it' },
+          { value: 0.95, label: '95%', note: 'For confirmatory or high-stakes studies. About two-thirds more people than 80%.' },
+        ]}
+        chosen={answers.power}
+        onPick={(value) => answer({ power: value })}
+      />
+    );
+  } else if (step === 'alpha') {
+    question = 'Which significance level (α)?';
+    help = 'α is the chance of a false positive: finding an effect that is not there. You will call a result significant when p is below α.';
+    body = (
+      <Choice<AlphaChoice>
+        options={[
+          { value: 'standard', label: 'α = .05', note: 'The convention in most fields.', tag: 'What almost everyone uses' },
+          { value: 'strict', label: 'α = .01', note: 'Stricter, when a false positive would be costly. Needs about 50% more people.' },
+          { value: 'bonferroni', label: 'Several tests, corrected', note: 'If you test several hypotheses and correct with Bonferroni, plan with α divided by the number of tests.' },
+        ]}
+        chosen={answers.alpha}
+        onPick={(value) => answer({ alpha: value })}
+      />
+    );
+  } else if (step === 'sides') {
+    question = 'A two-sided or a one-sided test?';
+    help = 'A two-sided test counts an effect in either direction. A one-sided test looks in one direction only, and ignores an effect the other way, however large.';
+    body = (
+      <Choice<1 | 2>
+        options={[
+          { value: 2, label: 'Two-sided', note: 'An effect in either direction counts. R\'s default.', tag: 'Recommended: what almost everyone uses' },
+          { value: 1, label: 'One-sided', note: 'Only if you fixed the direction in advance, in writing, and an effect the other way would mean the same to you as no effect. Needs about a fifth fewer people, which is why reviewers distrust it when it was not planned.' },
+        ]}
+        chosen={answers.sides}
+        onPick={(value) => answer({ sides: value })}
+      />
+    );
+  } else if (step === 'dropout') {
+    question = 'How many people will you lose?';
+    help = 'Some people drop out, skip questions or fail attention checks. Recruit extra so enough complete cases remain. These are rough guides; figures from similar studies are better.';
+    body = (
+      <Choice
+        options={[
+          { value: 0, label: 'None', note: 'The data are already complete, or nobody can drop out.' },
+          { value: 10, label: '10%', note: 'One session, in the lab or online.', tag: 'A common minimum' },
+          { value: 20, label: '20%', note: 'An online survey with attention checks, or a hard-to-reach group.' },
+          { value: 30, label: '30%', note: 'Several sessions, or a follow-up measurement weeks later.' },
+        ]}
+        chosen={answers.dropout}
+        onPick={(value) => answer({ dropout: value })}
+      />
+    );
+  }
 
   return (
     <div className="model-chooser sample-size">
@@ -300,8 +509,8 @@ export default function SampleSize() {
         <h1>How many participants do I need?</h1>
         <p>
           A power analysis, done before you collect data, tells you how many people you need for a good chance of
-          finding an effect that matters. G*Power and R do the arithmetic; the hard part is the choices that go into
-          it, and this page walks you through each one.
+          finding an effect that matters. Answer a few short questions; each one explains what to choose if you have
+          never done this before.
         </p>
       </header>
 
@@ -309,229 +518,126 @@ export default function SampleSize() {
         <p>
           Plan the sample before you collect it. Afterwards, a power analysis based on the effect you found tells you
           nothing the p-value and the confidence interval don't already say (<Link to="/lesson/08-3">Lesson 8-3</Link>).
-          If your data already exist, choose "What can my sample detect?" below instead.
         </p>
       </AvatarTip>
 
-      <section className="mc-panel" aria-labelledby={`${ids}-design`}>
-        <p className="mc-kicker">Step 1</p>
-        <h2 id={`${ids}-design`}>What will you test?</h2>
-        <div className="ss-designs" role="radiogroup" aria-labelledby={`${ids}-design`}>
-          {DESIGNS.map((d) => (
-            <label key={d.id} className={`ss-design${d.id === designId ? ' selected' : ''}`}>
-              <input type="radio" name={`${ids}-design`} checked={d.id === designId} onChange={() => pick(d.id)} />
-              <span className="ss-design-title">{d.title}</span>
-              <span className="ss-design-example">{d.example}</span>
-            </label>
-          ))}
-        </div>
-        <p className="ss-note">
-          Not sure which of these fits your question? <Link to="/which-model">Which model should I use?</Link> helps you choose.
-          Mixed models, logistic regression and mediation are not here: plan those by simulation, as{' '}
-          <Link to="/lesson/08-3">Lesson 8-3</Link> does, or with the simr package for mixed models.
-        </p>
-      </section>
+      <section className="mc-panel mc-tree" aria-labelledby={`${ids}-title`}>
+        <p className="mc-kicker">Step by step</p>
+        <h2 id={`${ids}-title`}>Answer a few short questions</h2>
 
-      <section className="mc-panel" aria-labelledby={`${ids}-mode`}>
-        <p className="mc-kicker">Step 2</p>
-        <h2 id={`${ids}-mode`}>What do you want to find out?</h2>
-        <div className="ss-choice" role="radiogroup" aria-labelledby={`${ids}-mode`}>
-          <label><input type="radio" name={`${ids}-mode`} checked={mode === 'n'} onChange={() => setMode('n')} /> How many people I need <small>for a study you are still planning</small></label>
-          <label><input type="radio" name={`${ids}-mode`} checked={mode === 'effect'} onChange={() => setMode('effect')} /> What can my sample detect? <small>when the number of people is already fixed, for example existing data</small></label>
-        </div>
-        {mode === 'effect' && (
-          <label className="ss-field">
-            <span>{unitLabel}</span>
-            <input inputMode="numeric" value={nFixed} onChange={(e) => setNFixed(e.target.value)} />
-          </label>
-        )}
-      </section>
-
-      <section className="mc-panel" aria-labelledby={`${ids}-effect`}>
-        <p className="mc-kicker">Step 3</p>
-        <h2 id={`${ids}-effect`}>{mode === 'n' ? 'How big is the effect you want to be able to find?' : 'Describe the design'}</h2>
-        <p>
-          This plans for {testText(design, sides)} (<Link to={`/lesson/${design.lessonId}`}>Lesson {design.lessonId.replace(/^0/, '')}</Link>).
-          {mode === 'n' && <> The effect size is {design.effectName}: {design.effectMeaning}</>}
-        </p>
-
-        <div className="ss-fields">
-          {design.id === 'anova' && (
-            <label className="ss-field"><span>Number of groups</span><input inputMode="numeric" value={k} onChange={(e) => setK(e.target.value)} /></label>
-          )}
-          {(design.id === 'regression' || design.id === 'r2-change') && (
-            <label className="ss-field"><span>Predictors in the {design.id === 'r2-change' ? 'full ' : ''}model</span><input inputMode="numeric" value={predictors} onChange={(e) => setPredictors(e.target.value)} /></label>
-          )}
-          {design.id === 'r2-change' && (
-            <label className="ss-field"><span>Of which added and tested</span><input inputMode="numeric" value={added} onChange={(e) => setAdded(e.target.value)} /></label>
-          )}
-          {design.id === 'chi-square' && (
-            <label className="ss-field"><span>Degrees of freedom</span><input inputMode="numeric" value={df} onChange={(e) => setDf(e.target.value)} /><small>(rows − 1) × (columns − 1)</small></label>
-          )}
-          {design.id === 'proportions' && (
-            <>
-              <label className="ss-field"><span>First group: % yes</span><input inputMode="decimal" value={p1} onChange={(e) => setP1(e.target.value)} /></label>
-              {mode === 'n' && (
-                <label className="ss-field"><span>Second group: % yes</span><input inputMode="decimal" value={p2} onChange={(e) => setP2(e.target.value)} /></label>
-              )}
-            </>
-          )}
-          {mode === 'n' && design.id !== 'proportions' && (
-            <label className="ss-field ss-effect"><span>{design.effectName} ({design.symbol})</span><input inputMode="decimal" value={effect} onChange={(e) => setEffect(e.target.value)} /></label>
-          )}
-        </div>
-
-        {mode === 'n' && 'plan' in built && (
-          <p className="ss-meaning">{meaning(design, built.plan.effect, built.plan.p1 ?? 0)}</p>
-        )}
-
-        {mode === 'n' && (
-          <>
-            <EffectHelper design={design} onUse={(value) => setEffect(String(value))} />
-            <details className="ss-explain" open>
-              <summary>Where should this number come from?</summary>
-              <ol>
-                <li><strong>The smallest effect that would matter.</strong> Ask what difference would change a decision or be worth knowing about, in the outcome's own units (say, 3 points on a wellbeing scale), and convert it with the calculator above. This is the smallest effect size of interest, and the best basis for a plan.</li>
-                <li><strong>A meta-analysis, or several similar studies.</strong> Their average is a far better guide than any single study. Published effects still tend to be inflated, because significant results are published more often.</li>
-                <li><strong>One earlier study.</strong> Treat its effect as an upper limit and plan for something smaller: a significant result from a small study usually overstates the effect (<Link to="/lesson/08-4">Lesson 8-4</Link>).</li>
-                <li><strong>A pilot study.</strong> Too small to estimate an effect size well. Use a pilot to test your materials and procedure, not to set the effect size.</li>
-                {design.benchmarks && (
-                  <li><strong>Cohen's conventions, as a last resort.</strong> Cohen called {design.symbol} = {design.benchmarks.map((b) => formatEffect(design, b)).join(', ')} small, medium and large, for when nothing else is known. They ignore what matters in your field, so say so if you use them.{' '}
-                    <span className="ss-bench">
-                      {design.benchmarks.map((b, i) => (
-                        <button key={b} type="button" className="button-secondary" onClick={() => setEffect(String(b))}>
-                          {['Small', 'Medium', 'Large'][i]} ({formatEffect(design, b)})
-                        </button>
-                      ))}
-                    </span>
-                  </li>
-                )}
-              </ol>
-            </details>
-          </>
-        )}
-      </section>
-
-      <section className="mc-panel" aria-labelledby={`${ids}-sure`}>
-        <p className="mc-kicker">Step 4</p>
-        <h2 id={`${ids}-sure`}>How sure do you want to be?</h2>
-        <div className="ss-fields">
-          <label className="ss-field">
-            <span>Power</span>
-            <select value={target} onChange={(e) => setTarget(e.target.value)}>
-              <option value="0.8">80%</option>
-              <option value="0.9">90%</option>
-              <option value="0.95">95%</option>
-            </select>
-            <small>80% means a one-in-five chance of missing a real effect of this size. 90% halves that risk and takes roughly a third more people.</small>
-          </label>
-          <label className="ss-field">
-            <span>α (significance level)</span>
-            <input inputMode="decimal" value={alpha} onChange={(e) => setAlpha(e.target.value)} />
-            <small>.05 is the convention. If you test several hypotheses and correct for it, plan with the corrected α, for example .05 / 3 = .0167 for three Bonferroni-corrected tests.</small>
-          </label>
-          {mode === 'n' && (
-            <label className="ss-field">
-              <span>Expected dropout (%)</span>
-              <input inputMode="decimal" value={dropout} onChange={(e) => setDropout(e.target.value)} />
-              <small>People who drop out, skip questions or fail attention checks. You recruit extra so enough complete cases remain.</small>
-            </label>
-          )}
-        </div>
-        {HAS_SIDES[design.id] && (
-          <fieldset className="ss-choice">
-            <legend>One or two sides?</legend>
-            <label><input type="radio" name={`${ids}-sides`} checked={sides === 2} onChange={() => setSides(2)} /> Two-sided <small>the default: an effect in either direction counts</small></label>
-            <label><input type="radio" name={`${ids}-sides`} checked={sides === 1} onChange={() => setSides(1)} /> One-sided <small>only if you fixed the direction in advance, in writing, and an effect in the other direction would mean the same to you as no effect. It needs about a fifth fewer people, which is why reviewers distrust it when it was not planned.</small></label>
-          </fieldset>
-        )}
-      </section>
-
-      <section className="mc-panel ss-result" aria-labelledby={`${ids}-result`}>
-        <p className="mc-kicker">Your plan</p>
-        <h2 id={`${ids}-result`}>{mode === 'n' ? 'The sample you need' : 'What your sample can detect'}</h2>
-        {'error' in built && <p role="alert" className="ss-error">{built.error}</p>}
-        {result?.kind === 'too-small' && (
-          <p role="alert" className="ss-error">An effect this small would need more than a million people. Check the effect size, or ask whether an effect this small matters.</p>
-        )}
-        {result?.kind === 'bad-n' && <p role="alert" className="ss-error">Enter a whole number of people, at least {result.min}.</p>}
-        {result?.kind === 'none' && <p role="alert" className="ss-error">No effect size reaches that power with this many people. Lower the power or add people.</p>}
-
-        {result?.kind === 'n' && (
-          <>
-            <div className="ss-headline" aria-live="polite">
-              <p><span className="ss-big">{result.recruit}</span> to recruit</p>
-              <p><span className="ss-big">{totalN(result.plan, result.n)}</span> complete cases needed</p>
+        {at > 0 && (
+          <nav className="model-chooser-trail" aria-label="Your answers so far">
+            <ol>
+              {steps.slice(0, at).map((s, i) => (
+                <li key={s}>
+                  <button type="button" onClick={() => go(i)}>
+                    <span className="visually-hidden">Change your answer: </span>
+                    {summary(s)}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="model-chooser-trail-actions">
+              <button type="button" onClick={() => go(at - 1)}>Back</button>
+              <button type="button" onClick={() => { go(0); setAnswers(START); }}>Start over</button>
             </div>
-            <p>
-              You need {peopleText(design, result.plan, result.n)} with complete data. With that many, the power is {pct(result.achieved, 1)}.
-              {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, recruit {peopleText(design, result.plan, result.recruitUnit)}.</>}
-            </p>
-            <h3>If the true effect is smaller</h3>
-            <table className="ss-table">
-              <thead><tr><th scope="col">True effect</th><th scope="col">Complete cases needed</th></tr></thead>
-              <tbody>
-                <tr><td>{design.id === 'proportions' ? `${pct(result.plan.effect, 1)} (as planned)` : `${design.symbol} = ${formatEffect(design, result.plan.effect)} (as planned)`}</td><td>{totalN(result.plan, result.n)}</td></tr>
-                {result.smaller.map((s) => (
-                  <tr key={s.f}>
-                    <td>{design.id === 'proportions' ? `${pct(s.e, 1)} (${pct(s.f)} of the difference)` : `${design.symbol} = ${formatEffect(design, s.e)} (${pct(s.f)} of it)`}</td>
-                    <td>{s.total === null ? 'more than a million' : s.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="ss-note">A somewhat smaller true effect needs a much larger sample. That is why the effect size is the choice to get right.</p>
-            <PowerCurve points={result.points} xLabel="Total number of people" target={power}
-              mark={[totalN(result.plan, result.n), result.achieved]} markLabel={`${totalN(result.plan, result.n)} people`} />
-            <h3>How to report it</h3>
-            <p className="ss-report">
-              An a priori power analysis with {tool(design)} showed that {peopleText(design, result.plan, result.n)} are
-              needed to detect {effectText(design, result.plan, result.plan.effect)} with {pct(power)} power in {testText(design, result.plan.sides)} at
-              α = {alphaText}.{' '}
-              <em>[Say where the effect size comes from.]</em>
-              {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, we will recruit {totalN(result.plan, result.recruitUnit)} participants.</>}
-            </p>
-          </>
+          </nav>
         )}
 
-        {result?.kind === 'effect' && (
-          <>
-            <div className="ss-headline" aria-live="polite">
-              <p><span className="ss-big">{design.id === 'proportions' ? pct(result.effect, 1) : formatEffect(design, result.effect)}</span> {design.id === 'proportions' ? 'in the second group' : `smallest ${design.symbol} with ${pct(power)} power`}</p>
-            </div>
-            <p>
-              With {peopleText(design, result.plan, result.n)}, {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power
-              for {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)} or larger` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)} or larger`}.
-              Smaller effects may well go unnoticed, so a non-significant result says little about them.
-            </p>
-            {design.id !== 'proportions' && <p className="ss-meaning">{meaning(design, result.effect, 0)}</p>}
-            <PowerCurve points={result.points} xLabel={design.id === 'proportions' ? 'Proportion in the second group' : `Effect size (${design.symbol})`}
-              target={power} mark={[result.effect, power]} markLabel={`${design.symbol} = ${formatEffect(design, result.effect)}`} />
-            <h3>How to report it</h3>
-            <p className="ss-report">
-              A sensitivity power analysis with {tool(design)} showed that with {peopleText(design, result.plan, result.n)},{' '}
-              {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power to detect{' '}
-              {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)}` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)}`} or larger.
-            </p>
-          </>
-        )}
-
-        {code && (
-          <>
-            <h3>Check it in R</h3>
-            <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
-            <div className="model-chooser-code">
-              <pre><code>{code}</code></pre>
-              <button type="button" className="button-secondary" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy code'}</button>
-            </div>
-            {mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && (
-              <p className="ss-note">R reports n unrounded{PER_GROUP[design.id] ? ' and per group' : ''}; round it up to whole people.</p>
+        {step !== 'result' ? (
+          <div className="mc-step" key={step}>
+            <p className="model-chooser-step">Question {at + 1}</p>
+            <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">{question}</h3>
+            <p className="model-chooser-help">{help}</p>
+            {body}
+          </div>
+        ) : (
+          <div className="model-chooser-answer ss-result" key="result">
+            <p className="mc-kicker">Your plan</p>
+            <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">{answers.mode === 'n' ? 'The sample you need' : 'What your sample can detect'}</h3>
+            {result?.kind === 'too-small' && (
+              <p role="alert" className="ss-error">An effect this small would need more than a million people. Check the effect size, or ask whether an effect this small matters.</p>
             )}
-          </>
-        )}
+            {result?.kind === 'bad-n' && <p role="alert" className="ss-error">This design needs at least {result.min} people. Change the number of people above.</p>}
+            {result?.kind === 'none' && <p role="alert" className="ss-error">No effect size reaches that power with this many people. Lower the power or add people.</p>}
 
-        <h3>What this assumes</h3>
-        <p>{design.assumes}</p>
+            {result?.kind === 'n' && (
+              <>
+                <div className="ss-headline">
+                  <p><span className="ss-big">{totalN(result.plan, result.recruitUnit)}</span> to recruit</p>
+                  <p><span className="ss-big">{totalN(result.plan, result.n)}</span> complete cases needed</p>
+                </div>
+                <p>
+                  You need {peopleText(design, result.plan, result.n)} with complete data. With that many, the power is {pct(result.achieved, 1)}.
+                  {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, recruit {peopleText(design, result.plan, result.recruitUnit)}.</>}
+                </p>
+                <h4>If the true effect is smaller</h4>
+                <table className="ss-table">
+                  <thead><tr><th scope="col">True effect</th><th scope="col">Complete cases needed</th></tr></thead>
+                  <tbody>
+                    <tr><td>{design.id === 'proportions' ? `${pct(result.plan.effect, 1)} (as planned)` : `${design.symbol} = ${formatEffect(design, result.plan.effect)} (as planned)`}</td><td>{totalN(result.plan, result.n)}</td></tr>
+                    {result.smaller.map((s) => (
+                      <tr key={s.f}>
+                        <td>{design.id === 'proportions' ? `${pct(s.e, 1)} (${pct(s.f)} of the difference)` : `${design.symbol} = ${formatEffect(design, s.e)} (${pct(s.f)} of it)`}</td>
+                        <td>{s.total === null ? 'more than a million' : s.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="ss-note">A somewhat smaller true effect needs a much larger sample. That is why the effect size is the choice to get right.</p>
+                <PowerCurve points={result.points} xLabel="Total number of people" target={power}
+                  mark={[totalN(result.plan, result.n), result.achieved]} markLabel={`${totalN(result.plan, result.n)} people`} />
+                <h4>How to report it</h4>
+                <p className="ss-report">
+                  An a priori power analysis with {tool(design)} showed that {peopleText(design, result.plan, result.n)}{design.id === 'paired' && ','} are
+                  needed to detect {effectText(design, result.plan, result.plan.effect)} with {pct(power)} power in {testText(design, result.plan.sides)} at
+                  α = {alphaText}.{' '}
+                  <em>{answers.route === 'unknown' ? '[Say that this is a conventional value, and why no better estimate was available.]' : '[Say where the effect size comes from.]'}</em>
+                  {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, we will recruit {totalN(result.plan, result.recruitUnit)} participants.</>}
+                </p>
+              </>
+            )}
+
+            {result?.kind === 'effect' && (
+              <>
+                <div className="ss-headline">
+                  <p><span className="ss-big">{design.id === 'proportions' ? pct(result.effect, 1) : formatEffect(design, result.effect)}</span> {design.id === 'proportions' ? 'in the second group' : `smallest ${design.symbol} with ${pct(power)} power`}</p>
+                </div>
+                <p>
+                  With {peopleText(design, result.plan, result.n)}, {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power
+                  for {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)} or larger` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)} or larger`}.
+                  Smaller effects may well go unnoticed, so a non-significant result says little about them.
+                </p>
+                {design.id !== 'proportions' && <p className="ss-meaning">{meaning(design, result.effect, 0)}</p>}
+                <PowerCurve points={result.points} xLabel={design.id === 'proportions' ? 'Proportion in the second group' : `Effect size (${design.symbol})`}
+                  target={power} mark={[result.effect, power]} markLabel={`${design.symbol} = ${formatEffect(design, result.effect)}`} />
+                <h4>How to report it</h4>
+                <p className="ss-report">
+                  A sensitivity power analysis with {tool(design)} showed that with {peopleText(design, result.plan, result.n)},{' '}
+                  {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power to detect{' '}
+                  {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)}` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)}`} or larger.
+                </p>
+              </>
+            )}
+
+            {code && (
+              <>
+                <h4>Check it in R</h4>
+                <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
+                <div className="model-chooser-code">
+                  <pre tabIndex={0} aria-label="R code"><code>{code}</code></pre>
+                  <button type="button" className="button-secondary" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy code'}</button>
+                </div>
+                {answers.mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && (
+                  <p className="ss-note">R reports n unrounded{PER_GROUP[design.id] ? ' and per group' : ''}; round it up to whole people.</p>
+                )}
+              </>
+            )}
+
+            <h4>What this assumes</h4>
+            <p>{design.assumes}</p>
+          </div>
+        )}
       </section>
     </div>
   );
