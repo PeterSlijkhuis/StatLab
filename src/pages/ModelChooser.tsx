@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { findLesson } from '../content/manifest';
-import { allAnswers, follow, GROUPS, packagesDownloaded, packagesMissingHere, pathTo, SHIPS_WITH_R, type Answer } from './modelTree';
+import { allAnswers, follow, GROUPS, packagesDownloaded, packagesMissingHere, pathTo, SHIPS_WITH_R, TREE, type Answer, type Node } from './modelTree';
+import { CUES, matchQuestion, type CueId } from './questionMatcher';
+import './ModelChooser.css';
 
 export { TREE, type Answer, type Node } from './modelTree';
 
@@ -207,11 +209,172 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
   );
 }
 
+const ANSWERS = new Map(allAnswers().map(({ answer }) => [answer.id, answer]));
+
+/** Research questions from the course data, one per common kind of analysis. */
+const EXAMPLES = [
+  'Do remote workers report higher wellbeing than office workers?',
+  'Does workload predict whether employees leave?',
+  'Did engagement rise from the first to the second measurement, and more for trained employees?',
+  'Does the effect of workload on wellbeing differ between departments?',
+  'Does training raise performance through higher engagement?',
+  'Does workload predict the number of sick days?',
+];
+
+type Overrides = Partial<Record<CueId, boolean>>;
+
+function Suggestion({ id, reasons, best, onCheck }: { id: string; reasons: string[]; best: boolean; onCheck: (id: string) => void }) {
+  const answer = ANSWERS.get(id)!;
+  const [open, setOpen] = useState(false);
+  const detailId = useId();
+  return (
+    <article className={`mc-suggestion${best ? ' best' : ''}`}>
+      <p className="mc-kicker">{best ? 'Best match' : 'Also possible'}</p>
+      <h3>{answer.model}</h3>
+      {best && <p className="mc-suggestion-when">{answer.when}</p>}
+      <ul className="mc-why" aria-label="Why it fits">
+        {reasons.map((reason) => (
+          <li key={reason}>{reason}</li>
+        ))}
+      </ul>
+      <div className="mc-suggestion-actions">
+        <button type="button" className={best ? 'button-primary' : 'button-secondary'} onClick={() => onCheck(id)}>
+          Check it with the questions
+        </button>
+        <button type="button" className="mc-link-button" aria-expanded={open} aria-controls={detailId} onClick={() => setOpen(!open)}>
+          {open ? 'Hide the details' : 'Show the details'}
+        </button>
+      </div>
+      <div id={detailId} className="mc-suggestion-detail" hidden={!open}>
+        {open && <AnswerCard answer={answer} />}
+      </div>
+    </article>
+  );
+}
+
+/**
+ * The research-question box: a keyword matcher suggests a model, shows the
+ * cues it read, and lets the student switch any of them off or add one.
+ */
+function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
+  const [text, setText] = useState('');
+  const [overrides, setOverrides] = useState<Overrides>({});
+  const match = useMemo(() => matchQuestion(text, overrides), [text, overrides]);
+  const shown = match.suggestions.slice(0, 3);
+  const chips = CUES.filter((cue) => match.detected.includes(cue.id) || cue.id in overrides);
+  const addable = CUES.filter((cue) => !chips.includes(cue));
+  const typed = text.trim().length > 0;
+
+  function write(next: string) {
+    setText(next);
+    setOverrides({});
+  }
+  function toggle(id: CueId) {
+    setOverrides({ ...overrides, [id]: !match.cues.includes(id) });
+  }
+
+  return (
+    <section className="mc-panel mc-matcher" aria-labelledby="mc-matcher-title">
+      <p className="mc-kicker">Quick start</p>
+      <h2 id="mc-matcher-title">Describe your research question</h2>
+      <label htmlFor="mc-question" className="visually-hidden">
+        Your research question
+      </label>
+      <textarea
+        id="mc-question"
+        rows={2}
+        value={text}
+        onChange={(event) => write(event.target.value)}
+        placeholder="For example: Do students who sleep more get higher exam scores?"
+      />
+      <div className="mc-examples">
+        <span className="mc-examples-label">Or try one:</span>
+        {EXAMPLES.map((example) => (
+          <button key={example} type="button" aria-pressed={text === example} onClick={() => write(example)}>
+            {example}
+          </button>
+        ))}
+      </div>
+      <p className="mc-note">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16">
+          <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M10 9v5M10 6.2v.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        The suggestion comes from keywords in your question, not from AI, so confirm it with the questions below.
+      </p>
+
+      <p className="visually-hidden" aria-live="polite">
+        {shown.length > 0 ? `Best match: ${ANSWERS.get(shown[0].id)!.model}` : typed ? 'No clear match yet.' : ''}
+      </p>
+
+      {chips.length > 0 && (
+        <div className="mc-cues">
+          <p className="mc-cues-title">What we read in your question. Tap one to switch it off if it is wrong.</p>
+          <ul>
+            {chips.map((cue) => (
+              <li key={cue.id}>
+                <button type="button" className="mc-chip" aria-pressed={match.cues.includes(cue.id)} onClick={() => toggle(cue.id)}>
+                  {cue.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <details className="mc-add">
+            <summary>Missed something? Add it</summary>
+            <ul>
+              {addable.map((cue) => (
+                <li key={cue.id}>
+                  <button type="button" className="mc-chip" aria-pressed="false" onClick={() => toggle(cue.id)}>
+                    {cue.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
+
+      {shown.length > 0 ? (
+        <div className="mc-suggestions">
+          {shown.map((suggestion, i) => (
+            <Suggestion key={suggestion.id} id={suggestion.id} reasons={suggestion.reasons} best={i === 0} onCheck={onCheck} />
+          ))}
+        </div>
+      ) : (
+        typed && (
+          <p className="mc-empty">
+            No clear match yet. Try saying what you measured and what you compare or predict it with, as in the examples, or
+            answer the short questions below.
+          </p>
+        )
+      )}
+    </section>
+  );
+}
+
+/** The question each step of a path answered, for the trail's labels. */
+function questionsOn(path: string[]): string[] {
+  const texts: string[] = [];
+  let node: Node = TREE;
+  for (const label of path) {
+    if (node.kind !== 'question') break;
+    texts.push(node.text);
+    node = node.options.find((option) => option.label === label)!.next;
+  }
+  return texts;
+}
+
+const startsWith = (path: string[], prefix: string[]) => prefix.every((label, i) => path[i] === label);
+
 export default function ModelChooser() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [path, setPath] = useState<string[]>(() => pathTo(searchParams.get('model') ?? '') ?? []);
+  // The furthest path taken or suggested, so stepping back shows the choice made there.
+  const [planned, setPlanned] = useState<{ path: string[]; suggested: boolean }>({ path, suggested: false });
   const { node } = follow(path);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const treeRef = useRef<HTMLElement>(null);
+  const baseId = useId();
   // Set by every control that replaces the button that was clicked, so focus
   // would otherwise fall to <body>. Never set on mount, so landing on the page
   // does not steal focus (also under StrictMode's double effect run).
@@ -222,75 +385,117 @@ export default function ModelChooser() {
     headingRef.current?.focus();
   }, [path]);
 
-  function go(next: string[]) {
+  function go(next: string[], plan?: { path: string[]; suggested: boolean }) {
     moveFocus.current = true;
     setPath(next);
+    setPlanned(plan ?? (startsWith(planned.path, next) ? planned : { path: next, suggested: false }));
     const reached = follow(next).node;
     setSearchParams(reached.kind === 'answer' ? { model: reached.id } : {}, { replace: true });
   }
 
   function pick(id: string) {
-    go(pathTo(id) ?? []);
+    const next = pathTo(id) ?? [];
+    go(next, { path: next, suggested: false });
   }
+
+  function check(id: string) {
+    const next = pathTo(id) ?? [];
+    go(next, { path: next, suggested: true });
+    const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    treeRef.current?.scrollIntoView?.({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  }
+
+  const asked = questionsOn(path);
+  const ahead = startsWith(planned.path, path) ? planned.path[path.length] : undefined;
 
   return (
     <div className="model-chooser">
-      <h1>Which model should I use?</h1>
-      <p>
-        Work down from the question you want your data to answer. Almost every analysis in this course is one of three
-        models, lm(), lmer() or glm(), and the chain is always the same: question, assumptions, choice of model,
-        computation, interpretation, report. The chooser also covers methods beyond the course, and says so.
-      </p>
-      <p className="model-chooser-legend">
-        Most snippets run as they are in the <Link to="/workspace">R Workspace</Link>, and the ones that need RStudio say
-        so. Each reads workplace.csv or wellbeing-population.csv, the course data the workspace already has, or a dataset
-        built into R when the course data has nothing that fits. For your own data, change the file name in read.csv() and
-        the column names.
-      </p>
+      <header className="mc-intro">
+        <h1>Which model should I use?</h1>
+        <p>
+          Describe your research question for a quick suggestion, or answer a few short questions. Almost every analysis in
+          this course is one of three models, lm(), lmer() or glm(), and the chain is always the same: question, assumptions,
+          choice of model, computation, interpretation, report.
+        </p>
+      </header>
 
-      {path.length > 0 && (
-        <nav className="model-chooser-trail" aria-label="Your answers so far">
-          <ol>
-            {path.map((label) => (
-              <li key={label}>{label}</li>
-            ))}
-          </ol>
-          <div className="model-chooser-trail-actions">
-            <button type="button" onClick={() => go(path.slice(0, -1))}>
-              Back
-            </button>
-            <button type="button" onClick={() => go([])}>
-              Start over
-            </button>
+      <QuestionMatcher onCheck={check} />
+
+      <section ref={treeRef} className="mc-panel mc-tree" aria-labelledby="mc-tree-title">
+        <p className="mc-kicker">Step by step</p>
+        <h2 id="mc-tree-title">Answer a few short questions</h2>
+
+        {path.length > 0 && (
+          <nav className="model-chooser-trail" aria-label="Your answers so far">
+            {planned.suggested && node.kind === 'answer' && (
+              <p className="mc-trail-hint">These answers lead to the suggestion. Tap any step to check it or change it.</p>
+            )}
+            <ol>
+              {path.map((label, i) => (
+                <li key={label}>
+                  <button type="button" title={asked[i]} onClick={() => go(path.slice(0, i))}>
+                    <span className="visually-hidden">Change your answer to {asked[i]} You chose: </span>
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="model-chooser-trail-actions">
+              <button type="button" onClick={() => go(path.slice(0, -1))}>
+                Back
+              </button>
+              <button type="button" onClick={() => go([], { path: [], suggested: false })}>
+                Start over
+              </button>
+            </div>
+          </nav>
+        )}
+
+        {node.kind === 'question' ? (
+          <div className="mc-step" key={path.join('/')}>
+            <p className="model-chooser-step">Question {path.length + 1}</p>
+            <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">
+              {node.text}
+            </h3>
+            {node.help && <p className="model-chooser-help">{node.help}</p>}
+            <ul className="model-chooser-options">
+              {node.options.map((option, i) => {
+                const id = `${baseId}-${i}`;
+                const flagged = option.label === ahead;
+                return (
+                  <li key={option.label}>
+                    <button type="button" className={flagged ? 'flagged' : undefined} aria-labelledby={`${id}-label`} aria-describedby={`${id}-more`} onClick={() => go([...path, option.label])}>
+                      <span className="mc-option-label" id={`${id}-label`}>
+                        {option.label}
+                      </span>
+                      <span id={`${id}-more`} className="mc-option-more">
+                        {flagged && <span className="mc-flag">{planned.suggested ? 'Suggested' : 'Your earlier choice'}</span>}
+                        <span className="mc-option-example">{option.example}</span>
+                        <span className="mc-option-tech">{option.tech}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </nav>
-      )}
+        ) : (
+          <div className="model-chooser-answer" key={node.id}>
+            <p className="mc-kicker">Your model</p>
+            <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">
+              {node.model}
+            </h3>
+            <AnswerCard answer={node} />
+          </div>
+        )}
 
-      {node.kind === 'question' ? (
-        <>
-          <p className="model-chooser-step">Question {path.length + 1}</p>
-          <h2 ref={headingRef} tabIndex={-1}>
-            {node.text}
-          </h2>
-          {node.help && <p className="model-chooser-help">{node.help}</p>}
-          <ul className="model-chooser-options">
-            {node.options.map((option) => (
-              <li key={option.label}>
-                <button type="button" onClick={() => go([...path, option.label])}>
-                  {option.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <div className="model-chooser-answer">
-          <h2 ref={headingRef} tabIndex={-1}>
-            {node.model}
-          </h2>
-          <AnswerCard answer={node} />
-        </div>
-      )}
+        <p className="model-chooser-legend">
+          Most snippets run as they are in the <Link to="/workspace">R Workspace</Link>, and the ones that need RStudio say so.
+          Each reads workplace.csv or wellbeing-population.csv, the course data the workspace already has, or a dataset built
+          into R when the course data has nothing that fits. For your own data, change the file name in read.csv() and the
+          column names.
+        </p>
+      </section>
 
       <Index onPick={pick} />
     </div>

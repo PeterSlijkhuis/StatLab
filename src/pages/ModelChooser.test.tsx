@@ -26,9 +26,9 @@ function renderChooser(url = '/which-model') {
   );
 }
 
-/** The chooser's own heading: the current question or answer. The index below it has an h2 of its own. */
+/** The chooser's own heading: the current question or answer. The sections around it have headings of their own. */
 function heading() {
-  return document.querySelector<HTMLElement>('.model-chooser > h2, .model-chooser-answer > h2')!;
+  return document.querySelector<HTMLElement>('.model-chooser-current')!;
 }
 
 /** Queries inside the answer card, so the index's filter buttons and badges do not match too. */
@@ -36,67 +36,67 @@ function card() {
   return within(document.querySelector<HTMLElement>('.model-chooser-answer')!);
 }
 
-const TO_OUTCOME = /predicts, or differs in, one outcome/i;
+const TO_OUTCOME = /one outcome differs/i;
 const NUMBER = [TO_OUTCOME, /^a number/i];
 const INDEPENDENT = [...NUMBER, /different people/i];
-const NUMERIC = [...INDEPENDENT, /numeric predictors/i];
-const GROUPS = [...INDEPENDENT, /grouping variables/i];
-const REPEATED = [...NUMBER, /measured more than once/i];
-const YES_NO = [TO_OUTCOME, /^yes or no/i, /one per case/i];
-const BAYES = /\(bayesian\)/i;
+const NUMERIC = [...INDEPENDENT, /^numbers$/i];
+const GROUPS = [...INDEPENDENT, /^groups$/i];
+const REPEATED = [...NUMBER, /^the same people, more than once$/i];
+const YES_NO = [TO_OUTCOME, /^yes or no/i, /one answer each/i];
+const BAYES = /how probable/i;
 
 // Written out by hand, not derived from TREE: a path that silently disappears
 // from the tree must fail here.
 const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lessonId: string }[] = [
-  { clicks: [...NUMERIC, /one numeric predictor/i], id: 'simple-regression', model: 'Simple linear regression', code: 'lm(wellbeing ~ autonomy, data = d)', lessonId: '10-2' },
+  { clicks: [...NUMERIC, /^one number$/i], id: 'simple-regression', model: 'Simple linear regression', code: 'lm(wellbeing ~ autonomy, data = d)', lessonId: '10-2' },
   { clicks: [...NUMERIC, /several predictors/i], id: 'multiple-regression', model: 'Multiple linear regression', code: 'wellbeing ~ autonomy + workload + tenure_years', lessonId: '11-1' },
-  { clicks: [...GROUPS, /with two groups/i], id: 'two-groups', model: 'Linear model with a two-group predictor', code: 'group_by(remote) %>% summarise(', lessonId: '12-1' },
-  { clicks: [...GROUPS, /three or more groups/i], id: 'several-groups', model: 'Linear model with a categorical predictor', code: 'emmeans(model, pairwise ~ department, adjust = "tukey")', lessonId: '12-2' },
-  { clicks: [...GROUPS, /covariate/i], id: 'groups-with-covariate', model: 'Linear model with a group and a covariate', code: 'lm(engagement_t2 ~ engagement_t1 + training', lessonId: '11-2' },
-  { clicks: [...GROUPS, /two grouping variables/i], id: 'factorial', model: 'Linear model with an interaction (factorial design)', code: 'contrasts = list(training = contr.sum, mentoring = contr.sum)', lessonId: '13-2' },
+  { clicks: [...GROUPS, /^two groups$/i], id: 'two-groups', model: 'Linear model with a two-group predictor', code: 'group_by(remote) %>% summarise(', lessonId: '12-1' },
+  { clicks: [...GROUPS, /^three or more groups$/i], id: 'several-groups', model: 'Linear model with a categorical predictor', code: 'emmeans(model, pairwise ~ department, adjust = "tukey")', lessonId: '12-2' },
+  { clicks: [...GROUPS, /adjusting for a number/i], id: 'groups-with-covariate', model: 'Linear model with a group and a covariate', code: 'lm(engagement_t2 ~ engagement_t1 + training', lessonId: '11-2' },
+  { clicks: [...GROUPS, /two kinds of groups/i], id: 'factorial', model: 'Linear model with an interaction (factorial design)', code: 'contrasts = list(training = contr.sum, mentoring = contr.sum)', lessonId: '13-2' },
   { clicks: [...REPEATED, /twice/i], id: 'before-after', model: 'Linear mixed-effects model for two time points', code: 'pivot_longer', lessonId: '14-3' },
   { clicks: [...REPEATED, /three or more/i], id: 'repeated-measures', model: 'Linear mixed-effects model', code: 'weight ~ time + (1 | Chick)', lessonId: '14-4' },
-  { clicks: [...NUMBER, /teams, classes or sites/i], id: 'nested-groups', model: 'Linear mixed-effects model with a grouping factor', code: '(1 | site)', lessonId: '14-3' },
-  { clicks: [...REPEATED, /also in different groups/i], id: 'time-by-group', model: 'Linear mixed-effects model with a time-by-group interaction', code: 'time * training', lessonId: '14-4' },
-  { clicks: [TO_OUTCOME, /a count of events/i, /start here/i], id: 'poisson-regression', model: 'Poisson regression', code: 'family = poisson', lessonId: '15-4' },
+  { clicks: [...NUMBER, /within teams/i], id: 'nested-groups', model: 'Linear mixed-effects model with a grouping factor', code: '(1 | site)', lessonId: '14-3' },
+  { clicks: [...REPEATED, /in different groups/i], id: 'time-by-group', model: 'Linear mixed-effects model with a time-by-group interaction', code: 'time * training', lessonId: '14-4' },
+  { clicks: [TO_OUTCOME, /a count of how often/i, /start here/i], id: 'poisson-regression', model: 'Poisson regression', code: 'family = poisson', lessonId: '15-4' },
   { clicks: [...YES_NO, /numbers, groups or both/i], id: 'logistic-regression', model: 'Logistic regression', code: 'family = binomial', lessonId: '15-2' },
-  { clicks: [BAYES, /one proportion/i], id: 'bayes-proportion', model: 'Bayesian estimate of a proportion (beta-binomial)', code: 'qbeta(', lessonId: '16-2' },
-  { clicks: [BAYES, /in a linear model/i], id: 'bayes-factor-models', model: 'Bayes factor from the BIC', code: 'exp((BIC(null_model) - BIC(model)) / 2)', lessonId: '16-3' },
-  { clicks: [/third variable/i, /mediator/i], id: 'mediation', model: 'Mediation model', code: 'indirect := a * b', lessonId: '17-1' },
-  { clicks: [/third variable/i, /reliability/i], id: 'scale-reliability', model: "Scale reliability (Cronbach's alpha)", code: 'psych::alpha(items)', lessonId: '03-4' },
-  { clicks: [/boil down/i, /traits behind them/i], id: 'exploratory-factors', model: 'Exploratory factor analysis (EFA)', code: 'factanal(', lessonId: '17-2' },
-  { clicks: [...YES_NO, /cross-table/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
-  { clicks: [...YES_NO, /one proportion/i], id: 'proportion-vs-value', model: 'Exact binomial test', code: 'binom.test(', lessonId: '09-1' },
-  { clicks: [TO_OUTCOME, /no order/i, /one other categorical variable/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
-  { clicks: [TO_OUTCOME, /ordered categories/i, /rank tests/i], id: 'rank-tests', model: 'Rank-based tests', code: 'kruskal.test(wellbeing ~ department, data = d)', lessonId: '12-4' },
-  { clicks: [BAYES, /prior on each coefficient/i], id: 'bayesian-regression', model: 'Bayesian linear regression (brms)', code: 'brm(', lessonId: '16-4' },
+  { clicks: [BAYES, /one percentage/i], id: 'bayes-proportion', model: 'Bayesian estimate of a proportion (beta-binomial)', code: 'qbeta(', lessonId: '16-2' },
+  { clicks: [BAYES, /against an effect/i], id: 'bayes-factor-models', model: 'Bayes factor from the BIC', code: 'exp((BIC(null_model) - BIC(model)) / 2)', lessonId: '16-3' },
+  { clicks: [/middle step, or/i, /^an effect through a middle step$/i], id: 'mediation', model: 'Mediation model', code: 'indirect := a * b', lessonId: '17-1' },
+  { clicks: [/middle step, or/i, /hang together/i], id: 'scale-reliability', model: "Scale reliability (Cronbach's alpha)", code: 'psych::alpha(items)', lessonId: '03-4' },
+  { clicks: [/summing up/i, /traits behind them/i], id: 'exploratory-factors', model: 'Exploratory factor analysis (EFA)', code: 'factanal(', lessonId: '17-2' },
+  { clicks: [...YES_NO, /a cross-table/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [...YES_NO, /one percentage/i], id: 'proportion-vs-value', model: 'Exact binomial test', code: 'binom.test(', lessonId: '09-1' },
+  { clicks: [TO_OUTCOME, /no order/i, /linked to one other category/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [TO_OUTCOME, /ordered levels/i, /groups differ, or/i], id: 'rank-tests', model: 'Rank-based tests', code: 'kruskal.test(wellbeing ~ department, data = d)', lessonId: '12-4' },
+  { clicks: [BAYES, /your own priors/i], id: 'bayesian-regression', model: 'Bayesian linear regression (brms)', code: 'brm(', lessonId: '16-4' },
 ];
 
 /** Answers beyond the course, reached by the same clicks a student would make. */
 const BEYOND: { clicks: RegExp[]; id: string; code: string }[] = [
-  { clicks: [...INDEPENDENT, /compare the mean/i], id: 'mean-vs-value', code: 'lm(I(exam_score - 70) ~ 1' },
-  { clicks: [...NUMERIC, /curved/i], id: 'curved-relationship', code: 'poly(sleep_hours, 2)' },
-  { clicks: [...NUMERIC, /moderation/i], id: 'continuous-moderation', code: 'workload_c * autonomy_c' },
+  { clicks: [...INDEPENDENT, /compare the average/i], id: 'mean-vs-value', code: 'lm(I(exam_score - 70) ~ 1' },
+  { clicks: [...NUMERIC, /pattern bends/i], id: 'curved-relationship', code: 'poly(sleep_hours, 2)' },
+  { clicks: [...NUMERIC, /depends on something else/i], id: 'continuous-moderation', code: 'workload_c * autonomy_c' },
   { clicks: [...GROUPS, /several outcomes/i], id: 'several-outcomes', code: 'manova(' },
-  { clicks: [...REPEATED, /different rates/i], id: 'growth-curve', code: '(Time | Chick)' },
-  { clicks: [...REPEATED, /many items or stimuli/i], id: 'crossed-random-effects', code: '(1 | lecturer)' },
+  { clicks: [...REPEATED, /their own pace/i], id: 'growth-curve', code: '(Time | Chick)' },
+  { clicks: [...REPEATED, /rates many items/i], id: 'crossed-random-effects', code: '(1 | lecturer)' },
   { clicks: [TO_OUTCOME, /^yes or no/i, /more than once, or grouped/i], id: 'repeated-binary', code: 'glmer(' },
-  { clicks: [TO_OUTCOME, /^yes or no/i, /trials per row/i], id: 'successes-of-trials', code: 'cbind(left, staff - left)' },
-  { clicks: [TO_OUTCOME, /ordered categories/i, /ordinal regression/i], id: 'ordinal-regression', code: 'polr(' },
-  { clicks: [TO_OUTCOME, /no order/i, /predicted from other variables/i], id: 'multinomial-regression', code: 'multinom(' },
-  { clicks: [TO_OUTCOME, /no order/i, /expected shares/i], id: 'goodness-of-fit', code: 'chisq.test(counts, p =' },
-  { clicks: [TO_OUTCOME, /a count of events/i, /overdispersion/i], id: 'negative-binomial', code: 'glm.nb(' },
-  { clicks: [TO_OUTCOME, /a count of events/i, /more zeros/i], id: 'zero-inflated', code: 'zeroinfl(' },
+  { clicks: [TO_OUTCOME, /^yes or no/i, /successes out of/i], id: 'successes-of-trials', code: 'cbind(left, staff - left)' },
+  { clicks: [TO_OUTCOME, /ordered levels/i, /several predictors at once/i], id: 'ordinal-regression', code: 'polr(' },
+  { clicks: [TO_OUTCOME, /no order/i, /from other variables/i], id: 'multinomial-regression', code: 'multinom(' },
+  { clicks: [TO_OUTCOME, /no order/i, /match what you expect/i], id: 'goodness-of-fit', code: 'chisq.test(counts, p =' },
+  { clicks: [TO_OUTCOME, /a count of how often/i, /more spread/i], id: 'negative-binomial', code: 'glm.nb(' },
+  { clicks: [TO_OUTCOME, /a count of how often/i, /extra zeros/i], id: 'zero-inflated', code: 'zeroinfl(' },
   { clicks: [TO_OUTCOME, /time until/i, /groups differ/i], id: 'survival-curves', code: 'survfit(Surv(tenure_years, left_company) ~ remote' },
-  { clicks: [TO_OUTCOME, /time until/i, /which predictors/i], id: 'cox-regression', code: 'coxph(' },
-  { clicks: [/third variable/i, /factors I expect/i], id: 'confirmatory-factors', code: 'cfa(model, data = HolzingerSwineford1939)' },
-  { clicks: [/third variable/i, /theory of paths/i], id: 'structural-equation-model', code: 'sem(model, data = HolzingerSwineford1939)' },
-  { clicks: [/boil down/i, /summary scores/i], id: 'principal-components', code: 'prcomp(' },
-  { clicks: [/boil down/i, /clusters/i], id: 'cluster-analysis', code: 'kmeans(' },
-  { clicks: [/over time/i, /forecast/i], id: 'forecast-series', code: 'arima(' },
-  { clicks: [/over time/i, /intervention/i], id: 'interrupted-time-series', code: 'time + after + time_after' },
-  { clicks: [/predict new cases/i, /only the useful predictors/i], id: 'lasso', code: 'cv.glmnet(' },
-  { clicks: [/predict new cases/i, /hard to read/i], id: 'random-forest', code: 'randomForest(' },
+  { clicks: [TO_OUTCOME, /time until/i, /sooner or later/i], id: 'cox-regression', code: 'coxph(' },
+  { clicks: [/middle step, or/i, /factors I expect/i], id: 'confirmatory-factors', code: 'cfa(model, data = HolzingerSwineford1939)' },
+  { clicks: [/middle step, or/i, /theory linking/i], id: 'structural-equation-model', code: 'sem(model, data = HolzingerSwineford1939)' },
+  { clicks: [/summing up/i, /summary scores/i], id: 'principal-components', code: 'prcomp(' },
+  { clicks: [/summing up/i, /into types/i], id: 'cluster-analysis', code: 'kmeans(' },
+  { clicks: [/one series/i, /forecast/i], id: 'forecast-series', code: 'arima(' },
+  { clicks: [/over time/i, /known moment/i], id: 'interrupted-time-series', code: 'time + after + time_after' },
+  { clicks: [/predicting new cases/i, /only the useful predictors/i], id: 'lasso', code: 'cv.glmnet(' },
+  { clicks: [/predicting new cases/i, /hard to explain/i], id: 'random-forest', code: 'randomForest(' },
   { clicks: [BAYES, /two groups/i], id: 'bayes-t-test', code: 'ttestBF(' },
 ];
 
@@ -145,7 +145,7 @@ describe('ModelChooser', () => {
 
   test('the traditional name is shown only when the leaf has one', async () => {
     renderChooser();
-    await clickThrough([...GROUPS, /with two groups/i]);
+    await clickThrough([...GROUPS, /^two groups$/i]);
     expect(screen.getByText('Traditional name:')).toBeTruthy();
 
     await userEvent.click(screen.getByRole('button', { name: /start over/i }));
@@ -214,17 +214,17 @@ describe('ModelChooser', () => {
     expect(document.activeElement).not.toBe(heading());
 
     await userEvent.click(screen.getByRole('button', { name: TO_OUTCOME }));
-    expect(heading().textContent).toMatch(/what kind of outcome/i);
+    expect(heading().textContent).toMatch(/what does your outcome look like/i);
     expect(document.activeElement).toBe(heading());
   });
 
   test('Back goes up one question', async () => {
     renderChooser();
     await clickThrough([...INDEPENDENT]);
-    expect(heading().textContent).toMatch(/what are you using to predict/i);
+    expect(heading().textContent).toMatch(/what do you compare or predict with/i);
 
     await userEvent.click(screen.getByRole('button', { name: /^back$/i }));
-    expect(heading().textContent).toMatch(/how were the scores collected/i);
+    expect(heading().textContent).toMatch(/who gave the scores/i);
     expect(document.activeElement).toBe(heading());
   });
 
@@ -253,7 +253,7 @@ describe('links and the index', () => {
   test('a link with ?model= opens that answer, with the path that leads to it', () => {
     renderChooser('/which-model?model=poisson-regression');
     expect(heading().textContent).toBe('Poisson regression');
-    expect(document.querySelector('.model-chooser-trail')?.textContent).toMatch(/a count of events/i);
+    expect(document.querySelector('.model-chooser-trail')?.textContent).toMatch(/a count of how often/i);
   });
 
   test('an unknown ?model= falls back to the first question', () => {
@@ -332,7 +332,7 @@ describe('where each snippet runs', () => {
 
   test('an answer that runs here says so and links to the R Workspace', async () => {
     renderChooser();
-    await clickThrough([...GROUPS, /three or more groups/i]);
+    await clickThrough([...GROUPS, /^three or more groups$/i]);
     expect(card().getByText('Runs in the R Workspace')).toBeTruthy();
     expect(card().getByRole('link', { name: 'R Workspace' }).getAttribute('href')).toBe('/workspace');
     expect(document.querySelector('.model-chooser-answer')?.textContent).toContain('The first run downloads emmeans');
@@ -340,7 +340,7 @@ describe('where each snippet runs', () => {
 
   test('advanced methods run in the R Workspace too, after a download', async () => {
     renderChooser();
-    await clickThrough([/third variable/i, /mediator/i]);
+    await clickThrough([/middle step, or/i, /^an effect through a middle step$/i]);
     expect(card().getByText('Runs in the R Workspace')).toBeTruthy();
     expect(document.querySelector('.model-chooser-answer')?.textContent).toContain('The first run downloads lavaan');
   });
@@ -373,7 +373,7 @@ describe('where each snippet runs', () => {
 
   test('Bayesian regression needs RStudio, and says why', async () => {
     renderChooser();
-    await clickThrough([BAYES, /prior on each coefficient/i]);
+    await clickThrough([BAYES, /your own priors/i]);
     expect(card().getByText('Needs RStudio')).toBeTruthy();
     expect(document.querySelector('.model-chooser-answer')?.textContent).toContain('this site does not have brms');
   });
@@ -425,7 +425,118 @@ describe('lesson links', () => {
 
   test('a model beyond the course links to the lesson it builds on', async () => {
     renderChooser();
-    await clickThrough([...REPEATED, /different rates/i]);
+    await clickThrough([...REPEATED, /their own pace/i]);
     expect(screen.getByRole('link', { name: /builds on the lesson: change over time/i }).getAttribute('href')).toBe('/lesson/14-4');
+  });
+});
+
+describe('research question', () => {
+  function box() {
+    return screen.getByRole('textbox', { name: 'Your research question' });
+  }
+  function best() {
+    return document.querySelector<HTMLElement>('.mc-suggestion.best h3')?.textContent;
+  }
+
+  test('typing a question shows a recommendation, with the reasons and a live summary', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'Does workload predict whether employees leave?');
+    expect(best()).toBe('Logistic regression');
+    expect(document.querySelector('.mc-suggestion.best')?.textContent).toContain('The outcome is yes or no');
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe('Best match: Logistic regression');
+    expect(document.querySelectorAll('.mc-suggestion').length).toBeLessThanOrEqual(3);
+  });
+
+  test('a question with no cues says so kindly and suggests nothing', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'hello');
+    expect(document.querySelector('.mc-suggestion')).toBeNull();
+    expect(screen.getByText(/no clear match yet\. try/i)).toBeTruthy();
+  });
+
+  test('clicking an example fills the box', async () => {
+    renderChooser();
+    const example = 'Do remote workers report higher wellbeing than office workers?';
+    await userEvent.click(screen.getByRole('button', { name: example }));
+    expect((box() as HTMLTextAreaElement).value).toBe(example);
+    expect(best()).toBe('Linear model with a two-group predictor');
+  });
+
+  test('switching a cue off re-ranks the suggestions', async () => {
+    renderChooser();
+    await userEvent.click(screen.getByRole('button', { name: /more for trained employees/i }));
+    expect(best()).toBe('Linear mixed-effects model with a time-by-group interaction');
+
+    await userEvent.click(screen.getByRole('button', { name: 'An effect depends on something', pressed: true }));
+    await userEvent.click(screen.getByRole('button', { name: 'Compares groups', pressed: true }));
+    expect(screen.getByRole('button', { name: 'Compares groups', pressed: false })).toBeTruthy();
+    expect(best()).toBe('Linear mixed-effects model for two time points');
+  });
+
+  test('a missed cue can be added', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'Does autonomy predict wellbeing?');
+    expect(best()).toBe('Simple linear regression');
+    const add = document.querySelector<HTMLElement>('.mc-add')!;
+    await userEvent.click(within(add).getByRole('button', { name: 'People in teams or classes' }));
+    expect(best()).toBe('Linear mixed-effects model with a grouping factor');
+  });
+
+  test('the details open the full answer card', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'Does workload predict the number of sick days?');
+    const card = document.querySelector<HTMLElement>('.mc-suggestion.best')!;
+    await userEvent.click(within(card).getByRole('button', { name: 'Show the details' }));
+    expect(card.querySelector('pre code')?.textContent).toContain('family = poisson');
+    expect(within(card).getByRole('button', { name: 'Hide the details' }).getAttribute('aria-expanded')).toBe('true');
+  });
+
+  test('"Check it with the questions" lands on the answer with its trail, and each step can be checked', async () => {
+    renderChooser();
+    await userEvent.type(box(), 'Does workload predict whether employees leave?');
+    const card = document.querySelector<HTMLElement>('.mc-suggestion.best')!;
+    await userEvent.click(within(card).getByRole('button', { name: 'Check it with the questions' }));
+
+    expect(heading().textContent).toBe('Logistic regression');
+    expect(document.activeElement).toBe(heading());
+    expect(screen.getByTestId('location').textContent).toBe('/which-model?model=logistic-regression');
+    const trail = screen.getByRole('navigation', { name: 'Your answers so far' });
+    expect([...trail.querySelectorAll('li')].map((li) => li.textContent?.replace(/^Change your answer to .*You chose: /, ''))).toEqual([
+      'How one outcome differs, or what predicts it',
+      'Yes or no',
+      'Different people, one answer each',
+      'Numbers, groups or both',
+    ]);
+
+    // Jumping back to step 2 shows that question, with the suggested choice marked.
+    await userEvent.click(within(trail).getByRole('button', { name: /yes or no/i }));
+    expect(heading().textContent).toBe('What does your outcome look like?');
+    const options = document.querySelector<HTMLElement>('.model-chooser-options')!;
+    expect(within(options).getByRole('button', { name: 'Yes or no' }).className).toContain('flagged');
+    expect(options.querySelector('.mc-flag')?.textContent).toBe('Suggested');
+  });
+
+  test('each option shows an example question and its technical name', () => {
+    renderChooser();
+    const options = document.querySelector<HTMLElement>('.model-chooser-options')!;
+    const first = within(options).getByRole('button', { name: 'How one outcome differs, or what predicts it' });
+    expect(first.querySelector('.mc-option-example')?.textContent).toBe('Do remote workers report higher wellbeing than office workers?');
+    expect(first.querySelector('.mc-option-tech')?.textContent).toBe('lm(), glm() and lmer()');
+  });
+
+  test('every option in the tree has an example and a technical name', () => {
+    (function walk(node: Node) {
+      if (node.kind === 'answer') return;
+      for (const option of node.options) {
+        expect(option.example.trim(), option.label).not.toBe('');
+        expect(option.tech.trim(), option.label).not.toBe('');
+        walk(option.next);
+      }
+    })(TREE);
+  });
+
+  test('the page says the suggestion comes from keywords', () => {
+    renderChooser();
+    expect(screen.getByText(/comes from keywords in your question, not from AI/i)).toBeTruthy();
   });
 });
