@@ -64,6 +64,7 @@ export const RECOMMENDED: PackageGroup[] = [
       { name: 'lme4', what: 'Mixed-effects (multilevel) models' },
       { name: 'lmerTest', what: 'p-values for lme4 models' },
       { name: 'effectsize', what: "Cohen's d, eta squared and other effect sizes" },
+      { name: 'pwr', what: 'Power analysis: how many participants a study needs' },
       { name: 'performance', what: 'Model checks, R squared and model comparison' },
       { name: 'lavaan', what: 'Structural equation models and confirmatory factor analysis' },
     ],

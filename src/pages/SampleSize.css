@@ -1,0 +1,63 @@
+/* Sample size planner. Builds on the panels in ModelChooser.css. */
+
+.ss-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 0.6rem; }
+.ss-design {
+  position: relative; display: flex; flex-direction: column; gap: 0.25rem; cursor: pointer;
+  padding: 0.8rem 0.9rem; border: 1.5px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  transition: border-color var(--fast), background var(--fast);
+}
+.ss-design:hover { border-color: var(--brand); }
+.ss-design.selected { border-color: var(--brand); background: var(--brand-soft); }
+.ss-design input { position: absolute; opacity: 0; pointer-events: none; }
+.ss-design:has(input:focus-visible) { outline: 3px solid var(--brand); outline-offset: 2px; }
+.ss-design-title { font-weight: 700; color: var(--ink); }
+.ss-design-example { font-size: 0.88rem; color: var(--muted); }
+
+.ss-choice { border: 0; padding: 0; margin: 0.4rem 0 0; display: grid; gap: 0.55rem; }
+.ss-choice legend { font-weight: 700; margin-bottom: 0.4rem; padding: 0; }
+.ss-choice label { display: block; line-height: 1.45; cursor: pointer; }
+.ss-choice small { display: block; margin-left: 1.6rem; color: var(--muted); font-size: 0.88rem; }
+
+.ss-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 0.9rem 1.2rem; margin: 0.9rem 0; }
+.ss-field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.8rem; }
+.ss-fields .ss-field { margin-top: 0; }
+.ss-field span { font-weight: 650; color: var(--ink); }
+.ss-field input, .ss-field select, .ss-helper input {
+  font: inherit; padding: 0.5rem 0.7rem; border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink); max-width: 14rem;
+}
+.ss-field small, .ss-helper small { color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+.ss-effect input { font-size: 1.15rem; font-weight: 700; }
+.ss-meaning { color: var(--ink-2); background: var(--surface-2); border-radius: var(--radius-sm); padding: 0.55rem 0.8rem; }
+
+.ss-helper, .ss-explain { margin: 0.9rem 0; border: 1px solid var(--line); border-radius: var(--radius); padding: 0.6rem 0.9rem; background: var(--surface); }
+.ss-helper summary, .ss-explain summary { cursor: pointer; font-weight: 700; color: var(--brand-ink); }
+.ss-helper-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 0.8rem 1.2rem; margin: 0.8rem 0; }
+.ss-helper label { display: flex; flex-direction: column; gap: 0.3rem; }
+.ss-helper label span { font-weight: 600; font-size: 0.92rem; }
+.ss-helper-result { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.2rem 0 0.3rem; }
+.ss-explain ol { margin: 0.7rem 0 0.2rem; padding-left: 1.3rem; display: grid; gap: 0.55rem; line-height: 1.5; }
+.ss-bench { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
+.ss-bench button { font-size: 0.85rem; padding: 0.3rem 0.7rem; }
+
+.ss-result { border-color: #c7d2fe; }
+.ss-result h3 { margin: 1.4rem 0 0.5rem; font-size: 1.05rem; }
+.ss-headline { display: flex; flex-wrap: wrap; gap: 0.6rem 2rem; margin: 0.3rem 0 0.8rem; }
+.ss-headline p { margin: 0; color: var(--ink-2); font-weight: 600; }
+.ss-big { display: block; font-size: 2.6rem; font-weight: 800; line-height: 1.1; color: var(--brand-ink); }
+.ss-error { color: #7f1d1d; background: var(--danger-soft); border-radius: var(--radius-sm); padding: 0.55rem 0.8rem; }
+.ss-note { color: var(--muted); font-size: 0.92rem; }
+.ss-report { background: var(--surface-2); border-left: 4px solid var(--brand); padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); line-height: 1.55; }
+.ss-table { border-collapse: collapse; margin: 0.3rem 0; font-size: 0.95rem; }
+.ss-table th, .ss-table td { text-align: left; padding: 0.35rem 1.2rem 0.35rem 0; border-bottom: 1px solid var(--line); }
+.ss-table td:last-child, .ss-table th:last-child { text-align: right; padding-right: 0; }
+
+.ss-curve { display: block; width: 100%; max-width: 36rem; height: auto; margin: 1rem 0 0.2rem; }
+.ss-curve text { font-size: 12px; fill: var(--muted); }
+.ss-curve .ss-axis-label { fill: var(--ink-2); font-weight: 600; }
+.ss-grid { stroke: var(--line); }
+.ss-target { stroke: var(--warn); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.ss-line { fill: none; stroke: var(--brand); stroke-width: 2.5; }
+.ss-mark { fill: var(--brand); stroke: #fff; stroke-width: 2; }
+.ss-result pre { background: #0f172a; color: #e2e8f0; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); overflow-x: auto; margin: 0; max-width: 100%; box-sizing: border-box; }
+.ss-result .model-chooser-code { min-width: 0; }
