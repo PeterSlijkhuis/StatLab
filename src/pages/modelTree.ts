@@ -16,7 +16,12 @@ export type Question = {
 };
 
 export type Option = {
+  /** Short, plain words a first-year understands. The page's walk and the tests follow it. */
   label: string;
+  /** One concrete research question this choice fits, shown under the label. */
+  example: string;
+  /** The technical name, shown small, for the student who knows it. */
+  tech: string;
   /** Starts a section of the "every model on this page" index. The deepest group on a path wins. */
   group?: string;
   next: Node;
@@ -95,31 +100,39 @@ export const GROUPS: { name: string; blurb: string }[] = [
 export const TREE: Question = {
   kind: 'question',
   text: 'What do you want to find out?',
-  help: 'Start from your research question, not from the data you happen to have. Most questions are the first kind.',
+  help: 'Pick the one closest to your research question. Most questions are the first kind.',
   options: [
     {
-      label: 'Whether something predicts, or differs in, one outcome',
+      label: 'How one outcome differs, or what predicts it',
+      example: 'Do remote workers report higher wellbeing than office workers?',
+      tech: 'lm(), glm() and lmer()',
       next: {
         kind: 'question',
-        text: 'What kind of outcome are you analysing?',
-        help: 'The outcome is the variable you want to explain. A total or mean of several questionnaire items counts as a number. A single rating item with 5 or more levels is usually treated as a number too; one with only 3 or 4 levels (never, sometimes, often) counts as ordered categories. A number of successes out of a fixed number of tries, such as 7 correct out of 10, is not a count of events: choose yes or no.',
+        text: 'What does your outcome look like?',
+        help: 'The outcome is what you want to explain. A total or average of questionnaire items is a number. A rating with only 3 or 4 levels (never, sometimes, often) is a few ordered levels. Successes out of a fixed number of tries, such as 7 correct out of 10, is yes or no, not a count.',
         options: [
           {
-            label: 'A number on a scale (a score, time, rating or amount)',
+            label: 'A number or score',
+            example: 'Does autonomy go with higher wellbeing scores?',
+            tech: 'Numeric outcome',
             group: 'Numeric outcome: one sample or numeric predictors',
             next: {
               kind: 'question',
-              text: 'How were the scores collected?',
-              help: 'This decides whether the observations are independent, which matters more than anything else about the choice. If people share a team, class or site that could make them alike, choose that option even when each person gave one score.',
+              text: 'Who gave the scores?',
+              help: 'This matters most of all. If people share a team, class or site that could make them alike, choose that option, even when each person gave one score.',
               options: [
                 {
-                  label: 'One score per case, from different people',
+                  label: 'Different people, one score each',
+                  example: 'Do remote and office workers differ in wellbeing?',
+                  tech: 'Independent observations',
                   next: {
                     kind: 'question',
-                    text: 'What are you using to predict the outcome?',
+                    text: 'What do you compare or predict with?',
                     options: [
                       {
-                        label: 'Nothing: compare the mean with a fixed value',
+                        label: 'Nothing: compare the average with a fixed number',
+                        example: 'Is the average exam score different from 70?',
+                        tech: 'One-sample t-test',
                         next: {
                           kind: 'answer',
                           id: 'mean-vs-value',
@@ -139,13 +152,17 @@ model %>% tidy(conf.int = TRUE)`,
                         },
                       },
                       {
-                        label: 'One or more numeric predictors',
+                        label: 'Numbers',
+                        example: 'Does more autonomy go with higher wellbeing?',
+                        tech: 'Regression',
                         next: {
                           kind: 'question',
-                          text: 'Which describes your predictors?',
+                          text: 'Which fits your predictors?',
                           options: [
                             {
-                              label: 'One numeric predictor',
+                              label: 'One number',
+                              example: 'Does autonomy predict wellbeing?',
+                              tech: 'Simple regression, correlation',
                               next: {
                                 kind: 'answer',
                                 id: 'simple-regression',
@@ -165,7 +182,9 @@ model %>% glance()`,
                               },
                             },
                             {
-                              label: 'Several predictors',
+                              label: 'Several predictors at once',
+                              example: 'Do autonomy and workload each predict wellbeing, controlling for tenure?',
+                              tech: 'Multiple regression',
                               next: {
                                 kind: 'answer',
                                 id: 'multiple-regression',
@@ -184,7 +203,9 @@ model %>% glance()`,
                               },
                             },
                             {
-                              label: 'The relationship is curved',
+                              label: 'The pattern bends',
+                              example: 'Does more sleep help exam scores only up to a point?',
+                              tech: 'Polynomial regression',
                               next: {
                                 kind: 'answer',
                                 id: 'curved-relationship',
@@ -206,7 +227,9 @@ curved %>% glance()`,
                               },
                             },
                             {
-                              label: "A predictor's effect depends on another variable, a number or a group (moderation)",
+                              label: 'One effect depends on something else',
+                              example: 'Is the effect of workload on wellbeing weaker for people with more autonomy?',
+                              tech: 'Moderation (interaction)',
                               next: {
                                 kind: 'answer',
                                 id: 'continuous-moderation',
@@ -234,14 +257,18 @@ emtrends(model, ~ autonomy_c, var = "workload_c", at = list(autonomy_c = c(-s, 0
                         },
                       },
                       {
-                        label: 'One or more grouping variables (conditions, groups, categories)',
+                        label: 'Groups',
+                        example: 'Do wellbeing scores differ between departments?',
+                        tech: 'Group comparison: t-test, ANOVA',
                         group: 'Numeric outcome: comparing groups',
                         next: {
                           kind: 'question',
-                          text: 'Which describes your groups?',
+                          text: 'Which fits your groups?',
                           options: [
                             {
-                              label: 'One grouping variable with two groups',
+                              label: 'Two groups',
+                              example: 'Do remote workers report higher wellbeing than office workers?',
+                              tech: 'Independent t-test',
                               next: {
                                 kind: 'answer',
                                 id: 'two-groups',
@@ -262,7 +289,9 @@ d %>% group_by(remote) %>% summarise(mean = mean(wellbeing), sd = sd(wellbeing))
                               },
                             },
                             {
-                              label: 'One grouping variable with three or more groups',
+                              label: 'Three or more groups',
+                              example: 'Do wellbeing scores differ between departments?',
+                              tech: 'One-way ANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'several-groups',
@@ -284,7 +313,9 @@ emmeans(model, pairwise ~ department, adjust = "tukey")`,
                               },
                             },
                             {
-                              label: 'Groups, adjusting for a numeric covariate',
+                              label: 'Groups, adjusting for a number',
+                              example: 'Are trained employees more engaged, adjusting for how engaged they were before?',
+                              tech: 'ANCOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'groups-with-covariate',
@@ -305,7 +336,9 @@ emmeans(model, pairwise ~ training)`,
                               },
                             },
                             {
-                              label: 'Two grouping variables that may interact',
+                              label: 'Two kinds of groups together',
+                              example: 'Do training and mentoring work better in combination?',
+                              tech: 'Factorial ANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'factorial',
@@ -329,7 +362,9 @@ emmeans(model, pairwise ~ training:mentoring, adjust = "tukey")`,
                               },
                             },
                             {
-                              label: 'Groups compared on several outcomes at once',
+                              label: 'Groups on several outcomes at once',
+                              example: 'Do departments differ in both wellbeing and engagement?',
+                              tech: 'MANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'several-outcomes',
@@ -354,15 +389,19 @@ summary.aov(model)`,
                   },
                 },
                 {
-                  label: 'The same people measured more than once, or under more than one condition',
+                  label: 'The same people, more than once',
+                  example: 'Did engagement rise from the first to the second measurement?',
+                  tech: 'Repeated measures',
                   group: 'Repeated measures and nested data',
                   next: {
                     kind: 'question',
-                    text: 'What does the design look like?',
-                    help: 'All of these need the data in long format: one row per person per measurement, which pivot_longer() makes. Matched pairs, such as twins or couples, count as one unit measured twice: give each pair its own id.',
+                    text: 'How often were they measured?',
+                    help: 'All of these need one row per person per measurement (long format), which pivot_longer() makes. Matched pairs, such as twins or couples, count as one unit measured twice: give each pair its own id.',
                     options: [
                       {
-                        label: 'Twice, such as before and after, or under two conditions',
+                        label: 'Twice, such as before and after',
+                        example: 'Did engagement rise from the first to the second measurement?',
+                        tech: 'Paired t-test',
                         next: {
                           kind: 'answer',
                           id: 'before-after',
@@ -384,7 +423,9 @@ summary(model)`,
                         },
                       },
                       {
-                        label: 'Three or more times or conditions',
+                        label: 'Three or more times',
+                        example: 'Does stress change across three exam weeks?',
+                        tech: 'Repeated-measures ANOVA',
                         next: {
                           kind: 'answer',
                           id: 'repeated-measures',
@@ -406,7 +447,9 @@ emmeans(model, pairwise ~ time, adjust = "holm")`,
                         },
                       },
                       {
-                        label: 'Repeatedly, and people are also in different groups',
+                        label: 'Over time, in different groups',
+                        example: 'Did engagement rise more for trained employees than for others?',
+                        tech: 'Mixed ANOVA',
                         next: {
                           kind: 'answer',
                           id: 'time-by-group',
@@ -430,7 +473,9 @@ emmeans(model, pairwise ~ training | time)`,
                         },
                       },
                       {
-                        label: 'Many time points, and people change at different rates',
+                        label: 'Many times, each at their own pace',
+                        example: 'Do some chicks grow faster than others over 21 days?',
+                        tech: 'Growth curve (random slopes)',
                         next: {
                           kind: 'answer',
                           id: 'growth-curve',
@@ -448,7 +493,9 @@ summary(model)`,
                         },
                       },
                       {
-                        label: 'Each person responds to many items or stimuli',
+                        label: 'Each person rates many items',
+                        example: 'Do students rate some lecturers higher, across many ratings each?',
+                        tech: 'Crossed random effects',
                         next: {
                           kind: 'answer',
                           id: 'crossed-random-effects',
@@ -472,7 +519,9 @@ summary(model)`,
                   },
                 },
                 {
-                  label: 'People grouped in teams, classes or sites',
+                  label: 'People within teams, classes or sites',
+                  example: 'Does autonomy predict wellbeing when staff work at different sites?',
+                  tech: 'Multilevel (nested) data',
                   group: 'Repeated measures and nested data',
                   next: {
                     kind: 'answer',
@@ -492,21 +541,27 @@ summary(model)`,
             },
           },
           {
-            label: 'Yes or no (two possible outcomes)',
+            label: 'Yes or no',
+            example: 'Does workload predict whether employees leave?',
+            tech: 'Binary outcome',
             group: 'Yes-or-no outcomes',
             next: {
               kind: 'question',
-              text: 'How were the outcomes collected?',
-              help: 'If the same people answer more than once, or people share a team, class or site, choose the second option even when each row is a different person.',
+              text: 'Who gave the answers?',
+              help: 'If the same people answer more than once, or people share a team, class or site, choose the second option, even when each row is a different person.',
               options: [
                 {
-                  label: 'One per case, from different people',
+                  label: 'Different people, one answer each',
+                  example: 'Are remote workers less likely to leave?',
+                  tech: 'Independent observations',
                   next: {
                     kind: 'question',
-                    text: 'What are you using to predict the outcome?',
+                    text: 'What do you compare or predict with?',
                     options: [
                       {
                         label: 'Numbers, groups or both',
+                        example: 'Does workload predict whether employees leave?',
+                        tech: 'Logistic regression',
                         next: {
                           kind: 'answer',
                           id: 'logistic-regression',
@@ -525,11 +580,15 @@ exp(cbind(OR = coef(model), confint(model)))`,
                         },
                       },
                       {
-                        label: 'One other categorical variable, as a cross-table',
+                        label: 'One other category (a cross-table)',
+                        example: 'Does the share who leave differ between departments?',
+                        tech: 'Chi-square test',
                         next: crossTable(),
                       },
                       {
-                        label: 'Nothing: compare one proportion with a fixed value',
+                        label: 'Nothing: compare one percentage with a fixed value',
+                        example: 'Do more than half of the students pass?',
+                        tech: 'Binomial test',
                         next: {
                           kind: 'answer',
                           id: 'proportion-vs-value',
@@ -548,7 +607,9 @@ binom.test(successes, nrow(d), p = 0.2)`,
                   },
                 },
                 {
-                  label: 'The same people measured more than once, or grouped in sites',
+                  label: 'Same people more than once, or grouped in sites',
+                  example: 'Did the same students pass more often on the second try?',
+                  tech: 'Mixed-effects logistic regression',
                   next: {
                     kind: 'answer',
                     id: 'repeated-binary',
@@ -568,7 +629,9 @@ exp(fixef(model))`,
                   },
                 },
                 {
-                  label: 'Several yes-or-no trials per row (such as 7 correct out of 10)',
+                  label: 'Successes out of a number of tries',
+                  example: 'Does practice raise the number correct out of 10 questions?',
+                  tech: 'Binomial regression',
                   next: {
                     kind: 'answer',
                     id: 'successes-of-trials',
@@ -592,14 +655,18 @@ exp(cbind(OR = coef(model), confint(model)))`,
             },
           },
           {
-            label: 'Ordered categories (a grade, a stage, a rating with only 3 or 4 levels)',
+            label: 'A few ordered levels',
+            example: 'Do departments differ in satisfaction rated low, medium or high?',
+            tech: 'Ordinal outcome',
             group: 'Categorical outcomes',
             next: {
               kind: 'question',
-              text: 'What is the question about the ordered outcome?',
+              text: 'What do you want to know about it?',
               options: [
                 {
-                  label: 'Whether groups differ, or two variables go together (rank tests)',
+                  label: 'Do groups differ, or do two things go together?',
+                  example: 'Do the departments differ in their satisfaction rating?',
+                  tech: 'Rank tests: Mann-Whitney, Kruskal-Wallis, Spearman',
                   next: {
                     kind: 'answer',
                     id: 'rank-tests',
@@ -618,7 +685,9 @@ cor.test(~ autonomy + wellbeing, data = d, method = "spearman", exact = FALSE)`,
                   },
                 },
                 {
-                  label: 'Several predictors at once (ordinal regression)',
+                  label: 'Several predictors at once',
+                  example: 'Do workload and autonomy predict the satisfaction level?',
+                  tech: 'Ordinal regression',
                   next: {
                     kind: 'answer',
                     id: 'ordinal-regression',
@@ -640,14 +709,18 @@ exp(cbind(OR = coef(model), confint(model)))`,
             },
           },
           {
-            label: 'Three or more categories with no order (a choice, a type)',
+            label: 'Categories with no order',
+            example: 'Does age predict how people travel to work: car, bike or train?',
+            tech: 'Nominal outcome',
             group: 'Categorical outcomes',
             next: {
               kind: 'question',
-              text: 'What is the question about the categories?',
+              text: 'What do you want to know about the categories?',
               options: [
                 {
-                  label: 'Which category, predicted from other variables',
+                  label: 'Which category, from other variables',
+                  example: 'Does age predict how people travel to work?',
+                  tech: 'Multinomial regression',
                   next: {
                     kind: 'answer',
                     id: 'multinomial-regression',
@@ -667,11 +740,15 @@ tidy(model, conf.int = TRUE, exponentiate = TRUE)`,
                   },
                 },
                 {
-                  label: 'Whether it is related to one other categorical variable',
+                  label: 'Linked to one other category',
+                  example: 'Is the way people travel to work linked to their department?',
+                  tech: 'Chi-square test of independence',
                   next: crossTable(),
                 },
                 {
-                  label: 'Whether the shares match expected shares',
+                  label: 'Do the shares match what you expect?',
+                  example: 'Are the four entrances of the building used equally often?',
+                  tech: 'Chi-square goodness of fit',
                   next: {
                     kind: 'answer',
                     id: 'goodness-of-fit',
@@ -691,7 +768,9 @@ chisq.test(counts, p = c(0.3, 0.2, 0.3, 0.2))`,
             },
           },
           {
-            label: 'A count of events with no fixed maximum (0, 1, 2, and so on)',
+            label: 'A count of how often',
+            example: 'Does workload predict the number of sick days?',
+            tech: 'Count outcome',
             group: 'Count outcomes',
             next: {
               kind: 'question',
@@ -699,7 +778,9 @@ chisq.test(counts, p = c(0.3, 0.2, 0.3, 0.2))`,
               help: 'Start with the first option. Its check tells you whether you need the second.',
               options: [
                 {
-                  label: 'Ordinary counts, or not sure yet (start here)',
+                  label: 'Ordinary counts, or not sure (start here)',
+                  example: 'Does workload predict the number of sick days?',
+                  tech: 'Poisson regression',
                   next: {
                     kind: 'answer',
                     id: 'poisson-regression',
@@ -718,7 +799,9 @@ sum(residuals(model, type = "pearson")^2) / df.residual(model)`,
                   },
                 },
                 {
-                  label: 'The counts vary far more than their mean (overdispersion)',
+                  label: 'Much more spread than the average suggests',
+                  example: 'Most people take 0 to 3 sick days, but a few take 40: what predicts them?',
+                  tech: 'Overdispersion: negative binomial',
                   next: {
                     kind: 'answer',
                     id: 'negative-binomial',
@@ -736,7 +819,9 @@ exp(cbind(RR = coef(model), confint(model)))`,
                   },
                 },
                 {
-                  label: 'Far more zeros than the other counts suggest',
+                  label: 'Lots of extra zeros',
+                  example: 'How many cigarettes do people smoke a day, when most smoke none?',
+                  tech: 'Zero-inflated model',
                   next: {
                     kind: 'answer',
                     id: 'zero-inflated',
@@ -758,15 +843,19 @@ summary(model)`,
             },
           },
           {
-            label: 'Time until something happens, where some cases have not had it yet',
+            label: 'Time until something happens',
+            example: 'Do remote workers stay longer before they leave?',
+            tech: 'Survival analysis',
             group: 'Time to an event',
             next: {
               kind: 'question',
-              text: 'What is the question?',
-              help: 'Cases that leave the study, or reach its end, before the event are censored: you know only that the event had not happened by then. These models use that information; a t-test on the times would not.',
+              text: 'What do you want to know?',
+              help: 'Some people have not had the event yet when the study ends. These models use that information; a t-test on the times would not.',
               options: [
                 {
                   label: 'Do groups differ in how long it takes?',
+                  example: 'Do remote workers stay longer than office workers?',
+                  tech: 'Kaplan-Meier, log-rank test',
                   next: {
                     kind: 'answer',
                     id: 'survival-curves',
@@ -785,7 +874,9 @@ survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                   },
                 },
                 {
-                  label: 'Which predictors change how soon it happens?',
+                  label: 'What makes it happen sooner or later?',
+                  example: 'Do workload and autonomy predict how soon people leave?',
+                  tech: 'Cox regression',
                   next: {
                     kind: 'answer',
                     id: 'cox-regression',
@@ -810,15 +901,19 @@ cox.zph(model)`,
       },
     },
     {
-      label: 'Whether an effect runs through a third variable, or how items measure a construct',
+      label: 'An effect through a middle step, or questionnaire items',
+      example: 'Does training raise performance by raising engagement?',
+      tech: 'Mediation and measurement',
       group: 'Mediation and measurement',
       next: {
         kind: 'question',
-        text: 'Which describes your question?',
-        help: 'Mediation is about a third variable that carries the effect. If the third variable changes how strong the effect is, that is moderation: go back and choose the first option on the first question.',
+        text: 'Which is closest to your question?',
+        help: 'A middle step (a mediator) carries the effect. If a third variable changes how strong an effect is, that is moderation instead: go back to the first question and choose the first option.',
         options: [
           {
-            label: 'Does X affect Y through a mediator M?',
+            label: 'An effect through a middle step',
+            example: 'Does training raise performance through higher engagement?',
+            tech: 'Mediation',
             next: {
               kind: 'answer',
               id: 'mediation',
@@ -844,7 +939,9 @@ parameterEstimates(fit, boot.ci.type = "perc")`,
             },
           },
           {
-            label: 'Do my questionnaire items hang together (reliability)?',
+            label: 'Do my questionnaire items hang together?',
+            example: 'Do the five wellbeing items measure the same thing reliably?',
+            tech: "Reliability, Cronbach's alpha",
             next: {
               kind: 'answer',
               id: 'scale-reliability',
@@ -863,6 +960,8 @@ psych::alpha(items)`,
           },
           {
             label: 'Do my items measure the factors I expect?',
+            example: 'Do the 9 test items split into the 3 abilities they were written for?',
+            tech: 'Confirmatory factor analysis',
             next: {
               kind: 'answer',
               id: 'confirmatory-factors',
@@ -884,7 +983,9 @@ summary(fit, fit.measures = TRUE, standardized = TRUE)`,
             },
           },
           {
-            label: 'Test a theory of paths between several constructs',
+            label: 'A theory linking several traits',
+            example: 'Does one ability explain another, when each is measured with several items?',
+            tech: 'Structural equation model',
             next: {
               kind: 'answer',
               id: 'structural-equation-model',
@@ -909,14 +1010,18 @@ summary(fit, fit.measures = TRUE, standardized = TRUE)`,
       },
     },
     {
-      label: 'Whether many variables boil down to a few, or which cases form groups',
+      label: 'Summing up many variables, or finding types',
+      example: 'Can 20 questionnaire items be summed up as a few traits?',
+      tech: 'Dimension reduction, clustering',
       group: 'Dimension reduction and clustering',
       next: {
         kind: 'question',
-        text: 'What do you want to summarise or group?',
+        text: 'What do you want to sum up or sort?',
         options: [
           {
-            label: 'Many numeric variables into a few summary scores',
+            label: 'Many numbers into a few summary scores',
+            example: 'Can ten fitness measures be summed up in two or three scores?',
+            tech: 'Principal component analysis',
             next: {
               kind: 'answer',
               id: 'principal-components',
@@ -937,6 +1042,8 @@ pca$rotation[, 1:2]`,
           },
           {
             label: 'Questionnaire items into the traits behind them',
+            example: 'Which traits lie behind the 20 personality items?',
+            tech: 'Exploratory factor analysis',
             next: {
               kind: 'answer',
               id: 'exploratory-factors',
@@ -954,7 +1061,9 @@ print(efa, cutoff = 0.3, sort = TRUE)`,
             },
           },
           {
-            label: 'Cases into groups of similar cases (clusters)',
+            label: 'People or cases into types',
+            example: 'Are there distinct types of employees, based on their survey answers?',
+            tech: 'Cluster analysis',
             next: {
               kind: 'answer',
               id: 'cluster-analysis',
@@ -978,15 +1087,19 @@ d %>% group_by(cluster) %>% summarise(across(c(workload, autonomy, wellbeing, pe
       },
     },
     {
-      label: 'How a series of measurements over time moves, and what comes next',
+      label: 'One series measured over time',
+      example: 'Did monthly sick leave drop after the new policy started?',
+      tech: 'Time series',
       group: 'Time series',
       next: {
         kind: 'question',
-        text: 'What is the question about the series?',
+        text: 'What do you want to know about the series?',
         help: 'This is for one long series measured at regular intervals, such as monthly sales. Many people each measured a few times is a repeated-measures design instead.',
         options: [
           {
-            label: 'Describe it and forecast the next values',
+            label: 'Describe it and forecast what comes next',
+            example: 'How many visitors can the museum expect next year?',
+            tech: 'ARIMA',
             next: {
               kind: 'answer',
               id: 'forecast-series',
@@ -1004,7 +1117,9 @@ predict(model, n.ahead = 10, newxreg = 1973:1982 - 1920)`,
             },
           },
           {
-            label: 'Did an intervention change its level or trend?',
+            label: 'Did something change it at a known moment?',
+            example: 'Did monthly sick leave drop after the new policy started?',
+            tech: 'Interrupted time series',
             next: {
               kind: 'answer',
               id: 'interrupted-time-series',
@@ -1030,15 +1145,19 @@ acf(residuals(model), plot = FALSE)`,
       },
     },
     {
-      label: 'How to predict new cases as accurately as possible',
+      label: 'Predicting new cases as well as possible',
+      example: 'Which employees are most likely to leave next year?',
+      tech: 'Prediction, machine learning',
       group: 'Prediction',
       next: {
         kind: 'question',
         text: 'What matters most?',
-        help: 'Prediction asks how well a model does on cases it has not seen, not whether a coefficient is significant. Every answer here judges the model on held-out data.',
+        help: 'Prediction asks how well a model does on cases it has not seen, not whether an effect is significant. Every answer here tests the model on held-out data.',
         options: [
           {
-            label: 'A simple model that keeps only the useful predictors',
+            label: 'A simple model with only the useful predictors',
+            example: 'Which few of 50 survey questions predict turnover best?',
+            tech: 'Lasso',
             next: {
               kind: 'answer',
               id: 'lasso',
@@ -1059,7 +1178,9 @@ coef(cv, s = "lambda.1se")`,
             },
           },
           {
-            label: 'Accuracy, even if the model is hard to read',
+            label: 'The best accuracy, even if hard to explain',
+            example: 'Which students will drop out, as accurately as possible?',
+            tech: 'Random forest',
             next: {
               kind: 'answer',
               id: 'random-forest',
@@ -1082,15 +1203,19 @@ sort(importance(model, type = 1)[, 1], decreasing = TRUE)`,
       },
     },
     {
-      label: 'How probable a value or an effect is, or how strong the evidence is (Bayesian)',
+      label: 'How probable something is, or how strong the evidence is',
+      example: 'How likely is it that the pass rate is above 70%?',
+      tech: 'Bayesian analysis',
       group: 'Bayesian analysis',
       next: {
         kind: 'question',
-        text: 'What do you want from the Bayesian analysis?',
+        text: 'What do you want to know?',
         help: 'Bayesian methods give probabilities for the unknowns themselves, and can show evidence that there is no effect. Module 16 introduces them.',
         options: [
           {
-            label: 'The plausible values of one proportion',
+            label: 'The likely values of one percentage',
+            example: 'What is the pass rate likely to be, given 34 passes out of 40?',
+            tech: 'Beta-binomial',
             next: {
               kind: 'answer',
               id: 'bayes-proportion',
@@ -1109,7 +1234,9 @@ pbeta(0.2, 1 + left, 1 + stayed, lower.tail = FALSE)`,
             },
           },
           {
-            label: 'The strength of the evidence for or against an effect in a linear model',
+            label: 'Evidence for or against an effect',
+            example: 'How strong is the evidence that autonomy matters for wellbeing, or that it does not?',
+            tech: 'Bayes factor',
             next: {
               kind: 'answer',
               id: 'bayes-factor-models',
@@ -1127,7 +1254,9 @@ c(BF10 = bf10, BF01 = 1 / bf10)`,
             },
           },
           {
-            label: 'Evidence for or against a difference between two groups',
+            label: 'Evidence about two groups',
+            example: 'Is there evidence that remote and office workers do not differ?',
+            tech: 'Bayesian t-test',
             next: {
               kind: 'answer',
               id: 'bayes-t-test',
@@ -1147,7 +1276,9 @@ bf
             },
           },
           {
-            label: 'A regression with a prior on each coefficient',
+            label: 'A regression with your own priors',
+            example: 'What are the plausible values of the autonomy effect, given earlier studies?',
+            tech: 'Bayesian regression (brms)',
             next: {
               kind: 'answer',
               id: 'bayesian-regression',
