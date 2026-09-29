@@ -1,4 +1,4 @@
-import type { DesignId } from '../stats/power';
+import { fFromEta2, fFromMeans, type DesignId } from '../stats/power';
 
 /** Everything the sample size page says about one design. */
 export type Design = {
@@ -146,3 +146,116 @@ export const DESIGNS: Design[] = [
 ];
 
 export const designById = (id: DesignId) => DESIGNS.find((design) => design.id === id)!;
+
+/** How the student arrives at the effect size. */
+export type EffectRoute = 'matter' | 'research' | 'unknown';
+
+export type EffectField = { key: string; label: string; hint: string; placeholder: string; optional?: boolean };
+
+/** Values the student has typed, by field key, already parsed (NaN when empty). */
+export type FieldValues = Record<string, number>;
+
+/**
+ * What to ask for each design and route, and how it becomes the effect size.
+ * `rows` and `cols` (chi-square) come from the earlier table-size question.
+ */
+export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fields: EffectField[]; compute: (v: FieldValues, raw: Record<string, string>) => number } {
+  const sd: EffectField = { key: 'sd', label: 'Standard deviation of the outcome', hint: 'How much scores vary within one group. Take it from earlier studies that used the same measure, or from the scale\'s manual.', placeholder: 'e.g. 10' };
+  const r2Full: EffectField = { key: 'r2', label: 'Expected R² of the full model', hint: 'What all predictors together explain, controls included. If unsure, take what the controls explain in earlier studies and add the change.', placeholder: 'e.g. .30' };
+  switch (id) {
+    case 'two-groups':
+    case 'one-sample':
+      return route === 'matter'
+        ? {
+            fields: [
+              { key: 'diff', label: id === 'two-groups' ? 'Smallest difference between the group means that would matter' : 'Smallest difference from the fixed value that would matter', hint: 'In the outcome\'s own units, for example 3 points on a 0 to 100 wellbeing scale. Ask: below what difference would I shrug?', placeholder: 'e.g. 3' },
+              sd,
+            ],
+            compute: (v) => Math.abs(v.diff) / v.sd,
+          }
+        : { fields: [{ key: 'es', label: "Cohen's d reported in earlier research", hint: 'Use the average of a meta-analysis if there is one.', placeholder: 'e.g. 0.40' }], compute: (v) => Math.abs(v.es) };
+    case 'paired':
+      return route === 'matter'
+        ? {
+            fields: [
+              { key: 'diff', label: 'Smallest average change that would matter', hint: 'In the outcome\'s own units, for example 2 points from before to after.', placeholder: 'e.g. 2' },
+              { ...sd, label: 'Standard deviation of the scores at one time point', hint: 'How much people differ from each other at one measurement, from earlier studies or the scale\'s manual.' },
+              { key: 'r', label: 'Correlation between the two measurements', hint: 'How strongly people\'s first and second scores go together. Repeated measurements of the same scale often correlate .5 to .8. If you do not know, .5 is the cautious choice.', placeholder: 'e.g. .5' },
+            ],
+            compute: (v) => Math.abs(v.diff) / (v.sd * Math.sqrt(2 * (1 - v.r))),
+          }
+        : {
+            fields: [
+              { key: 'es', label: 'Effect size reported in earlier research (dz or d)', hint: 'dz is the mean change divided by the SD of the change scores. Many papers report d instead, based on the SD at one time point.', placeholder: 'e.g. 0.40' },
+              { key: 'r', label: 'Only if the paper reports d: the correlation between the two measurements', hint: 'Leave empty if the paper reports dz. With a correlation, d is converted: dz = d / √(2(1 − r)).', placeholder: 'e.g. .5', optional: true },
+            ],
+            compute: (v) => (Number.isNaN(v.r) ? Math.abs(v.es) : Math.abs(v.es) / Math.sqrt(2 * (1 - v.r))),
+          };
+    case 'anova':
+      return route === 'matter'
+        ? {
+            fields: [
+              { key: 'means', label: 'The group means you expect, separated by spaces', hint: 'The smallest pattern of differences that would matter, in the outcome\'s own units: one number per group.', placeholder: 'e.g. 44 46 48' },
+              sd,
+            ],
+            compute: (v, raw) => {
+              const means = (raw.means ?? '').trim().split(/[\s;]+/).map((x) => Number(x.replace(',', '.')));
+              return means.length >= 2 && means.every(Number.isFinite) ? fFromMeans(means, v.sd) : NaN;
+            },
+          }
+        : { fields: [{ key: 'eta2', label: 'η² (eta squared) reported in earlier research', hint: 'For a design with one factor, partial η² is the same number.', placeholder: 'e.g. .06' }], compute: (v) => fFromEta2(v.eta2) };
+    case 'correlation':
+      return {
+        fields: [route === 'matter'
+          ? { key: 'r', label: 'Smallest correlation that would matter', hint: 'Below this, the relationship would be too weak to be useful for your purpose. r = .10 means the variables share 1% of their variance; r = .30 means 9%.', placeholder: 'e.g. .20' }
+          : { key: 'r', label: 'Correlation reported in earlier research', hint: 'Use the average of a meta-analysis if there is one.', placeholder: 'e.g. .25' }],
+        compute: (v) => Math.abs(v.r),
+      };
+    case 'regression':
+      return {
+        fields: [{ key: 'r2', label: route === 'matter' ? 'Smallest R² that would matter' : 'R² reported in earlier research', hint: 'The share of variance in the outcome that the predictors explain together.', placeholder: 'e.g. .10' }],
+        compute: (v) => v.r2 / (1 - v.r2),
+      };
+    case 'r2-change':
+      return {
+        fields: [
+          { key: 'dr2', label: route === 'matter' ? 'Smallest R² change that would matter' : 'R² change reported in earlier research', hint: 'The extra variance the tested predictors explain on top of the others, for example .03 (3%).', placeholder: 'e.g. .03' },
+          r2Full,
+        ],
+        compute: (v) => v.dr2 / (1 - v.r2),
+      };
+    case 'chi-square':
+      return {
+        fields: [{ key: 'v', label: route === 'matter' ? "Smallest Cramér's V that would matter" : "Cramér's V reported in earlier research", hint: 'The effect size for a table of counts, from 0 (no relation) to 1. For a 2 × 2 table it equals phi.', placeholder: 'e.g. .20' }],
+        compute: (v) => v.v * Math.sqrt(Math.min(v.rows, v.cols) - 1),
+      };
+    case 'proportions':
+      return {
+        fields: [{ key: 'p2', label: 'Percentage "yes" in the second group', hint: 'The smallest difference from the first group that would matter, or what earlier studies found.', placeholder: 'e.g. 45' }],
+        compute: (v) => v.p2 / 100,
+      };
+  }
+}
+
+/** Starting values for a student with nothing to go on. */
+export type Preset = { value: number; label: string; note: string; recommended?: boolean };
+
+export function presets(design: Design): Preset[] {
+  const [s, m, l] = design.benchmarks ?? [0, 0, 0];
+  const cohen: Preset[] = [
+    { value: s, label: `Small (${design.symbol} = ${fmt(design, s)})`, note: 'Cohen\'s "small": needs a large sample.' },
+    { value: m, label: `Medium (${design.symbol} = ${fmt(design, m)})`, note: 'Cohen\'s "medium": a common choice in student projects, although real effects are often smaller.' },
+    { value: l, label: `Large (${design.symbol} = ${fmt(design, l)})`, note: 'Cohen\'s "large": rarely realistic. Use it only with a strong reason.' },
+  ];
+  if (design.id === 'two-groups') {
+    return [{ value: 0.36, label: 'Typical (d = 0.36)', note: 'The median effect in social psychology (Lovakov & Agadullina, 2021). An honest default that needs about twice the sample of "medium".', recommended: true }, ...cohen];
+  }
+  if (design.id === 'correlation') {
+    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'A typical correlation in psychology (Gignac & Szodorai, 2016). An honest default that needs more than twice the sample of "medium".', recommended: true }, ...cohen];
+  }
+  return cohen;
+}
+
+function fmt(design: Design, value: number): string {
+  return design.id === 'correlation' ? value.toFixed(2).replace(/^0\./, '.') : value.toFixed(2);
+}
