@@ -3,7 +3,7 @@ on:
   push:
     branches: [audit-outputs]
 permissions:
-  contents: read
+  contents: write
 jobs:
   outputs:
     runs-on: ubuntu-24.04
@@ -15,4 +15,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vitest run src/content/exercises/outputs.itest.ts --reporter=verbose
+      - run: npx vitest run src/content/exercises/outputs.itest.ts
+      - run: |
+          git config user.name "Peter Slijkhuis"
+          git config user.email peter@slijkhuis.one
+          git add -f lesson-outputs.txt
+          git commit -m "Lesson outputs"
+          git push

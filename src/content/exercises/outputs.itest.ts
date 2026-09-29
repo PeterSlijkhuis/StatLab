@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { WebR, type RCharacter } from 'webr';
 import { afterAll, beforeAll, test } from 'vitest';
 import { ALL_LESSONS } from '../manifest';
@@ -38,6 +38,5 @@ test('print every lesson block output', async () => {
     }
     await destroyEnv(webR, env);
   }
-  const chunk = 60000;
-  for (let i = 0; i < all.length; i += chunk) console.log(`@@CHUNK ${i / chunk}\n` + all.slice(i, i + chunk));
+  await writeFile('lesson-outputs.txt', all);
 }, 3_600_000);
