@@ -24,7 +24,7 @@
 
 <p align="center">
   Built for psychology and business students at the <strong>University of Twente</strong>.<br>
-  <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson. Theory and terminology follow Analysing Data Using Linear Models by S.M. van den Berg (5th ed., University of Twente, 2021).</sub>
+  <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson. Theory, terminology and topic order follow Analysing Data Using Linear Models by S.M. van den Berg (5th ed., University of Twente, 2021; Creative Commons BY-NC-SA licence); the lessons are written independently.</sub>
 </p>
 
 ## See it in action
@@ -61,7 +61,7 @@
     </td>
     <td valign="top">
       <h3>🧭 "Which model should I use?"</h3>
-      A guide that walks from a research question to the right model among 44, with ready-to-run R code and a link to the lesson.
+      A guide that walks from a research question to the right model among 45, with ready-to-run R code and a link to the lesson.
     </td>
   </tr>
   <tr>
@@ -84,7 +84,7 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/home.png" alt="The StatLab home page: a blue banner with a 63% progress ring and a Continue button, tiles for a 14-day streak, 1300 points, 37 of 59 lessons and 56 of 84 exercises, and the module list in the sidebar."></td>
+    <td width="50%"><img src="docs/screenshots/home.png" alt="The StatLab home page: a blue banner with a 63% progress ring and a Continue button, tiles for the day streak, points, lessons and exercises completed, and the module list in the sidebar."></td>
     <td width="50%"><img src="docs/screenshots/lesson-plot.png" alt="A lesson on factor analysis: an R block computes eigenvalues and draws a scree plot, and the output shows the numbers and the plot right below the code."></td>
   </tr>
   <tr>
@@ -183,8 +183,9 @@ first line:
 
 Two fictional, generated datasets carry the course: a population of 5000
 students (`wellbeing-population.csv`) for the sampling modules, and a workplace
-study of 480 employees (`workplace.csv`) built so that every model in the
-linear-model part has a real effect to find.
+study of 480 employees (`workplace.csv`) built so that the models in the
+linear-model part have real effects to find, and one deliberate null (mentoring
+on wellbeing).
 
 ## Built to be trusted
 
@@ -204,7 +205,13 @@ StatLab was made by **dr. P.J.H. Slijkhuis** and **dr. V.d.C. Resendez Gomez**,
 based on materials provided by **dr. S.J. Watson**.
 Theory, terminology and topic order follow
 [*Analysing Data Using Linear Models*](https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf) by Stéphanie M. van den Berg
-(5th edition, University of Twente, 2021).
+(5th edition, University of Twente, 2021), which is licensed under a
+[Creative Commons BY-NC-SA licence](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+StatLab's lessons follow its theory, terminology and topic order but are
+written independently.
+
+RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with
+or endorsed by Posit.
 
 <p>
   <a href="https://www.utwente.nl/en/"><img src="src/assets/logos/utwente.png" alt="University of Twente" height="56"></a>

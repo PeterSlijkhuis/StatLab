@@ -68,9 +68,9 @@ lines(b_grid, post_flat, col = "grey50")
 lines(b_grid, prior_sceptical / sum(prior_sceptical), lty = 2)`} />
 
 The posterior mean moves from 1.05 to 0.89. Pulling an estimate towards zero like
-this is called **shrinkage**. It is a feature: estimates from noisy data are too
-extreme on average, and a sensible prior corrects for that before a replication
-has to.
+this is called **shrinkage**. It is a feature: noisy estimates, especially the ones that stand out, tend to
+overstate the true effect, and a sensible prior corrects for that before a
+replication has to.
 
 ## The shortcut: a weighted average
 
@@ -126,8 +126,10 @@ hypothesis(fit, "autonomy > 0")  # the probability of a claim
 pp_check(fit)                    # does the model reproduce the data?
 ```
 
-With this prior and these data, brms should give a slope close to the 0.89 you
-computed here, since the normal shortcut is very accurate with 480 cases.
+With this prior and these data, brms should give a slope of roughly the 0.89 you
+computed here, since the normal shortcut is very accurate with 480 cases. Do not
+expect an exact match: brms draws samples from the posterior, so its numbers differ
+a little in the later decimals.
 
 <Quiz
   id="q-shrinkage"

@@ -12,8 +12,8 @@ model3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
 model3 %>% glance() %>% select(r.squared, adj.r.squared, sigma, statistic, df, df.residual, p.value)`} />
 
 - **`statistic`** is *F*, and **`df`** and **`df.residual`** are its two degrees
-  of freedom: the number of predictors, and *n* minus the number of estimated
-  coefficients. APA writes them together: *F*(3, 476).
+  of freedom: the number of slope coefficients (a factor with *k* levels counts
+  as *k* − 1), and *n* minus the number of estimated coefficients. APA writes them together: *F*(3, 476).
 - Its null hypothesis is that **every** slope is zero at once. Rejecting it says
   at least one predictor is doing something, and nothing about which.
 - **`sigma`** is the residual SD — the typical miss, in points of wellbeing.

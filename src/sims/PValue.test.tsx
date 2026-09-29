@@ -5,10 +5,19 @@ import PValue from './PValue';
 describe('PValue', () => {
   test('the p-value is the proportion of null results at least as extreme', () => {
     render(<PValue />);
-    const p = Number(screen.getByTestId('p-value').textContent);
+    const p = screen.getByTestId('p-value').textContent;
     const extreme = Number(screen.getByTestId('extreme-count').textContent);
     const total = Number(screen.getByTestId('replications').textContent);
-    expect(p).toBeCloseTo(extreme / total, 6);
+    expect(extreme).toBeGreaterThan(0);
+    expect(p).toBe((extreme / total).toFixed(3));
+  });
+
+  test('with no extreme shuffles p is shown as a bound, never zero', () => {
+    render(<PValue />);
+    fireEvent.change(screen.getByLabelText(/Group size/), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/Observed difference/), { target: { value: '5' } });
+    expect(screen.getByTestId('extreme-count').textContent).toBe('0');
+    expect(screen.getByTestId('p-value').textContent).toBe('< 0.00025 (none of 4000)');
   });
 
   test('moving the observed effect further out lowers p', () => {

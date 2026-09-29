@@ -242,7 +242,7 @@ export const module12: ExerciseDef[] = [
           } else if (!is.character(top) || length(top) != 1L) {
             list(pass = FALSE, message = "top_by_median should be a single department name as text. pull() on a factor column gives a factor; wrap it in as.character().")
           } else if (identical(top, exp_top_mean) && !identical(exp_top_mean, exp_top)) {
-            list(pass = FALSE, message = paste0("\\"", exp_top_mean, "\\" has the highest MEAN. The highest MEDIAN is a different department, and that is the finding: one department has both the heaviest workload and the most autonomy, so its wellbeing scores are pulled apart at both ends. Its mean lands mid-table while its typical employee is the best off in the company."))
+            list(pass = FALSE, message = paste0("\\"", exp_top_mean, "\\" has the highest MEAN. The highest MEDIAN is a different department, and that is the finding: a minority of that department's employees report very low wellbeing, and that tail drags its mean down to mid-table while its typical employee is the best off in the company."))
           } else if (!identical(top, exp_top)) {
             list(pass = FALSE, message = paste0("top_by_median is \\"", top, "\\" but the highest median belongs to \\"", exp_top, "\\". Sort on the median column, descending."))
           } else {
@@ -300,7 +300,7 @@ export const module12: ExerciseDef[] = [
         } else if (nrow(tbl) != nrow(tukey)) {
           list(pass = FALSE, message = paste0("Four departments give ", nrow(tukey), " pairwise comparisons; pairs_tbl has ", nrow(tbl), ". Check that you ran the comparisons on department."))
         } else if (isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(none$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = "Those p-values are unadjusted. Six comparisons at .05 each give about a 26% chance of at least one false positive if the tests were independent (about 21% here, since they share groups), which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
+          list(pass = FALSE, message = "Those p-values are unadjusted. Six comparisons at .05 each give about a 26% chance of at least one false positive if the tests were independent (about 20% here, since they share groups), which is exactly what the adjustment is for. Pass adjust = \\"tukey\\".")
         } else if (!isTRUE(all.equal(sort(as.vector(tbl$p.value)), sort(as.vector(tukey$p.value)), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "Your p-values are adjusted, but not with Tukey's method. Tukey is the one designed for all pairwise comparisons after a linear model; Bonferroni is more conservative here. Pass adjust = \\"tukey\\".")
         } else if (!is.numeric(n_sig) || length(n_sig) != 1L) {

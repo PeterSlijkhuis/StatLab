@@ -106,7 +106,7 @@ export default function CLT() {
         <tbody>
           <tr><th scope="row">Population mean (μ)</th><td>{deferredPopulation.mean.toFixed(2)}</td><th scope="row">Mean of the sample means</th><td>{mean(means).toFixed(2)}</td></tr>
           <tr><th scope="row">Population SD (σ)</th><td>{deferredPopulation.sd.toFixed(2)}</td><th scope="row">SD of the sample means</th><td>{observedSe.toFixed(2)}</td></tr>
-          <tr><th scope="row">σ / √n predicts</th><td>{predictedSe.toFixed(2)}</td><th scope="row">Observed matches prediction</th><td>{Math.abs(observedSe - predictedSe) < predictedSe * 0.1 ? 'yes' : 'close'}</td></tr>
+          <tr><th scope="row">σ / √n predicts</th><td>{predictedSe.toFixed(2)}</td><th scope="row">Observed matches prediction</th><td>{Math.abs(observedSe - predictedSe) < predictedSe * 0.1 ? 'yes' : 'not within 10%'}</td></tr>
         </tbody>
       </table>
     </div>

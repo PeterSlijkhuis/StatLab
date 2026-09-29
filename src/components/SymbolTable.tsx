@@ -32,7 +32,7 @@ export const SYMBOLS: SymbolRow[] = [
   { symbols: ['{ }'], read: 'block', meaning: 'Group several lines into one, as in a function body.', example: 'function(x) { x * 2 }' },
   { symbols: ['::'], read: 'from package', meaning: 'Use one function from a package without attaching it.', example: 'dplyr::filter()' },
   { symbols: ['|>'], read: 'and then', meaning: 'Pass the left side in as the first argument of the right side. Built into R.', example: 'scores |> mean()' },
-  { symbols: ['%>%'], read: 'and then', meaning: 'The same idea from dplyr. This course uses it after library(dplyr).', example: 'team %>% filter(hours > 35)' },
+  { symbols: ['%>%'], read: 'and then', meaning: 'The same idea from the magrittr package, which dplyr loads for you. This course uses it after library(dplyr).', example: 'team %>% filter(hours > 35)' },
   { symbols: ['~'], read: 'is modelled by', meaning: 'Builds a formula: the outcome on the left, predictors on the right.', example: 'lm(wellbeing ~ workload)' },
 ];
 

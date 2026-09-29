@@ -190,9 +190,9 @@ export const module07: ExerciseDef[] = [
           if (value > 0 && value < 1) {
             list(pass = FALSE, message = paste0("That is the PROPORTION (", round(value, 2), "). The exercise asks for the count out of 100, so use sum() rather than mean()."))
           } else if (isTRUE(all.equal(value, 100, tolerance = 1e-9))) {
-            list(pass = FALSE, message = "All 100 intervals captured it, which cannot happen by chance with a 95 per cent procedure. Either you compared each interval against its own sample mean, which sits in the middle of it by construction, or you built it from the SD instead of the standard error, which makes it far too wide. Compare against mu, the population mean, and use sd(s) / sqrt(40).")
+            list(pass = FALSE, message = "All 100 intervals captured it. That can happen by chance, but only about once in 170 runs (0.95^100 = .006), so it is more likely that you compared each interval against its own sample mean, which sits in the middle of it by construction, or you built it from the SD instead of the standard error, which makes it far too wide. Compare against mu, the population mean, and use sd(s) / sqrt(40).")
           } else if (value >= 86 && value <= 99) {
-            list(pass = TRUE, message = paste0(value, " of your 100 intervals contained mu. It will rarely be exactly 95, but it lands close, and over enough studies the proportion settles on 95 per cent. The 95 per cent describes the PROCEDURE, not any one interval."))
+            list(pass = TRUE, message = paste0(value, " of your 100 intervals contained mu. It will often not be exactly 95 (that happens in only about one run in five), but it lands close, and over enough studies the proportion settles on 95 per cent. The 95 per cent describes the PROCEDURE, not any one interval."))
           } else if (value <= 14) {
             list(pass = FALSE, message = paste0("Only ", value, " intervals captured mu. If you counted the ones that MISSED, take 100 minus your count - the misses are the 5 per cent, not the 95."))
           } else {

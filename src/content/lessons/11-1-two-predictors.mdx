@@ -83,7 +83,7 @@ or removed.
 model3 %>% tidy()
 model3 %>% glance() %>% select(r.squared, adj.r.squared, statistic, df, df.residual, p.value)`} />
 
-*R*² can only rise when you add a predictor, even a useless one — it is the share
+*R*² can never fall when you add a predictor, even a useless one, and in practice it always rises a little: it is the share
 of variance the fitted model accounts for, and an extra column always lets the
 fit wriggle a little closer. **Adjusted *R*²** subtracts a penalty for each
 predictor, so it can fall. When the two are far apart you have paid for

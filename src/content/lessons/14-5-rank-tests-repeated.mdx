@@ -2,7 +2,8 @@ The rank tests of Lesson 12-4, Mann-Whitney and Kruskal-Wallis, assume every sco
 comes from a different person. When the same people are measured more than once, the ranks have to be
 taken **within** each person, just as the mixed model removes each person's own
 level. Two tests do this: the Wilcoxon signed-rank test for two measurements, and
-the Friedman test for three or more.
+the Friedman test, which works for two or more (the textbook recommends it even for
+two; it calls the statistic *F*r).
 
 <CodeBlock id="c-load" code={`library(dplyr)
 library(tidyr)
@@ -16,9 +17,10 @@ d %>% summarise(median_change = median(change), mean_change = mean(change), n = 
 ## Two measurements: the Wilcoxon signed-rank test
 
 Take each employee's change, rank the changes by their size while ignoring the
-sign, then add up the ranks of the positive changes. That sum is *V* (the textbook calls it *T*+). If nothing
-changed on average, the positive and negative changes would carry about equal rank
-sums, and *V* would be near half of the total.
+sign, then add up the ranks of the positive changes. That sum is *V* (the textbook calls it *T*+). If the
+changes were symmetric around zero (no typical change), the positive and negative
+changes would carry about equal rank sums, and *V* would be near half of the total.
+Changes of exactly zero are left out.
 
 <CodeBlock id="c-wilcoxon" code={`wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE)
 
@@ -66,8 +68,10 @@ friedman.test(stress ~ wave | id, data = waves)`} />
 
 The formula reads "stress by wave, within id". Like *H*, the Friedman statistic is
 compared with a chi-square distribution with *k* − 1 degrees of freedom. It needs
-every person measured at every wave: anyone with a gap is dropped entirely, which is
-the same limitation the paired *t*-test had and the mixed model does not.
+every person measured at every wave: with the formula interface a single missing score
+makes R stop with "not an unreplicated complete block design", so you would have to
+drop incomplete people yourself first. That is the same limitation the paired *t*-test
+had and the mixed model does not.
 
 <CodeBlock id="c-within-ranks" code={`waves %>%
   group_by(id) %>%

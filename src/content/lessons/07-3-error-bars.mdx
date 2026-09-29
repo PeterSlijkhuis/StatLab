@@ -78,7 +78,8 @@ bars: overlapping confidence intervals do **not** mean "no difference": two 95
 per cent intervals can overlap while the difference between two independent
 means is significant. The reverse is safer: when the 95 per cent intervals of two
 independent groups do not overlap at all, the difference is significant at the
-.05 level. Either way, the interval for a *difference* is a different interval,
+.05 level by Welch's test (with very unequal SDs and group sizes, the pooled
+t-test can disagree). Either way, the interval for a *difference* is a different interval,
 and Module 8 computes it.
 
 <Exercise id="m7-3-a" />
@@ -100,7 +101,7 @@ and Module 8 computes it.
   choices={[
     { text: 'Mean exam score by programme. Error bars show 95% confidence intervals. Psychology, M = 76.0, 95% CI [72.7, 79.3]; Business, M = 73.0, 95% CI [70.5, 75.5].', correct: true, response: 'Correct. It names what the bars are and reports both means with their intervals, which is what APA asks for and what lets a reader check the figure against the text.' },
     { text: 'Mean exam score by programme. The intervals overlap, so the two programmes do not differ.', response: 'Overlapping 95% intervals do not establish the absence of a difference. The question is about the interval for the DIFFERENCE, which is not drawn here.' },
-    { text: 'Mean exam score by programme. Error bars show the range within which 95% of students in each programme scored.', response: 'That would be built from the SD and would span roughly 50 to 98. These bars are built from the standard error and describe the means.' },
+    { text: 'Mean exam score by programme. Error bars show the range within which 95% of students in each programme scored.', response: 'That would be built from the SD and would span roughly 52 to 100 for Psychology and 53 to 93 for Business. These bars are built from the standard error and describe the means.' },
     { text: 'Mean exam score by programme, with standard error bars.', response: 'The bars shown are about twice the standard error, because they are CI bars. Labelling them SE would lead a reader to double them for a 95% interval, overstating the uncertainty about twofold.' },
   ]}
 />

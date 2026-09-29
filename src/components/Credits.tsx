@@ -22,6 +22,7 @@ export const REFERENCE_BOOK = {
   title: 'Analysing Data Using Linear Models',
   author: 'S.M. van den Berg',
   href: 'https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf',
+  licenceHref: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
 };
 
 export const PARTNERS = [
@@ -62,11 +63,20 @@ export default function Credits({ variant = 'full' }: Props) {
       </p>
       {variant === 'full' && (
         <p className="credits-book">
-          Theory and terminology follow{' '}
+          Theory, terminology and topic order follow{' '}
           <a href={REFERENCE_BOOK.href} target="_blank" rel="noopener noreferrer">
             <cite>{REFERENCE_BOOK.title}</cite>
           </a>{' '}
-          by {REFERENCE_BOOK.author} (5th ed., University of Twente, 2021).
+          by {REFERENCE_BOOK.author} (5th ed., University of Twente, 2021), licensed under a{' '}
+          <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
+            Creative Commons BY-NC-SA licence
+          </a>
+          . StatLab's lessons are written independently.
+        </p>
+      )}
+      {variant === 'full' && (
+        <p className="credits-book">
+          RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with or endorsed by Posit.
         </p>
       )}
       <ul className="credits-partners">

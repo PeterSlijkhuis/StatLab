@@ -37,6 +37,13 @@ describe('Credits', () => {
     expect(twente.getAttribute('href')).toBe('https://www.utwente.nl/en/');
   });
 
+  test('names the book licence and the RStudio trademark', () => {
+    render(<Credits />);
+    const licence = screen.getByRole('link', { name: 'Creative Commons BY-NC-SA licence' });
+    expect(licence.getAttribute('href')).toBe('https://creativecommons.org/licenses/by-nc-sa/4.0/');
+    expect(screen.getByText(/not affiliated with or endorsed by Posit/)).toBeTruthy();
+  });
+
   // The home page is not the only way in: a student following a shared lesson
   // link never sees it, so the credit has to be on every page.
   test('shows at the foot of the sidebar, which every page has', () => {

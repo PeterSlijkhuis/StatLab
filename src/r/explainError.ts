@@ -68,7 +68,7 @@ const RULES: Rule[] = [
   },
   {
     pattern: /object of type 'closure' is not subsettable/,
-    explain: () => 'You used [ ] or $ on a function, not on data. This usually means the data frame name is misspelt, or is the name of a built-in function such as data or df.',
+    explain: () => 'You used [ ] or $ on a function, not on data. This usually means the data frame you meant was never created under that name, and the name is also a built-in function, such as data or df. Check that the read.csv() line ran and what you called the result.',
   },
   {
     pattern: /arguments imply differing number of rows/,

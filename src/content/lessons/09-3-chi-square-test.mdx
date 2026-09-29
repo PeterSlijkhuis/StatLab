@@ -104,7 +104,10 @@ fisher.test(small_counts)`} />
 
 In this small table of 29 people, the two "left" cells expect fewer than 4
 leavers each, so the chi-square approximation is off the table. Fisher's test
-gives p = .68: nothing to see here, and with so few people there rarely would be.
+gives p = .68, with an odds ratio of 0.64 and a 95% CI from 0.07 to 4.77: the
+data are compatible with anything from a strong effect one way to a strong
+effect the other. With 29 people the test is inconclusive, not evidence of no
+difference.
 
 The test also needs each person counted once, in one cell. A table of 480
 answers from 120 people, each asked four times, breaks that. Module 14 builds
@@ -116,7 +119,7 @@ the models that handle repeated answers.
   choices={[
     { text: 'It is the same in both, because the statistic is the same', response: 'The statistic grows with N, so the same value means very different effects at different sample sizes.' },
     { text: 'It is much stronger in the study of 10,000: V = .35 against .03', response: 'The other way round. V = sqrt(12 / N): .35 for 100 people, .03 for 10,000. The same statistic from more people means a weaker association.' },
-    { text: 'It is much stronger in the study of 100: V = .35 against .03', correct: true, response: 'Correct. The large study found a real but negligible association; the small one found a substantial one.' },
+    { text: 'It is much stronger in the study of 100: V = .35 against .03', correct: true, response: 'Correct. The large study found a statistically clear but negligible association; the small one found a substantial one.' },
   ]}
 />
 

@@ -29,8 +29,9 @@ d %>%
 If department made no difference, every department's mean rank would be near the
 middle, about 240. Support sits far below the others. The Kruskal-Wallis statistic
 *H* measures how far the mean ranks spread around that middle, and under the null
-hypothesis it follows a chi-square distribution with *k* − 1 degrees of freedom,
-where *k* is the number of groups.
+hypothesis it approximately follows a chi-square distribution with *k* − 1
+degrees of freedom, where *k* is the number of groups (the approximation is good
+unless groups are very small).
 
 <CodeBlock id="c-kw" code={`kruskal.test(wellbeing ~ department, data = d)`} />
 

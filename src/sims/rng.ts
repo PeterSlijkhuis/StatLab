@@ -205,7 +205,7 @@ export function normalQuantile(p: number, mu = 0, sigma = 1): number {
       ((((ACKLAM_D[0] * q + ACKLAM_D[1]) * q + ACKLAM_D[2]) * q + ACKLAM_D[3]) * q + 1);
   }
 
-  // One Halley step against normalCdf, which is accurate to ~1e-7. Without it
+  // One Halley step against normalCdf, which is accurate to ~1e-15. Without it
   // Acklam alone is good to ~1e-9 in the body but drifts in the tails.
   const error = normalCdf(z) - p;
   const density = normalPdf(z);
@@ -218,7 +218,8 @@ export function normalQuantile(p: number, mu = 0, sigma = 1): number {
 
 /**
  * Cornish-Fisher expansion of the Student t quantile, to five terms: agrees
- * with R's qt to better than 2e-4 for df >= 4, which is finer than a pixel at
+ * with R's qt to better than 2e-4 for df >= 4 up to the 95% level (about 2e-3
+ * at 99% with df = 4), which is finer than a pixel at
  * the sizes we draw, and needs no incomplete beta function. The CI simulation
  * never goes below df = 4.
  */

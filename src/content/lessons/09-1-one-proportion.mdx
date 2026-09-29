@@ -41,13 +41,14 @@ se <- sqrt(p * (1 - p) / n)
 
 c(lower = p - 1.96 * se, upper = p + 1.96 * se)`} />
 
-`prop.test()` does the same job with a small correction that behaves better
-when the proportion is close to 0 or 1 or the sample is small. Give it the
-number of yes answers and the number of cases.
+`prop.test()` builds a different interval, the Wilson score interval (with a
+continuity correction by default), which behaves better than estimate ± 1.96 SE
+when the proportion is close to 0 or 1 or the sample is small. It is not centred
+exactly on *p*. Give it the number of yes answers and the number of cases.
 
 <CodeBlock id="c-prop-test" code={`prop.test(sum(d$left_company), nrow(d))$conf.int`} />
 
-The two intervals agree to about a percentage point. With a sample this size the
+The two intervals agree to within half a percentage point. With a sample this size the
 correction hardly matters; with 30 people it would.
 
 <Exercise id="m9-1-a" />

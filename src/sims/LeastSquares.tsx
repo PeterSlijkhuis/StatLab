@@ -189,7 +189,7 @@ export default function LeastSquares() {
       <p className="leastsquares-equation">
         {degenerate
           ? 'Every point sits at the same x, so there is no line to fit: the slope would be a division by zero.'
-          : `The best line is ŷ = ${best.intercept.toFixed(2)} + ${best.slope.toFixed(2)}x, with r = ${best.r.toFixed(2)}.`}
+          : `The best line is ŷ = ${best.intercept.toFixed(2)} ${best.slope < 0 ? '−' : '+'} ${Math.abs(best.slope).toFixed(2)}x, with r = ${best.r.toFixed(2)}.`}
       </p>
 
       <div className="leastsquares-actions">

@@ -13,10 +13,10 @@ Two numeric columns, one on each axis, one point per employee.
 <CodeBlock id="scatter" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
   geom_point()`} />
 
-Which variable goes where is a claim, not a convention: the thing you think is
-being affected — the **outcome** — goes on y, and the thing you think is doing
-the affecting goes on x. Module 10 writes the same claim as
-`lm(wellbeing ~ autonomy)`, in the same order.
+By convention the **outcome**, the variable you want to explain or predict,
+goes on y, and the predictor goes on x. Module 10 writes the same choice as
+`lm(wellbeing ~ autonomy)`, in the same order. Putting a variable on x does not
+claim that it causes anything.
 
 With 480 points, many land on top of each other. Making them partly transparent
 shows where the crowd is.
@@ -86,7 +86,7 @@ your readers cannot distinguish red from green.
   question="Which wording belongs with the figure you just built, as its title and note?"
   choices={[
     { text: 'Autonomy causes higher wellbeing among employees.', response: 'The figure shows an association in observational data. Nothing here rules out the possibility that content employees report more autonomy, or that a third variable drives both.' },
-    { text: 'Title: Wellbeing and Self-Reported Autonomy in 480 Employees. Note: The line is a fitted linear regression with its 95% confidence band.', correct: true, response: 'Correct. The title says what is plotted and for how many people, and the note says what the line and band are: everything a reader needs to interpret the figure without the surrounding text.' },
+    { text: 'Title: Wellbeing and Self-Reported Autonomy in 480 Employees. Note. The line is a fitted linear regression with its 95% confidence band.', correct: true, response: 'Correct. The title says what is plotted and for how many people, and the note says what the line and band are: everything a reader needs to interpret the figure without the surrounding text.' },
     { text: 'Scatterplot.', response: 'True and useless. The title and note have to work when the figure is read on its own, which is how figures are usually read.' },
     { text: 'The relationship between autonomy and wellbeing was significant.', response: 'A title or note describes the figure; significance belongs in the text, and nothing in this figure reports a test.' },
   ]}

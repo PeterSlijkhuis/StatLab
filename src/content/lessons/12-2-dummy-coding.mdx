@@ -22,7 +22,7 @@ comparison for your question, say so with
   id="p-count"
   question="How many coefficients will lm(wellbeing ~ department) produce for four departments?"
   choices={[
-    { text: 'Four, one per department', response: 'That would be one too many: with an intercept as well, the model could not tell them apart.' },
+    { text: 'Four, one for each department (and an intercept on top)', response: 'That would be five parameters for four group means. With an intercept, one department has to become the reference.' },
     { text: 'Three, plus an intercept', correct: true, response: 'Right - k levels cost k - 1 coefficients. The missing one is the reference, and the intercept carries it.' },
     { text: 'One, because department is one variable', response: 'One variable, but three dummy columns. A factor is not a single slope.' },
     { text: 'Five, one per department plus an intercept', response: 'Five parameters cannot be estimated from four group means. The model would be unidentifiable.' },

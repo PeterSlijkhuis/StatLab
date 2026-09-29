@@ -26,8 +26,9 @@ Same *t*, same degrees of freedom, same *p*. With exactly two time points and
 nobody missing a measurement, the random intercept does precisely what a paired
 *t*-test does: it removes each employee's own level before looking at the change.
 This exact match holds for lmer's default REML fit. The textbook recommends
-`REML = FALSE`; with maximum likelihood the degrees of freedom are 480 rather than
-479, so the *t* differs from the paired *t* in the second decimal.
+`REML = FALSE`; with maximum likelihood the degrees of freedom come out close to 480
+rather than 479, so the *t* no longer matches the paired *t* exactly, though it
+differs only slightly.
 
 <CodeBlock id="c-differences" code={`differences <- d$engagement_t2 - d$engagement_t1
 

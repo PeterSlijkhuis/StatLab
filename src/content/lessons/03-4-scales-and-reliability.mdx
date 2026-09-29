@@ -94,7 +94,8 @@ with items that agree only weakly.
 ## Which item is the weak one?
 
 Recompute alpha with each item left out in turn. An item whose removal raises
-alpha is not measuring what the others measure.
+alpha agrees poorly with the others, and is a candidate for not measuring the
+same thing.
 
 <CodeBlock id="c-drop" code={`alpha_of <- function(items) {
   k <- ncol(items)
@@ -128,6 +129,6 @@ you when an item looks as if it still needs reversing.
   choices={[
     { text: 'That the scale measures what it claims to measure', response: 'That is validity. Alpha says the items agree with each other, which five questions about the wrong construct can do just as well.' },
     { text: 'That its items are consistent with each other, so averaging them is reasonable', correct: true, response: 'Exactly. Reliability is necessary for a useful score, but it is not the same as measuring the right thing.' },
-    { text: 'That 90% of the answers are correct', response: 'Alpha is not a percentage of anything. It is a ratio of variances.' },
+    { text: 'That 90% of the answers are correct', response: 'Alpha says nothing about correct answers. It is built from the item variances and the variance of the total score, and estimates how much of the score variance is not measurement error.' },
   ]}
 />
