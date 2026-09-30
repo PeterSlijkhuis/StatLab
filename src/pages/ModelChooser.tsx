@@ -95,7 +95,7 @@ function AnswerCard({ answer }: { answer: Answer }) {
       </p>
       {answer.traditional && (
         <p>
-          <strong>Traditional name:</strong> {answer.traditional}
+          <strong>Traditional counterpart:</strong> {answer.traditional}
         </p>
       )}
       <p>
@@ -159,7 +159,7 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
     <section className="model-index" aria-labelledby="model-index-title">
       <div className="model-index-head">
         <h2 id="model-index-title">Browse all {entries.length} models</h2>
-        <p>Already know what you need? Search by name, or by the test you know it as.</p>
+        <p>Already know what you need? Search by name, or by the traditional test you know it as.</p>
       </div>
       <div className="model-index-tools">
         <label className="model-index-search">
@@ -168,7 +168,7 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
             <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
             <path d="M13 13l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search, for example t-test or mediation" />
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search, for example mediation or a traditional test" />
         </label>
         <div className="model-index-filters" role="group" aria-label="Show">
           {FILTERS.map((option) => (

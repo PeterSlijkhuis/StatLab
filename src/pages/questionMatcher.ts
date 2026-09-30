@@ -79,7 +79,7 @@ export const CUES: Cue[] = [
   {
     id: 'ranks',
     label: 'Ranks instead of means',
-    why: 'You ask for a rank-based (nonparametric) test',
+    why: 'You ask for a traditional rank-based (nonparametric) test',
     pattern: /\bnon ?parametric\b|\bmann whitney\b|\bwilcoxon\b|\bkruskal\b|\brank based\b|\bskewed\b/,
   },
   {

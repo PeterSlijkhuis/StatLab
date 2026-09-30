@@ -274,7 +274,7 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
       return `library(pwr)\npwr.anova.test(k = ${plan.k ?? 3}, ${size}, ${a}, ${pw})`;
     }
     case 'repeated': {
-      const head = `# Repeated-measures ANOVA, assuming sphericity (G*Power's formula)\nk <- ${plan.k ?? 3}; r <- ${num(plan.rho ?? 0.5)}; alpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {\n  df1 <- k - 1; df2 <- (n - 1) * (k - 1)\n  1 - pf(qf(1 - alpha, df1, df2), df1, df2, ncp = n * k * f^2 / (1 - r))\n}\n`;
+      const head = `# Repeated measures, assuming sphericity (G*Power's formula)\nk <- ${plan.k ?? 3}; r <- ${num(plan.rho ?? 0.5)}; alpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {\n  df1 <- k - 1; df2 <- (n - 1) * (k - 1)\n  1 - pf(qf(1 - alpha, df1, df2), df1, df2, ncp = n * k * f^2 / (1 - r))\n}\n`;
       return e
         ? `${head}n <- 2\nwhile (power_at(n, ${num(plan.effect)}) < target) n <- n + 1\nn`
         : `${head}uniroot(function(f) power_at(${n}, f) - target, c(1e-6, 10), tol = 1e-10)$root`;
@@ -282,7 +282,7 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
     case 'factorial': {
       const layout = plan.layout ?? 'between';
       const per = { between: 'people per cell', mixed: 'people per group', within: 'people' }[layout];
-      const head = `# One effect in a 2 × 2 ANOVA (${layout === 'mixed' ? 'one factor between, one within people' : `both factors ${layout} people`}): F test with 1 df\nalpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {   # n = ${per}\n  N <- ${CELLS[layout]} * n; df2 <- N - ${LOST_DF[layout]}\n  1 - pf(qf(1 - alpha, 1, df2), 1, df2, ncp = N * f^2)\n}\n`;
+      const head = `# One effect in a 2 × 2 design (${layout === 'mixed' ? 'one factor between, one within people' : `both factors ${layout} people`}): F test with 1 df\nalpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {   # n = ${per}\n  N <- ${CELLS[layout]} * n; df2 <- N - ${LOST_DF[layout]}\n  1 - pf(qf(1 - alpha, 1, df2), 1, df2, ncp = N * f^2)\n}\n`;
       return e
         ? `${head}n <- 2\nwhile (power_at(n, ${num(plan.effect)}) < target) n <- n + 1\nn   # ${per}`
         : `${head}uniroot(function(f) power_at(${n}, f) - target, c(1e-6, 10), tol = 1e-10)$root`;
