@@ -83,7 +83,7 @@ export const PAGE_ENTRIES: { path: string; title: string; what: string; keywords
     path: '/sample-size',
     title: 'How many participants?',
     what: 'Work out the sample size for your study, step by step.',
-    keywords: 'sample size how many participants people power analysis gpower g*power n',
+    keywords: 'sample size how many participants people power analysis gpower g*power n ab test a/b 2x2 factorial',
   },
   {
     path: '/workspace',
