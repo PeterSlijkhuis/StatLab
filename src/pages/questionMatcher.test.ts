@@ -5,6 +5,17 @@ import { CUES, detectCues, matchQuestion, RULE_IDS } from './questionMatcher';
 // Realistic questions as students write them. `top` must rank first; `inTop2`
 // is for questions a careful reader could answer two ways.
 const QUESTIONS: { q: string; top?: string; inTop2?: string }[] = [
+  // Found in the strict audit of 2026-09-30.
+  { q: 'Does stress differ between the three exam weeks?', top: 'repeated-measures' },
+  { q: 'Do some chicks grow faster than others over 21 days?', top: 'growth-curve' },
+  { q: 'Does exercise reduce the number of doctor visits per year?', top: 'poisson-regression' },
+  { q: 'Does the number of sick days per month differ between departments?', top: 'poisson-regression' },
+  { q: 'Does social class predict income?', top: 'simple-regression' },
+  { q: 'Does therapy reduce depression more than a waiting list, measured before and after?', top: 'time-by-group' },
+  { q: 'Do training and mentoring work better in combination?', top: 'factorial' },
+  { q: 'Did engagement rise more for trained employees than for others?', top: 'time-by-group' },
+  { q: 'Is the way people travel to work linked to their department?', top: 'cross-table' },
+  { q: 'Most people take 0 to 3 sick days, but a few take 40: what predicts them?', top: 'poisson-regression' },
   { q: 'Do remote workers report higher wellbeing than office workers?', top: 'two-groups' },
   { q: 'Is there a difference in exam scores between men and women?', top: 'two-groups' },
   { q: 'Do the four departments differ in wellbeing?', top: 'several-groups' },

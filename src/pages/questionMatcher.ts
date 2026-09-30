@@ -67,7 +67,7 @@ export const CUES: Cue[] = [
     id: 'count',
     label: 'Outcome is a count',
     why: 'The outcome is a count of how often something happens',
-    pattern: /\bhow many\b|\bnumber of (?!(items|variables|questions|predictors|factors|components|hours|years)\b)|\bcount of\b|\bhow often\b|\bfrequency\b|\btimes (a|per|each) (day|week|month|year)\b/,
+    pattern: /\bhow many\b|\bnumber of (?!(items|variables|questions|predictors|factors|components|hours|years)\b)|\bcount of\b|\bhow often\b|\bsick days\b|\bfrequency\b|\btimes (a|per|each) (day|week|month|year)\b/,
   },
   {
     id: 'ordinal',
@@ -87,7 +87,7 @@ export const CUES: Cue[] = [
     label: 'Outcome is a category',
     why: 'The outcome is one of several categories with no order',
     pattern:
-      /\bwhich (kind|type|category|brand|option|mode|party|product|programme|program|one) (of|do|does|people|they|students|employees)\b|\bchoice of\b|\bchoose (between|among)\b|\bhow (people|they|students|employees|staff) (travel|commute|vote)|\bvote for\b|\bcar,? bike\b/,
+      /\bwhich (kind|type|category|brand|option|mode|party|product|programme|program|one) (of|do|does|people|they|students|employees)\b|\bchoice of\b|\bchoose (between|among)\b|\b(how|the way) (people|they|students|employees|staff) (travel|commute|vote)|\bvote for\b|\bcar,? bike\b/,
   },
   {
     id: 'survival',
@@ -106,7 +106,7 @@ export const CUES: Cue[] = [
     label: 'Compares groups',
     why: 'You compare groups',
     pattern: new RegExp(
-      `\\b(differ|differs|differed|difference|differences|different from each other|compare|compared|comparing|comparison|versus|vs|group|condition|treatment|control group|experimental|intervention|gender|men|women|male|female|remote|office workers|training|trained|untrained|mentoring|nationality|department|${GROUP_NOUNS})\\b|\\bper (programme|program|department|group|condition|faculty|country)\\b|(?<!measures |rm )\\banova\\b`,
+      `\\b(differ|differs|differed|difference|differences|different from each other|compare|compared|comparing|comparison|versus|vs|group|condition|treatment|control group|control condition|waiting list|placebo|experimental|intervention|gender|men|women|male|female|remote|office workers|training|trained|untrained|mentoring|nationality|department|${GROUP_NOUNS})\\b|\\bper (programme|program|department|group|condition|faculty|country)\\b|(?<!measures |rm )\\banova\\b`,
     ),
   },
   {
@@ -151,7 +151,7 @@ export const CUES: Cue[] = [
     label: 'Same people, twice',
     why: 'The same people are measured twice',
     pattern:
-      /\bbefore and after\b|\bpre ?(test)? (and|to|vs|versus) post\b|\bt1\b[^?]*\bt2\b|\btime 1\b[^?]*\btime 2\b|\bpre ?\/ ?post\b|\bpretest\b|\bposttest\b|\bfrom the first to the second\b|\bfirst and second (measurement|time|wave|test|exam)\b|\btwo (time points|measurements|waves|occasions)\b|\btwice\b|\bfollow ?up\b|\bsame (people|participants|students|employees|persons|patients|children|workers|staff)\b|\bpaired\b|\bmatched pairs\b|\brepeated\b|\bthan (before|at baseline|at the start)\b|\b(rise|rose|increase|increased|drop|dropped|improve|improved|change|changed) from\b/,
+      /\bbefore and after\b|\bpre ?(test)? (and|to|vs|versus) post\b|\bt1\b[^?]*\bt2\b|\btime 1\b[^?]*\btime 2\b|\bpre ?\/ ?post\b|\bpretest\b|\bposttest\b|\bfrom the first to the second\b|\bfirst and second (measurement|time|wave|test|exam)\b|\btwo (time points|measurements|waves|occasions)\b|\btwice\b|\bfollow ?up\b|\bsame (people|participants|students|employees|persons|patients|children|workers|staff)\b|\bpaired\b|\bmatched pairs\b|\brepeated\b|\bthan (before|at baseline|at the start)\b|\b(rise|rose|increase|increased|drop|dropped|improve|improved|change|changed) from\b|\b(rise|rose|increased?|improved?|changed?|grew|dropped) more\b/,
   },
   {
     id: 'waves',
@@ -164,14 +164,14 @@ export const CUES: Cue[] = [
     id: 'clustered',
     label: 'People in teams or classes',
     why: 'People are grouped in teams, classes or sites, which makes them alike',
-    pattern: /\b(teams?|class(es|rooms?)?|schools?|sites?|hospitals?|clinics?|branches|wards?|nested|multilevel|multi level|households?|families|neighbourhoods?|neighborhoods?)\b/,
+    pattern: /\b(teams?|(?<!(social|working|middle|upper|lower) )class(es|rooms?)?|schools?|sites?|hospitals?|clinics?|branches|wards?|nested|multilevel|multi level|households?|families|neighbourhoods?|neighborhoods?)\b/,
   },
   {
     id: 'moderation',
     label: 'An effect depends on something',
     why: 'You ask whether an effect depends on something else',
     pattern:
-      /\b(effect|relationship|relation|link|association|impact|influence)\b[^?]*\b(depends?|differs?|different|stronger|weaker|vary|varies|smaller|larger|bigger)\b|\bdepends? on\b|\b(stronger|weaker|more|less|bigger|smaller|larger) (for|among|when|in)\b|\bdiffer(s)? for\b|\bmoderat\w*|\binteract\w*|\bbuffer\w*/,
+      /\b(effect|relationship|relation|link|association|impact|influence)\b[^?]*\b(depends?|differs?|different|stronger|weaker|vary|varies|smaller|larger|bigger)\b|\bdepends? on\b|\b(stronger|weaker|more|less|bigger|smaller|larger) (for|among|when|in)\b|\bdiffer(s)? for\b|\bmoderat\w*|\binteract\w*|\bbuffer\w*|\bin combination\b|\bcombined\b/,
   },
   {
     id: 'mediation',
@@ -231,7 +231,7 @@ export const CUES: Cue[] = [
     id: 'timeSeries',
     label: 'One series over time',
     why: 'You follow one series measured at regular intervals',
-    pattern: /\btime series\b|\bmonthly\b|\byearly\b|\bannual\b|\bper (month|year|quarter)\b|\beach (month|year|quarter)\b|\bforecast\w*|\bover the (past|last) \d+ (years|months)\b|\bexpect next (year|month)\b/,
+    pattern: /\btime series\b|\bmonthly\b|\byearly\b|\bannual\b|\beach (month|year|quarter)\b|\bforecast\w*|\bover the (past|last) \d+ (years|months)\b|\bexpect next (year|month)\b/,
   },
   {
     id: 'intervention',
@@ -291,7 +291,7 @@ export function detectCues(text: string): CueId[] {
   // Paired or matched data compares two measurements, not two groups, and so does
   // "the difference between before and after" when no group is named.
   const groupNamed = cueById('groups').pattern!.test(t.replace(/\b(differ\w*|different from each other|compar\w*|versus|vs)\b/g, ''));
-  if (/\b(paired|matched)\b/.test(t) || (found.has('twice') && !groupNamed)) ['groups', 'twoGroups', 'manyGroups'].forEach((id) => found.delete(id as CueId));
+  if (/\b(paired|matched)\b/.test(t) || ((found.has('twice') || found.has('waves')) && !groupNamed)) ['groups', 'twoGroups', 'manyGroups'].forEach((id) => found.delete(id as CueId));
   // "Differ in how fast they improve" is about rates, not groups.
   if (found.has('growth') && !found.has('twoGroups') && !found.has('manyGroups')) found.delete('groups');
   // Reducing many variables is not picking predictors.

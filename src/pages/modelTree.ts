@@ -375,7 +375,7 @@ model <- manova(cbind(wellbeing, engagement_t2, performance) ~ department, data 
 summary(model, test = "Pillai")
 summary.aov(model)`,
                                 check:
-                                  "The outcomes correlate moderately with each other; if they do not, analyse them one at a time. No extreme outliers, and more cases in every group than there are outcomes. Pillai's trace is the most robust of the four test statistics.",
+                                  "The outcomes correlate moderately with each other; if they do not, analyse them one at a time. No extreme outliers, more cases in every group than there are outcomes, and similar variances and correlations of the outcomes in every group. Pillai's trace is the most robust of the four test statistics when that last condition fails.",
                                 traditional: 'The traditional one-way MANOVA.',
                                 note: 'The overall test asks whether the groups differ on the combination of outcomes. summary.aov() then gives one traditional ANOVA per outcome; correct those for multiple testing, for example with p.adjust(p, method = "holm").',
                                 buildsOn: '12-2',
@@ -417,7 +417,7 @@ model <- lmer(engagement ~ time + (1 | employee_id), data = long_d)
 summary(model)`,
                           check:
                             'Data in long format: one row per person per measurement. Residuals roughly normal, which matters mainly in small samples. With skewed differences in a small sample, the traditional Wilcoxon signed-rank test: wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE).',
-                          traditional: 'The traditional paired-samples t-test: t.test(d$engagement_t2, d$engagement_t1, paired = TRUE). Same t, same p, when nobody is missing a measurement.',
+                          traditional: 'The traditional paired-samples t-test: t.test(d$engagement_t2, d$engagement_t1, paired = TRUE). Same t, same p, when nobody is missing a measurement and the two measurements correlate positively (no singular fit).',
                           note: '(1 | employee_id) gives every employee their own starting level, so the model knows which scores belong together. engagement_t1 sorts first, so it is the reference and the time coefficient is the change from the first measurement to the second. Unlike the traditional paired t-test, it keeps people who missed a measurement.',
                           lessonId: '14-3',
                         },
@@ -441,7 +441,7 @@ anova(model)
 emmeans(model, pairwise ~ time, adjust = "holm")`,
                           check:
                             'Data in long format: one row per case per measurement, which ChickWeight already is. Residuals roughly normal, which matters mainly in small samples. The model assumes the same spread at every time point and the same correlation between every pair of them. Compare the SDs per time point first: in ChickWeight they grow from about 1 g at hatching to about 72 g at day 21, so read its p-values with care. For a growth process like this, a growth-curve model with random slopes fits better. For a small, clearly skewed sample, the traditional Friedman test, which needs every chick at every time point, so keep only the complete ones first: complete <- long_d %>% group_by(Chick) %>% filter(n() == 3) %>% ungroup() %>% droplevels(), then friedman.test(weight ~ time | Chick, data = complete).',
-                          traditional: 'The traditional repeated-measures ANOVA. With complete data the model\'s F matches its uncorrected F: both assume the time points are equally correlated.',
+                          traditional: 'The traditional repeated-measures ANOVA. With complete data and no singular fit, the model\'s F matches its uncorrected F. The model assumes equal variances and correlations at every time point (compound symmetry), which is stricter than the sphericity the traditional F needs.',
                           note: 'anova() tests whether weight differs across the time points at all; emmeans then compares each pair of time points. (1 | Chick) lets each chick have its own level, as (1 | id) would for people. Unlike the traditional repeated-measures ANOVA, the model keeps the chicks that missed a weighing.',
                           lessonId: '14-4',
                         },
@@ -532,7 +532,7 @@ summary(model)`,
 d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 model <- lmer(wellbeing ~ autonomy + workload + (1 | site), data = d)
 summary(model)`,
-                    check: 'Enough groups to estimate how they vary: a handful at the very least, and ideally twenty or more. The 6 sites here are few, which is why Lesson 14-3 finds SD_site near 0. Residuals roughly normal, which matters mainly in small samples.',
+                    check: 'Enough groups to estimate how they vary: a handful at the very least, and ideally twenty or more. With only 6 sites, as here, the site SD is estimated imprecisely and may come out as 0 (a singular fit). Residuals roughly normal, which matters mainly in small samples.',
                     note: 'Employees at the same site are more alike than employees at different sites; (1 | site) accounts for that. If people are also measured repeatedly, nest them: (1 | site/employee_id). If a predictor\'s effect may differ between sites, add a random slope: (autonomy | site).',
                     lessonId: '14-3',
                   },
@@ -572,10 +572,10 @@ model <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomia
 summary(model)
 exp(cbind(OR = coef(model), confint(model)))`,
                           check:
-                            'Independent observations, and enough cases of the rarer outcome: a common rule of thumb is at least 10 per estimated coefficient (a factor with k levels uses k − 1). If R warns that fitted probabilities of 0 or 1 occurred, a predictor separates the outcomes perfectly; Firth\'s method, logistf::logistf(), handles that in RStudio.',
+                            'Independent observations, numeric predictors that relate in a straight line to the log odds, and enough cases of the rarer outcome: a common rule of thumb is at least 10 per estimated coefficient (a factor with k levels uses k − 1). If R warns that fitted probabilities of 0 or 1 occurred, a predictor separates the outcomes perfectly; Firth\'s method, logistf::logistf(), handles that in RStudio.',
                           traditional:
                             'With one categorical predictor, such as remote, the traditional chi-square test of independence: chisq.test(table(d$left_company, d$remote), correct = FALSE), which matches anova(glm(left_company ~ remote, data = d, family = binomial), test = "Rao").',
-                          note: 'The coefficients are in log odds. exp() turns them into odds ratios: above 1, the outcome becomes more likely; below 1, less likely.',
+                          note: 'The intercept is in log odds and each slope is a difference in log odds (a log odds ratio). exp() turns the slopes into odds ratios: above 1, the outcome becomes more likely; below 1, less likely.',
                           lessonId: '15-2',
                         },
                       },
@@ -622,7 +622,7 @@ summary(model)
 exp(fixef(model))`,
                     check:
                       'For repeated measurements, long format: one row per person per measurement. Clustered data, such as employees in sites, is already in shape. With few clusters or a rare outcome the model may fail to converge; simplify the random part first.',
-                    traditional: "For one yes-or-no answer at two time points, the traditional McNemar test: mcnemar.test(table(before, after)).",
+                    traditional: "For one yes-or-no answer at two time points, the traditional McNemar test: mcnemar.test(table(before, after)). It asks the same question; the mixed model gives a similar but not identical p.",
                     note: 'exp() turns the coefficients into odds ratios for people in the same cluster, here the same site, holding its random intercept fixed. These are usually further from 1 than the population-average odds ratios an ordinary logistic regression gives.',
                     buildsOn: '14-2',
                     further: 'Gelman and Hill, Data Analysis Using Regression and Multilevel/Hierarchical Models.',
@@ -699,7 +699,7 @@ model <- polr(Sat ~ Infl + Type, data = housing, weights = Freq, Hess = TRUE)
 summary(model)
 exp(cbind(OR = coef(model), confint(model)))`,
                     check:
-                      'Proportional odds: each predictor shifts the odds of being above any cut-off by the same amount. The ordinal package tests it: ordinal::nominal_test(ordinal::clm(Sat ~ Infl + Type, data = housing, weights = Freq)), where a small p flags a predictor that breaks the assumption. A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
+                      'Proportional odds: each predictor multiplies the odds of being above any cut-off by the same factor (the same odds ratio at every cut-off). The ordinal package tests it: ordinal::nominal_test(ordinal::clm(Sat ~ Infl + Type, data = housing, weights = Freq)), where a small p flags a predictor that breaks the assumption. A total of many Likert items is usually analysed as a number instead. MASS hides dplyr\'s select(), so attach MASS before dplyr, or write dplyr::select().',
                     note: 'Each row of housing is one combination of answers, and Freq says how many tenants gave it, hence weights = Freq; with one row per person, leave it out. Your own outcome needs to be a factor with its levels in order: factor(x, levels = c("low", "medium", "high"), ordered = TRUE). An odds ratio above 1 means that predictor goes with higher categories of the outcome. The intercepts (the zeta values in the output) are the cut-offs between adjacent categories.',
                     buildsOn: '15-2',
                     further: 'Alan Agresti, Analysis of Ordinal Categorical Data, and the ordinal package\'s vignettes.',
@@ -868,7 +868,7 @@ summary(fit)$table
 survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                     check:
                       'Censoring unrelated to the outcome: cases whose follow-up ends early (censored, here still employed when the data were collected) are no more or less likely to have the event than cases followed for longer. The traditional log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
-                    traditional: 'The traditional log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "breslow"))$sctest.',
+                    traditional: 'The traditional log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "exact"))$sctest. With no tied event times, any ties option gives the same value.',
                     note: 'Surv(tenure_years, left_company) pairs each employee\'s years at the company with whether they left (1) or still work there, which makes them censored (0). summary(fit)$table gives each group\'s median time to the event; survdiff() is the traditional log-rank test; plot(fit) draws the curves.',
                     further: 'Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, and the survival package\'s vignettes.',
                   },
@@ -890,7 +890,7 @@ tidy(model, conf.int = TRUE, exponentiate = TRUE)
 cox.zph(model)`,
                     check:
                       'Proportional hazards: each predictor multiplies the risk by the same factor at every point in time. cox.zph() tests this for each predictor; a small p flags a problem. Roughly 10 events or more per predictor.',
-                    note: 'The exponentiated coefficients are hazard ratios: 1.5 means a 50% higher risk of the event at any moment for each one-unit increase in the predictor.',
+                    note: 'The exponentiated coefficients are hazard ratios: 1.5 means a 50% higher hazard (the rate of the event at any moment, among those who have not had it yet) for each one-unit increase in the predictor.',
                     further: 'Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, and the survival package\'s vignettes.',
                   },
                 },
@@ -932,7 +932,7 @@ set.seed(1)
 fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000)
 parameterEstimates(fit, boot.ci.type = "perc")`,
               check:
-                'Mediation is a causal claim: the predictor comes before the mediator, and the mediator before the outcome, ideally measured at different times. With data from one moment, say the pattern is consistent with mediation rather than that it shows it.',
+                'Mediation is a causal claim: the predictor comes before the mediator, and the mediator before the outcome, ideally measured at different times. With data from one moment, say the pattern is consistent with mediation rather than that it shows it. It also assumes no unmeasured variable affects both the mediator and the outcome; randomising the predictor does not guarantee this, and the bootstrap cannot fix it.',
               traditional: 'Mediation analysis, as in PROCESS model 4. The older Baron and Kenny steps and the traditional Sobel test are no longer recommended.',
               note: 'lavaan needs numbers, so trained codes training as 1 for Yes and 0 for No. The indirect effect a × b is the part of the effect that runs through the mediator; it is supported when its bootstrap confidence interval excludes 0. c is the direct effect that remains, and total is their sum.',
               lessonId: '17-1',
@@ -1112,7 +1112,7 @@ model
 predict(model, n.ahead = 10, newxreg = 1973:1982 - 1920)`,
               check:
                 'Equally spaced observations with no gaps. A trend or a seasonal pattern needs differencing, a trend regressor (as xreg does here) or a seasonal term; plot(series) and acf(series) show both. In RStudio, forecast::auto.arima(series) chooses the orders for you.',
-              note: 'order = c(p, d, q) sets the autoregressive terms, the number of differences and the moving-average terms. xreg adds a straight-line trend in years, centred on 1920; predict() needs the future years in newxreg. predict() gives forecasts with standard errors, which grow the further ahead you look. Compare candidate orders by AIC: lower is better. For your own data, ts(d$value, start = c(2020, 1), frequency = 12) turns a column of monthly values into a series.',
+              note: 'order = c(p, d, q) sets the autoregressive terms, the number of differences and the moving-average terms. xreg adds a straight-line trend in years, centred on 1920; predict() needs the future years in newxreg. predict() gives forecasts with standard errors, which grow the further ahead you look. Compare candidate orders with the same d by AIC: lower is better. For your own data, ts(d$value, start = c(2020, 1), frequency = 12) turns a column of monthly values into a series.',
               further: 'Hyndman and Athanasopoulos, Forecasting: Principles and Practice (free online at otexts.com), which uses the fable package.',
             },
           },
@@ -1173,7 +1173,7 @@ set.seed(1)
 cv <- cv.glmnet(x, y, alpha = 1)
 coef(cv, s = "lambda.1se")`,
               check:
-                'Complete cases only, since model.matrix() drops rows with missing values. glmnet standardises the predictors for you. For a yes-or-no outcome, add family = "binomial". Avoid stepwise selection: its p-values and R² are biased upwards.',
+                'Complete cases only, since model.matrix() drops rows with missing values. glmnet standardises the predictors for you. For a yes-or-no outcome, add family = "binomial". Avoid stepwise selection: its p-values come out too small and its R² too large.',
               note: 'The lasso shrinks coefficients towards zero and sets the weakest to exactly zero, so the predictors left over are the selection. lambda.1se is the simplest model whose cross-validated error is within one standard error of the best. The coefficients are shrunk on purpose, so they come without p-values.',
               further: 'An Introduction to Statistical Learning, the chapter on linear model selection and regularisation.',
             },
