@@ -1,16 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
 import { findLesson } from '../content/manifest';
 import SampleSize from './SampleSize';
 import { DESIGNS } from './sampleSizeDesigns';
+
+/** Stands in for the browser's Back button. */
+function BrowserBack() {
+  const navigate = useNavigate();
+  return <button type="button" onClick={() => navigate(-1)}>Browser back</button>;
+}
 
 function setup() {
   const user = userEvent.setup();
   render(
     <MemoryRouter>
       <SampleSize />
+      <BrowserBack />
     </MemoryRouter>,
   );
   const pick = (name: RegExp) => user.click(screen.getByRole('button', { name }));
@@ -183,6 +190,18 @@ describe('sample size page', () => {
     await fill(/Standard deviation of the outcome/, '10');
     // (4 / 10) / √(2 × 3) = 0.16.
     expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.16');
+  });
+
+  test("the browser's Back button goes back one question, keeping the answers", async () => {
+    const { user, pick } = setup();
+    await pick(/^Compare two separate groups/);
+    await pick(/How many people do I need/);
+    expect(question()).toBe('How big is the effect you want to be able to find?');
+    await user.click(screen.getByRole('button', { name: 'Browser back' }));
+    expect(question()).toBe('What do you want to find out?');
+    expect(screen.getByRole('button', { name: /How many people do I need/ }).textContent).toContain('Your earlier choice');
+    await user.click(screen.getByRole('button', { name: 'Browser back' }));
+    expect(question()).toBe('What will you test?');
   });
 
   test('every design links to a lesson that exists', () => {
