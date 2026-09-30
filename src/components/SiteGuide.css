@@ -27,3 +27,5 @@
 @media print { .site-guide { display: none; } }
 .site-guide-compact .site-guide-label { display: none; }
 .site-guide-compact .site-guide-button { padding: 0.25rem; }
+/* The R status pill also sits bottom right: stand on top of it while it shows. */
+body:has(.r-status.ready, .r-status.busy) .site-guide { bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3.5rem); }
