@@ -214,6 +214,9 @@ export function markExercise(lessonId: string, exerciseId: string, status: Exerc
 
 export function markQuiz(lessonId: string, quizId: string, correct: boolean): void {
   update(lessonId, (lesson) => {
+    // Like an exercise pass, a right answer is permanent: answering again in a
+    // review round must not take back points already earned.
+    if (lesson.quizzes[quizId]) return;
     lesson.quizzes[quizId] = correct;
   });
 }

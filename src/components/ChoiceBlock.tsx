@@ -18,6 +18,8 @@ type Props = {
   kind: ChoiceKind;
   question: string;
   choices: Choice[];
+  /** Called once, with whether the pick was right. */
+  onAnswer?: (correct: boolean) => void;
 };
 
 const LABELS: Record<ChoiceKind, string> = {
@@ -28,7 +30,7 @@ const LABELS: Record<ChoiceKind, string> = {
 
 const ICONS: Record<ChoiceKind, string> = { predict: '🔮', quiz: '💡', interpret: '📝' };
 
-export default function ChoiceBlock({ id, kind, question, choices }: Props) {
+export default function ChoiceBlock({ id, kind, question, choices, onAnswer }: Props) {
   const { lessonId } = useLesson();
   const [chosen, setChosen] = useState<number | null>(null);
 
@@ -37,6 +39,7 @@ export default function ChoiceBlock({ id, kind, question, choices }: Props) {
     setChosen(index);
     // Predictions are deliberately not scored: commitment, not assessment.
     if (kind !== 'predict') markQuiz(lessonId, id, choices[index].correct === true);
+    onAnswer?.(choices[index].correct === true);
   }
 
   const selection = chosen === null ? null : choices[chosen];

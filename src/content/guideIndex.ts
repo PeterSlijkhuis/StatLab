@@ -86,6 +86,12 @@ export const PAGE_ENTRIES: { path: string; title: string; what: string; keywords
     keywords: 'sample size how many participants people power analysis gpower g*power n ab test a/b 2x2 factorial',
   },
   {
+    path: '/review',
+    title: 'Review quiz',
+    what: 'Ten mixed questions from the lessons you have opened.',
+    keywords: 'review quiz practice revise revision exam test yourself questions repeat remember study',
+  },
+  {
     path: '/workspace',
     title: 'R Workspace',
     what: 'Write and run your own R code, and upload your own data.',
