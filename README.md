@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://peterslijkhuis.github.io/statlab/"><img alt="Open StatLab" src="https://img.shields.io/badge/Open_StatLab-Start_learning_now-4f46e5?style=for-the-badge&logo=r&logoColor=white"></a>
   <a href="#see-it-in-action"><img alt="Watch the tour" src="https://img.shields.io/badge/Watch-the_tour-0ea5e9?style=for-the-badge"></a>
+  <a href="docs/readme/launch.mp4"><img alt="Play the 20 second video" src="https://img.shields.io/badge/Play-20_second_video-db2777?style=for-the-badge"></a>
 </p>
 
 <p align="center">
@@ -28,6 +29,11 @@
 </p>
 
 ## See it in action
+
+<p align="center">
+  <a href="docs/readme/launch.mp4"><img src="docs/readme/launch.jpg" alt="Poster of StatLab's 20-second launch video. Click to play it." width="100%"></a>
+  <br><sub>▶️ <a href="docs/readme/launch.mp4">Play the 20-second launch video</a> (with sound), or watch the longer tour below.</sub>
+</p>
 
 <p align="center">
   <img src="docs/readme/demo.webp" alt="A one-minute tour of StatLab: the home page with a 14-day streak and 1300 points; a lesson where R runs in the page and draws a scree plot; an exercise where a wrong answer gets an explanation from the student's avatar and the right answer earns points and confetti; the least-squares simulation with a line being dragged; the model chooser recommending multiple regression in five clicks; and the avatar shop where a crown is bought with points." width="100%">
@@ -78,6 +84,20 @@
       The layout folds down for small screens, and progress can be exported and picked up on another device.
     </td>
   </tr>
+  <tr>
+    <td valign="top">
+      <h3>🎯 "How many participants?"</h3>
+      A step-by-step sample size planner for two groups, repeated measures, 2 × 2 designs, regression and proportions, with the course model to fit, a power curve and R code that reproduces it.
+    </td>
+    <td valign="top">
+      <h3>🧑‍🏫 "Where to?"</h3>
+      Type what you are looking for, "compare two groups" or "how many people do I need", and the avatar points to the right lesson or tool.
+    </td>
+    <td valign="top">
+      <h3>♿ Built for everyone</h3>
+      Keyboard navigation, a skip link and screen reader labels, with every page scanned against WCAG 2.1 AA on each change.
+    </td>
+  </tr>
 </table>
 
 ## A look inside
@@ -106,6 +126,14 @@
   <tr>
     <td align="center"><sub>The R Workspace: RStudio's panes, with your own data.</sub></td>
     <td align="center"><sub>From research question to model in a few clicks.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/sample-size.png" alt="The sample size planner's result for a 2 × 2 pre-post design: recruit 144 participants to end with 128 complete cases, a table showing how many are needed if the true effect is smaller, and a power curve crossing 80% at 128 people."></td>
+    <td width="50%"><img src="docs/screenshots/helper.png" alt="The Where to? helper opened on a lesson page. The student typed how many people do I need, and it suggests the How many participants? planner and Lesson 8-4 on effect sizes and planning a study."></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Plan a study: how many people, and what if the effect is smaller.</sub></td>
+    <td align="center"><sub>Lost? Ask the avatar where to go.</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/images/least-squares.png" alt="The least-squares simulation: a scatter of points, a line the student drags with intercept and slope sliders, and orange squares showing each squared residual."></td>
@@ -193,6 +221,8 @@ on wellbeing).
   solution, alternate solution and known wrong answer through R and checks that
   the right ones pass and the wrong ones fail for the right reason.
 - **A real browser clicks through the site** before anything is published.
+- **Accessible by default.** Every page is scanned with axe against WCAG 2.1 AA
+  on each change, and a failing scan blocks the release.
 - **It keeps itself up to date.** A weekly workflow checks for new versions of
   webR and the site's dependencies and only takes them after the full R check
   passes.

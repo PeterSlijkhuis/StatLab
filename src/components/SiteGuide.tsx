@@ -61,7 +61,7 @@ export default function SiteGuide() {
           {text.trim() === '' ? (
             <>
               <Link className="site-guide-hit" to={`/lesson/${last.id}`}>
-                <strong>{lastVisitedLesson() ? 'Carry on' : 'Start here'}: Lesson {last.id}</strong>
+                <strong>{lastVisitedLesson() ? 'Carry on' : 'Start here'}: Lesson {last.id.replace(/^0/, '')}</strong>
                 <span>{last.title}</span>
               </Link>
               <p className="site-guide-note">Or try:</p>
