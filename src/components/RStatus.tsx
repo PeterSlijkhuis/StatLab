@@ -1,16 +1,5 @@
 import { useEffect, useState } from 'react';
-import { onStatus, type RStatus as Status } from '../r/webrClient';
-
-/**
- * Restarting reloads the page rather than respawning the worker in place.
- * webR's PostMessage channel cannot interrupt running R code, so a student's
- * infinite loop has no other escape. A reload clears the dead lesson
- * environment, the memoised session promise and stale component state in one
- * move, and nothing is lost because code drafts live in localStorage.
- */
-function restart() {
-  window.location.reload();
-}
+import { onStatus, restartR, type RStatus as Status } from '../r/webrClient';
 
 export default function RStatus() {
   const [status, setStatus] = useState<Status>({ phase: 'idle' });
@@ -21,7 +10,7 @@ export default function RStatus() {
   if (status.phase === 'idle') return null;
 
   if (status.phase === 'ready') {
-    return <div className="r-status ready"><span>R is ready</span><button type="button" onClick={restart} title="Use this if R stops responding">Restart R</button></div>;
+    return <div className="r-status ready"><span>R is ready</span><button type="button" onClick={restartR} title="Use this if R stops responding">Restart R</button></div>;
   }
 
   if (status.phase === 'error') {
@@ -29,7 +18,7 @@ export default function RStatus() {
       <div className="r-status error">
         <p>R could not start. StatLab needs a recent browser and an internet connection the first time it loads. You can still read the lessons and answer the questions.</p>
         <p className="r-status-detail">{status.detail}</p>
-        <button type="button" onClick={restart}>Try again</button>
+        <button type="button" onClick={restartR}>Try again</button>
       </div>
     );
   }

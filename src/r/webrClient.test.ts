@@ -144,3 +144,29 @@ describe('singleton and retry', () => {
     expect(MockedWebR).toHaveBeenCalledTimes(2); // constructor called twice
   });
 });
+
+describe('restartR', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  test('closes the running R, tells listeners, and boots a fresh one on the next request', async () => {
+    vi.doMock('webr', () => ({
+      WebR: class {
+        init = vi.fn(async () => {});
+        close = vi.fn();
+      },
+    }));
+    const { getWebR, onRestart, restartR } = await import('./webrClient');
+    const first = await getWebR();
+    const heard = vi.fn();
+    onRestart(heard);
+
+    restartR();
+
+    expect(first.close).toHaveBeenCalledTimes(1);
+    expect(heard).toHaveBeenCalledTimes(1);
+    const second = await getWebR();
+    expect(second).not.toBe(first);
+  });
+});

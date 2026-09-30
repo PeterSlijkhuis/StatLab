@@ -1,5 +1,5 @@
 import type { WebR } from 'webr';
-import { setStatus } from './webrClient';
+import { onRestart, setStatus } from './webrClient';
 
 /**
  * Spec §3.5: installed at boot. The 40 MB figure the spec quotes was measured
@@ -130,6 +130,12 @@ export async function mountDatasets(
 }
 
 let prepared: Promise<void> | null = null;
+
+// Both caches belong to one webR instance; a restarted R has nothing installed.
+onRestart(() => {
+  prepared = null;
+  packagePromises = new Map();
+});
 
 /** Install packages and mount datasets exactly once per webR instance. */
 export function prepareSession(

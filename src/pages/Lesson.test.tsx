@@ -65,7 +65,7 @@ vi.mock('../content/manifest', async (importOriginal) => {
 
 const getWebR = vi.hoisted(() => vi.fn());
 const setStatus = vi.hoisted(() => vi.fn());
-vi.mock('../r/webrClient', () => ({ getWebR, setStatus }));
+vi.mock('../r/webrClient', () => ({ getWebR, setStatus, onRestart: () => () => {} }));
 
 const prepareSession = vi.hoisted(() => vi.fn());
 const fetchDataset = vi.hoisted(() => vi.fn());
