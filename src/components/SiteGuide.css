@@ -1,0 +1,29 @@
+/* The avatar helper in the bottom right corner. */
+.site-guide { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+.site-guide-button {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.9rem 0.25rem 0.25rem; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--brand); background: var(--surface); color: var(--brand-ink); font-weight: 700; box-shadow: var(--shadow-lg);
+  transition: transform var(--fast) var(--ease);
+}
+.site-guide-button:hover { transform: translateY(-2px); }
+.site-guide-button svg { display: block; border-radius: 50%; }
+.site-guide-panel {
+  width: min(22rem, calc(100vw - 2rem)); max-height: min(28rem, calc(100vh - 7rem)); overflow-y: auto; box-sizing: border-box;
+  padding: 0.9rem; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-lg);
+}
+.site-guide-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.site-guide-title { margin: 0; font-weight: 750; color: var(--ink); }
+.site-guide-close { border: 0; background: none; font-size: 1.4rem; line-height: 1; cursor: pointer; color: var(--muted); padding: 0.1rem 0.4rem; }
+.site-guide-input { width: 100%; box-sizing: border-box; margin: 0.6rem 0; font: inherit; padding: 0.5rem 0.7rem; border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+.site-guide-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.site-guide-hit { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.55rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius-sm); text-decoration: none; color: var(--ink-2); font-size: 0.9rem; }
+.site-guide-hit strong { color: var(--brand-ink); }
+.site-guide-hit:hover { border-color: var(--brand); background: var(--brand-soft); }
+.site-guide-note { margin: 0.6rem 0 0.4rem; color: var(--muted); font-size: 0.9rem; }
+.site-guide-starters { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.site-guide-starters button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); cursor: pointer; }
+.site-guide-starters button:hover { border-color: var(--brand); color: var(--brand-ink); }
+@media (max-width: 640px) { .site-guide-label { display: none; } .site-guide-button { padding: 0.25rem; } }
+@media print { .site-guide { display: none; } }
+.site-guide-compact .site-guide-label { display: none; }
+.site-guide-compact .site-guide-button { padding: 0.25rem; }
