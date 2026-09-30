@@ -122,7 +122,7 @@ type Answers = {
   text: Record<string, string>;
 };
 
-const START: Answers = { text: { n: '100', k: '3', predictors: '3', added: '1', rows: '2', cols: '2', p1: '30', tests: '3', nstim: '4' } };
+const START: Answers = { text: { n: '100', k: '3', predictors: '3', added: '1', rows: '2', cols: '2', p1: '30', tests: '3', nstim: '4', rpre: '.5' } };
 
 function stepsFor(a: Answers): StepId[] {
   const steps: StepId[] = ['design'];
@@ -195,7 +195,7 @@ const INPUT_TEXT: Partial<Record<StepId, { question: string; help: string }>> = 
   tests: { question: 'How many tests will you correct for?', help: 'Bonferroni divides α by the number of tests you correct for together, so each test needs a smaller p-value, and the study needs more people.' },
 };
 
-type Option<T> = { value: T; label: string; note: string; tag?: string };
+type Option<T> = { value: T; label: string; note: ReactNode; tag?: string };
 
 function Choice<T>({ options, chosen, onPick }: { options: Option<T>[]; chosen: T | undefined; onPick: (value: T) => void }) {
   const id = useId();
@@ -319,6 +319,17 @@ export default function SampleSize() {
     ? stimulusSimCode(result.n, parse(answers.text.k), parse(answers.text.nstim), result.kind === 'n' ? result.plan.effect : result.effect)
     : '';
 
+  /** Everyone needed for an effect at the usual settings, to show next to each plain-words option. */
+  function previewPeople(effect: number): number | null {
+    const t = answers.text;
+    const p: Plan = {
+      design: design.id, effect, alpha: 0.05, sides: 2, k: parse(t.k), predictors: parse(t.predictors), added: parse(t.added),
+      df: (parse(t.rows) - 1) * (parse(t.cols) - 1), p1: parse(t.p1) / 100, rho: answers.rho,
+    };
+    const n = solveN(p, 0.8);
+    return n === null ? null : totalN(p, n);
+  }
+
   /** The trail's label for an answered step. */
   function summary(s: StepId): string {
     const t = answers.text;
@@ -334,7 +345,7 @@ export default function SampleSize() {
       case 'added': return `${t.added} tested`;
       case 'table': return `${t.rows} × ${t.cols} table`;
       case 'p1': return `${t.p1}% yes in group 1`;
-      case 'route': return { matter: 'Smallest effect that matters', research: 'Earlier research', unknown: 'A typical value' }[answers.route ?? 'matter'];
+      case 'route': return { matter: 'My own guess of the scores', research: 'From a paper', unknown: 'In plain words' }[answers.route ?? 'unknown'];
       case 'effect': return design.id === 'proportions' ? `${pct(answers.effect ?? 0, 1)} yes in group 2` : `${design.symbol} = ${formatEffect(design, answers.effect ?? 0)}`;
       case 'power': return `${pct(power)} power`;
       case 'alpha': return `α = ${alphaLabel(alphaOf(answers))}`;
@@ -379,7 +390,7 @@ export default function SampleSize() {
       <Choice
         options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: `e.g. ${d.example} Analysis: ${d.test}.` }))}
         chosen={answers.design}
-        onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'means', 'eta2', 'r2', 'dr2', 'v', 'p2'].map((k) => [k, ''])) } })}
+        onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'spread', 'eta2', 'r2', 'dr2', 'v', 'p2'].map((k) => [k, ''])), rpre: '.5' } })}
       />
     );
   } else if (step === 'mode') {
@@ -396,39 +407,39 @@ export default function SampleSize() {
       />
     );
   } else if (step === 'route') {
-    question = 'How will you decide how big the effect is?';
+    question = 'How big is the effect you want to be able to find?';
     help = (
       <>
-        The effect size is the size of the difference or relationship you want to be able to find. For this design it is {design.effectName}: {design.effectMeaning}
-        {design.id === 'paired' && ' Think of it as how consistent the change is: a small change that nearly everyone shows gives a large dz.'}
-        {' '}It is the choice that matters most: halve it and you need about four times as many people.
+        The effect size is how big the difference or relationship is. It is the choice that matters most: an effect half as big needs
+        about four times as many people. You do not need to know it exactly. Pick the way that fits what you know.
       </>
     );
     body = (
       <Choice<EffectRoute>
         options={[
-          { value: 'matter', label: 'The smallest effect that would matter', note: 'You decide what size of effect would be worth finding, in your outcome\'s own units. The strongest basis for a plan.', tag: 'Recommended' },
-          { value: 'research', label: 'An effect size from earlier research', note: 'From a meta-analysis or similar studies. One study\'s effect is usually too optimistic: replications find on average about half the original effect (Open Science Collaboration, 2015).' },
-          { value: 'unknown', label: 'I have nothing to go on yet', note: 'Start from a typical value, and say in your report that it is a convention, not an estimate.' },
+          { value: 'unknown', label: 'Choose a size in plain words', note: 'No numbers needed. Pick small, typical, medium or large, and see straight away how many people each one needs.', tag: 'Easiest: start here if this is new' },
+          { value: 'matter', label: 'I can guess the scores', note: 'You know your measure well enough to say what difference, in its own units, would be worth finding, and roughly how much people differ. The strongest basis for a plan.' },
+          { value: 'research', label: 'I have an effect size from a paper', note: 'From a meta-analysis or similar studies. One study\'s effect is usually too optimistic: replications find on average about half the original effect (Open Science Collaboration, 2015).' },
         ]}
         chosen={answers.route}
         onPick={(value) => answer({ route: value })}
       />
     );
   } else if (step === 'effect' && answers.route === 'unknown') {
-    question = `Which ${design.effectName} will you plan for?`;
+    question = 'Which size of effect do you want to be able to find?';
     help = (
       <>
-        {design.effectName} is {design.effectMeaning} Without any information, pick a conventional value.
-        {presets(design).some((p) => p.recommended)
-          ? ' The typical value from published research is the honest choice. Cohen\'s "medium" is common in student projects, but real effects are often smaller, so a study planned for it can easily miss them.'
-          : ' Cohen\'s "medium" is the usual choice here. Real effects are often smaller, so if you can afford more people, plan for something between small and medium.'}
-        {design.id === 'paired' && ' Cohen wrote these conventions for d, not dz, so they are rougher still here.'}
+        Choose the smallest effect you would not want to miss. Smaller effects need more people. The number of people under each option
+        uses the usual settings (80% power, α = .05); you can change those in the next questions.
+        {design.id === 'paired' && ' For two measurements of the same people, these sizes are rougher: Cohen wrote them for d, not dz.'}
       </>
     );
     body = (
       <Choice
-        options={presets(design).map((p) => ({ value: p.value, label: p.label, note: p.note, tag: p.recommended ? 'Recommended' : undefined }))}
+        options={presets(design).map((p) => {
+          const people = previewPeople(p.value);
+          return { value: p.value, label: p.label, note: <>{p.note} <strong>{people === null ? 'Needs more than a million people.' : `Needs about ${people} people.`}</strong></>, tag: p.recommended ? 'Recommended' : undefined };
+        })}
         chosen={answers.effect}
         onPick={(value) => answer({ effect: value })}
       />
@@ -445,11 +456,11 @@ export default function SampleSize() {
     else if (design.id === 'proportions') error = effect > 0 && effect < 1 && effect !== p1 ? undefined : 'Enter a percentage between 0 and 100 that differs from the first group\'s.';
     else if (!(Number.isFinite(effect) && effect > 0)) error = 'These numbers do not give a usable effect size. Check that standard deviations are above 0 and correlations and R² values are between 0 and 1.';
     else if (design.id === 'correlation' && effect >= 1) error = 'A correlation has to be below 1.';
-    question = design.id === 'proportions' ? 'What percentage do you expect in the second group?' : route === 'matter' ? 'What is the smallest effect that would matter?' : 'What did earlier research find?';
+    question = design.id === 'proportions' ? 'What percentage do you expect in the second group?' : route === 'matter' ? 'What difference would be worth finding?' : 'What did earlier research find?';
     help = design.id === 'proportions'
       ? 'Take the smallest difference from the first group that would matter to you, or what earlier studies found.'
       : route === 'matter'
-        ? 'Fill in what you know; the page turns it into the effect size.'
+        ? 'Rough guesses are fine. The page turns them into the effect size and says what it means, and you can always come back and try other values.'
         : 'If it comes from a single study, a common precaution is to plan for a smaller value than it reports.';
     body = (
       <form className="ss-input-step" onSubmit={(e) => { e.preventDefault(); if (!missing && !error) answer({ effect: Number(design.id === 'proportions' ? effect.toFixed(4) : formatEffect(design, effect).replace(/^\./, '0.')) }); }}>

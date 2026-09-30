@@ -33,7 +33,7 @@ describe('sample size page', () => {
     expect(question()).toBe('What will you test?');
     await pick(/^Compare two separate groups/);
     await pick(/How many people do I need/);
-    await pick(/The smallest effect that would matter/);
+    await pick(/I can guess the scores/);
     await fill(/Smallest difference between the group means/, '3');
     await fill(/Standard deviation of the outcome/, '10');
     expect(document.querySelector('.ss-meaning')!.textContent).toContain('d = 0.30');
@@ -49,16 +49,19 @@ describe('sample size page', () => {
     // 176 / 0.9 rounds up to 196 per group.
     expect(report()).toContain('we will recruit 392 participants');
     expect(screen.getByText(/pwr.t.test\(d = 0.3, sig.level = 0.05, power = 0.8/)).toBeTruthy();
-    expect(trail()).toEqual(['Compare two separate groups', 'Plan a new study', 'Smallest effect that matters', 'd = 0.30', '80% power', 'α = .05', 'Two-sided', '10% dropout']);
+    expect(trail()).toEqual(['Compare two separate groups', 'Plan a new study', 'My own guess of the scores', 'd = 0.30', '80% power', 'α = .05', 'Two-sided', '10% dropout']);
   });
 
   test('a student with nothing to go on gets typical values, and Cohen\'s medium gives the textbook 64 per group', async () => {
     const { pick } = setup();
     await pick(/^Compare two separate groups/);
     await pick(/How many people do I need/);
-    await pick(/I have nothing to go on yet/);
-    expect(screen.getByRole('button', { name: /Typical \(d = 0.36\)/ }).textContent).toContain('Recommended');
-    await pick(/Medium \(d = 0.50\)/);
+    await pick(/Choose a size in plain words/);
+    const typical = screen.getByRole('button', { name: /Typical \(d = 0.36\)/ });
+    expect(typical.textContent).toContain('Recommended');
+    // pwr.t.test(d = 0.36, power = 0.8): 122.1 per group, so 123 × 2.
+    expect(typical.textContent).toContain('Needs about 246 people');
+    await pick(/Medium: noticeable \(d = 0.50\)/);
     await pick(/^80%/);
     await pick(/α = \.05/);
     await pick(/^Two-sided/);
@@ -85,10 +88,10 @@ describe('sample size page', () => {
     const { pick, next, fill } = setup();
     await pick(/^Measure the same people twice/);
     await pick(/How many people do I need/);
-    await pick(/The smallest effect that would matter/);
+    await pick(/I can guess the scores/);
     await fill(/Smallest average change/, '2');
     await fill(/Standard deviation of the scores at one time point/, '10');
-    await fill(/Correlation between the two measurements/, '.5');
+    expect(screen.getByLabelText(/Correlation between the two measurements/)).toHaveProperty('value', '.5');
     // dz = 2 / (10 × √(2 × 0.5)) = 0.20.
     expect(document.querySelector('.ss-meaning')!.textContent).toContain('dz = 0.20');
     await next();
@@ -112,7 +115,7 @@ describe('sample size page', () => {
     const { pick, fill } = setup();
     await pick(/^Relate two numeric variables/);
     await pick(/How many people do I need/);
-    await pick(/An effect size from earlier research/);
+    await pick(/I have an effect size from a paper/);
     await fill(/Correlation reported in earlier research/, '1.2');
     expect(document.querySelector('.ss-error')!.textContent).toMatch(/below 1/);
     expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true);
@@ -123,8 +126,8 @@ describe('sample size page', () => {
     await pick(/^Compare three or more groups/);
     await pick(/How many people do I need/);
     await next();
-    await pick(/I have nothing to go on yet/);
-    await pick(/Medium \(f = 0.25\)/);
+    await pick(/Choose a size in plain words/);
+    await pick(/Medium: noticeable \(f = 0.25\)/);
     await pick(/^80%/);
     await pick(/α = \.05/);
     expect(question()).toBe('How many people will you lose?');
@@ -142,8 +145,8 @@ describe('sample size page', () => {
     await pick(/^r = \.50/);
     await pick(/Yes, several stimuli per condition/);
     await next();
-    await pick(/I have nothing to go on yet/);
-    await pick(/Medium \(f = 0.25\)/);
+    await pick(/Choose a size in plain words/);
+    await pick(/Medium: noticeable \(f = 0.25\)/);
     await pick(/^80%/);
     await pick(/α = \.05/);
     await pick(/^None/);
@@ -153,7 +156,7 @@ describe('sample size page', () => {
     expect(trail()).toContain('Several stimuli per condition');
   });
 
-  test('repeated measures turn expected condition means into f', async () => {
+  test('repeated measures turn the biggest difference into f', async () => {
     const { pick, next, fill } = setup();
     await pick(/^Measure the same people in several conditions/);
     await pick(/How many people do I need/);
@@ -161,24 +164,24 @@ describe('sample size page', () => {
     await next();
     await pick(/^r = \.50/);
     await pick(/No, one score per condition/);
-    await pick(/The smallest effect that would matter/);
-    await fill(/condition means you expect/, '500 510 520 530');
+    await pick(/I can guess the scores/);
+    await fill(/highest and the lowest condition mean/, '30');
     await fill(/Standard deviation of the scores within one condition/, '50');
-    // The means spread by √125 = 11.18 around 515; 11.18 / 50 = 0.22.
-    expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.22');
-    await fill(/condition means you expect/, '500 510 520');
+    // Cohen's cautious pattern: f = (30 / 50) / √(2 × 4) = 0.21.
+    expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.21');
+    await fill(/Standard deviation of the scores within one condition/, '0');
     expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true);
   });
 
-  test('three groups: expected means give f', async () => {
+  test('three groups: the biggest difference gives f', async () => {
     const { pick, next, fill } = setup();
     await pick(/^Compare three or more groups/);
     await pick(/How many people do I need/);
     await next();
-    await pick(/The smallest effect that would matter/);
-    await fill(/group means you expect/, '44 46 48');
+    await pick(/I can guess the scores/);
+    await fill(/highest and the lowest group mean/, '4');
     await fill(/Standard deviation of the outcome/, '10');
-    // √(8/3) / 10 = 0.16.
+    // (4 / 10) / √(2 × 3) = 0.16.
     expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.16');
   });
 
