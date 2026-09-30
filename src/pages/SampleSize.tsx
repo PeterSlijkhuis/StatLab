@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AvatarTip from '../components/AvatarTip';
 import { pnorm } from '../stats/distributions';
 import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, stimulusSimCode, totalN, type DesignId, type Plan } from '../stats/power';
@@ -222,7 +222,11 @@ function Choice<T>({ options, chosen, onPick }: { options: Option<T>[]; chosen: 
 
 export default function SampleSize() {
   const [answers, setAnswers] = useState<Answers>(START);
-  const [at, setAt] = useState(0);
+  // The step lives in the URL, one history entry per question, so the browser's Back button goes back one question.
+  // Answers are not in the URL, so a step is only shown once it has been reached in this visit.
+  const [params, setParams] = useSearchParams();
+  const [reached, setReached] = useState(0);
+  const at = Math.min(Math.max(0, Math.floor(Number(params.get('step')) || 0)), reached);
   const [copied, setCopied] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
   const moveFocus = useRef(false);
@@ -240,12 +244,12 @@ export default function SampleSize() {
 
   function go(index: number) {
     moveFocus.current = true;
-    setAt(index);
+    setParams(index > 0 ? { step: String(index) } : {});
   }
   function answer(patch: Partial<Answers>) {
-    moveFocus.current = true;
     setAnswers((prev) => ({ ...prev, ...patch }));
-    setAt((i) => i + 1);
+    setReached(at + 1);
+    go(at + 1);
   }
   function type(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, text: { ...prev.text, [key]: value } }));
@@ -603,7 +607,7 @@ export default function SampleSize() {
             </ol>
             <div className="model-chooser-trail-actions">
               <button type="button" onClick={() => go(at - 1)}>Back</button>
-              <button type="button" onClick={() => { go(0); setAnswers(START); }}>Start over</button>
+              <button type="button" onClick={() => { go(0); setReached(0); setAnswers(START); }}>Start over</button>
             </div>
           </nav>
         )}

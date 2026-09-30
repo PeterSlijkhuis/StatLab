@@ -372,9 +372,13 @@ const startsWith = (path: string[], prefix: string[]) => prefix.every((label, i)
 
 export default function ModelChooser() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [path, setPath] = useState<string[]>(() => pathTo(searchParams.get('model') ?? '') ?? []);
+  // The answers so far live in the URL, one history entry per question, so the browser's Back button goes back one question.
+  const path = useMemo(() => {
+    const model = searchParams.get('model');
+    return model ? (pathTo(model) ?? []) : follow(searchParams.getAll('step')).path;
+  }, [searchParams]);
   // The furthest path taken or suggested, so stepping back shows the choice made there.
-  const [planned, setPlanned] = useState<{ path: string[]; suggested: boolean }>({ path, suggested: false });
+  const [planned, setPlanned] = useState<{ path: string[]; suggested: boolean }>(() => ({ path, suggested: false }));
   const { node } = follow(path);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const treeRef = useRef<HTMLElement>(null);
@@ -391,10 +395,9 @@ export default function ModelChooser() {
 
   function go(next: string[], plan?: { path: string[]; suggested: boolean }) {
     moveFocus.current = true;
-    setPath(next);
     setPlanned(plan ?? (startsWith(planned.path, next) ? planned : { path: next, suggested: false }));
     const reached = follow(next).node;
-    setSearchParams(reached.kind === 'answer' ? { model: reached.id } : {}, { replace: true });
+    setSearchParams(reached.kind === 'answer' ? { model: reached.id } : { step: next });
   }
 
   function pick(id: string) {

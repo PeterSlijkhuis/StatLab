@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { StrictMode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
 import { findLesson } from '../content/manifest';
 import { DATASET_FILES } from '../r/session';
@@ -15,12 +15,19 @@ function Location() {
   return <p data-testid="location">{location.pathname + location.search}</p>;
 }
 
+/** Stands in for the browser's Back button. */
+function BrowserBack() {
+  const navigate = useNavigate();
+  return <button type="button" onClick={() => navigate(-1)}>Browser back</button>;
+}
+
 function renderChooser(url = '/which-model') {
   return render(
     <StrictMode>
       <MemoryRouter initialEntries={[url]}>
         <ModelChooser />
         <Location />
+        <BrowserBack />
       </MemoryRouter>
     </StrictMode>,
   );
@@ -555,4 +562,19 @@ describe('research question', () => {
     renderChooser();
     expect(screen.getByText(/comes from keywords in your question, not from AI/i)).toBeTruthy();
   });
+});
+
+test("the browser's Back button goes back one question, not off the page", async () => {
+  const user = userEvent.setup();
+  renderChooser();
+  const first = heading().textContent;
+  await user.click(screen.getByRole('button', { name: TO_OUTCOME }));
+  const second = heading().textContent;
+  await user.click(screen.getByRole('button', { name: /^a number/i }));
+  expect(heading().textContent).not.toBe(second);
+  await user.click(screen.getByRole('button', { name: 'Browser back' }));
+  expect(heading().textContent).toBe(second);
+  await user.click(screen.getByRole('button', { name: 'Browser back' }));
+  expect(heading().textContent).toBe(first);
+  expect(screen.getByTestId('location').textContent).toBe('/which-model');
 });
