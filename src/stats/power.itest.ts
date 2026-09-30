@@ -76,7 +76,7 @@ describe('the R code on the sample size page gives the page\'s answer', () => {
 
 test('the stimulus simulation runs and returns a power', async () => {
   await ensurePackages(webR, ['lmerTest']);
-  const code = stimulusSimCode(12, 3, 3, 0.4, 3);
+  const code = stimulusSimCode(12, 3, 3, 0.4, 0.05, 3);
   const power = await webR.evalRNumber(`local({\n${code}\n})`);
   expect(power).toBeGreaterThanOrEqual(0);
   expect(power).toBeLessThanOrEqual(1);
