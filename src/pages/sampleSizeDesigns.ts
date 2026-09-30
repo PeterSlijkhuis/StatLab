@@ -1,4 +1,4 @@
-import { fFromEta2, fFromMeans, type DesignId } from '../stats/power';
+import { fFromEta2, type DesignId } from '../stats/power';
 
 /** Everything the sample size page says about one design. */
 export type Design = {
@@ -174,7 +174,7 @@ export type FieldValues = Record<string, number>;
  * `rows` and `cols` (chi-square) come from the earlier table-size question.
  */
 export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fields: EffectField[]; compute: (v: FieldValues, raw: Record<string, string>) => number } {
-  const sd: EffectField = { key: 'sd', label: 'Standard deviation of the outcome', hint: 'How much scores vary within one group. Take it from earlier studies that used the same measure, or from the scale\'s manual.', placeholder: 'e.g. 10' };
+  const sd: EffectField = { key: 'sd', label: 'Standard deviation of the outcome', hint: 'How much scores vary within one group. Take it from earlier studies that used the same measure, or from the scale\'s manual. Not sure? Think of the range where almost everyone\'s scores fall and divide it by 4: if almost everyone scores between 30 and 70, the SD is about 10.', placeholder: 'e.g. 10' };
   const r2Full: EffectField = { key: 'r2', label: 'Expected R² of the full model', hint: 'What all predictors together explain, controls included. If unsure, take what the controls explain in earlier studies and add the change.', placeholder: 'e.g. .30' };
   switch (id) {
     case 'two-groups':
@@ -193,10 +193,10 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
         ? {
             fields: [
               { key: 'diff', label: 'Smallest average change that would matter', hint: 'In the outcome\'s own units, for example 2 points from before to after.', placeholder: 'e.g. 2' },
-              { ...sd, label: 'Standard deviation of the scores at one time point', hint: 'How much people differ from each other at one measurement, from earlier studies or the scale\'s manual.' },
-              { key: 'r', label: 'Correlation between the two measurements', hint: 'How strongly people\'s first and second scores go together. Repeated measurements of the same scale often correlate .5 to .8. If you do not know, .5 is the cautious choice.', placeholder: 'e.g. .5' },
+              { ...sd, label: 'Standard deviation of the scores at one time point', hint: 'How much people differ from each other at one measurement, from earlier studies or the scale\'s manual. Not sure? Think of the range where almost everyone\'s scores fall and divide it by 4: if almost everyone scores between 30 and 70, the SD is about 10.' },
+              { key: 'rpre', label: 'Correlation between the two measurements', hint: 'Filled in with .5, the cautious choice when you do not know. How strongly people\'s first and second scores go together: repeated measurements of the same scale often correlate .5 to .8.', placeholder: 'e.g. .5' },
             ],
-            compute: (v) => Math.abs(v.diff) / (v.sd * Math.sqrt(2 * (1 - v.r))),
+            compute: (v) => Math.abs(v.diff) / (v.sd * Math.sqrt(2 * (1 - v.rpre))),
           }
         : {
             fields: [
@@ -209,13 +209,11 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
       return route === 'matter'
         ? {
             fields: [
-              { key: 'means', label: 'The condition means you expect, separated by spaces', hint: 'The smallest pattern of differences that would matter, in the outcome\'s own units: one number per condition, in any order.', placeholder: 'e.g. 500 510 520 530' },
-              { ...sd, label: 'Standard deviation of the scores within one condition', hint: 'How much people differ from each other in one condition, from earlier studies or a pilot. If each condition has several stimuli, use the SD of people\'s average over those stimuli.' },
+              { key: 'spread', label: 'Smallest difference between the highest and the lowest condition mean that would matter', hint: 'In the outcome\'s own units, for example 4 points. The page assumes any other conditions fall in the middle, the most cautious pattern.', placeholder: 'e.g. 4' },
+              { ...sd, label: 'Standard deviation of the scores within one condition', hint: 'How much people differ from each other in one condition, from earlier studies or a pilot. If each condition has several stimuli, use the SD of people\'s average over those stimuli. Not sure? Think of the range where almost everyone\'s scores fall and divide it by 4: if almost everyone scores between 30 and 70, the SD is about 10.' },
             ],
-            compute: (v, raw) => {
-              const means = (raw.means ?? '').trim().split(/[\s;]+/).map((x) => Number(x.replace(',', '.')));
-              return means.length === v.k && means.every(Number.isFinite) ? fFromMeans(means, v.sd) : NaN;
-            },
+            // Cohen's (1988) minimum-variability pattern: f = d / √(2k).
+            compute: (v) => Math.abs(v.spread) / v.sd / Math.sqrt(2 * v.k),
           }
         : {
             fields: [{ key: 'eta2', label: 'Partial η² from a similar repeated-measures study', hint: 'Only from a study where the same people also did every condition: partial η² from a between-groups study is not comparable. It already contains that study\'s correlation between conditions.', placeholder: 'e.g. .06' }],
@@ -226,13 +224,11 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
       return route === 'matter'
         ? {
             fields: [
-              { key: 'means', label: 'The group means you expect, separated by spaces', hint: 'The smallest pattern of differences that would matter, in the outcome\'s own units: one number per group.', placeholder: 'e.g. 44 46 48' },
+              { key: 'spread', label: 'Smallest difference between the highest and the lowest group mean that would matter', hint: 'In the outcome\'s own units, for example 4 points. The page assumes any other groups fall in the middle, the most cautious pattern.', placeholder: 'e.g. 4' },
               sd,
             ],
-            compute: (v, raw) => {
-              const means = (raw.means ?? '').trim().split(/[\s;]+/).map((x) => Number(x.replace(',', '.')));
-              return means.length >= 2 && means.every(Number.isFinite) ? fFromMeans(means, v.sd) : NaN;
-            },
+            // Cohen's (1988) minimum-variability pattern: f = d / √(2k).
+            compute: (v) => Math.abs(v.spread) / v.sd / Math.sqrt(2 * v.k),
           }
         : { fields: [{ key: 'eta2', label: 'η² (eta squared) reported in earlier research', hint: 'For a design with one factor, partial η² is the same number.', placeholder: 'e.g. .06' }], compute: (v) => fFromEta2(v.eta2) };
     case 'correlation':
@@ -268,21 +264,22 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
   }
 }
 
-/** Starting values for a student with nothing to go on. */
+/** Effect sizes in plain words, for a student with no numbers to go on. */
 export type Preset = { value: number; label: string; note: string; recommended?: boolean };
 
 export function presets(design: Design): Preset[] {
   const [s, m, l] = design.benchmarks ?? [0, 0, 0];
+  const d = design.symbol === 'd' || design.symbol === 'dz';
   const cohen: Preset[] = [
-    { value: s, label: `Small (${design.symbol} = ${fmt(design, s)})`, note: 'Cohen\'s "small": needs a large sample.' },
-    { value: m, label: `Medium (${design.symbol} = ${fmt(design, m)})`, note: 'Cohen\'s "medium": a common choice in student projects, although real effects are often smaller.' },
-    { value: l, label: `Large (${design.symbol} = ${fmt(design, l)})`, note: 'Cohen\'s "large": rarely realistic. Use it only with a strong reason.' },
+    { value: s, label: `Small: subtle (${design.symbol} = ${fmt(design, s)})`, note: `Real, but hard to notice without measuring many people.${d ? ' Cohen\'s example: the height difference between 15- and 16-year-old girls.' : ''}` },
+    { value: m, label: `Medium: noticeable (${design.symbol} = ${fmt(design, m)})`, note: `Visible to a careful observer.${d ? ' Cohen\'s example: the height difference between 14- and 18-year-old girls.' : ''} Common in student projects, but real effects are often smaller.` },
+    { value: l, label: `Large: obvious (${design.symbol} = ${fmt(design, l)})`, note: `Most people would notice it without any statistics.${d ? ' Cohen\'s example: 13- versus 18-year-old girls.' : ''} Rarely realistic; choose it only with a strong reason.` },
   ];
   if (design.id === 'two-groups') {
-    return [{ value: 0.36, label: 'Typical (d = 0.36)', note: 'The median effect in social psychology (Lovakov & Agadullina, 2021). An honest default that needs about twice the sample of "medium".', recommended: true }, ...cohen];
+    return [{ value: 0.36, label: 'Typical (d = 0.36)', note: 'Between small and medium: the median effect found in social psychology (Lovakov & Agadullina, 2021). An honest default when you have nothing else.', recommended: true }, ...cohen];
   }
   if (design.id === 'correlation') {
-    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'A typical correlation in psychology (Gignac & Szodorai, 2016). An honest default that needs more than twice the sample of "medium".', recommended: true }, ...cohen];
+    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'Between small and medium: a typical correlation in psychology (Gignac & Szodorai, 2016). An honest default when you have nothing else.', recommended: true }, ...cohen];
   }
   return cohen;
 }
