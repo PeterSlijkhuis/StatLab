@@ -1,5 +1,6 @@
 /* The avatar helper in the bottom right corner. */
-.site-guide { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+.corner-stack { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+.site-guide { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
 .site-guide-button {
   display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.9rem 0.25rem 0.25rem; border-radius: 999px; cursor: pointer;
   border: 1.5px solid var(--brand); background: var(--surface); color: var(--brand-ink); font-weight: 700; box-shadow: var(--shadow-lg);
@@ -27,6 +28,4 @@
 @media print { .site-guide { display: none; } }
 .site-guide-compact .site-guide-label { display: none; }
 .site-guide-compact .site-guide-button { padding: 0.25rem; }
-/* The R status pill also sits bottom right: stand on top of it while it shows. */
-body:has(.r-status.ready, .r-status.busy) .site-guide { bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3.5rem); }
 .site-guide-tour { display: block; margin: 0.8rem 0 0; padding: 0; font: inherit; font-size: 0.88rem; background: none; border: 0; color: var(--brand-ink); text-decoration: underline; cursor: pointer; }
