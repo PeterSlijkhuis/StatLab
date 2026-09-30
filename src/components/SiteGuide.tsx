@@ -5,6 +5,7 @@ import { ALL_LESSONS, findLesson } from '../content/manifest';
 import { currentLook } from '../state/avatar';
 import { getProgress, lastVisitedLesson } from '../state/progress';
 import Avatar from './Avatar';
+import { startTour } from './Tour';
 import './SiteGuide.css';
 
 const STARTERS = ['I am new to R', 'Which test do I need?', 'How many participants?', 'Make a plot'];
@@ -70,6 +71,7 @@ export default function SiteGuide() {
                   <button key={starter} type="button" onClick={() => { setText(starter); inputRef.current?.focus(); }}>{starter}</button>
                 ))}
               </div>
+              <button type="button" className="site-guide-tour" onClick={() => { setOpen(false); startTour(); }}>Show me around the site</button>
             </>
           ) : hits.length > 0 ? (
             <ul className="site-guide-hits" aria-live="polite">
