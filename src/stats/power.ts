@@ -317,22 +317,25 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
  * condition, where no formula applies. The standard deviations are
  * placeholders the student replaces with estimates from a pilot.
  */
-export function stimulusSimCode(nPeople: number, k: number, nStim: number, f: number, nsim = 100): string {
+export function stimulusSimCode(nPeople: number, k: number, nStim: number, f: number, alpha = 0.05, nsim = 100): string {
   return `# Power with several stimuli per condition, by simulation (lmerTest).
 # The standard deviations below are placeholders. Replace them with
 # estimates from a pilot or an earlier study: fit the same model to those
-# data and read them from VarCorr(). Everything is in single-trial units.
+# data and read them from VarCorr(). They are in single-trial units.
 library(lmerTest)
 n_people <- ${nPeople}; k <- ${k}; n_stim <- ${nStim}   # people, conditions, stimuli per condition
 same_stimuli <- TRUE     # FALSE if each condition has its own stimuli
-f <- ${num(f)}
-means <- seq(-1, 1, length.out = k)
-means <- f * means / sqrt(mean(means^2))   # or type your own condition means
+alpha <- ${num(alpha)}
+f <- ${num(f)}           # in SDs of people's average score in one condition, as on the page
 sd_person <- 0.6         # people differ in their average score
 sd_person_cond <- 0.3    # people differ in how the conditions affect them
 sd_stim <- 0.3           # stimuli differ in their average score
 sd_stim_cond <- 0.2      # stimuli differ in how the conditions affect them
 sd_noise <- 0.7          # everything else, from trial to trial
+sd_average <- sqrt(sd_person^2 + sd_person_cond^2 + sd_noise^2 / n_stim)   # SD of people's averages
+sd_person^2 / sd_average^2   # the correlation between conditions these imply; compare with the page's r
+means <- seq(-1, 1, length.out = k)
+means <- f * sd_average * means / sqrt(mean(means^2))   # or type your own condition means
 nsim <- ${nsim}             # use 1000 in desktop R for a precise answer
 
 one_study <- function() {
@@ -357,5 +360,5 @@ one_study <- function() {
 }
 
 p <- replicate(nsim, one_study())
-mean(p < 0.05, na.rm = TRUE)   # the estimated power`;
+mean(p < alpha, na.rm = TRUE)   # the estimated power`;
 }

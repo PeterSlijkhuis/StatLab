@@ -178,7 +178,7 @@ export const DESIGNS: Design[] = [
     effectMeaning: 'the share of "yes" you expect in each group.',
     defaultEffect: 0.45,
     assumes:
-      'Two groups of equal size and the normal approximation that base R\'s power.prop.test() uses. prop.test() applies a continuity correction by default, which costs a little power; with small expected counts (under about 5 in a cell), plan by simulation instead.',
+      'Two groups of equal size and the normal approximation that base R\'s power.prop.test() uses. prop.test() and chisq.test() apply a continuity correction by default, which costs about 3 to 5 percentage points of power: use correct = FALSE, or add about 10 to 15% more people; with small expected counts (under about 5 in a cell), plan by simulation instead.',
   },
   {
     id: 'chi-square',
@@ -329,13 +329,24 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research', factors
   }
 }
 
+/**
+ * Two decimals, or three significant digits when two decimals would be more
+ * than 0.5% off (f = 0.0625 would otherwise show as 0.06). The page plans with
+ * the value as shown, so the report and the R code give the same number.
+ */
+export function shortEffect(value: number): string {
+  const two = value.toFixed(2);
+  return Math.abs(Number(two) - value) <= 0.005 * Math.abs(value) ? two : String(Number(value.toPrecision(3)));
+}
+
 /** Effect sizes in plain words, for a student with no numbers to go on. */
 export type Preset = { value: number; label: string; note: string; recommended?: boolean };
 
 export function presets(design: Design, factors?: { layout: Layout; which: Which; rho?: number }): Preset[] {
   if (design.id === 'factorial' && factors) return factorialPresets(factors.layout, factors.which, factors.rho);
   const [s, m, l] = design.benchmarks ?? [0, 0, 0];
-  const d = design.symbol === 'd' || design.symbol === 'dz';
+  // Cohen's height examples compare separate groups, so they fit d, not dz.
+  const d = design.symbol === 'd';
   const cohen: Preset[] = [
     { value: s, label: `Small: subtle (${design.symbol} = ${fmt(design, s)})`, note: `Real, but hard to notice without measuring many people.${d ? ' Cohen\'s example: the height difference between 15- and 16-year-old girls.' : ''}` },
     { value: m, label: `Medium: noticeable (${design.symbol} = ${fmt(design, m)})`, note: `Visible to a careful observer.${d ? ' Cohen\'s example: the height difference between 14- and 18-year-old girls.' : ''} Common in student projects, but real effects are often smaller.` },
@@ -352,8 +363,8 @@ export function presets(design: Design, factors?: { layout: Layout; which: Which
 
 /** 2 × 2 effects in plain words: a main effect as Cohen's d, an interaction as the shape of the two simple effects. */
 function factorialPresets(layout: Layout, which: Which, rho = 0.5): Preset[] {
-  const f = (delta: number) => factorialF(layout, which, delta, rho);
-  const show = (delta: number) => `f = ${f(delta).toFixed(2)}`;
+  const f = (delta: number) => Number(shortEffect(factorialF(layout, which, delta, rho)));
+  const show = (delta: number) => `f = ${shortEffect(f(delta))}`;
   if (which === 'interaction') {
     return [
       { value: f(0.5), label: `The effect disappears (${show(0.5)})`, note: 'One factor has a medium effect (d = 0.50) at one level of the other factor and none at the other level. For example: the training helps, the waiting list does not.', recommended: true },

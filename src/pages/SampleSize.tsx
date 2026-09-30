@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import AvatarTip from '../components/AvatarTip';
 import { pnorm } from '../stats/distributions';
 import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, stimulusSimCode, totalN, type DesignId, type Layout, type Plan, type Which } from '../stats/power';
-import { DESIGNS, designById, effectInputs, presets, type Design, type EffectRoute } from './sampleSizeDesigns';
+import { DESIGNS, designById, effectInputs, presets, shortEffect, type Design, type EffectRoute } from './sampleSizeDesigns';
 import './ModelChooser.css';
 import './SampleSize.css';
 
@@ -17,11 +17,11 @@ const noZero = (text: string) => text.replace(/^(-?)0\./, '$1.');
 function formatEffect(design: Design, value: number): string {
   if (design.id === 'correlation') return noZero(value.toFixed(2));
   if (design.symbol === 'f²') return value.toFixed(3);
-  return value.toFixed(2);
+  return shortEffect(value);
 }
 
 /** What an effect of this size means, in words a student can check against their field. */
-function meaning(design: Design, effect: number, p1: number): string {
+function meaning(design: Design, effect: number, p1: number, k = 3, rho = 0.5): string {
   switch (design.id) {
     case 'two-groups':
       return `If scores are normal, about ${pct(pnorm(effect))} of the higher group scores above the other group's mean (it would be 50% with no difference).`;
@@ -30,7 +30,8 @@ function meaning(design: Design, effect: number, p1: number): string {
     case 'one-sample':
       return `If scores are normal, about ${pct(pnorm(effect))} of people score on the expected side of the fixed value.`;
     case 'repeated':
-      return `Within one condition, the conditions would explain ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance in the scores (η², leaving out the differences between people).`;
+      // Partial η² as a repeated-measures analysis reports it: λ = n(k − 1)·ηp²/(1 − ηp²).
+      return `The conditions would explain ${pct((k * effect ** 2) / (k * effect ** 2 + (k - 1) * (1 - rho)), 1)} of the variance left once the differences between people are taken out (partial η², as a repeated-measures analysis reports it).`;
     case 'factorial':
       return `This effect explains ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance the other effects leave (partial η²).`;
     case 'anova':
@@ -79,7 +80,13 @@ function testText(design: Design, sides: 1 | 2, plan?: Plan): string {
 
 function effectText(design: Design, plan: Plan, value: number): string {
   if (design.id === 'proportions') return `a difference between ${pct(plan.p1 ?? 0, 1)} and ${pct(value, 1)}`;
-  if (design.id === 'repeated' || (design.id === 'factorial' && plan.layout !== 'between')) return `an effect of f = ${formatEffect(design, value)} (with a correlation of r = ${noZero((plan.rho ?? 0.5).toFixed(2))} between conditions)`;
+  const r = plan.rho ?? 0.5;
+  if (design.id === 'repeated') return `an effect of f = ${formatEffect(design, value)} (with a correlation of r = ${noZero(r.toFixed(2))} between conditions)`;
+  if (design.id === 'factorial' && plan.layout !== 'between') {
+    // This page's f already contains the correlation (λ = N·f²). G*Power's repeated-measures f does not.
+    const gpower = plan.layout === 'mixed' ? `; in G*Power's repeated-measures procedures, with r = ${noZero(r.toFixed(2))}, this is f = ${shortEffect(value * Math.sqrt((plan.which === 'main-between' ? 1 + r : 1 - r) / 2))}` : '';
+    return `an effect of f = ${formatEffect(design, value)} (an f that already includes the correlation of r = ${noZero(r.toFixed(2))} between conditions${gpower})`;
+  }
   return `an effect of ${design.symbol} = ${formatEffect(design, value)}`;
 }
 
@@ -348,7 +355,7 @@ export default function SampleSize() {
 
   const stimuli = design.id === 'repeated' && answers.stimuli && result && (result.kind === 'n' || result.kind === 'effect');
   const simCode = stimuli
-    ? stimulusSimCode(result.n, parse(answers.text.k), parse(answers.text.nstim), result.kind === 'n' ? result.plan.effect : result.effect)
+    ? stimulusSimCode(result.n, parse(answers.text.k), parse(answers.text.nstim), result.kind === 'n' ? result.plan.effect : result.effect, result.plan.alpha)
     : '';
 
   /** Everyone needed for an effect at the usual settings, to show next to each plain-words option. */
@@ -510,7 +517,7 @@ export default function SampleSize() {
         </div>
         {!missing && !error && (
           <p className="ss-meaning">
-            {design.id === 'proportions' ? <>That is a difference of {(100 * Math.abs(effect - p1)).toFixed(1)} percentage points.</> : <>That is {design.symbol} = <strong>{formatEffect(design, effect)}</strong>. {meaning(design, effect, 0)}</>}
+            {design.id === 'proportions' ? <>That is a difference of {(100 * Math.abs(effect - p1)).toFixed(1)} percentage points.</> : <>That is {design.symbol} = <strong>{formatEffect(design, effect)}</strong>. {meaning(design, effect, 0, parse(answers.text.k), answers.rho)}</>}
           </p>
         )}
         {error && <p className="ss-error">{error}</p>}
@@ -533,7 +540,7 @@ export default function SampleSize() {
     );
   } else if (step === 'which') {
     question = 'Which effect is your question about?';
-    help = 'Plan for the effect your hypothesis is about. An interaction asks whether the effect of one factor depends on the other; it needs far more people than a main effect of the same size, often four times as many or more.';
+    help = 'Plan for the effect your hypothesis is about. An interaction asks whether the effect of one factor depends on the other; it needs far more people than a main effect of a within-person factor of the same size, often four times as many.';
     const main: Option<Which>[] = answers.layout === 'mixed'
       ? [
           { value: 'main-within', label: 'The effect of the within-person factor', note: 'Averaged over both groups. For example: do scores change from before to after, whichever group people are in?' },
@@ -552,13 +559,16 @@ export default function SampleSize() {
     );
   } else if (step === 'rho') {
     question = 'How strongly do a person\'s scores in different conditions go together?';
-    help = 'People who score high in one condition usually score high in the others too. The stronger that correlation, the fewer people you need, because every person is compared with themselves. Take it from a pilot or an earlier study with the same measure if you can. If people do each condition several times (repeated trials), plan on their average per condition: averages over many trials are more reliable, so they usually correlate more strongly.';
+    const between = answers.which === 'main-between';
+    help = between
+      ? 'People who score high in one condition usually score high in the others too. For the difference between the groups this works the other way round: each person\'s scores are averaged over the conditions, and the stronger they go together, the less that averaging helps. So here a stronger correlation means you need more people. Take it from a pilot or an earlier study with the same measure if you can.'
+      : 'People who score high in one condition usually score high in the others too. The stronger that correlation, the fewer people you need, because every person is compared with themselves. Take it from a pilot or an earlier study with the same measure if you can. If people do each condition several times (repeated trials), plan on their average per condition: averages over many trials are more reliable, so they usually correlate more strongly.';
     body = (
       <Choice
         options={[
-          { value: 0.3, label: 'r = .30', note: 'Weak: noisy measures, or conditions far apart in time or very different from each other.' },
-          { value: 0.5, label: 'r = .50', note: 'The cautious choice when you do not know, and G*Power\'s default.', tag: 'Recommended if you do not know' },
-          { value: 0.7, label: 'r = .70', note: 'Strong: a reliable measure, or scores averaged over many trials. Only with evidence, because it lowers the sample a lot.' },
+          { value: 0.3, label: 'r = .30', note: between ? 'Weak: noisy measures, or conditions far apart in time. Only with evidence, because for this effect it lowers the sample.' : 'Weak: noisy measures, or conditions far apart in time or very different from each other.' },
+          { value: 0.5, label: 'r = .50', note: between ? 'G*Power\'s default and a reasonable middle. For the most cautious plan for this effect, choose .70.' : 'The cautious choice when you do not know, and G*Power\'s default.', tag: 'Recommended if you do not know' },
+          { value: 0.7, label: 'r = .70', note: between ? 'Strong: a reliable measure, or scores averaged over many trials. For this effect it raises the sample, so it is the cautious choice.' : 'Strong: a reliable measure, or scores averaged over many trials. Only with evidence, because it lowers the sample a lot.' },
         ]}
         chosen={answers.rho}
         onPick={(value) => answer({ rho: value, text: { ...answers.text, rho: String(value) } })}
@@ -750,7 +760,7 @@ export default function SampleSize() {
                     With several stimuli per condition, this effect is <strong>optimistic</strong>: it treats your {answers.text.nstim} stimuli as the only ones that matter. See <a href="#ss-stimuli">Your stimuli</a> below.
                   </p>
                 )}
-                {design.id !== 'proportions' && <p className="ss-meaning">{meaning(design, result.effect, 0)}</p>}
+                {design.id !== 'proportions' && <p className="ss-meaning">{meaning(design, result.effect, 0, result.plan.k, result.plan.rho)}</p>}
                 <PowerCurve points={result.points} xLabel={design.id === 'proportions' ? 'Proportion in the second group' : `Effect size (${design.symbol})`}
                   target={power} mark={[result.effect, power]} markLabel={`${design.symbol} = ${formatEffect(design, result.effect)}`} />
                 <h4>How to report it</h4>
@@ -780,8 +790,8 @@ export default function SampleSize() {
               <>
                 <h4 id="ss-stimuli">Your stimuli</h4>
                 <p>
-                  The formula above averages each person's scores over the stimuli in a condition. That ignores that some stimuli are easier or
-                  react more strongly to a condition than others. When stimuli really differ, a test on those averages finds effects too often,
+                  The formula above averages each person's scores over the stimuli in a condition. That ignores that stimuli differ. When they
+                  differ in how the conditions affect them (or, with different stimuli in each condition, in their average score), a test on those averages finds effects too often,
                   and the true power is lower than the page says (Judd, Westfall &amp; Kenny, 2012).
                 </p>
                 <p>
