@@ -120,6 +120,7 @@ export default function Sidebar({ open = false }: Props) {
         <ul>
           <li><NavLink to="/which-model" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🧭</span>Which model should I use?</NavLink></li>
           <li><NavLink to="/sample-size" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🎯</span>How many participants?</NavLink></li>
+          <li><NavLink to="/review" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🔁</span>Review quiz</NavLink></li>
           <li><NavLink to="/workspace" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">⌨️</span>R Workspace</NavLink></li>
         </ul>
       </div>
