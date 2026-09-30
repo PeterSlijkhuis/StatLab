@@ -114,7 +114,7 @@ export default function App() {
       <Sidebar open={navOpen} />
       {navOpen && <div className="nav-backdrop" aria-hidden="true" onClick={() => setNavOpen(false)} />}
       <main id="main" tabIndex={-1} className="app-main">
-        <RStatus />
+        <RStatus where="page" />
         <div ref={page} className={`page page-${pathname.split('/')[1] || 'home'}`}>
         <Routes key={restarts}>
           <Route path="/" element={<Home />} />
@@ -135,7 +135,11 @@ export default function App() {
         </div>
       </main>
       <Toaster />
-      <SiteGuide />
+      {/* One stack, so the helper and the R pill can never overlap, whatever their height. */}
+      <div className="corner-stack">
+        <SiteGuide />
+        <RStatus where="corner" />
+      </div>
       <Tour />
     </div>
   );
