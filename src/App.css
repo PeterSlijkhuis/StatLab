@@ -64,6 +64,12 @@ a:hover { color: var(--brand); }
 .skip-link:focus { top: 0.75rem; }
 .app-main:focus { outline: none; }
 ::selection { background: #c7d2fe; }
+/* The system text cursor can be white and hard to see on a light page: use a white I-beam with a black outline. */
+:root { --text-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round'%3E%3Cpath d='M8 4h8M8 20h8M12 4v16' stroke='%23000' stroke-width='4'/%3E%3Cpath d='M8 4h8M8 20h8M12 4v16' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E") 12 12, text; }
+:where(p, li, h1, h2, h3, h4, h5, h6, td, th, pre, code, blockquote, figcaption, dd, dt, textarea,
+  input:not([type="radio"], [type="checkbox"], [type="range"], [type="button"], [type="submit"], [type="file"], [type="color"])) { cursor: var(--text-cursor); }
+:where(a, button, summary, select, [role="button"]) :where(*) { cursor: inherit; }
+.r-editor .cm-editor .cm-content { cursor: var(--text-cursor); }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Shared buttons ---------------------------------------------------------- */
