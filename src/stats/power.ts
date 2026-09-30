@@ -11,6 +11,7 @@ export type DesignId =
   | 'two-groups'
   | 'paired'
   | 'repeated'
+  | 'factorial'
   | 'one-sample'
   | 'anova'
   | 'correlation'
@@ -38,13 +39,22 @@ export type Plan = {
   p1?: number;
   /** Correlation between a person's scores in different conditions (repeated). */
   rho?: number;
+  /** Factorial: which factors each person does, and the effect the plan is for. */
+  layout?: Layout;
+  which?: Which;
 };
+
+/** A 2 × 2 design: both factors between people, both within, or one of each. */
+export type Layout = 'between' | 'within' | 'mixed';
+/** The effect in a 2 × 2 design. In a mixed design, main effects say which factor. */
+export type Which = 'main' | 'main-within' | 'main-between' | 'interaction';
 
 /** Whether n counts people per group (or pairs), or everyone in the study. */
 export const PER_GROUP: Record<DesignId, boolean> = {
   'two-groups': true,
   paired: false,
   repeated: false,
+  factorial: true,
   'one-sample': false,
   anova: true,
   correlation: false,
@@ -59,6 +69,7 @@ export const HAS_SIDES: Record<DesignId, boolean> = {
   'two-groups': true,
   paired: true,
   repeated: false,
+  factorial: false,
   'one-sample': true,
   anova: false,
   correlation: true,
@@ -80,10 +91,34 @@ export function minN(plan: Plan): number {
   }
 }
 
+/** A 2 × 2 design's n counts people per cell, per group, or everyone. */
+const CELLS: Record<Layout, number> = { between: 4, mixed: 2, within: 1 };
+/** Error degrees of freedom are N minus this. */
+const LOST_DF: Record<Layout, number> = { between: 4, mixed: 2, within: 1 };
+
+/**
+ * Cohen's f of one effect in a 2 × 2 design, from its size in standard
+ * deviations of the scores in one cell, and the correlation r between a
+ * person's scores in different conditions (compound symmetry). For a main
+ * effect `delta` is the difference between the two levels, averaged over the
+ * other factor; for the interaction it is the difference between the two
+ * simple effects. Every effect has 1 df, so its test is a t-test on one
+ * contrast, and λ = N·f² in every layout.
+ */
+export function factorialF(layout: Layout, which: Which, delta: number, r = 0.5): number {
+  const d = Math.abs(delta);
+  if (layout === 'between') return which === 'interaction' ? d / 4 : d / 2;
+  if (layout === 'within') return which === 'interaction' ? d / (2 * Math.sqrt(1 - r)) : d / Math.sqrt(1 - r);
+  if (which === 'interaction') return d / Math.sqrt(8 * (1 - r));
+  if (which === 'main-between') return d / Math.sqrt(2 * (1 + r));
+  return d / Math.sqrt(2 * (1 - r));
+}
+
 /** Everyone in the study, for a given n. */
 export function totalN(plan: Plan, n: number): number {
   if (plan.design === 'anova') return n * (plan.k ?? 3);
   if (plan.design === 'two-groups' || plan.design === 'proportions') return 2 * n;
+  if (plan.design === 'factorial') return n * CELLS[plan.layout ?? 'between'];
   return n;
 }
 
@@ -114,6 +149,11 @@ export function powerAt(plan: Plan, n: number): number {
       // G*Power's "ANOVA: repeated measures, within factors" with sphericity (ε = 1).
       const k = plan.k ?? 3;
       return fPower(k - 1, (n - 1) * (k - 1), (n * k * effect ** 2) / (1 - (plan.rho ?? 0.5)), alpha);
+    }
+    case 'factorial': {
+      // One effect of a 2 × 2 ANOVA: G*Power's "fixed effects, special" for a between design.
+      const N = totalN(plan, n);
+      return fPower(1, N - LOST_DF[plan.layout ?? 'between'], N * effect ** 2, alpha);
     }
     case 'regression':
     case 'r2-change': {
@@ -237,6 +277,14 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
       const head = `# Repeated-measures ANOVA, assuming sphericity (G*Power's formula)\nk <- ${plan.k ?? 3}; r <- ${num(plan.rho ?? 0.5)}; alpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {\n  df1 <- k - 1; df2 <- (n - 1) * (k - 1)\n  1 - pf(qf(1 - alpha, df1, df2), df1, df2, ncp = n * k * f^2 / (1 - r))\n}\n`;
       return e
         ? `${head}n <- 2\nwhile (power_at(n, ${num(plan.effect)}) < target) n <- n + 1\nn`
+        : `${head}uniroot(function(f) power_at(${n}, f) - target, c(1e-6, 10), tol = 1e-10)$root`;
+    }
+    case 'factorial': {
+      const layout = plan.layout ?? 'between';
+      const per = { between: 'people per cell', mixed: 'people per group', within: 'people' }[layout];
+      const head = `# One effect in a 2 × 2 ANOVA (${layout === 'mixed' ? 'one factor between, one within people' : `both factors ${layout} people`}): F test with 1 df\nalpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {   # n = ${per}\n  N <- ${CELLS[layout]} * n; df2 <- N - ${LOST_DF[layout]}\n  1 - pf(qf(1 - alpha, 1, df2), 1, df2, ncp = N * f^2)\n}\n`;
+      return e
+        ? `${head}n <- 2\nwhile (power_at(n, ${num(plan.effect)}) < target) n <- n + 1\nn   # ${per}`
         : `${head}uniroot(function(f) power_at(${n}, f) - target, c(1e-6, 10), tol = 1e-10)$root`;
     }
     case 'correlation': {

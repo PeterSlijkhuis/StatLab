@@ -192,6 +192,49 @@ describe('sample size page', () => {
     expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.16');
   });
 
+  test('a before-and-after study with a control group plans for the interaction in a 2 × 2 mixed design', async () => {
+    const { pick, next, fill } = setup();
+    await pick(/^Two factors at once/);
+    await pick(/How many people do I need/);
+    await pick(/One factor between people, one within/);
+    await pick(/Whether one factor's effect depends on the other/);
+    await pick(/^r = \.50/);
+    await pick(/I can guess the scores/);
+    await fill(/Effect of one factor at the first level/, '5');
+    await fill(/The same effect at the other level/, '0');
+    await fill(/Standard deviation of the scores within one cell/, '10');
+    // (5 − 0) / 10 = 0.5 SD, f = 0.5 / √(8 × (1 − .5)) = 0.25.
+    expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.25');
+    await next();
+    await pick(/^80%/);
+    await pick(/α = \.05/);
+    expect(question()).toBe('How many people will you lose?');
+    await pick(/^None/);
+    // λ = N·f² with df2 = N − 2: 128 people, 64 per group.
+    expect(report()).toContain('128 participants (64 per group, each measured in both conditions) are needed to detect an effect of f = 0.25 (with a correlation of r = .50 between conditions)');
+    expect(report()).toContain('the F test for the interaction in a 2 × 2 mixed ANOVA');
+    expect(trail()).toContain('One factor between, one within');
+  });
+
+  test('2 × 2 in plain words: interactions are described by their shape, and between designs skip the correlation', async () => {
+    const { pick } = setup();
+    await pick(/^Two factors at once/);
+    await pick(/How many people do I need/);
+    await pick(/Each person is in one combination only/);
+    await pick(/Whether one factor's effect depends on the other/);
+    expect(question()).toBe('How big is the effect you want to be able to find?');
+    await pick(/Choose a size in plain words/);
+    const disappears = screen.getByRole('button', { name: /The effect disappears \(f = 0.13\)/ });
+    expect(disappears.textContent).toContain('Recommended');
+    // f = 0.5 / 4 = 0.125: λ = N/64 reaches 80% power at 508 people (127 per cell), as in R.
+    expect(disappears.textContent).toContain('Needs about 508 people');
+    await pick(/The effect disappears/);
+    await pick(/^80%/);
+    await pick(/α = \.05/);
+    await pick(/^None/);
+    expect(report()).toContain('508 participants (127 in each of the four cells)');
+  });
+
   test("the browser's Back button goes back one question, keeping the answers", async () => {
     const { user, pick } = setup();
     await pick(/^Compare two separate groups/);

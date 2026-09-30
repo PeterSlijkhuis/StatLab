@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { Link, useSearchParams } from 'react-router-dom';
 import AvatarTip from '../components/AvatarTip';
 import { pnorm } from '../stats/distributions';
-import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, stimulusSimCode, totalN, type DesignId, type Plan } from '../stats/power';
+import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, stimulusSimCode, totalN, type DesignId, type Layout, type Plan, type Which } from '../stats/power';
 import { DESIGNS, designById, effectInputs, presets, type Design, type EffectRoute } from './sampleSizeDesigns';
 import './ModelChooser.css';
 import './SampleSize.css';
@@ -31,6 +31,8 @@ function meaning(design: Design, effect: number, p1: number): string {
       return `If scores are normal, about ${pct(pnorm(effect))} of people score on the expected side of the fixed value.`;
     case 'repeated':
       return `Within one condition, the conditions would explain ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance in the scores (η², leaving out the differences between people).`;
+    case 'factorial':
+      return `This effect explains ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance the other effects leave (partial η²).`;
     case 'anova':
       return `The groups explain ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance in the outcome (η²).`;
     case 'correlation':
@@ -49,22 +51,41 @@ function meaning(design: Design, effect: number, p1: number): string {
 function peopleText(design: Design, plan: Plan, n: number): string {
   const total = totalN(plan, n);
   if (design.id === 'paired') return `${total} participants, each measured twice`;
+  if (design.id === 'factorial') {
+    if (plan.layout === 'within') return `${total} participants, each in all four conditions`;
+    if (plan.layout === 'mixed') return `${total} participants (${n} per group, each measured in both conditions)`;
+    return `${total} participants (${n} in each of the four cells)`;
+  }
   if (PER_GROUP[design.id]) return `${total} participants (${n} per group)`;
   return `${total} participants`;
 }
 
-function testText(design: Design, sides: 1 | 2): string {
+const WHICH_TEXT: Record<Which, string> = {
+  interaction: 'interaction',
+  main: 'main effect',
+  'main-within': 'main effect of the within-person factor',
+  'main-between': 'main effect of the between-person factor',
+};
+const LAYOUT_TEXT: Record<Layout, string> = {
+  between: 'a 2 × 2 between-subjects ANOVA',
+  within: 'a 2 × 2 within-subjects (repeated-measures) ANOVA',
+  mixed: 'a 2 × 2 mixed ANOVA (one factor between, one within people)',
+};
+
+function testText(design: Design, sides: 1 | 2, plan?: Plan): string {
+  if (design.id === 'factorial' && plan) return `the F test for the ${WHICH_TEXT[plan.which ?? 'interaction']} in ${LAYOUT_TEXT[plan.layout ?? 'between']}`;
   return HAS_SIDES[design.id] ? `a ${sides === 2 ? 'two' : 'one'}-sided ${design.test}` : `the ${design.test}`;
 }
 
 function effectText(design: Design, plan: Plan, value: number): string {
   if (design.id === 'proportions') return `a difference between ${pct(plan.p1 ?? 0, 1)} and ${pct(value, 1)}`;
-  if (design.id === 'repeated') return `an effect of f = ${formatEffect(design, value)} (with a correlation of r = ${noZero((plan.rho ?? 0.5).toFixed(2))} between conditions)`;
+  if (design.id === 'repeated' || (design.id === 'factorial' && plan.layout !== 'between')) return `an effect of f = ${formatEffect(design, value)} (with a correlation of r = ${noZero((plan.rho ?? 0.5).toFixed(2))} between conditions)`;
   return `an effect of ${design.symbol} = ${formatEffect(design, value)}`;
 }
 
 function tool(design: Design): string {
-  if (design.id === 'repeated') return 'the formula G*Power uses for repeated measures (Faul et al., 2007), computed in R';
+  if (design.id === 'repeated') return 'the formula G*Power uses for repeated measures (Faul et al., 2007), computed in R,';
+  if (design.id === 'factorial') return 'the noncentral F distribution, as in G*Power (Faul et al., 2007), computed in R,';
   return design.id === 'proportions' ? 'the power.prop.test() function in R' : 'the pwr package in R (Champely, 2020)';
 }
 
@@ -103,7 +124,7 @@ function PowerCurve({ points, xLabel, target, mark, markLabel }: {
   );
 }
 
-type StepId = 'design' | 'mode' | 'n' | 'k' | 'rho' | 'stimuli' | 'nstim' | 'predictors' | 'added' | 'table' | 'p1' | 'route' | 'effect' | 'power' | 'alpha' | 'tests' | 'sides' | 'dropout';
+type StepId = 'design' | 'mode' | 'layout' | 'which' | 'n' | 'k' | 'rho' | 'stimuli' | 'nstim' | 'predictors' | 'added' | 'table' | 'p1' | 'route' | 'effect' | 'power' | 'alpha' | 'tests' | 'sides' | 'dropout';
 type AlphaChoice = 'standard' | 'strict' | 'bonferroni';
 
 type Answers = {
@@ -113,6 +134,8 @@ type Answers = {
   rho?: number;
   /** Several stimuli (pictures, words, items) per condition. */
   stimuli?: boolean;
+  layout?: Layout;
+  which?: Which;
   effect?: number;
   power?: number;
   alpha?: AlphaChoice;
@@ -129,7 +152,9 @@ function stepsFor(a: Answers): StepId[] {
   if (!a.design) return steps;
   steps.push('mode');
   if (!a.mode) return steps;
+  if (a.design === 'factorial') steps.push('layout', 'which');
   if (a.mode === 'effect') steps.push('n');
+  if (a.design === 'factorial' && a.layout !== 'between') steps.push('rho');
   if (a.design === 'anova' || a.design === 'repeated') steps.push('k');
   if (a.design === 'repeated') {
     steps.push('rho', 'stimuli');
@@ -150,8 +175,9 @@ function stepsFor(a: Answers): StepId[] {
 const alphaOf = (a: Answers) => (a.alpha === 'strict' ? 0.01 : a.alpha === 'bonferroni' ? 0.05 / parse(a.text.tests) : 0.05);
 const alphaLabel = (x: number) => noZero(String(Number(x.toPrecision(3))));
 
-function unitLabel(design: Design): string {
+function unitLabel(design: Design, layout?: Layout): string {
   if (design.id === 'paired') return 'people, each measured twice';
+  if (design.id === 'factorial') return layout === 'between' ? 'people in each of the four cells' : layout === 'mixed' ? 'people per group' : 'people in total';
   return PER_GROUP[design.id] ? 'people per group' : 'people in total';
 }
 
@@ -161,7 +187,7 @@ function inputStep(step: StepId, a: Answers, design: Design): { fields: { key: s
   const whole = (key: string, lo: number, hi: number) => Number.isInteger(parse(t[key])) && parse(t[key]) >= lo && parse(t[key]) <= hi;
   switch (step) {
     case 'n':
-      return { fields: [{ key: 'n', label: `Number of ${unitLabel(design)}` }], error: whole('n', 2, 1_000_000) ? undefined : 'Enter a whole number of people.' };
+      return { fields: [{ key: 'n', label: `Number of ${unitLabel(design, a.layout)}` }], error: whole('n', 2, 1_000_000) ? undefined : 'Enter a whole number of people.' };
     case 'k':
       return { fields: [{ key: 'k', label: design.id === 'repeated' ? 'Number of conditions' : 'Number of groups' }], error: whole('k', 2, 50) ? undefined : 'Enter a whole number from 2 to 50.' };
     case 'predictors':
@@ -271,6 +297,8 @@ export default function SampleSize() {
       df: (parse(t.rows) - 1) * (parse(t.cols) - 1),
       p1: parse(t.p1) / 100,
       rho: a.rho,
+      layout: a.layout,
+      which: a.which,
     };
   }, [answers]);
 
@@ -329,6 +357,7 @@ export default function SampleSize() {
     const p: Plan = {
       design: design.id, effect, alpha: 0.05, sides: 2, k: parse(t.k), predictors: parse(t.predictors), added: parse(t.added),
       df: (parse(t.rows) - 1) * (parse(t.cols) - 1), p1: parse(t.p1) / 100, rho: answers.rho,
+      layout: answers.layout, which: answers.which,
     };
     const n = solveN(p, 0.8);
     return n === null ? null : totalN(p, n);
@@ -340,7 +369,9 @@ export default function SampleSize() {
     switch (s) {
       case 'design': return design.title;
       case 'mode': return answers.mode === 'n' ? 'Plan a new study' : 'Sample size is fixed';
-      case 'n': return `${t.n} ${unitLabel(design)}`;
+      case 'layout': return { between: 'Each person in one cell', within: 'Each person in all four', mixed: 'One factor between, one within' }[answers.layout ?? 'between'];
+      case 'which': return WHICH_TEXT[answers.which ?? 'interaction'].replace(/^./, (c) => c.toUpperCase());
+      case 'n': return `${t.n} ${unitLabel(design, answers.layout)}`;
       case 'k': return `${t.k} ${design.id === 'repeated' ? 'conditions' : 'groups'}`;
       case 'rho': return `r = ${noZero((answers.rho ?? 0.5).toFixed(2))} between conditions`;
       case 'stimuli': return answers.stimuli ? 'Several stimuli per condition' : 'One score per condition';
@@ -389,12 +420,12 @@ export default function SampleSize() {
     );
   } else if (step === 'design') {
     question = 'What will you test?';
-    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. Repeated measures, with or without several stimuli per condition, are under "Measure the same people in several conditions". Logistic regression, mediation and models with more random factors are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does.</>;
+    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. An A/B test is two separate groups: choose the yes/no comparison for clicks or sign-ups, and the first option for a score. Repeated measures, with or without several stimuli per condition, are under "Measure the same people in several conditions"; a before-and-after study with a control group is a 2 × 2 design. Logistic regression, mediation and models with more random factors are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does.</>;
     body = (
       <Choice
         options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: `e.g. ${d.example} Analysis: ${d.test}.` }))}
         chosen={answers.design}
-        onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'spread', 'eta2', 'r2', 'dr2', 'v', 'p2'].map((k) => [k, ''])), rpre: '.5' } })}
+        onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'spread', 'eta2', 'r2', 'dr2', 'v', 'p2', 'eff1', 'eff2'].map((k) => [k, ''])), rpre: '.5' } })}
       />
     );
   } else if (step === 'mode') {
@@ -440,7 +471,7 @@ export default function SampleSize() {
     );
     body = (
       <Choice
-        options={presets(design).map((p) => {
+        options={presets(design, answers.layout && answers.which ? { layout: answers.layout, which: answers.which, rho: answers.rho } : undefined).map((p) => {
           const people = previewPeople(p.value);
           return { value: p.value, label: p.label, note: <>{p.note} <strong>{people === null ? 'Needs more than a million people.' : `Needs about ${people} people.`}</strong></>, tag: p.recommended ? 'Recommended' : undefined };
         })}
@@ -450,7 +481,7 @@ export default function SampleSize() {
     );
   } else if (step === 'effect') {
     const route = design.id === 'proportions' ? 'matter' : (answers.route as 'matter' | 'research');
-    const { fields, compute } = effectInputs(design.id, route);
+    const { fields, compute } = effectInputs(design.id, route, answers.layout && answers.which ? { layout: answers.layout, which: answers.which } : undefined);
     const values = Object.fromEntries(Object.entries(answers.text).map(([k, v]) => [k, parse(v)]));
     const missing = fields.some((f) => !f.optional && (answers.text[f.key] ?? '').trim() === '');
     const effect = missing ? NaN : compute(values, answers.text);
@@ -486,9 +517,42 @@ export default function SampleSize() {
         <button type="submit" className="button-primary" disabled={missing || !!error}>Next</button>
       </form>
     );
+  } else if (step === 'layout') {
+    question = 'How do people take part in the four combinations?';
+    help = 'A 2 × 2 design crosses two factors with two levels each, which gives four combinations (cells). A factor is between people when each person gets one level, and within people when each person gets both.';
+    body = (
+      <Choice<Layout>
+        options={[
+          { value: 'mixed', label: 'One factor between people, one within', note: 'For example training versus waiting list (between), each measured before and after (within). The usual design for a study with a control group.', tag: 'Most common' },
+          { value: 'within', label: 'Each person does all four combinations', note: 'For example every participant sees photo and text ads, each in two colours. Needs the fewest people.' },
+          { value: 'between', label: 'Each person is in one combination only', note: 'For example four versions of a questionnaire, each person answers one. Needs the most people.' },
+        ]}
+        chosen={answers.layout}
+        onPick={(value) => answer({ layout: value, which: undefined, effect: undefined })}
+      />
+    );
+  } else if (step === 'which') {
+    question = 'Which effect is your question about?';
+    help = 'Plan for the effect your hypothesis is about. An interaction asks whether the effect of one factor depends on the other; it needs far more people than a main effect of the same size, often four times as many or more.';
+    const main: Option<Which>[] = answers.layout === 'mixed'
+      ? [
+          { value: 'main-within', label: 'The effect of the within-person factor', note: 'Averaged over both groups. For example: do scores change from before to after, whichever group people are in?' },
+          { value: 'main-between', label: 'The difference between the groups', note: 'Averaged over both conditions. Usually the least interesting question in a before-and-after study.' },
+        ]
+      : [{ value: 'main', label: 'The effect of one factor, averaged over the other', note: 'A main effect. For example: do photo ads work better than text ads, whatever their colour?' }];
+    body = (
+      <Choice<Which>
+        options={[
+          { value: 'interaction', label: 'Whether one factor\'s effect depends on the other', note: answers.layout === 'mixed' ? 'The interaction. For example: does the training group improve more than the waiting-list group? In a before-and-after study with a control group, this is the test that answers your question.' : 'The interaction. For example: do photo ads work better than text ads for young viewers, but not for old ones?', tag: 'Most common' },
+          ...main,
+        ]}
+        chosen={answers.which}
+        onPick={(value) => answer({ which: value, effect: undefined })}
+      />
+    );
   } else if (step === 'rho') {
     question = 'How strongly do a person\'s scores in different conditions go together?';
-    help = 'People who score high in one condition usually score high in the others too. The stronger that correlation, the fewer people you need, because every person is compared with themselves. Take it from a pilot or an earlier study with the same measure if you can.';
+    help = 'People who score high in one condition usually score high in the others too. The stronger that correlation, the fewer people you need, because every person is compared with themselves. Take it from a pilot or an earlier study with the same measure if you can. If people do each condition several times (repeated trials), plan on their average per condition: averages over many trials are more reliable, so they usually correlate more strongly.';
     body = (
       <Choice
         options={[
@@ -506,7 +570,7 @@ export default function SampleSize() {
     body = (
       <Choice
         options={[
-          { value: false, label: 'No, one score per condition', note: 'For example one questionnaire score per condition, or the stimuli are exactly what you want to draw conclusions about.' },
+          { value: false, label: 'No, one score per condition', note: 'For example one questionnaire score per condition, or the same trial repeated several times and averaged, or the stimuli are exactly what you want to draw conclusions about.' },
           { value: true, label: 'Yes, several stimuli per condition', note: 'For example 4 pictures in each of 4 conditions. The page gives the minimum number of people and a simulation for the rest.' },
         ]}
         chosen={answers.stimuli}
@@ -663,7 +727,7 @@ export default function SampleSize() {
                 <h4>How to report it</h4>
                 <p className="ss-report">
                   An a priori power analysis with {tool(design)} showed that {peopleText(design, result.plan, result.n)}{design.id === 'paired' && ','} are
-                  needed to detect {effectText(design, result.plan, result.plan.effect)} with {pct(power)} power in {testText(design, result.plan.sides)} at
+                  needed to detect {effectText(design, result.plan, result.plan.effect)} with {pct(power)} power in {testText(design, result.plan.sides, result.plan)} at
                   α = {alphaText}.{' '}
                   <em>{answers.route === 'unknown' ? '[Say that this is a conventional value, and why no better estimate was available.]' : '[Say where the effect size comes from.]'}</em>
                   {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, we will recruit {totalN(result.plan, result.recruitUnit)} participants.</>}
@@ -677,7 +741,7 @@ export default function SampleSize() {
                   <p><span className="ss-big">{design.id === 'proportions' ? pct(result.effect, 1) : formatEffect(design, result.effect)}</span> {design.id === 'proportions' ? 'in the second group' : `smallest ${design.symbol} with ${pct(power)} power`}</p>
                 </div>
                 <p>
-                  With {peopleText(design, result.plan, result.n)}, {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power
+                  With {peopleText(design, result.plan, result.n)}, {testText(design, result.plan.sides, result.plan)} at α = {alphaText} has {pct(power)} power
                   for {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)} or larger` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)} or larger`}.
                   Smaller effects may well go unnoticed, so a non-significant result says little about them.
                 </p>
@@ -692,7 +756,7 @@ export default function SampleSize() {
                 <h4>How to report it</h4>
                 <p className="ss-report">
                   A sensitivity power analysis with {tool(design)} showed that with {peopleText(design, result.plan, result.n)},{' '}
-                  {testText(design, result.plan.sides)} at α = {alphaText} has {pct(power)} power to detect{' '}
+                  {testText(design, result.plan.sides, result.plan)} at α = {alphaText} has {pct(power)} power to detect{' '}
                   {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)}` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)}`} or larger.
                 </p>
               </>
@@ -701,12 +765,12 @@ export default function SampleSize() {
             {code && (
               <>
                 <h4>Check it in R</h4>
-                <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' || design.id === 'repeated' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
+                <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' || design.id === 'repeated' || design.id === 'factorial' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
                 <div className="model-chooser-code">
                   <pre tabIndex={0} aria-label="R code"><code>{code}</code></pre>
                   <button type="button" className="button-secondary" onClick={() => void copy(code)}>{copied === code ? 'Copied' : 'Copy code'}</button>
                 </div>
-                {answers.mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && design.id !== 'repeated' && (
+                {answers.mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && design.id !== 'repeated' && design.id !== 'factorial' && (
                   <p className="ss-note">R reports n unrounded{PER_GROUP[design.id] ? ' and per group' : ''}; round it up to whole people.</p>
                 )}
               </>

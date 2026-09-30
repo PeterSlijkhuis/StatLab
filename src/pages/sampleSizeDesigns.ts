@@ -1,4 +1,4 @@
-import { fFromEta2, type DesignId } from '../stats/power';
+import { factorialF, fFromEta2, type DesignId, type Layout, type Which } from '../stats/power';
 
 /** Everything the sample size page says about one design. */
 export type Design = {
@@ -23,7 +23,7 @@ export const DESIGNS: Design[] = [
   {
     id: 'two-groups',
     title: 'Compare two separate groups',
-    example: 'Do remote and office workers differ in wellbeing?',
+    example: 'Do remote and office workers differ in wellbeing? Or an A/B test on a score, such as time on a page.',
     test: 'independent-samples t-test',
     lessonId: '12-1',
     symbol: 'd',
@@ -61,6 +61,20 @@ export const DESIGNS: Design[] = [
     defaultEffect: 0.25,
     assumes:
       'Every person does every condition, scores are roughly normal, and sphericity holds: the differences between each pair of conditions vary about equally. This is the formula G*Power uses for "ANOVA: repeated measures, within factors" with ε = 1. When sphericity fails, the Greenhouse-Geisser correction costs power, so plan for more people. The same test is the F test for condition in a mixed model with a random intercept per person (Lesson 14-4). The plan is for the overall F test; follow-up comparisons between pairs of conditions have their own, often lower, power.',
+  },
+  {
+    id: 'factorial',
+    title: 'Two factors at once, like a 2 × 2 design',
+    example: 'Does a training raise wellbeing more than a waiting list, measured before and after? Or: do photo and text ads work differently for young and old viewers?',
+    test: '2 × 2 ANOVA',
+    lessonId: '13-2',
+    symbol: 'f',
+    effectName: "Cohen's f",
+    effectMeaning: 'the size of one effect relative to the variation left after the other effects.',
+    benchmarks: [0.1, 0.25, 0.4],
+    defaultEffect: 0.25,
+    assumes:
+      'Two factors with two levels each, the same number of people in every cell or group, and roughly normal scores with the same spread in every cell. For factors within people, the correlation between conditions is the same for every pair. Each effect in a 2 × 2 design has 1 degree of freedom, so its F test is a t-test on one contrast; for a design with both factors between people this is G*Power\'s "ANOVA: fixed effects, special, main effects and interactions". A factor with three or more levels, or several stimuli per condition, needs a simulation or the Superpower package. If each condition repeats the same trial several times, plan on each person\'s average over those trials.',
   },
   {
     id: 'one-sample',
@@ -133,7 +147,7 @@ export const DESIGNS: Design[] = [
   {
     id: 'proportions',
     title: 'Compare a yes/no outcome between two groups',
-    example: 'Do fewer mentored employees leave the company?',
+    example: 'Do fewer mentored employees leave the company? Or an A/B test: do more visitors click with version B than with version A?',
     test: 'test of two proportions (a chi-square test on a 2 × 2 table)',
     lessonId: '09-3',
     symbol: 'p₂',
@@ -173,7 +187,7 @@ export type FieldValues = Record<string, number>;
  * What to ask for each design and route, and how it becomes the effect size.
  * `rows` and `cols` (chi-square) come from the earlier table-size question.
  */
-export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fields: EffectField[]; compute: (v: FieldValues, raw: Record<string, string>) => number } {
+export function effectInputs(id: DesignId, route: 'matter' | 'research', factors?: { layout: Layout; which: Which }): { fields: EffectField[]; compute: (v: FieldValues, raw: Record<string, string>) => number } {
   const sd: EffectField = { key: 'sd', label: 'Standard deviation of the outcome', hint: 'How much scores vary within one group. Take it from earlier studies that used the same measure, or from the scale\'s manual. Not sure? Think of the range where almost everyone\'s scores fall and divide it by 4: if almost everyone scores between 30 and 70, the SD is about 10.', placeholder: 'e.g. 10' };
   const r2Full: EffectField = { key: 'r2', label: 'Expected R² of the full model', hint: 'What all predictors together explain, controls included. If unsure, take what the controls explain in earlier studies and add the change.', placeholder: 'e.g. .30' };
   switch (id) {
@@ -220,6 +234,32 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
             // λ = n(k − 1)·ηp²/(1 − ηp²), written as G*Power's f for the chosen correlation.
             compute: (v) => Math.sqrt((v.eta2 / (1 - v.eta2)) * ((v.k - 1) * (1 - v.rho)) / v.k),
           };
+    case 'factorial': {
+      const { layout, which } = factors ?? { layout: 'between', which: 'interaction' };
+      const cellSd: EffectField = { ...sd, label: 'Standard deviation of the scores within one cell', hint: 'A cell is one combination of the two factors. How much people differ from each other there, from earlier studies or a pilot. Not sure? Think of the range where almost everyone\'s scores fall and divide it by 4: if almost everyone scores between 30 and 70, the SD is about 10.' };
+      if (route === 'research') {
+        return {
+          fields: [{ key: 'eta2', label: 'Partial η² of the same effect in a similar study', hint: 'Only from a study with the same layout (the same factors between or within people): partial η² from another layout is not comparable.', placeholder: 'e.g. .04' }],
+          compute: (v) => fFromEta2(v.eta2),
+        };
+      }
+      return which === 'interaction'
+        ? {
+            fields: [
+              { key: 'eff1', label: 'Effect of one factor at the first level of the other', hint: 'A difference in the outcome\'s own units. In a pre-post design with a control group: the expected change in the training group, for example 5 points.', placeholder: 'e.g. 5' },
+              { key: 'eff2', label: 'The same effect at the other level', hint: 'For example 0 points of change in the waiting-list group. Use a minus sign if the effect goes the other way there.', placeholder: 'e.g. 0' },
+              cellSd,
+            ],
+            compute: (v) => factorialF(layout, which, (v.eff1 - v.eff2) / v.sd, v.rho),
+          }
+        : {
+            fields: [
+              { key: 'diff', label: 'Smallest difference between the two levels of the factor that would matter', hint: 'Averaged over the other factor, in the outcome\'s own units, for example 3 points.', placeholder: 'e.g. 3' },
+              cellSd,
+            ],
+            compute: (v) => factorialF(layout, which, v.diff / v.sd, v.rho),
+          };
+    }
     case 'anova':
       return route === 'matter'
         ? {
@@ -267,7 +307,8 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
 /** Effect sizes in plain words, for a student with no numbers to go on. */
 export type Preset = { value: number; label: string; note: string; recommended?: boolean };
 
-export function presets(design: Design): Preset[] {
+export function presets(design: Design, factors?: { layout: Layout; which: Which; rho?: number }): Preset[] {
+  if (design.id === 'factorial' && factors) return factorialPresets(factors.layout, factors.which, factors.rho);
   const [s, m, l] = design.benchmarks ?? [0, 0, 0];
   const d = design.symbol === 'd' || design.symbol === 'dz';
   const cohen: Preset[] = [
@@ -282,6 +323,24 @@ export function presets(design: Design): Preset[] {
     return [{ value: 0.2, label: 'Typical (r = .20)', note: 'Between small and medium: a typical correlation in psychology (Gignac & Szodorai, 2016). An honest default when you have nothing else.', recommended: true }, ...cohen];
   }
   return cohen;
+}
+
+/** 2 × 2 effects in plain words: a main effect as Cohen's d, an interaction as the shape of the two simple effects. */
+function factorialPresets(layout: Layout, which: Which, rho = 0.5): Preset[] {
+  const f = (delta: number) => factorialF(layout, which, delta, rho);
+  const show = (delta: number) => `f = ${f(delta).toFixed(2)}`;
+  if (which === 'interaction') {
+    return [
+      { value: f(0.5), label: `The effect disappears (${show(0.5)})`, note: 'One factor has a medium effect (d = 0.50) at one level of the other factor and none at the other level. For example: the training helps, the waiting list does not.', recommended: true },
+      { value: f(0.25), label: `The effect halves (${show(0.25)})`, note: 'A medium effect (d = 0.50) at one level shrinks to a small one (d = 0.25) at the other. Common, and very hard to detect.' },
+      { value: f(1), label: `The effect reverses (${show(1)})`, note: 'A medium effect (d = 0.50) one way at one level, and the same effect the other way at the other level. Rare; choose it only with a strong reason.' },
+    ];
+  }
+  return [
+    { value: f(0.2), label: `Small: subtle (d = 0.20, ${show(0.2)})`, note: 'The two levels differ by a fifth of a standard deviation, averaged over the other factor. Real, but hard to notice.' },
+    { value: f(0.5), label: `Medium: noticeable (d = 0.50, ${show(0.5)})`, note: 'Half a standard deviation. Common in student projects, but real effects are often smaller.' },
+    { value: f(0.8), label: `Large: obvious (d = 0.80, ${show(0.8)})`, note: 'Most people would notice it without any statistics. Rarely realistic; choose it only with a strong reason.' },
+  ];
 }
 
 function fmt(design: Design, value: number): string {

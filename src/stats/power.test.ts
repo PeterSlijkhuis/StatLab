@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { dzFromD, f2FromR2, fFromEta2, fFromMeans, powerAt, rCode, solveEffect, solveN, totalN, wFromV, type Plan } from './power';
+import { dzFromD, f2FromR2, factorialF, fFromEta2, fFromMeans, powerAt, rCode, solveEffect, solveN, totalN, wFromV, type Layout, type Plan, type Which } from './power';
 
 // Printed by the pwr package (1.3) and base R's power.prop.test, with n
 // rounded up: ceiling(pwr.t.test(d = 0.5, power = 0.8)$n) and so on.
@@ -135,6 +135,31 @@ describe('repeated measures match G*Power', () => {
   test('power, from R\'s pf (and within simulation error of aov with Error(id/c))', () => {
     expect(powerAt(plan(4), 20)).toBeCloseTo(0.7288426, 6);
     expect(powerAt({ design: 'repeated', effect: 0.3, alpha: 0.05, sides: 2, k: 3, rho: 0.7 }, 15)).toBeCloseTo(0.8858583, 6);
+  });
+});
+
+describe('2 × 2 designs', () => {
+  const plan = (layout: Layout, which: Which, effect: number, rho = 0.5): Plan => ({ design: 'factorial', effect, alpha: 0.05, sides: 2, layout, which, rho });
+  test('between: G*Power\'s "fixed effects, special" gives 128 people for f = .25 (32 per cell)', () => {
+    expect(solveN(plan('between', 'main', 0.25), 0.8)).toBe(32);
+    expect(totalN(plan('between', 'main', 0.25), 32)).toBe(128);
+  });
+  test('power, from R\'s pf, and within simulation error of a t-test on the contrast (2000 runs)', () => {
+    // Simple effects of 0.5 and 0 SD, r = .5: simulated power .475 (mixed, 30 per group) and .582 (within, 40 people).
+    expect(powerAt(plan('mixed', 'interaction', factorialF('mixed', 'interaction', 0.5)), 30)).toBeCloseTo(0.4778965, 6);
+    expect(powerAt(plan('within', 'interaction', factorialF('within', 'interaction', 0.5)), 40)).toBeCloseTo(0.5874031, 6);
+    expect(powerAt(plan('mixed', 'main-between', factorialF('mixed', 'main-between', 0.5)), 40)).toBeCloseTo(0.7224485, 6);
+  });
+  test('a within main effect of two conditions is the paired t-test', () => {
+    // Mixed, within factor: each person's change, dz = d / √(2(1 − r)).
+    const f = factorialF('mixed', 'main-within', 0.5, 0.5);
+    expect(f).toBeCloseTo(0.5, 10);
+  });
+  test('an interaction that makes an effect disappear needs about four times the people of that effect alone', () => {
+    const simple = solveN({ design: 'two-groups', effect: 0.5, alpha: 0.05, sides: 2 }, 0.8)! * 2;
+    const interaction = totalN(plan('between', 'interaction', 0.125), solveN(plan('between', 'interaction', 0.125), 0.8)!);
+    expect(interaction / simple).toBeGreaterThan(3.8);
+    expect(interaction / simple).toBeLessThan(4.2);
   });
 });
 
