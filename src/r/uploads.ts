@@ -1,6 +1,6 @@
 import type { WebR } from 'webr';
 import { DATA_DIR, DATASET_FILES, ensurePackages } from './session';
-import { setStatus } from './webrClient';
+import { onRestart, setStatus } from './webrClient';
 import { deleteStoredFile, loadStoredFiles, saveStoredFile } from '../state/uploadStore';
 
 /**
@@ -121,6 +121,11 @@ async function installExcelReader(webR: WebR): Promise<void> {
 }
 
 let restored: Promise<void> | null = null;
+
+// A restarted R starts with an empty data folder, so the kept files go back in.
+onRestart(() => {
+  restored = null;
+});
 
 /**
  * Puts the files kept from earlier visits back into R's data folder, once per

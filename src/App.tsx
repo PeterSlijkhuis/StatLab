@@ -15,10 +15,11 @@ import SampleSize from './pages/SampleSize';
 import Review from './pages/Review';
 import AvatarStudio from './pages/AvatarStudio';
 import { fetchDataset, prepareSession } from './r/session';
-import { getWebR } from './r/webrClient';
+import { getWebR, onRestart } from './r/webrClient';
 import './App.css';
 
 export default function App() {
+  const [restarts, setRestarts] = useState(0);
   // Spec 3.5: webR starts in the background on first app load, not when the
   // first lesson opens. Mounted here rather than in main.tsx so it is testable
   // by rendering App. Both calls are memoised, so StrictMode's double mount and
@@ -26,7 +27,14 @@ export default function App() {
   useEffect(() => {
     // Not swallowing: prepareSession's own catch has already set the error
     // status that RStatus renders. This only stops an unhandled rejection.
-    void getWebR().then((r) => prepareSession(r, fetchDataset)).catch(() => {});
+    const boot = () => void getWebR().then((r) => prepareSession(r, fetchDataset)).catch(() => {});
+    boot();
+    // After "Restart R": remount the page, so every lesson environment, code
+    // block and console that held the old R starts over on the new one.
+    return onRestart(() => {
+      setRestarts((count) => count + 1);
+      boot();
+    });
   }, []);
 
   useEffect(() => {
@@ -108,7 +116,7 @@ export default function App() {
       <main id="main" tabIndex={-1} className="app-main">
         <RStatus />
         <div ref={page} className={`page page-${pathname.split('/')[1] || 'home'}`}>
-        <Routes>
+        <Routes key={restarts}>
           <Route path="/" element={<Home />} />
           <Route path="/lesson/:lessonId" element={<Lesson />} />
           <Route path="/workspace" element={<RWorkspace />} />

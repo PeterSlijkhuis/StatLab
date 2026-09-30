@@ -18,6 +18,7 @@ let instance: WebR | null = null;
 let booting: Promise<WebR> | null = null;
 let status: RStatus = { phase: 'idle' };
 const listeners = new Set<(s: RStatus) => void>();
+const restartListeners = new Set<() => void>();
 
 export function getStatus(): RStatus {
   return status;
@@ -55,3 +56,24 @@ export function getWebR(): Promise<WebR> {
   return booting;
 }
 
+
+/** Called on every restart, so anything cached per webR instance can forget it. */
+export function onRestart(fn: () => void): () => void {
+  restartListeners.add(fn);
+  return () => restartListeners.delete(fn);
+}
+
+/**
+ * Throws the running R away and starts a fresh one, without reloading the page.
+ * webR's PostMessage channel cannot interrupt running R code, but closing ends
+ * the worker even in the middle of a student's infinite loop. Listeners reset
+ * their per-instance caches and remount what held the old R; code drafts live
+ * in localStorage, so nothing typed is lost.
+ */
+export function restartR(): void {
+  const old = instance;
+  instance = null;
+  booting = null;
+  old?.close();
+  for (const fn of restartListeners) fn();
+}

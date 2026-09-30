@@ -63,7 +63,8 @@ export function useLessonSession(
       // which derives from these, so an env being freed must never read as ready.
       setEnv(null);
       setWebR(null);
-      if (created && createdBy) void destroyEnv(createdBy, created);
+      // After a restart the old R is gone along with its environments.
+      if (created && createdBy) destroyEnv(createdBy, created).catch(() => {});
     };
   }, [key]);
 
