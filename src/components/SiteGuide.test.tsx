@@ -19,7 +19,7 @@ test('the avatar helper suggests a lesson from a few words and goes there', asyn
   const button = screen.getByRole('button', { name: /Where to\?/ });
   await user.click(button);
   expect(screen.getByRole('dialog', { name: 'Where do you want to go?' })).toBeTruthy();
-  expect(screen.getByRole('link', { name: /Start here: Lesson 00-1/ })).toBeTruthy();
+  expect(screen.getByRole('link', { name: /Start here: Lesson 0-1/ })).toBeTruthy();
   await user.type(screen.getByLabelText('Type a topic or a question'), 'logistic regression');
   await user.click(screen.getByRole('link', { name: /Lesson 15-2/ }));
   expect(screen.getByTestId('where').textContent).toBe('/lesson/15-2');
