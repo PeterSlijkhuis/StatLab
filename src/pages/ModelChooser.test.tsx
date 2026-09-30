@@ -72,10 +72,10 @@ const PATHS: { clicks: RegExp[]; id: string; model: string; code: string; lesson
   { clicks: [/middle step, or/i, /^an effect through a middle step$/i], id: 'mediation', model: 'Mediation model', code: 'indirect := a * b', lessonId: '17-1' },
   { clicks: [/middle step, or/i, /hang together/i], id: 'scale-reliability', model: "Scale reliability (Cronbach's alpha)", code: 'psych::alpha(items)', lessonId: '03-4' },
   { clicks: [/summing up/i, /traits behind them/i], id: 'exploratory-factors', model: 'Exploratory factor analysis (EFA)', code: 'factanal(', lessonId: '17-2' },
-  { clicks: [...YES_NO, /a cross-table/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
-  { clicks: [...YES_NO, /one percentage/i], id: 'proportion-vs-value', model: 'Exact binomial test', code: 'binom.test(', lessonId: '09-1' },
-  { clicks: [TO_OUTCOME, /no order/i, /linked to one other category/i], id: 'cross-table', model: 'Chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
-  { clicks: [TO_OUTCOME, /ordered levels/i, /groups differ, or/i], id: 'rank-tests', model: 'Rank-based tests', code: 'kruskal.test(wellbeing ~ department, data = d)', lessonId: '12-4' },
+  { clicks: [...YES_NO, /a cross-table/i], id: 'cross-table', model: 'Traditional chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [...YES_NO, /one percentage/i], id: 'proportion-vs-value', model: 'Traditional exact binomial test', code: 'binom.test(', lessonId: '09-1' },
+  { clicks: [TO_OUTCOME, /no order/i, /linked to one other category/i], id: 'cross-table', model: 'Traditional chi-square test of independence', code: 'chisq.test(', lessonId: '09-3' },
+  { clicks: [TO_OUTCOME, /ordered levels/i, /groups differ, or/i], id: 'rank-tests', model: 'Traditional rank-based tests', code: 'kruskal.test(wellbeing ~ department, data = d)', lessonId: '12-4' },
   { clicks: [BAYES, /your own priors/i], id: 'bayesian-regression', model: 'Bayesian linear regression (brms)', code: 'brm(', lessonId: '16-4' },
 ];
 
@@ -153,11 +153,11 @@ describe('ModelChooser', () => {
   test('the traditional name is shown only when the leaf has one', async () => {
     renderChooser();
     await clickThrough([...GROUPS, /^two groups$/i]);
-    expect(screen.getByText('Traditional name:')).toBeTruthy();
+    expect(screen.getByText('Traditional counterpart:')).toBeTruthy();
 
     await userEvent.click(screen.getByRole('button', { name: /start over/i }));
     await clickThrough([...NUMERIC, /several predictors/i]);
-    expect(screen.queryByText('Traditional name:')).toBeNull();
+    expect(screen.queryByText('Traditional counterpart:')).toBeNull();
   });
 
   test('every node in the tree is well formed', () => {
@@ -294,7 +294,7 @@ describe('links and the index', () => {
     await userEvent.type(search, 'kruskal');
     expect([...index.querySelectorAll('.model-card button')].map((button) => button.textContent)).toEqual([
       'Linear model with a categorical predictor',
-      'Rank-based tests',
+      'Traditional rank-based tests',
     ]);
 
     await userEvent.clear(search);

@@ -132,7 +132,7 @@ export const TREE: Question = {
                       {
                         label: 'Nothing: compare the average with a fixed number',
                         example: 'Is the average exam score different from 70?',
-                        tech: 'One-sample t-test',
+                        tech: 'Traditional one-sample t-test',
                         next: {
                           kind: 'answer',
                           id: 'mean-vs-value',
@@ -144,8 +144,8 @@ d <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
 model <- lm(I(exam_score - 70) ~ 1, data = d)
 model %>% tidy(conf.int = TRUE)`,
                           check:
-                            'Independent scores and no extreme outliers; roughly normal scores, which matters mainly in small samples. For a small, clearly skewed sample, the one-sample Wilcoxon signed-rank test: wilcox.test(d$exam_score, mu = 70).',
-                          traditional: 'The one-sample t-test: t.test(d$exam_score, mu = 70). Same t, same p.',
+                            'Independent scores and no extreme outliers; roughly normal scores, which matters mainly in small samples. For a small, clearly skewed sample, the traditional one-sample Wilcoxon signed-rank test: wilcox.test(d$exam_score, mu = 70).',
+                          traditional: 'The traditional one-sample t-test: t.test(d$exam_score, mu = 70). Same t, same p.',
                           note: 'Here the question is whether the mean exam score differs from 70; put your own comparison value in its place. ~ 1 means a model with no predictors, so the intercept is how far the mean lies from that value, with its confidence interval.',
                           buildsOn: '08-3',
                           further: 'Van den Berg, Analysing Data Using Linear Models, section 5.15, The intercept only model.',
@@ -175,8 +175,8 @@ model <- lm(wellbeing ~ autonomy, data = d)
 model %>% tidy()
 model %>% glance()`,
                                 check:
-                                  "A scatterplot with geom_smooth(method = lm) shows a roughly straight-line pattern; no extreme outliers; residuals with similar spread along the whole line; residuals roughly normal, which matters mainly in small samples. For a curved-but-consistent pattern, ranks or outliers, Spearman's correlation: cor.test(d$wellbeing, d$autonomy, method = \"spearman\").",
-                                traditional: "Pearson correlation: cor.test(d$wellbeing, d$autonomy). Its t and p match the slope's.",
+                                  "A scatterplot with geom_smooth(method = lm) shows a roughly straight-line pattern; no extreme outliers; residuals with similar spread along the whole line; residuals roughly normal, which matters mainly in small samples. For a curved-but-consistent pattern, ranks or outliers, the traditional Spearman correlation test: cor.test(d$wellbeing, d$autonomy, method = \"spearman\").",
+                                traditional: "The traditional Pearson correlation test: cor.test(d$wellbeing, d$autonomy). Its t and p match the slope's.",
                                 note: 'The slope b is the difference in predicted outcome (here wellbeing) between people who differ by one unit on the predictor (autonomy).',
                                 lessonId: '10-2',
                               },
@@ -259,7 +259,7 @@ emtrends(model, ~ autonomy_c, var = "workload_c", at = list(autonomy_c = c(-s, 0
                       {
                         label: 'Groups',
                         example: 'Do wellbeing scores differ between departments?',
-                        tech: 'Group comparison: t-test, ANOVA',
+                        tech: 'Group comparison (traditional t-test, ANOVA)',
                         group: 'Numeric outcome: comparing groups',
                         next: {
                           kind: 'question',
@@ -268,7 +268,7 @@ emtrends(model, ~ autonomy_c, var = "workload_c", at = list(autonomy_c = c(-s, 0
                             {
                               label: 'Two groups',
                               example: 'Do remote workers report higher wellbeing than office workers?',
-                              tech: 'Independent t-test',
+                              tech: 'Traditional independent t-test',
                               next: {
                                 kind: 'answer',
                                 id: 'two-groups',
@@ -281,9 +281,9 @@ model <- lm(wellbeing ~ remote, data = d)
 model %>% tidy()
 d %>% group_by(remote) %>% summarise(mean = mean(wellbeing), sd = sd(wellbeing))`,
                                 check:
-                                  'Similar spread in each group, which matters especially when group sizes differ. Residuals roughly normal, which matters mainly in small samples; with large groups the Central Limit Theorem covers moderate skew. For a small, clearly skewed sample or extreme outliers, the Mann-Whitney test: wilcox.test(wellbeing ~ remote, data = d).',
+                                  'Similar spread in each group, which matters especially when group sizes differ. Residuals roughly normal, which matters mainly in small samples; with large groups the Central Limit Theorem covers moderate skew. For a small, clearly skewed sample or extreme outliers, the traditional Mann-Whitney test: wilcox.test(wellbeing ~ remote, data = d).',
                                 traditional:
-                                  'The independent-samples t-test: t.test(wellbeing ~ remote, data = d, var.equal = TRUE). Same t with the sign reversed, because t.test subtracts the groups the other way round, and the same p. When the spreads differ, leave out var.equal = TRUE to get Welch\'s test.',
+                                  'The traditional independent-samples t-test: t.test(wellbeing ~ remote, data = d, var.equal = TRUE). Same t with the sign reversed, because t.test subtracts the groups the other way round, and the same p. When the spreads differ, leave out var.equal = TRUE to get the traditional Welch test.',
                                 note: 'The slope is the difference between the two group means. Always look at the means: the sign of b depends on which group R took as the reference.',
                                 lessonId: '12-1',
                               },
@@ -291,7 +291,7 @@ d %>% group_by(remote) %>% summarise(mean = mean(wellbeing), sd = sd(wellbeing))
                             {
                               label: 'Three or more groups',
                               example: 'Do wellbeing scores differ between departments?',
-                              tech: 'One-way ANOVA',
+                              tech: 'Traditional one-way ANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'several-groups',
@@ -306,8 +306,8 @@ model %>% glance()
 model %>% tidy()
 emmeans(model, pairwise ~ department, adjust = "tukey")`,
                                 check:
-                                  'Similar spread in each group, which matters especially when group sizes differ. Residuals roughly normal, which matters mainly in small samples; with large groups the Central Limit Theorem covers moderate skew. For a small, clearly skewed sample or extreme outliers, the Kruskal-Wallis test: kruskal.test(wellbeing ~ department, data = d).',
-                                traditional: 'One-way ANOVA: summary(aov(wellbeing ~ department, data = d)). Same F, same p.',
+                                  'Similar spread in each group, which matters especially when group sizes differ. Residuals roughly normal, which matters mainly in small samples; with large groups the Central Limit Theorem covers moderate skew. For a small, clearly skewed sample or extreme outliers, the traditional Kruskal-Wallis test: kruskal.test(wellbeing ~ department, data = d).',
+                                traditional: 'The traditional one-way ANOVA: summary(aov(wellbeing ~ department, data = d)). Same F, same p.',
                                 note: 'Each b compares one group with the reference group. glance() gives the overall F; emmeans gives every pairwise comparison, corrected for multiple testing.',
                                 lessonId: '12-2',
                               },
@@ -315,7 +315,7 @@ emmeans(model, pairwise ~ department, adjust = "tukey")`,
                             {
                               label: 'Groups, adjusting for a number',
                               example: 'Are trained employees more engaged, adjusting for how engaged they were before?',
-                              tech: 'ANCOVA',
+                              tech: 'Traditional ANCOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'groups-with-covariate',
@@ -330,7 +330,7 @@ model %>% tidy(conf.int = TRUE)
 emmeans(model, pairwise ~ training)`,
                                 check:
                                   'The covariate relates to the outcome in a roughly straight line with a similar slope in every group: fit lm(engagement_t2 ~ engagement_t1 * training, data = d) and check that the interaction is small. The covariate is measured before the groups could have changed it. If the slopes clearly differ, that difference is your finding: see the moderation model under numeric predictors.',
-                                traditional: 'ANCOVA: anova(model) gives the F test for the groups, adjusted for the covariate entered before them.',
+                                traditional: 'The traditional ANCOVA: anova(model) gives the F test for the groups, adjusted for the covariate entered before them.',
                                 note: 'The group coefficients are differences between groups at the same value of the covariate: here, trained and untrained employees who started with the same engagement. emmeans gives each group\'s adjusted mean, its predicted mean at the average covariate, and the pairwise differences between them.',
                                 lessonId: '11-2',
                               },
@@ -338,7 +338,7 @@ emmeans(model, pairwise ~ training)`,
                             {
                               label: 'Two kinds of groups together',
                               example: 'Do training and mentoring work better in combination?',
-                              tech: 'Factorial ANOVA',
+                              tech: 'Traditional factorial ANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'factorial',
@@ -354,7 +354,7 @@ Anova(model, type = "III")
 emmeans(model, pairwise ~ training:mentoring, adjust = "tukey")`,
                                 check:
                                   'Similar spread in each cell, which matters especially when group sizes differ. Residuals roughly normal, which matters mainly in small samples. Plot the cell means before interpreting main effects.',
-                                traditional: 'Two-way (factorial) ANOVA. Anova(model, type = "III") gives its F tests for each main effect and the interaction.',
+                                traditional: 'The traditional two-way (factorial) ANOVA. Anova(model, type = "III") gives its F tests for each main effect and the interaction.',
                                 // Type III main-effect tests are only meaningful with sum-to-zero contrasts. Under R's
                                 // default treatment contrasts they test each factor at the other's reference level.
                                 note: 'The contrasts = list(...) line matters: type III tests of the main effects are only correct with sum-to-zero contrasts, and R does not use those by default. An interaction means the effect of one factor depends on the level of the other: in an interaction plot, the lines are not parallel.',
@@ -364,11 +364,11 @@ emmeans(model, pairwise ~ training:mentoring, adjust = "tukey")`,
                             {
                               label: 'Groups on several outcomes at once',
                               example: 'Do departments differ in both wellbeing and engagement?',
-                              tech: 'MANOVA',
+                              tech: 'Traditional MANOVA',
                               next: {
                                 kind: 'answer',
                                 id: 'several-outcomes',
-                                model: 'Multivariate linear model (MANOVA)',
+                                model: 'Multivariate linear model (traditional MANOVA)',
                                 when: 'Several related numeric outcomes, such as three subscales of one questionnaire, and the question is whether the groups differ on them taken together.',
                                 rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 model <- manova(cbind(wellbeing, engagement_t2, performance) ~ department, data = d)
@@ -376,10 +376,10 @@ summary(model, test = "Pillai")
 summary.aov(model)`,
                                 check:
                                   "The outcomes correlate moderately with each other; if they do not, analyse them one at a time. No extreme outliers, and more cases in every group than there are outcomes. Pillai's trace is the most robust of the four test statistics.",
-                                traditional: 'One-way MANOVA.',
-                                note: 'The overall test asks whether the groups differ on the combination of outcomes. summary.aov() then gives one ANOVA per outcome; correct those for multiple testing, for example with p.adjust(p, method = "holm").',
+                                traditional: 'The traditional one-way MANOVA.',
+                                note: 'The overall test asks whether the groups differ on the combination of outcomes. summary.aov() then gives one traditional ANOVA per outcome; correct those for multiple testing, for example with p.adjust(p, method = "holm").',
                                 buildsOn: '12-2',
-                                further: 'Field, Miles and Field, Discovering Statistics Using R, has a chapter on MANOVA and the discriminant analysis that often follows it.',
+                                further: 'Field, Miles and Field, Discovering Statistics Using R, has a chapter on the traditional MANOVA and the discriminant analysis that often follows it.',
                               },
                             },
                           ],
@@ -401,7 +401,7 @@ summary.aov(model)`,
                       {
                         label: 'Twice, such as before and after',
                         example: 'Did engagement rise from the first to the second measurement?',
-                        tech: 'Paired t-test',
+                        tech: 'Traditional paired t-test',
                         next: {
                           kind: 'answer',
                           id: 'before-after',
@@ -416,16 +416,16 @@ long_d <- d %>% pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = 
 model <- lmer(engagement ~ time + (1 | employee_id), data = long_d)
 summary(model)`,
                           check:
-                            'Data in long format: one row per person per measurement. Residuals roughly normal, which matters mainly in small samples. With skewed differences in a small sample, the Wilcoxon signed-rank test: wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE).',
-                          traditional: 'The paired-samples t-test: t.test(d$engagement_t2, d$engagement_t1, paired = TRUE). Same t, same p, when nobody is missing a measurement.',
-                          note: '(1 | employee_id) gives every employee their own starting level, so the model knows which scores belong together. engagement_t1 sorts first, so it is the reference and the time coefficient is the change from the first measurement to the second. Unlike the paired t-test, it keeps people who missed a measurement.',
+                            'Data in long format: one row per person per measurement. Residuals roughly normal, which matters mainly in small samples. With skewed differences in a small sample, the traditional Wilcoxon signed-rank test: wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE).',
+                          traditional: 'The traditional paired-samples t-test: t.test(d$engagement_t2, d$engagement_t1, paired = TRUE). Same t, same p, when nobody is missing a measurement.',
+                          note: '(1 | employee_id) gives every employee their own starting level, so the model knows which scores belong together. engagement_t1 sorts first, so it is the reference and the time coefficient is the change from the first measurement to the second. Unlike the traditional paired t-test, it keeps people who missed a measurement.',
                           lessonId: '14-3',
                         },
                       },
                       {
                         label: 'Three or more times',
                         example: 'Does stress change across three exam weeks?',
-                        tech: 'Repeated-measures ANOVA',
+                        tech: 'Traditional repeated-measures ANOVA',
                         next: {
                           kind: 'answer',
                           id: 'repeated-measures',
@@ -440,16 +440,16 @@ model <- lmer(weight ~ time + (1 | Chick), data = long_d)
 anova(model)
 emmeans(model, pairwise ~ time, adjust = "holm")`,
                           check:
-                            'Data in long format: one row per case per measurement, which ChickWeight already is. Residuals roughly normal, which matters mainly in small samples. The model assumes the same spread at every time point and the same correlation between every pair of them. Compare the SDs per time point first: in ChickWeight they grow from about 1 g at hatching to about 72 g at day 21, so read its p-values with care. For a growth process like this, a growth-curve model with random slopes fits better. For a small, clearly skewed sample, the Friedman test, which needs every chick at every time point, so keep only the complete ones first: complete <- long_d %>% group_by(Chick) %>% filter(n() == 3) %>% ungroup() %>% droplevels(), then friedman.test(weight ~ time | Chick, data = complete).',
-                          traditional: 'Repeated-measures ANOVA. With complete data the F matches its uncorrected F: both assume the time points are equally correlated.',
-                          note: 'anova() tests whether weight differs across the time points at all; emmeans then compares each pair of time points. (1 | Chick) lets each chick have its own level, as (1 | id) would for people. Unlike repeated-measures ANOVA, the model keeps the chicks that missed a weighing.',
+                            'Data in long format: one row per case per measurement, which ChickWeight already is. Residuals roughly normal, which matters mainly in small samples. The model assumes the same spread at every time point and the same correlation between every pair of them. Compare the SDs per time point first: in ChickWeight they grow from about 1 g at hatching to about 72 g at day 21, so read its p-values with care. For a growth process like this, a growth-curve model with random slopes fits better. For a small, clearly skewed sample, the traditional Friedman test, which needs every chick at every time point, so keep only the complete ones first: complete <- long_d %>% group_by(Chick) %>% filter(n() == 3) %>% ungroup() %>% droplevels(), then friedman.test(weight ~ time | Chick, data = complete).',
+                          traditional: 'The traditional repeated-measures ANOVA. With complete data the model\'s F matches its uncorrected F: both assume the time points are equally correlated.',
+                          note: 'anova() tests whether weight differs across the time points at all; emmeans then compares each pair of time points. (1 | Chick) lets each chick have its own level, as (1 | id) would for people. Unlike the traditional repeated-measures ANOVA, the model keeps the chicks that missed a weighing.',
                           lessonId: '14-4',
                         },
                       },
                       {
                         label: 'Over time, in different groups',
                         example: 'Did engagement rise more for trained employees than for others?',
-                        tech: 'Mixed ANOVA',
+                        tech: 'Traditional mixed ANOVA',
                         next: {
                           kind: 'answer',
                           id: 'time-by-group',
@@ -467,7 +467,7 @@ anova(model)
 emmeans(model, pairwise ~ training | time)`,
                           check:
                             'Data in long format, with time and group (here training) as factors. Residuals with similar spread in each group, and roughly normal in small samples.',
-                          traditional: 'Mixed (split-plot) ANOVA.',
+                          traditional: 'The traditional mixed (split-plot) ANOVA.',
                           note: 'The time:training interaction is usually the question: did the trained employees change differently from the others? In a randomised trial it is the treatment effect. emmeans compares the groups at each time point.',
                           lessonId: '14-4',
                         },
@@ -509,7 +509,7 @@ model <- lmer(y ~ service + (1 | student) + (1 | lecturer), data = ratings)
 summary(model)`,
                           check:
                             'One row per participant per item (here, per rating). Enough participants and enough items, since both are samples. Add random slopes, such as (service | student), when the design supports them.',
-                          traditional: 'Separate by-participant and by-item ANOVAs (F1 and F2), which this model replaces.',
+                          traditional: 'Separate by-participant and by-item traditional ANOVAs (F1 and F2), which this model replaces.',
                           note: 'Both participants and items vary, here students and lecturers, so both get their own random intercept, and the effect of service (a course taught for another department) then generalises across both. Averaging over items first, as F1 analyses did, treats the items as if they were the only ones possible. The first 5000 ratings keep the example quick.',
                           buildsOn: '14-3',
                           further: 'Baayen, Davidson and Bates (2008), Mixed-effects modeling with crossed random effects for subjects and items, Journal of Memory and Language.',
@@ -574,7 +574,7 @@ exp(cbind(OR = coef(model), confint(model)))`,
                           check:
                             'Independent observations, and enough cases of the rarer outcome: a common rule of thumb is at least 10 per estimated coefficient (a factor with k levels uses k − 1). If R warns that fitted probabilities of 0 or 1 occurred, a predictor separates the outcomes perfectly; Firth\'s method, logistf::logistf(), handles that in RStudio.',
                           traditional:
-                            'With one categorical predictor, such as remote, the chi-square test of independence: chisq.test(table(d$left_company, d$remote), correct = FALSE), which matches anova(glm(left_company ~ remote, data = d, family = binomial), test = "Rao").',
+                            'With one categorical predictor, such as remote, the traditional chi-square test of independence: chisq.test(table(d$left_company, d$remote), correct = FALSE), which matches anova(glm(left_company ~ remote, data = d, family = binomial), test = "Rao").',
                           note: 'The coefficients are in log odds. exp() turns them into odds ratios: above 1, the outcome becomes more likely; below 1, less likely.',
                           lessonId: '15-2',
                         },
@@ -582,23 +582,23 @@ exp(cbind(OR = coef(model), confint(model)))`,
                       {
                         label: 'One other category (a cross-table)',
                         example: 'Does the share who leave differ between departments?',
-                        tech: 'Chi-square test',
+                        tech: 'Traditional chi-square test',
                         next: crossTable(),
                       },
                       {
                         label: 'Nothing: compare one percentage with a fixed value',
                         example: 'Do more than half of the students pass?',
-                        tech: 'Binomial test',
+                        tech: 'Traditional binomial test',
                         next: {
                           kind: 'answer',
                           id: 'proportion-vs-value',
-                          model: 'Exact binomial test',
+                          model: 'Traditional exact binomial test',
                           when: 'One yes-or-no variable, and the question is whether the proportion of yes differs from a fixed value, such as 50% or a known pass rate.',
                           rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 successes <- sum(d$left_company == 1)
 binom.test(successes, nrow(d), p = 0.2)`,
                           check: 'Independent cases, each counted once, and no missing values in the outcome (nrow() would count them).',
-                          traditional: 'The large-sample version is prop.test(successes, nrow(d), p = 0.2, correct = FALSE). As a model, an intercept-only logistic regression tests the same value only with an offset: glm(left_company ~ 1, offset = rep(qlogis(0.2), nrow(d)), data = d, family = binomial), whose intercept is the difference in log odds from 20%. Without the offset it tests 50%.',
+                          traditional: 'The traditional large-sample version is prop.test(successes, nrow(d), p = 0.2, correct = FALSE). As a model, an intercept-only logistic regression tests the same value only with an offset: glm(left_company ~ 1, offset = rep(qlogis(0.2), nrow(d)), data = d, family = binomial), whose intercept is the difference in log odds from 20%. Without the offset it tests 50%.',
                           note: 'Here the question is whether the share of employees who left differs from 20%. For your own data, count your own level in place of left_company == 1 and use your own proportion in place of 0.2. The output gives the observed proportion with its exact 95% confidence interval.',
                           lessonId: '09-1',
                         },
@@ -622,7 +622,7 @@ summary(model)
 exp(fixef(model))`,
                     check:
                       'For repeated measurements, long format: one row per person per measurement. Clustered data, such as employees in sites, is already in shape. With few clusters or a rare outcome the model may fail to converge; simplify the random part first.',
-                    traditional: "For one yes-or-no answer at two time points, McNemar's test: mcnemar.test(table(before, after)).",
+                    traditional: "For one yes-or-no answer at two time points, the traditional McNemar test: mcnemar.test(table(before, after)).",
                     note: 'exp() turns the coefficients into odds ratios for people in the same cluster, here the same site, holding its random intercept fixed. These are usually further from 1 than the population-average odds ratios an ordinary logistic regression gives.',
                     buildsOn: '14-2',
                     further: 'Gelman and Hill, Data Analysis Using Regression and Multilevel/Hierarchical Models.',
@@ -666,20 +666,20 @@ exp(cbind(OR = coef(model), confint(model)))`,
                 {
                   label: 'Do groups differ, or do two things go together?',
                   example: 'Do the departments differ in their satisfaction rating?',
-                  tech: 'Rank tests: Mann-Whitney, Kruskal-Wallis, Spearman',
+                  tech: 'Traditional rank tests: Mann-Whitney, Kruskal-Wallis, Spearman',
                   next: {
                     kind: 'answer',
                     id: 'rank-tests',
-                    model: 'Rank-based tests',
+                    model: 'Traditional rank-based tests',
                     when: 'An ordered outcome, or a numeric one that is clearly skewed or has extreme outliers, and the question is whether groups differ or whether two variables go together.',
                     rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 wilcox.test(wellbeing ~ remote, data = d)
 kruskal.test(wellbeing ~ department, data = d)
 cor.test(~ autonomy + wellbeing, data = d, method = "spearman", exact = FALSE)`,
                     check:
-                      'Independent cases, each counted once. The group tests compare whole distributions; read them as a difference in medians only when the groups have a similar shape and spread. When the same people are measured more than once, use a test built on within-person comparisons instead: the Wilcoxon signed-rank test (which ranks each person\'s difference) for two measurements, wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE), and the Friedman test (which ranks within each person) for three or more.',
+                      'Independent cases, each counted once. The group tests compare whole distributions; read them as a difference in medians only when the groups have a similar shape and spread. When the same people are measured more than once, use a test built on within-person comparisons instead: the traditional Wilcoxon signed-rank test (which ranks each person\'s difference) for two measurements, wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE), and the traditional Friedman test (which ranks within each person) for three or more.',
                     traditional:
-                      "The Mann-Whitney test, the Kruskal-Wallis test and Spearman's rank correlation. After a significant Kruskal-Wallis test, pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = \"holm\", exact = FALSE) compares every pair of groups.",
+                      "The traditional Mann-Whitney test, Kruskal-Wallis test and Spearman rank correlation test. After a significant traditional Kruskal-Wallis test, pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = \"holm\", exact = FALSE) compares every pair of groups.",
                     note: 'wilcox.test() compares two groups, kruskal.test() three or more, and cor.test() with method = "spearman" gives rho, the correlation between the ranks; method = "kendall" gives Kendall\'s tau instead. These tests work on ranks, so report each group\'s median alongside them. To add predictors or covariates, use ordinal regression.',
                     lessonId: '12-4',
                   },
@@ -742,17 +742,17 @@ tidy(model, conf.int = TRUE, exponentiate = TRUE)`,
                 {
                   label: 'Linked to one other category',
                   example: 'Is the way people travel to work linked to their department?',
-                  tech: 'Chi-square test of independence',
+                  tech: 'Traditional chi-square test of independence',
                   next: crossTable(),
                 },
                 {
                   label: 'Do the shares match what you expect?',
                   example: 'Are the four entrances of the building used equally often?',
-                  tech: 'Chi-square goodness of fit',
+                  tech: 'Traditional chi-square goodness of fit',
                   next: {
                     kind: 'answer',
                     id: 'goodness-of-fit',
-                    model: 'Chi-square goodness-of-fit test',
+                    model: 'Traditional chi-square goodness-of-fit test',
                     when: 'One categorical variable, and the question is whether its categories occur in the proportions you expected, such as equal shares or last year\'s figures.',
                     rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 counts <- table(d$department)
@@ -850,16 +850,16 @@ summary(model)`,
             next: {
               kind: 'question',
               text: 'What do you want to know?',
-              help: 'Some people have not had the event yet when the study ends. These models use that information; a t-test on the times would not.',
+              help: 'Some people have not had the event yet when the study ends. These models use that information; a traditional t-test on the times would not.',
               options: [
                 {
                   label: 'Do groups differ in how long it takes?',
                   example: 'Do remote workers stay longer than office workers?',
-                  tech: 'Kaplan-Meier, log-rank test',
+                  tech: 'Kaplan-Meier, traditional log-rank test',
                   next: {
                     kind: 'answer',
                     id: 'survival-curves',
-                    model: 'Kaplan-Meier estimate and log-rank test',
+                    model: 'Kaplan-Meier estimate and traditional log-rank test',
                     when: 'Time to an event, such as leaving a job or relapse, compared between groups, with some cases censored.',
                     rCode: `library(survival)
 d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
@@ -867,9 +867,9 @@ fit <- survfit(Surv(tenure_years, left_company) ~ remote, data = d)
 summary(fit)$table
 survdiff(Surv(tenure_years, left_company) ~ remote, data = d)`,
                     check:
-                      'Censoring unrelated to the outcome: cases whose follow-up ends early (censored, here still employed when the data were collected) are no more or less likely to have the event than cases followed for longer. The log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
-                    traditional: 'The log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "breslow"))$sctest.',
-                    note: 'Surv(tenure_years, left_company) pairs each employee\'s years at the company with whether they left (1) or still work there, which makes them censored (0). summary(fit)$table gives each group\'s median time to the event; survdiff() is the log-rank test; plot(fit) draws the curves.',
+                      'Censoring unrelated to the outcome: cases whose follow-up ends early (censored, here still employed when the data were collected) are no more or less likely to have the event than cases followed for longer. The traditional log-rank test has most power when one group\'s risk is a constant multiple of the other\'s; when the curves cross it can miss a real difference.',
+                    traditional: 'The traditional log-rank test is the score test of a Cox model with the group as its only predictor: summary(coxph(Surv(tenure_years, left_company) ~ remote, data = d, ties = "breslow"))$sctest.',
+                    note: 'Surv(tenure_years, left_company) pairs each employee\'s years at the company with whether they left (1) or still work there, which makes them censored (0). summary(fit)$table gives each group\'s median time to the event; survdiff() is the traditional log-rank test; plot(fit) draws the curves.',
                     further: 'Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, and the survival package\'s vignettes.',
                   },
                 },
@@ -933,7 +933,7 @@ fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000)
 parameterEstimates(fit, boot.ci.type = "perc")`,
               check:
                 'Mediation is a causal claim: the predictor comes before the mediator, and the mediator before the outcome, ideally measured at different times. With data from one moment, say the pattern is consistent with mediation rather than that it shows it.',
-              traditional: 'Mediation analysis, as in PROCESS model 4. The older Baron and Kenny steps and the Sobel test are no longer recommended.',
+              traditional: 'Mediation analysis, as in PROCESS model 4. The older Baron and Kenny steps and the traditional Sobel test are no longer recommended.',
               note: 'lavaan needs numbers, so trained codes training as 1 for Yes and 0 for No. The indirect effect a × b is the part of the effect that runs through the mediator; it is supported when its bootstrap confidence interval excludes 0. c is the direct effect that remains, and total is their sum.',
               lessonId: '17-1',
             },
@@ -1229,7 +1229,7 @@ qbeta(c(0.025, 0.5, 0.975), 1 + left, 1 + stayed)
 pbeta(0.2, 1 + left, 1 + stayed, lower.tail = FALSE)`,
               check:
                 'Independent cases, each counted once, and no missing values in the outcome. The 1 + in each shape is a flat Beta(1, 1) prior; with fewer than about 30 cases, show that the answer holds under another reasonable prior too.',
-              traditional: 'The exact binomial test and its confidence interval: binom.test(left, left + stayed, p = 0.2).',
+              traditional: 'The traditional exact binomial test and its confidence interval: binom.test(left, left + stayed, p = 0.2).',
               note: 'Here the proportion is the share of employees who left. The qbeta() line gives the posterior median with a 95% credible interval around it; the pbeta() line is the posterior probability that the share is above 20%. Put the value your own claim is about in place of 0.2.',
               lessonId: '16-2',
             },
@@ -1257,11 +1257,11 @@ c(BF10 = bf10, BF01 = 1 / bf10)`,
           {
             label: 'Evidence about two groups',
             example: 'Is there evidence that remote and office workers do not differ?',
-            tech: 'Bayesian t-test',
+            tech: 'Bayesian version of the traditional t-test',
             next: {
               kind: 'answer',
               id: 'bayes-t-test',
-              model: 'Bayesian t-test (default Bayes factor)',
+              model: 'Bayesian two-group comparison (default Bayes factor)',
               when: 'Two independent groups and a numeric outcome, and you want the evidence for a difference or for no difference, as psychology journals often ask for.',
               rCode: `library(BayesFactor)
 d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
@@ -1269,8 +1269,8 @@ bf <- ttestBF(formula = wellbeing ~ remote, data = d)
 bf
 1 / bf`,
               check:
-                'The same as for the t-test: independent scores, roughly normal within each group. The default prior on the standardised difference is a Cauchy with scale 0.707 ("medium"); rerun with rscale = "wide" to show the conclusion does not hang on it.',
-              traditional: 'The independent-samples t-test: t.test(wellbeing ~ remote, data = d, var.equal = TRUE).',
+                'The same as for the traditional t-test: independent scores, roughly normal within each group. The default prior on the standardised difference is a Cauchy with scale 0.707 ("medium"); rerun with rscale = "wide" to show the conclusion does not hang on it.',
+              traditional: 'The traditional independent-samples t-test: t.test(wellbeing ~ remote, data = d, var.equal = TRUE).',
               note: 'The printout is BF10, the evidence for a difference against none; 1 / bf gives BF01, the evidence for no difference. posterior(bf, iterations = 10000) draws plausible values of the difference itself.',
               buildsOn: '16-3',
               further: 'The BayesFactor package manual by Richard Morey (free online), and the free program JASP for the same analysis through menus.',
@@ -1307,7 +1307,7 @@ function crossTable(): Answer {
   return {
     kind: 'answer',
     id: 'cross-table',
-    model: 'Chi-square test of independence',
+    model: 'Traditional chi-square test of independence',
     when: 'Two categorical variables, such as department and whether people left, and the question is whether they are related.',
     rCode: `d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 counts <- table(d$left_company, d$department)
@@ -1315,7 +1315,7 @@ counts
 chisq.test(counts, correct = FALSE)
 prop.table(counts, margin = 2)`,
     check:
-      "Each case counted once, in one cell. Expected counts of at least 5 in nearly every cell; chisq.test() warns when they are lower, and then Fisher's exact test is the alternative: fisher.test(counts).",
+      "Each case counted once, in one cell. Expected counts of at least 5 in nearly every cell; chisq.test() warns when they are lower, and then the traditional Fisher exact test is the alternative: fisher.test(counts).",
     note: 'A significant result means the outcome is distributed differently across the categories of the predictor. The last line shows how: the proportion of each outcome within each predictor category. For a yes-or-no outcome, logistic regression with this one predictor gives the same chi-square with anova(glm(left_company ~ department, data = d, family = binomial), test = "Rao"), and extends to more predictors.',
     lessonId: '09-3',
   };

@@ -54,11 +54,11 @@ describe('sample size page', () => {
     expect(question()).toBe('The sample you need');
     // pwr.t.test(d = 0.3, power = 0.8) gives n = 175.4 per group.
     expect(report()).toContain('352 participants (176 per group)');
-    expect(report()).toContain('d = 0.30 with 80% power in a two-sided independent-samples t-test at α = .05');
+    expect(report()).toContain('d = 0.30 with 80% power in a two-sided test of the group difference (the traditional independent-samples t-test) at α = .05');
     // 176 / 0.9 rounds up to 196 per group.
     expect(report()).toContain('we will recruit 392 participants');
     expect(screen.getByText(/pwr.t.test\(d = 0.3, sig.level = 0.05, power = 0.8/)).toBeTruthy();
-    expect(screen.getByText(/is the independent-samples t-test \(Lesson 12-1\)/)).toBeTruthy();
+    expect(screen.getByText(/is the same as the traditional independent-samples t-test \(Lesson 12-1\)/)).toBeTruthy();
     expect(trail()).toEqual(['Compare two separate groups', 'Plan a new study', 'My own guess of the scores', 'd = 0.30', '80% power', 'α = .05', 'Two-sided', '10% dropout']);
   });
 
@@ -215,7 +215,7 @@ describe('sample size page', () => {
     await pick(/^None/);
     // λ = N·f² with df2 = N − 2: 128 people, 64 per group.
     expect(report()).toContain('128 participants (64 per group, each measured in both conditions) are needed to detect an effect of f = 0.25 (with a correlation of r = .50 between conditions)');
-    expect(report()).toContain('the F test for the interaction in a 2 × 2 mixed ANOVA');
+    expect(report()).toContain('the F test for the interaction in a 2 × 2 mixed design, one factor between and one within people (a traditional mixed ANOVA)');
     expect(trail()).toContain('One factor between, one within');
   });
 

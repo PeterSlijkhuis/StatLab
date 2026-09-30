@@ -67,9 +67,9 @@ const WHICH_TEXT: Record<Which, string> = {
   'main-between': 'main effect of the between-person factor',
 };
 const LAYOUT_TEXT: Record<Layout, string> = {
-  between: 'a 2 × 2 between-subjects ANOVA',
-  within: 'a 2 × 2 within-subjects (repeated-measures) ANOVA',
-  mixed: 'a 2 × 2 mixed ANOVA (one factor between, one within people)',
+  between: 'a 2 × 2 between-subjects design (a traditional two-way ANOVA)',
+  within: 'a 2 × 2 within-subjects design (a traditional repeated-measures ANOVA)',
+  mixed: 'a 2 × 2 mixed design, one factor between and one within people (a traditional mixed ANOVA)',
 };
 
 function testText(design: Design, sides: 1 | 2, plan?: Plan): string {
@@ -214,8 +214,8 @@ const INPUT_TEXT: Partial<Record<StepId, { question: string; help: string }>> = 
   n: { question: 'How many people will you have?', help: 'Count the people you expect to have complete data for, not everyone you invite.' },
   k: { question: 'How many groups will you compare?', help: 'For example 3 for three training programmes. The plan assumes groups of about equal size.' },
   predictors: { question: 'How many predictors will the model have?', help: 'Count every term in the model, control variables included. A numeric predictor counts once; a categorical predictor with g categories counts g − 1 times, because R turns it into g − 1 dummy variables (Lesson 12-2).' },
-  added: { question: 'How many of those predictors are you testing?', help: 'Usually 1: the predictor your question is about, with the others as controls. With one tested predictor, this is the same test as that predictor\'s t-test in summary().' },
-  table: { question: 'How big is your table of counts?', help: 'Rows are the categories of one variable, columns those of the other: department (4) by remote work (2) is a 4 × 2 table. For a goodness-of-fit test of one variable, enter its number of categories as rows and 2 as columns; that gives the right degrees of freedom.' },
+  added: { question: 'How many of those predictors are you testing?', help: 'Usually 1: the predictor your question is about, with the others as controls. With one tested predictor, this is the same test as that predictor\'s p-value in summary().' },
+  table: { question: 'How big is your table of counts?', help: 'Rows are the categories of one variable, columns those of the other: department (4) by remote work (2) is a 4 × 2 table. For a traditional goodness-of-fit test of one variable, enter its number of categories as rows and 2 as columns; that gives the right degrees of freedom.' },
   p1: { question: 'What percentage says "yes" in the first group?', help: 'The comparison or control group. Take it from records, earlier studies or national figures. The same difference in percentage points is harder to detect near 50% than near 0% or 100%.' },
   nstim: { question: 'How many stimuli per condition?', help: 'For example 4 pictures in every condition. If every condition uses the same stimuli, count them once.' },
   tests: { question: 'How many tests will you correct for?', help: 'Bonferroni divides α by the number of tests you correct for together, so each test needs a smaller p-value, and the study needs more people.' },
@@ -398,7 +398,7 @@ export default function SampleSize() {
   const input = step === 'result' ? null : inputStep(step, answers, design);
   if (input) {
     const text = step === 'k' && design.id === 'repeated'
-      ? { question: 'How many conditions will each person do?', help: 'Count the conditions every participant goes through, for example 4. With 2 conditions and one score each, this is the paired t-test.' }
+      ? { question: 'How many conditions will each person do?', help: 'Count the conditions every participant goes through, for example 4. With 2 conditions and one score each, this is the traditional paired t-test.' }
       : INPUT_TEXT[step as StepId]!;
     question = text.question;
     help = text.help;
