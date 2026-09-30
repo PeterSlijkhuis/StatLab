@@ -121,6 +121,23 @@ describe('detectable effect matches pwr and power.prop.test', () => {
   }
 });
 
+describe('repeated measures match G*Power', () => {
+  // G*Power 3.1, "ANOVA: repeated measures, within factors", 1 group, ε = 1:
+  // f = .25, r = .5, α = .05, 80% power gives 28 people for 3 measurements and 24 for 4.
+  const plan = (k: number): Plan => ({ design: 'repeated', effect: 0.25, alpha: 0.05, sides: 2, k, rho: 0.5 });
+  test('sample sizes', () => {
+    expect(solveN(plan(3), 0.8)).toBe(28);
+    expect(solveN(plan(4), 0.8)).toBe(24);
+  });
+  test('two conditions give the paired t-test: f = d / 2 and dz = d / √(2(1 − r))', () => {
+    expect(solveN(plan(2), 0.8)).toBe(solveN({ design: 'paired', effect: 0.5, alpha: 0.05, sides: 2 }, 0.8));
+  });
+  test('power, from R\'s pf (and within simulation error of aov with Error(id/c))', () => {
+    expect(powerAt(plan(4), 20)).toBeCloseTo(0.7288426, 6);
+    expect(powerAt({ design: 'repeated', effect: 0.3, alpha: 0.05, sides: 2, k: 3, rho: 0.7 }, 15)).toBeCloseTo(0.8858583, 6);
+  });
+});
+
 describe('planning helpers', () => {
   test('the solved n reaches the power and one fewer does not', () => {
     const plan: Plan = { design: 'two-groups', effect: 0.5, alpha: 0.05, sides: 2 };

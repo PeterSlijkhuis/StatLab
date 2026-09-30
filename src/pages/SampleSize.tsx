@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { Link } from 'react-router-dom';
 import AvatarTip from '../components/AvatarTip';
 import { pnorm } from '../stats/distributions';
-import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, totalN, type DesignId, type Plan } from '../stats/power';
+import { HAS_SIDES, minN, PER_GROUP, powerAt, rCode, solveEffect, solveN, stimulusSimCode, totalN, type DesignId, type Plan } from '../stats/power';
 import { DESIGNS, designById, effectInputs, presets, type Design, type EffectRoute } from './sampleSizeDesigns';
 import './ModelChooser.css';
 import './SampleSize.css';
@@ -29,6 +29,8 @@ function meaning(design: Design, effect: number, p1: number): string {
       return `If change scores are normal, about ${pct(pnorm(effect))} of people change in the expected direction.`;
     case 'one-sample':
       return `If scores are normal, about ${pct(pnorm(effect))} of people score on the expected side of the fixed value.`;
+    case 'repeated':
+      return `Within one condition, the conditions would explain ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance in the scores (η², leaving out the differences between people).`;
     case 'anova':
       return `The groups explain ${pct(effect ** 2 / (1 + effect ** 2), 1)} of the variance in the outcome (η²).`;
     case 'correlation':
@@ -57,10 +59,12 @@ function testText(design: Design, sides: 1 | 2): string {
 
 function effectText(design: Design, plan: Plan, value: number): string {
   if (design.id === 'proportions') return `a difference between ${pct(plan.p1 ?? 0, 1)} and ${pct(value, 1)}`;
+  if (design.id === 'repeated') return `an effect of f = ${formatEffect(design, value)} (with a correlation of r = ${noZero((plan.rho ?? 0.5).toFixed(2))} between conditions)`;
   return `an effect of ${design.symbol} = ${formatEffect(design, value)}`;
 }
 
 function tool(design: Design): string {
+  if (design.id === 'repeated') return 'the formula G*Power uses for repeated measures (Faul et al., 2007), computed in R';
   return design.id === 'proportions' ? 'the power.prop.test() function in R' : 'the pwr package in R (Champely, 2020)';
 }
 
@@ -99,13 +103,16 @@ function PowerCurve({ points, xLabel, target, mark, markLabel }: {
   );
 }
 
-type StepId = 'design' | 'mode' | 'n' | 'k' | 'predictors' | 'added' | 'table' | 'p1' | 'route' | 'effect' | 'power' | 'alpha' | 'tests' | 'sides' | 'dropout';
+type StepId = 'design' | 'mode' | 'n' | 'k' | 'rho' | 'stimuli' | 'nstim' | 'predictors' | 'added' | 'table' | 'p1' | 'route' | 'effect' | 'power' | 'alpha' | 'tests' | 'sides' | 'dropout';
 type AlphaChoice = 'standard' | 'strict' | 'bonferroni';
 
 type Answers = {
   design?: DesignId;
   mode?: Mode;
   route?: EffectRoute;
+  rho?: number;
+  /** Several stimuli (pictures, words, items) per condition. */
+  stimuli?: boolean;
   effect?: number;
   power?: number;
   alpha?: AlphaChoice;
@@ -115,7 +122,7 @@ type Answers = {
   text: Record<string, string>;
 };
 
-const START: Answers = { text: { n: '100', k: '3', predictors: '3', added: '1', rows: '2', cols: '2', p1: '30', tests: '3' } };
+const START: Answers = { text: { n: '100', k: '3', predictors: '3', added: '1', rows: '2', cols: '2', p1: '30', tests: '3', nstim: '4' } };
 
 function stepsFor(a: Answers): StepId[] {
   const steps: StepId[] = ['design'];
@@ -123,7 +130,11 @@ function stepsFor(a: Answers): StepId[] {
   steps.push('mode');
   if (!a.mode) return steps;
   if (a.mode === 'effect') steps.push('n');
-  if (a.design === 'anova') steps.push('k');
+  if (a.design === 'anova' || a.design === 'repeated') steps.push('k');
+  if (a.design === 'repeated') {
+    steps.push('rho', 'stimuli');
+    if (a.stimuli) steps.push('nstim');
+  }
   if (a.design === 'regression' || a.design === 'r2-change') steps.push('predictors');
   if (a.design === 'r2-change') steps.push('added');
   if (a.design === 'chi-square') steps.push('table');
@@ -152,7 +163,7 @@ function inputStep(step: StepId, a: Answers, design: Design): { fields: { key: s
     case 'n':
       return { fields: [{ key: 'n', label: `Number of ${unitLabel(design)}` }], error: whole('n', 2, 1_000_000) ? undefined : 'Enter a whole number of people.' };
     case 'k':
-      return { fields: [{ key: 'k', label: 'Number of groups' }], error: whole('k', 2, 50) ? undefined : 'Enter a whole number from 2 to 50.' };
+      return { fields: [{ key: 'k', label: design.id === 'repeated' ? 'Number of conditions' : 'Number of groups' }], error: whole('k', 2, 50) ? undefined : 'Enter a whole number from 2 to 50.' };
     case 'predictors':
       return { fields: [{ key: 'predictors', label: 'Number of predictors' }], error: whole('predictors', 1, 100) ? undefined : 'Enter a whole number from 1 to 100.' };
     case 'added':
@@ -164,6 +175,8 @@ function inputStep(step: StepId, a: Answers, design: Design): { fields: { key: s
       };
     case 'p1':
       return { fields: [{ key: 'p1', label: 'Percentage "yes" in the first group' }], error: parse(t.p1) > 0 && parse(t.p1) < 100 ? undefined : 'Enter a percentage between 0 and 100.' };
+    case 'nstim':
+      return { fields: [{ key: 'nstim', label: 'Stimuli per condition' }], error: whole('nstim', 1, 500) ? undefined : 'Enter a whole number from 1 to 500.' };
     case 'tests':
       return { fields: [{ key: 'tests', label: 'Number of tests' }], error: whole('tests', 2, 100) ? undefined : 'Enter a whole number from 2 to 100.' };
     default:
@@ -178,6 +191,7 @@ const INPUT_TEXT: Partial<Record<StepId, { question: string; help: string }>> = 
   added: { question: 'How many of those predictors are you testing?', help: 'Usually 1: the predictor your question is about, with the others as controls. With one tested predictor, this is the same test as that predictor\'s t-test in summary().' },
   table: { question: 'How big is your table of counts?', help: 'Rows are the categories of one variable, columns those of the other: department (4) by remote work (2) is a 4 × 2 table. For a goodness-of-fit test of one variable, enter its number of categories as rows and 2 as columns; that gives the right degrees of freedom.' },
   p1: { question: 'What percentage says "yes" in the first group?', help: 'The comparison or control group. Take it from records, earlier studies or national figures. The same difference in percentage points is harder to detect near 50% than near 0% or 100%.' },
+  nstim: { question: 'How many stimuli per condition?', help: 'For example 4 pictures in every condition. If every condition uses the same stimuli, count them once.' },
   tests: { question: 'How many tests will you correct for?', help: 'Bonferroni divides α by the number of tests you correct for together, so each test needs a smaller p-value, and the study needs more people.' },
 };
 
@@ -209,7 +223,7 @@ function Choice<T>({ options, chosen, onPick }: { options: Option<T>[]; chosen: 
 export default function SampleSize() {
   const [answers, setAnswers] = useState<Answers>(START);
   const [at, setAt] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
   const moveFocus = useRef(false);
   const ids = useId();
@@ -252,6 +266,7 @@ export default function SampleSize() {
       added: parse(t.added),
       df: (parse(t.rows) - 1) * (parse(t.cols) - 1),
       p1: parse(t.p1) / 100,
+      rho: a.rho,
     };
   }, [answers]);
 
@@ -289,15 +304,20 @@ export default function SampleSize() {
   }, [step, plan, answers.mode, answers.dropout, answers.text.n, power]);
 
   const code = result && (result.kind === 'n' || result.kind === 'effect') ? rCode(result.plan, answers.mode ?? 'n', power, result.kind === 'effect' ? result.n : undefined) : '';
-  useEffect(() => setCopied(false), [code]);
-  async function copy() {
+  useEffect(() => setCopied(''), [code]);
+  async function copy(text: string) {
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
+      await navigator.clipboard.writeText(text);
+      setCopied(text);
     } catch {
       // No clipboard permission: the code is on screen to copy by hand.
     }
   }
+
+  const stimuli = design.id === 'repeated' && answers.stimuli && result && (result.kind === 'n' || result.kind === 'effect');
+  const simCode = stimuli
+    ? stimulusSimCode(result.n, parse(answers.text.k), parse(answers.text.nstim), result.kind === 'n' ? result.plan.effect : result.effect)
+    : '';
 
   /** The trail's label for an answered step. */
   function summary(s: StepId): string {
@@ -306,7 +326,10 @@ export default function SampleSize() {
       case 'design': return design.title;
       case 'mode': return answers.mode === 'n' ? 'Plan a new study' : 'Sample size is fixed';
       case 'n': return `${t.n} ${unitLabel(design)}`;
-      case 'k': return `${t.k} groups`;
+      case 'k': return `${t.k} ${design.id === 'repeated' ? 'conditions' : 'groups'}`;
+      case 'rho': return `r = ${noZero((answers.rho ?? 0.5).toFixed(2))} between conditions`;
+      case 'stimuli': return answers.stimuli ? 'Several stimuli per condition' : 'One score per condition';
+      case 'nstim': return `${t.nstim} stimuli per condition`;
       case 'predictors': return `${t.predictors} predictors`;
       case 'added': return `${t.added} tested`;
       case 'table': return `${t.rows} × ${t.cols} table`;
@@ -328,8 +351,11 @@ export default function SampleSize() {
 
   const input = step === 'result' ? null : inputStep(step, answers, design);
   if (input) {
-    question = INPUT_TEXT[step as StepId]!.question;
-    help = INPUT_TEXT[step as StepId]!.help;
+    const text = step === 'k' && design.id === 'repeated'
+      ? { question: 'How many conditions will each person do?', help: 'Count the conditions every participant goes through, for example 4. With 2 conditions and one score each, this is the paired t-test.' }
+      : INPUT_TEXT[step as StepId]!;
+    question = text.question;
+    help = text.help;
     body = (
       <form className="ss-input-step" onSubmit={(e) => { e.preventDefault(); if (!input.error) answer({}); }}>
         <div className="ss-fields">
@@ -348,7 +374,7 @@ export default function SampleSize() {
     );
   } else if (step === 'design') {
     question = 'What will you test?';
-    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. Mixed models, logistic regression and mediation are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does, or with the simr package for mixed models.</>;
+    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. Repeated measures, with or without several stimuli per condition, are under "Measure the same people in several conditions". Logistic regression, mediation and models with more random factors are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does.</>;
     body = (
       <Choice
         options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: `e.g. ${d.example} Analysis: ${d.test}.` }))}
@@ -411,7 +437,7 @@ export default function SampleSize() {
     const route = design.id === 'proportions' ? 'matter' : (answers.route as 'matter' | 'research');
     const { fields, compute } = effectInputs(design.id, route);
     const values = Object.fromEntries(Object.entries(answers.text).map(([k, v]) => [k, parse(v)]));
-    const missing = fields.some((f) => !f.optional && Number.isNaN(values[f.key]));
+    const missing = fields.some((f) => !f.optional && (answers.text[f.key] ?? '').trim() === '');
     const effect = missing ? NaN : compute(values, answers.text);
     const p1 = parse(answers.text.p1) / 100;
     let error: string | undefined;
@@ -444,6 +470,33 @@ export default function SampleSize() {
         {error && <p className="ss-error">{error}</p>}
         <button type="submit" className="button-primary" disabled={missing || !!error}>Next</button>
       </form>
+    );
+  } else if (step === 'rho') {
+    question = 'How strongly do a person\'s scores in different conditions go together?';
+    help = 'People who score high in one condition usually score high in the others too. The stronger that correlation, the fewer people you need, because every person is compared with themselves. Take it from a pilot or an earlier study with the same measure if you can.';
+    body = (
+      <Choice
+        options={[
+          { value: 0.3, label: 'r = .30', note: 'Weak: noisy measures, or conditions far apart in time or very different from each other.' },
+          { value: 0.5, label: 'r = .50', note: 'The cautious choice when you do not know, and G*Power\'s default.', tag: 'Recommended if you do not know' },
+          { value: 0.7, label: 'r = .70', note: 'Strong: a reliable measure, or scores averaged over many trials. Only with evidence, because it lowers the sample a lot.' },
+        ]}
+        chosen={answers.rho}
+        onPick={(value) => answer({ rho: value, text: { ...answers.text, rho: String(value) } })}
+      />
+    );
+  } else if (step === 'stimuli') {
+    question = 'Does each condition use several stimuli?';
+    help = 'Stimuli are the things people respond to: pictures, words, sentences, video clips or vignettes. If you want your conclusion to hold for stimuli like yours, and not only for these few, the stimuli are a sample too, just like the people.';
+    body = (
+      <Choice
+        options={[
+          { value: false, label: 'No, one score per condition', note: 'For example one questionnaire score per condition, or the stimuli are exactly what you want to draw conclusions about.' },
+          { value: true, label: 'Yes, several stimuli per condition', note: 'For example 4 pictures in each of 4 conditions. The page gives the minimum number of people and a simulation for the rest.' },
+        ]}
+        chosen={answers.stimuli}
+        onPick={(value) => answer({ stimuli: value })}
+      />
     );
   } else if (step === 'power') {
     question = 'How much power do you want?';
@@ -571,6 +624,11 @@ export default function SampleSize() {
                   You need {peopleText(design, result.plan, result.n)} with complete data. With that many, the power is {pct(result.achieved, 1)}.
                   {result.drop > 0 && <> To allow for {pct(result.drop)} dropout, recruit {peopleText(design, result.plan, result.recruitUnit)}.</>}
                 </p>
+                {stimuli && (
+                  <p className="ss-note ss-warning">
+                    With several stimuli per condition, this is the <strong>minimum</strong>: it treats your {answers.text.nstim} stimuli as the only ones that matter. See <a href="#ss-stimuli">Your stimuli</a> below.
+                  </p>
+                )}
                 <h4>If the true effect is smaller</h4>
                 <table className="ss-table">
                   <thead><tr><th scope="col">True effect</th><th scope="col">Complete cases needed</th></tr></thead>
@@ -608,6 +666,11 @@ export default function SampleSize() {
                   for {design.id === 'proportions' ? `a difference between ${pct(result.plan.p1 ?? 0, 1)} and ${pct(result.effect, 1)} or larger` : `effects of ${design.symbol} = ${formatEffect(design, result.effect)} or larger`}.
                   Smaller effects may well go unnoticed, so a non-significant result says little about them.
                 </p>
+                {stimuli && (
+                  <p className="ss-note ss-warning">
+                    With several stimuli per condition, this effect is <strong>optimistic</strong>: it treats your {answers.text.nstim} stimuli as the only ones that matter. See <a href="#ss-stimuli">Your stimuli</a> below.
+                  </p>
+                )}
                 {design.id !== 'proportions' && <p className="ss-meaning">{meaning(design, result.effect, 0)}</p>}
                 <PowerCurve points={result.points} xLabel={design.id === 'proportions' ? 'Proportion in the second group' : `Effect size (${design.symbol})`}
                   target={power} mark={[result.effect, power]} markLabel={`${design.symbol} = ${formatEffect(design, result.effect)}`} />
@@ -623,14 +686,45 @@ export default function SampleSize() {
             {code && (
               <>
                 <h4>Check it in R</h4>
-                <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
+                <p>The same calculation in R. It runs in the <Link to="/workspace">R Workspace</Link>; {design.id === 'proportions' || design.id === 'repeated' ? 'it needs only base R' : 'the first run downloads the pwr package'}.</p>
                 <div className="model-chooser-code">
                   <pre tabIndex={0} aria-label="R code"><code>{code}</code></pre>
-                  <button type="button" className="button-secondary" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy code'}</button>
+                  <button type="button" className="button-secondary" onClick={() => void copy(code)}>{copied === code ? 'Copied' : 'Copy code'}</button>
                 </div>
-                {answers.mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && (
+                {answers.mode === 'n' && design.id !== 'regression' && design.id !== 'r2-change' && design.id !== 'repeated' && (
                   <p className="ss-note">R reports n unrounded{PER_GROUP[design.id] ? ' and per group' : ''}; round it up to whole people.</p>
                 )}
+              </>
+            )}
+
+            {stimuli && (
+              <>
+                <h4 id="ss-stimuli">Your stimuli</h4>
+                <p>
+                  The formula above averages each person's scores over the stimuli in a condition. That ignores that some stimuli are easier or
+                  react more strongly to a condition than others. When stimuli really differ, a test on those averages finds effects too often,
+                  and the true power is lower than the page says (Judd, Westfall &amp; Kenny, 2012).
+                </p>
+                <p>
+                  With few stimuli, their number limits power more than the number of people: past some point, adding people barely helps,
+                  while adding stimuli does (Westfall, Kenny &amp; Judd, 2014). With {answers.text.nstim} stimuli per condition, adding stimuli is
+                  often the cheapest way to more power.
+                </p>
+                <p>
+                  The honest plan is a simulation: make up data that look like your study many times, analyse each with the mixed model you will
+                  use, and count how often the effect is significant. The script below does that. Its standard deviations are guesses: replace them
+                  with estimates from a pilot or an earlier study, then change the number of people or stimuli until the power reaches {pct(power)}.
+                  In the browser it takes a few minutes.
+                </p>
+                <div className="model-chooser-code">
+                  <pre tabIndex={0} aria-label="R simulation code"><code>{simCode}</code></pre>
+                  <button type="button" className="button-secondary" onClick={() => void copy(simCode)}>{copied === simCode ? 'Copied' : 'Copy code'}</button>
+                </div>
+                <p className="ss-note">
+                  Without pilot data, the free PANGEA app by Jake Westfall (
+                  <a href="https://jakewestfall.shinyapps.io/pangea/" target="_blank" rel="noreferrer">jakewestfall.shinyapps.io/pangea</a>)
+                  plans this design from standardised guesses.
+                </p>
               </>
             )}
 

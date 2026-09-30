@@ -10,6 +10,7 @@ import { pchisq, pf, pnorm, pt, qchisqUpper, qfUpper, qnormUpper, qtUpper } from
 export type DesignId =
   | 'two-groups'
   | 'paired'
+  | 'repeated'
   | 'one-sample'
   | 'anova'
   | 'correlation'
@@ -35,12 +36,15 @@ export type Plan = {
   df?: number;
   /** The first group's proportion (proportions). */
   p1?: number;
+  /** Correlation between a person's scores in different conditions (repeated). */
+  rho?: number;
 };
 
 /** Whether n counts people per group (or pairs), or everyone in the study. */
 export const PER_GROUP: Record<DesignId, boolean> = {
   'two-groups': true,
   paired: false,
+  repeated: false,
   'one-sample': false,
   anova: true,
   correlation: false,
@@ -54,6 +58,7 @@ export const PER_GROUP: Record<DesignId, boolean> = {
 export const HAS_SIDES: Record<DesignId, boolean> = {
   'two-groups': true,
   paired: true,
+  repeated: false,
   'one-sample': true,
   anova: false,
   correlation: true,
@@ -104,6 +109,11 @@ export function powerAt(plan: Plan, n: number): number {
     case 'anova': {
       const k = plan.k ?? 3;
       return fPower(k - 1, (n - 1) * k, k * n * effect ** 2, alpha);
+    }
+    case 'repeated': {
+      // G*Power's "ANOVA: repeated measures, within factors" with sphericity (ε = 1).
+      const k = plan.k ?? 3;
+      return fPower(k - 1, (n - 1) * (k - 1), (n * k * effect ** 2) / (1 - (plan.rho ?? 0.5)), alpha);
     }
     case 'regression':
     case 'r2-change': {
@@ -223,6 +233,12 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
       const size = e ? `f = ${num(plan.effect)}` : `n = ${n}`;
       return `library(pwr)\npwr.anova.test(k = ${plan.k ?? 3}, ${size}, ${a}, ${pw})`;
     }
+    case 'repeated': {
+      const head = `# Repeated-measures ANOVA, assuming sphericity (G*Power's formula)\nk <- ${plan.k ?? 3}; r <- ${num(plan.rho ?? 0.5)}; alpha <- ${num(plan.alpha)}; target <- ${num(target)}\npower_at <- function(n, f) {\n  df1 <- k - 1; df2 <- (n - 1) * (k - 1)\n  1 - pf(qf(1 - alpha, df1, df2), df1, df2, ncp = n * k * f^2 / (1 - r))\n}\n`;
+      return e
+        ? `${head}n <- 2\nwhile (power_at(n, ${num(plan.effect)}) < target) n <- n + 1\nn`
+        : `${head}uniroot(function(f) power_at(${n}, f) - target, c(1e-6, 10), tol = 1e-10)$root`;
+    }
     case 'correlation': {
       const size = e ? `r = ${num(plan.effect)}` : `n = ${n}`;
       return `library(pwr)\npwr.r.test(${size}, ${a}, ${pw}, alternative = "${alt}")`;
@@ -246,4 +262,52 @@ export function rCode(plan: Plan, solveFor: 'n' | 'effect', target: number, n?: 
       return `library(pwr)\npwr.chisq.test(${size}, df = ${plan.df ?? 1}, ${a}, ${pw})`;
     }
   }
+}
+
+/**
+ * A simulation for a repeated-measures design with several stimuli per
+ * condition, where no formula applies. The standard deviations are
+ * placeholders the student replaces with estimates from a pilot.
+ */
+export function stimulusSimCode(nPeople: number, k: number, nStim: number, f: number, nsim = 100): string {
+  return `# Power with several stimuli per condition, by simulation (lmerTest).
+# The standard deviations below are placeholders. Replace them with
+# estimates from a pilot or an earlier study: fit the same model to those
+# data and read them from VarCorr(). Everything is in single-trial units.
+library(lmerTest)
+n_people <- ${nPeople}; k <- ${k}; n_stim <- ${nStim}   # people, conditions, stimuli per condition
+same_stimuli <- TRUE     # FALSE if each condition has its own stimuli
+f <- ${num(f)}
+means <- seq(-1, 1, length.out = k)
+means <- f * means / sqrt(mean(means^2))   # or type your own condition means
+sd_person <- 0.6         # people differ in their average score
+sd_person_cond <- 0.3    # people differ in how the conditions affect them
+sd_stim <- 0.3           # stimuli differ in their average score
+sd_stim_cond <- 0.2      # stimuli differ in how the conditions affect them
+sd_noise <- 0.7          # everything else, from trial to trial
+nsim <- ${nsim}             # use 1000 in desktop R for a precise answer
+
+one_study <- function() {
+  d <- expand.grid(person = 1:n_people, cond = 1:k, stim = 1:n_stim)
+  if (!same_stimuli) d$stim <- (d$cond - 1) * n_stim + d$stim
+  n_s <- max(d$stim)
+  d$y <- means[d$cond] +
+    rnorm(n_people, 0, sd_person)[d$person] +
+    matrix(rnorm(n_people * k, 0, sd_person_cond), n_people)[cbind(d$person, d$cond)] +
+    rnorm(n_s, 0, sd_stim)[d$stim] +
+    (if (same_stimuli) matrix(rnorm(n_s * k, 0, sd_stim_cond), n_s)[cbind(d$stim, d$cond)] else 0) +
+    rnorm(nrow(d), 0, sd_noise)
+  d$person <- factor(d$person); d$cond <- factor(d$cond); d$stim <- factor(d$stim)
+  model <- if (same_stimuli) {
+    y ~ cond + (1 | person) + (1 | person:cond) + (1 | stim) + (1 | stim:cond)
+  } else {
+    y ~ cond + (1 | person) + (1 | person:cond) + (1 | stim)
+  }
+  tryCatch(suppressMessages(suppressWarnings(
+    anova(lmer(model, data = d))[["Pr(>F)"]][1]
+  )), error = function(e) NA)
+}
+
+p <- replicate(nsim, one_study())
+mean(p < 0.05, na.rm = TRUE)   # the estimated power`;
 }

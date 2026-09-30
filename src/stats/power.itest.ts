@@ -2,7 +2,7 @@
 import { WebR } from 'webr';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { ensurePackages } from '../r/session';
-import { rCode, solveEffect, solveN, type Plan } from './power';
+import { rCode, solveEffect, solveN, stimulusSimCode, type Plan } from './power';
 
 /**
  * The sample size page shows R code that should give the same answer as the
@@ -28,6 +28,8 @@ const PLANS: Plan[] = [
   { design: 'paired', effect: 0.35, alpha: 0.05, sides: 2 },
   { design: 'one-sample', effect: 0.6, alpha: 0.05, sides: 1 },
   { design: 'anova', effect: 0.2, alpha: 0.05, sides: 2, k: 4 },
+  { design: 'repeated', effect: 0.25, alpha: 0.05, sides: 2, k: 4, rho: 0.5 },
+  { design: 'repeated', effect: 0.15, alpha: 0.01, sides: 2, k: 3, rho: 0.7 },
   { design: 'correlation', effect: 0.25, alpha: 0.05, sides: 2 },
   { design: 'correlation', effect: 0.2, alpha: 0.05, sides: 1 },
   { design: 'regression', effect: 0.1, alpha: 0.05, sides: 2, predictors: 4 },
@@ -41,12 +43,14 @@ const PLANS: Plan[] = [
 async function runAndRead(code: string, plan: Plan, solveFor: 'n' | 'effect'): Promise<number> {
   const lines = code.split('\n');
   // The regression code ends with the number of people; every other call returns a power.htest.
+  // The repeated-measures code is base R and ends with its answer.
+  if (plan.design === 'repeated') return webR.evalRNumber(`local({\n${code}\n})`);
   if (solveFor === 'n' && (plan.design === 'regression' || plan.design === 'r2-change')) {
     return webR.evalRNumber(`local({\n${lines.filter((l) => !/^res$|^#/.test(l)).join('\n')}\n})`);
   }
   const field = solveFor === 'n'
     ? (plan.design === 'chi-square' ? 'N' : 'n')
-    : ({ 'two-groups': 'd', paired: 'd', 'one-sample': 'd', anova: 'f', correlation: 'r', regression: 'f2', 'r2-change': 'f2', proportions: 'p2', 'chi-square': 'w' } as const)[plan.design];
+    : ({ 'two-groups': 'd', paired: 'd', repeated: 'f', 'one-sample': 'd', anova: 'f', correlation: 'r', regression: 'f2', 'r2-change': 'f2', proportions: 'p2', 'chi-square': 'w' } as const)[plan.design];
   const call = lines.filter((l) => !l.startsWith('library')).join('\n');
   const value = await webR.evalRNumber(`local({ library(pwr); (${call})$${field} })`);
   return solveFor === 'n' ? Math.ceil(value) : value;
@@ -66,3 +70,11 @@ describe('the R code on the sample size page gives the page\'s answer', () => {
     });
   }
 });
+
+test('the stimulus simulation runs and returns a power', async () => {
+  await ensurePackages(webR, ['lmerTest']);
+  const code = stimulusSimCode(12, 3, 3, 0.4, 3);
+  const power = await webR.evalRNumber(`local({\n${code}\n})`);
+  expect(power).toBeGreaterThanOrEqual(0);
+  expect(power).toBeLessThanOrEqual(1);
+}, 300_000);

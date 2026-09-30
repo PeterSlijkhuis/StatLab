@@ -133,6 +133,55 @@ describe('sample size page', () => {
     expect(report()).toContain('159 participants (53 per group)');
   });
 
+  test('repeated measures with several stimuli: G*Power\'s 24 people as the minimum, plus a simulation', async () => {
+    const { pick, next, fill } = setup();
+    await pick(/^Measure the same people in several conditions/);
+    await pick(/How many people do I need/);
+    await fill(/Number of conditions/, '4');
+    await next();
+    await pick(/^r = \.50/);
+    await pick(/Yes, several stimuli per condition/);
+    await next();
+    await pick(/I have nothing to go on yet/);
+    await pick(/Medium \(f = 0.25\)/);
+    await pick(/^80%/);
+    await pick(/α = \.05/);
+    await pick(/^None/);
+    expect(report()).toContain('24 participants are needed to detect an effect of f = 0.25 (with a correlation of r = .50 between conditions)');
+    expect(document.querySelector('.ss-warning')!.textContent).toContain('minimum');
+    expect(screen.getByText(/n_people <- 24; k <- 4; n_stim <- 4/)).toBeTruthy();
+    expect(trail()).toContain('Several stimuli per condition');
+  });
+
+  test('repeated measures turn expected condition means into f', async () => {
+    const { pick, next, fill } = setup();
+    await pick(/^Measure the same people in several conditions/);
+    await pick(/How many people do I need/);
+    await fill(/Number of conditions/, '4');
+    await next();
+    await pick(/^r = \.50/);
+    await pick(/No, one score per condition/);
+    await pick(/The smallest effect that would matter/);
+    await fill(/condition means you expect/, '500 510 520 530');
+    await fill(/Standard deviation of the scores within one condition/, '50');
+    // The means spread by √125 = 11.18 around 515; 11.18 / 50 = 0.22.
+    expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.22');
+    await fill(/condition means you expect/, '500 510 520');
+    expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true);
+  });
+
+  test('three groups: expected means give f', async () => {
+    const { pick, next, fill } = setup();
+    await pick(/^Compare three or more groups/);
+    await pick(/How many people do I need/);
+    await next();
+    await pick(/The smallest effect that would matter/);
+    await fill(/group means you expect/, '44 46 48');
+    await fill(/Standard deviation of the outcome/, '10');
+    // √(8/3) / 10 = 0.16.
+    expect(document.querySelector('.ss-meaning')!.textContent).toContain('f = 0.16');
+  });
+
   test('every design links to a lesson that exists', () => {
     for (const design of DESIGNS) expect(findLesson(design.lessonId), design.id).toBeTruthy();
   });

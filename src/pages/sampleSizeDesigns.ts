@@ -49,6 +49,20 @@ export const DESIGNS: Design[] = [
       'Change scores that are roughly normal. dz already contains how strongly the two measurements correlate: the higher that correlation, the larger dz for the same change, and the fewer people you need. Here n counts people, each measured twice.',
   },
   {
+    id: 'repeated',
+    title: 'Measure the same people in several conditions',
+    example: 'Does reaction time differ between four conditions that every participant does?',
+    test: 'repeated-measures ANOVA (the overall F test)',
+    lessonId: '14-4',
+    symbol: 'f',
+    effectName: "Cohen's f",
+    effectMeaning: 'how far the condition means spread around their average, in standard deviations of the scores within one condition.',
+    benchmarks: [0.1, 0.25, 0.4],
+    defaultEffect: 0.25,
+    assumes:
+      'Every person does every condition, scores are roughly normal, and sphericity holds: the differences between each pair of conditions vary about equally. This is the formula G*Power uses for "ANOVA: repeated measures, within factors" with ε = 1. When sphericity fails, the Greenhouse-Geisser correction costs power, so plan for more people. The same test is the F test for condition in a mixed model with a random intercept per person (Lesson 14-4). The plan is for the overall F test; follow-up comparisons between pairs of conditions have their own, often lower, power.',
+  },
+  {
     id: 'one-sample',
     title: 'Compare one group with a fixed value',
     example: 'Is average wellbeing different from a benchmark score of 50?',
@@ -190,6 +204,23 @@ export function effectInputs(id: DesignId, route: 'matter' | 'research'): { fiel
               { key: 'r', label: 'Only if the paper reports d: the correlation between the two measurements', hint: 'Leave empty if the paper reports dz. With a correlation, d is converted: dz = d / √(2(1 − r)).', placeholder: 'e.g. .5', optional: true },
             ],
             compute: (v) => (Number.isNaN(v.r) ? Math.abs(v.es) : Math.abs(v.es) / Math.sqrt(2 * (1 - v.r))),
+          };
+    case 'repeated':
+      return route === 'matter'
+        ? {
+            fields: [
+              { key: 'means', label: 'The condition means you expect, separated by spaces', hint: 'The smallest pattern of differences that would matter, in the outcome\'s own units: one number per condition, in any order.', placeholder: 'e.g. 500 510 520 530' },
+              { ...sd, label: 'Standard deviation of the scores within one condition', hint: 'How much people differ from each other in one condition, from earlier studies or a pilot. If each condition has several stimuli, use the SD of people\'s average over those stimuli.' },
+            ],
+            compute: (v, raw) => {
+              const means = (raw.means ?? '').trim().split(/[\s;]+/).map((x) => Number(x.replace(',', '.')));
+              return means.length === v.k && means.every(Number.isFinite) ? fFromMeans(means, v.sd) : NaN;
+            },
+          }
+        : {
+            fields: [{ key: 'eta2', label: 'Partial η² from a similar repeated-measures study', hint: 'Only from a study where the same people also did every condition: partial η² from a between-groups study is not comparable. It already contains that study\'s correlation between conditions.', placeholder: 'e.g. .06' }],
+            // λ = n(k − 1)·ηp²/(1 − ηp²), written as G*Power's f for the chosen correlation.
+            compute: (v) => Math.sqrt((v.eta2 / (1 - v.eta2)) * ((v.k - 1) * (1 - v.rho)) / v.k),
           };
     case 'anova':
       return route === 'matter'
