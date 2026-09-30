@@ -38,6 +38,8 @@ describe('sample size page', () => {
   test('walks a first-timer from the design to a plan: d = 0.30 from a raw difference', async () => {
     const { pick, next, fill } = setup();
     expect(question()).toBe('What will you test?');
+    // Each design names the model the course fits, not only the classic test.
+    expect(screen.getByRole('button', { name: /^Compare two separate groups/ }).textContent).toContain('In R: lm(outcome ~ group)');
     await pick(/^Compare two separate groups/);
     await pick(/How many people do I need/);
     await pick(/I can guess the scores/);
@@ -56,6 +58,7 @@ describe('sample size page', () => {
     // 176 / 0.9 rounds up to 196 per group.
     expect(report()).toContain('we will recruit 392 participants');
     expect(screen.getByText(/pwr.t.test\(d = 0.3, sig.level = 0.05, power = 0.8/)).toBeTruthy();
+    expect(screen.getByText(/is the independent-samples t-test \(Lesson 12-1\)/)).toBeTruthy();
     expect(trail()).toEqual(['Compare two separate groups', 'Plan a new study', 'My own guess of the scores', 'd = 0.30', '80% power', 'α = .05', 'Two-sided', '10% dropout']);
   });
 

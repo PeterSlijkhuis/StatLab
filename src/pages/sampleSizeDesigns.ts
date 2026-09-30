@@ -7,6 +7,9 @@ export type Design = {
   example: string;
   /** The test the plan is for, as a student would name it. */
   test: string;
+  /** The model the course fits for this question, and how its test relates to the planned one. */
+  model: string;
+  modelNote: string;
   lessonId: string;
   /** The effect size's symbol and name, and what it measures. */
   symbol: string;
@@ -25,6 +28,8 @@ export const DESIGNS: Design[] = [
     title: 'Compare two separate groups',
     example: 'Do remote and office workers differ in wellbeing? Or an A/B test on a score, such as time on a page.',
     test: 'independent-samples t-test',
+    model: 'lm(outcome ~ group)',
+    modelNote: 'The test of the group coefficient is the independent-samples t-test (Lesson 12-1).',
     lessonId: '12-1',
     symbol: 'd',
     effectName: "Cohen's d",
@@ -39,6 +44,8 @@ export const DESIGNS: Design[] = [
     title: 'Measure the same people twice',
     example: 'Does engagement change between the first and second measurement?',
     test: 'paired t-test',
+    model: 'lmer(outcome ~ time + (1 | person))',
+    modelNote: 'With two time points and nobody missing, the test of time is the paired t-test (Lesson 14-3).',
     lessonId: '14-3',
     symbol: 'dz',
     effectName: 'Cohen\'s dz',
@@ -53,6 +60,8 @@ export const DESIGNS: Design[] = [
     title: 'Measure the same people in several conditions',
     example: 'Does reaction time differ between four conditions that every participant does?',
     test: 'repeated-measures ANOVA (the overall F test)',
+    model: 'lmer(outcome ~ condition + (1 | person))',
+    modelNote: 'The F test for condition is the repeated-measures ANOVA (Lesson 14-4).',
     lessonId: '14-4',
     symbol: 'f',
     effectName: "Cohen's f",
@@ -67,6 +76,8 @@ export const DESIGNS: Design[] = [
     title: 'Two factors at once, like a 2 × 2 design',
     example: 'Does a training raise wellbeing more than a waiting list, measured before and after? Or: do photo and text ads work differently for young and old viewers?',
     test: '2 × 2 ANOVA',
+    model: 'lm(outcome ~ a * b)',
+    modelNote: 'Each effect is one term of this model: a * b gives both main effects and their interaction (Lesson 13-2). When a factor is within people, add a random intercept per person: lmer(outcome ~ a * b + (1 | person)) (Lesson 14-4).',
     lessonId: '13-2',
     symbol: 'f',
     effectName: "Cohen's f",
@@ -81,6 +92,8 @@ export const DESIGNS: Design[] = [
     title: 'Compare one group with a fixed value',
     example: 'Is average wellbeing different from a benchmark score of 50?',
     test: 'one-sample t-test',
+    model: 'lm(outcome - value ~ 1)',
+    modelNote: 'The test of the intercept is the one-sample t-test against the fixed value (Lesson 8-2 runs it as t.test()).',
     lessonId: '08-2',
     symbol: 'd',
     effectName: "Cohen's d",
@@ -94,6 +107,8 @@ export const DESIGNS: Design[] = [
     title: 'Compare three or more groups',
     example: 'Does wellbeing differ between the four departments?',
     test: 'one-way ANOVA (the overall F test)',
+    model: 'lm(outcome ~ group)',
+    modelNote: 'With group a factor of three or more categories, the overall F test of the model is the one-way ANOVA (Lesson 12-2).',
     lessonId: '12-2',
     symbol: 'f',
     effectName: "Cohen's f",
@@ -108,6 +123,8 @@ export const DESIGNS: Design[] = [
     title: 'Relate two numeric variables',
     example: 'Is workload related to wellbeing?',
     test: 'Pearson correlation test',
+    model: 'lm(outcome ~ predictor)',
+    modelNote: 'The test of the slope gives the same p-value as the test of the correlation (Lesson 10-2).',
     lessonId: '10-1',
     symbol: 'r',
     effectName: 'the correlation r',
@@ -122,6 +139,8 @@ export const DESIGNS: Design[] = [
     title: 'Predict an outcome from several predictors',
     example: 'Do workload, autonomy and tenure together predict wellbeing?',
     test: 'F test of R² in a multiple regression',
+    model: 'lm(outcome ~ x1 + x2 + x3)',
+    modelNote: 'The F test at the bottom of summary() tests the whole model (Lesson 11-3).',
     lessonId: '11-3',
     symbol: 'f²',
     effectName: "Cohen's f²",
@@ -135,6 +154,8 @@ export const DESIGNS: Design[] = [
     title: 'Test predictors on top of others',
     example: 'Does autonomy predict wellbeing over and above workload and tenure?',
     test: 'F test of the R² change (with one added predictor, the same as its t-test)',
+    model: 'anova(small_model, big_model)',
+    modelNote: 'The F test comparing lm(outcome ~ controls) with lm(outcome ~ controls + x) is the test of the R² change (Lesson 11-3).',
     lessonId: '11-3',
     symbol: 'f²',
     effectName: "Cohen's f²",
@@ -149,6 +170,8 @@ export const DESIGNS: Design[] = [
     title: 'Compare a yes/no outcome between two groups',
     example: 'Do fewer mentored employees leave the company? Or an A/B test: do more visitors click with version B than with version A?',
     test: 'test of two proportions (a chi-square test on a 2 × 2 table)',
+    model: 'glm(yes_no ~ group, family = binomial)',
+    modelNote: 'The page plans with the test of two proportions. The group coefficient in this logistic regression has almost the same power, at most a few percentage points less, so a few extra people cover it (Module 15).',
     lessonId: '09-3',
     symbol: 'p₂',
     effectName: 'the two proportions',
@@ -162,6 +185,8 @@ export const DESIGNS: Design[] = [
     title: 'Relate two categorical variables',
     example: 'Is department related to working remotely?',
     test: 'chi-square test of independence (or goodness of fit)',
+    model: 'chisq.test(table(a, b))',
+    modelNote: 'As a model: glm(count ~ a + b, family = poisson) on the table of counts gives the same chi-square test (Lesson 15-4).',
     lessonId: '09-3',
     symbol: 'w',
     effectName: "Cohen's w",

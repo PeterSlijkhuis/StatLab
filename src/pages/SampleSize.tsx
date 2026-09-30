@@ -420,10 +420,10 @@ export default function SampleSize() {
     );
   } else if (step === 'design') {
     question = 'What will you test?';
-    help = <>Pick the comparison your research question makes. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. An A/B test is two separate groups: choose the yes/no comparison for clicks or sign-ups, and the first option for a score. Repeated measures, with or without several stimuli per condition, are under "Measure the same people in several conditions"; a before-and-after study with a control group is a 2 × 2 design. Logistic regression, mediation and models with more random factors are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does.</>;
+    help = <>Pick the comparison your research question makes; each option shows the model from the course. Not sure? <Link to="/which-model">Which model should I use?</Link> helps you choose. An A/B test is two separate groups: a score, or a yes/no outcome such as clicks. A before-and-after study with a control group is a 2 × 2 design. Logistic regression with several predictors, mediation and models with more random factors are not here: plan those by simulation, as <Link to="/lesson/08-3">Lesson 8-3</Link> does.</>;
     body = (
       <Choice
-        options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: `e.g. ${d.example} Analysis: ${d.test}.` }))}
+        options={DESIGNS.map((d) => ({ value: d.id, label: d.title, note: <>e.g. {d.example}<br />In R: <code>{d.model}</code></> }))}
         chosen={answers.design}
         onPick={(value) => answer(value === answers.design ? {} : { design: value, route: undefined, effect: undefined, text: { ...answers.text, ...Object.fromEntries(['diff', 'sd', 'r', 'es', 'spread', 'eta2', 'r2', 'dr2', 'v', 'p2', 'eff1', 'eff2'].map((k) => [k, ''])), rpre: '.5' } })}
       />
@@ -806,6 +806,10 @@ export default function SampleSize() {
                 </p>
               </>
             )}
+
+            <h4>The model you will fit</h4>
+            <p><code>{design.model}</code></p>
+            <p>{design.modelNote}</p>
 
             <h4>What this assumes</h4>
             <p>{design.assumes}</p>
