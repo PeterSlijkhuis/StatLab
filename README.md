@@ -206,7 +206,7 @@ on wellbeing).
 StatLab was made by **dr. P.J.H. Slijkhuis** and **dr. V.d.C. Resendez Gomez**,
 based on materials provided by **dr. S.J. Watson**.
 Theory, terminology and topic order follow
-[*Analysing Data Using Linear Models*](https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf) by Stéphanie M. van den Berg
+[*Analysing Data Using Linear Models*](https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf) by **Prof. dr. Stéphanie M. van den Berg**
 (5th edition, University of Twente, 2021), which is licensed under a
 [Creative Commons BY-NC-SA licence](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 StatLab's lessons follow its theory, terminology and topic order but are
