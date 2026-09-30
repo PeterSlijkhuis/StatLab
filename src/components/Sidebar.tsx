@@ -115,7 +115,7 @@ export default function Sidebar({ open = false }: Props) {
         </div>
       ))}
 
-      <div className="sidebar-part">
+      <div className="sidebar-part sidebar-reference">
         <p className="sidebar-part-title">Reference</p>
         <ul>
           <li><NavLink to="/which-model" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🧭</span>Which model should I use?</NavLink></li>

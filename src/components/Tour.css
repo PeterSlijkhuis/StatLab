@@ -1,0 +1,22 @@
+/* Above the helper (50), toasts (60) and confetti (70): nothing else is clickable during the tour. */
+.tour { position: fixed; inset: 0; z-index: 80; }
+.tour-dim, .tour-spotlight { position: fixed; pointer-events: none; }
+.tour-dim { inset: 0; background: rgba(15, 23, 42, 0.55); }
+.tour-spotlight {
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--brand), 0 0 0 200vmax rgba(15, 23, 42, 0.55);
+  transition: left var(--medium, 0.25s), top var(--medium, 0.25s), width var(--medium, 0.25s), height var(--medium, 0.25s);
+}
+.tour-card {
+  position: fixed; box-sizing: border-box; padding: 1.1rem 1.2rem 1rem;
+  background: var(--surface); color: var(--ink); border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+}
+.tour-card h2 { margin: 0.1rem 0 0.4rem; font-size: 1.15rem; }
+.tour-card p { margin: 0 0 0.9rem; line-height: 1.5; color: var(--ink-2); }
+.tour-card .tour-count { margin: 0; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase; color: var(--brand); }
+.tour-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.tour-actions .button-primary { margin-left: auto; }
+.tour-skip { font: inherit; font-size: 0.9rem; background: none; border: 0; padding: 0.4rem 0.2rem; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.tour-skip:hover { color: var(--brand-ink); }
+@media (prefers-reduced-motion: reduce) { .tour-spotlight { transition: none; } }

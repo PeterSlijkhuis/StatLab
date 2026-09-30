@@ -3,6 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import RStatus from './components/RStatus';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
+import Tour from './components/Tour';
 import SiteGuide from './components/SiteGuide';
 import Toaster from './components/Toaster';
 import { confetti, prefersReducedMotion, showToast } from './components/celebrate';
@@ -127,6 +128,7 @@ export default function App() {
       </main>
       <Toaster />
       <SiteGuide />
+      <Tour />
     </div>
   );
 }
