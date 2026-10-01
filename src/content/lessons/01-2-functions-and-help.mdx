@@ -86,7 +86,8 @@ inside out.
 length(seq(from = 0, to = 100, by = 10))`} />
 
 Read the first line inside out: average the scores, ignoring the missing one,
-then round to one decimal. It is compact, and once there are four or five
+then round to one decimal. R prints 64.2, not the 64.3 you may have learned:
+when a number sits exactly halfway, R rounds to the even digit. It is compact, and once there are four or five
 functions stacked up it becomes unreadable. The pipe you met in Module 0 is
 R's answer to exactly that problem.
 
