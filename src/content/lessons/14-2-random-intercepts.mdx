@@ -58,7 +58,7 @@ c(
 
 The `employee_id` row is how much employees differ from each other; the
 `Residual` row is what is left within an employee once their own level and the
-time effect are accounted for. Their ratio is the **intraclass correlation**: the
+time effect are accounted for. The employee variance divided by the sum of the two is the **intraclass correlation**: the
 share of the total variance that is stable differences between people.
 
 A high ICC shows how much is at stake. It says most of the raw
@@ -97,7 +97,7 @@ as such: *t*(479.0) for time here, or *t*(539.8) for the intercept, rounded to o
   choices={[
     { text: 'A separate coefficient for every employee, reported in the output', response: 'The deviations are estimated but not reported as fixed coefficients. What is reported is their standard deviation.' },
     { text: 'One extra parameter: the standard deviation of employees\' own starting levels, which lets the model know which rows belong to the same person', correct: true, response: 'Correct - one parameter for 480 employees, which is what makes the approach practical.' },
-    { text: 'An interaction between employee and time', response: 'That would be a random slope, written (1 + time | employee_id). This is an intercept only.' },
+    { text: 'An interaction between employee and time', response: 'That would be a random slope, written (1 + time | employee_id), and with only two measurements per employee it cannot be estimated. This is an intercept only.' },
     { text: 'A correction applied to the p-value after fitting', response: 'Nothing is corrected afterwards. The dependence is part of the model from the start.' },
   ]}
 />

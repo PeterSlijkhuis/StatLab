@@ -180,11 +180,11 @@ export const module12: ExerciseDef[] = [
         } else if (isTRUE(all.equal(b, intercept, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the intercept, ", round(intercept, 2), ". With one factor and nothing else in the model the intercept is the mean of the reference department (", exp_ref, "), not of Support and not of everybody."))
         } else if (isTRUE(all.equal(b, as.vector(means[["Support"]]), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("That is Support's own mean (", round(means[["Support"]], 2), "). The coefficient is a difference: Support's mean minus the reference department's, which is ", round(exp_b, 2), "."))
+          list(pass = FALSE, message = paste0("That is Support's own mean (", round(means[["Support"]], 2), "). The coefficient is a difference: Support's mean minus the reference department's, which is ", sprintf("%.2f", exp_b), "."))
         } else if (!isTRUE(all.equal(b, exp_b, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("b_support is ", round(b, 4), " but the departmentSupport coefficient is ", round(exp_b, 4), "."))
         } else {
-          list(pass = TRUE, message = paste0("The reference is ", exp_ref, ", whose mean is the intercept, ", round(intercept, 2), ". b = ", round(exp_b, 2), " for Support means its mean is ", round(means[["Support"]], 2), ". Every coefficient in this model is a comparison with ", exp_ref, " - so none of them compares Marketing with Sales, which is what Lesson 12-3 is for."))
+          list(pass = TRUE, message = paste0("The reference is ", exp_ref, ", whose mean is the intercept, ", round(intercept, 2), ". b = ", sprintf("%.2f", exp_b), " for Support means its mean is ", round(means[["Support"]], 2), ". Every coefficient in this model is a comparison with ", exp_ref, " - so none of them compares Marketing with Sales, which is what Lesson 12-3 is for."))
         }
       }
     `,

@@ -22,7 +22,9 @@ d %>% summarise(mean_sick = mean(sick_days), var_sick = var(sick_days), min = mi
 
 Poisson regression models the **logarithm** of the expected count as a straight
 line. Transforming back, each coefficient multiplies the expected count instead of
-adding to it.
+adding to it. The book describes the same model as having an exponential link
+function, naming the transformation back from the linear part; R and most texts
+call it the log link.
 
 <CodeBlock id="c-fit" code={`m_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)
 

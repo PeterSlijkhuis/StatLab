@@ -12,7 +12,9 @@ population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
 
 population %>% summarise(mu = mean(exam_score), sigma = sd(exam_score), n = n())`} />
 
-Two numbers: a mean of about 73.3 and a standard deviation of about 12.4. The
+Two numbers: a mean of about 73.3 and a standard deviation of about 12.4. (sd()
+divides by n − 1; the textbook's population σ divides by N and gives 12.35
+instead of 12.36, a difference that changes nothing in this module.) The
 claim of this lesson is that those two numbers are almost the whole story.
 
 <CodeBlock id="hist" code={`library(ggplot2)

@@ -89,7 +89,9 @@ training comparison within each level of mentoring. With only two training level
 there is one comparison per level of mentoring, so the adjustment changes nothing
 here; it matters when the factor has three or more levels.
 That call needs the `emmeans` package attached, which this lesson deliberately
-does not do; go back to Lesson 12-3 to run it there.
+does not do; go back to Lesson 12-3 and run it there after refitting the model:
+`d$change <- d$engagement_t2 - d$engagement_t1` and
+`model <- lm(change ~ training * mentoring, data = d)`.
 
 ## An APA-ready figure
 
@@ -112,7 +114,7 @@ one would say "Error bars show +/- 1 standard error of the mean."
   choices={[
     { text: 'Neither factor has an effect', response: 'Both lines can be steep and both can sit far apart. Parallel says nothing about the size of either effect.' },
     { text: 'No interaction in this sample: the effect of each factor looks the same at both levels of the other', correct: true, response: 'Correct, and the sample caveat matters - parallel-looking lines are still estimates with error bars.' },
-    { text: 'The interaction is significant', response: 'The opposite. A significant interaction is what makes the lines depart from parallel.' },
+    { text: 'The interaction is significant', response: 'The opposite. The interaction test asks whether the lines depart from parallel by more than sampling error would produce; exactly parallel lines give an interaction estimate of zero.' },
     { text: 'The design is unbalanced', response: 'Balance is about cell sizes and is invisible in a plot of means.' },
   ]}
 />

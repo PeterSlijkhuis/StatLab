@@ -103,7 +103,7 @@ export const module17: ExerciseDef[] = [
         } else if (!identical(as.character(got$call$rotation), "promax")) {
           list(pass = FALSE, message = "Two factors, good. Let them correlate with rotation = \\"promax\\": pressure and support are unlikely to be unrelated.")
         } else {
-          list(pass = TRUE, message = paste0("Correct. The chi-square test of fit gives p = ", format(round(got$PVAL, 2), nsmall = 2), ", so there is no evidence that two factors fall short. Print it with print(efa, cutoff = 0.3) to see which items load where."))
+          list(pass = TRUE, message = paste0("Correct. The chi-square test of fit gives p = ", sub("^0", "", format(round(got$PVAL, 2), nsmall = 2)), ", so there is no evidence that two factors fall short. Print it with print(efa, cutoff = 0.3) to see which items load where."))
         }
       }
     `,

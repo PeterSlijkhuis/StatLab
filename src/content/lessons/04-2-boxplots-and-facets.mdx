@@ -21,8 +21,10 @@ computed:
 - the box spans the **quartiles** — the middle half of the department, so its
   height is the IQR;
 - the whiskers reach out to the furthest observation within 1.5 IQRs of the box
-  (ggplot2 measures from the quartiles; the textbook describes the distance from
-  the median, so its whiskers can end slightly differently);
+  (ggplot2 measures from the quartiles, as does the textbook's worked wage
+  example; the textbook's prose measures from the median instead, which gives
+  shorter whiskers and flags more points: here Sales would show seven points
+  below its whisker instead of none);
 - anything beyond that is drawn as a point, and is worth looking at rather than
   deleting.
 

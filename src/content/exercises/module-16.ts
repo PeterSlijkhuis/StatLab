@@ -144,6 +144,8 @@ export const module16: ExerciseDef[] = [
           list(pass = FALSE, message = "That is a 90% interval. A 95% interval leaves 2.5% in each tail: qbeta(c(0.025, 0.975), ...).")
         } else if (close(ci, binom.test(k, n)$conf.int)) {
           list(pass = FALSE, message = "That is the frequentist confidence interval from binom.test(). Here the interval should come from the posterior, with qbeta().")
+        } else if (close(ci, qbeta(c(0.025, 0.975), 1 + sum(d$left_company), 1 + nrow(d) - sum(d$left_company)))) {
+          list(pass = FALSE, message = "That is the interval for the whole company. Use Engineering's counts: left_eng out of n_eng.")
         } else if (!close(ci, expected)) {
           list(pass = FALSE, message = paste0("ci_engineering is [", paste(round(ci, 3), collapse = ", "), "]. The posterior is Beta(1 + ", k, ", 1 + ", n - k, "): leavers in the first shape, stayers in the second."))
         } else {

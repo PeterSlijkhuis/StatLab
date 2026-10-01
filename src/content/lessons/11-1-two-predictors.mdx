@@ -86,15 +86,15 @@ model3 %>% glance() %>% select(r.squared, adj.r.squared, statistic, df, df.resid
 *R*² can never fall when you add a predictor, even a useless one, and in practice it always rises a little: it is the share
 of variance the fitted model accounts for, and an extra column always lets the
 fit wriggle a little closer. **Adjusted *R*²** subtracts a penalty for each
-predictor, so it can fall. When the two are far apart you have paid for
-predictors that bought you nothing.
+predictor, so it can fall. When the two are far apart, the model has many
+predictors for its sample size, and some of them may be buying you nothing.
 
 <Quiz
   id="q-adding"
   question="You add a predictor that is pure noise, unrelated to everything. What happens?"
   choices={[
     { text: 'R-squared falls slightly and adjusted R-squared falls more', response: 'R-squared cannot fall when a predictor is added. It rises, if only by a rounding error.' },
-    { text: 'R-squared rises slightly; adjusted R-squared falls', correct: true, response: 'Correct, and that gap is exactly what adjusted R-squared exists to show you.' },
+    { text: 'R-squared rises slightly; adjusted R-squared usually falls', correct: true, response: 'Correct. Adjusted R-squared goes up only when the new predictor\'s |t| is above 1, which pure noise reaches about one time in three by chance. That gap is what adjusted R-squared exists to show you.' },
     { text: 'Both stay exactly the same', response: 'Only if the noise variable were perfectly uncorrelated with the residuals in this sample, which never quite happens.' },
     { text: 'The model becomes invalid', response: 'It stays a valid model. It is just a slightly worse one, and adjusted R-squared is how it tells you so.' },
   ]}

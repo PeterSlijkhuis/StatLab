@@ -49,7 +49,7 @@ export const module10: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(r_w, exp_w, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("r_workload is ", round(r_w, 3), ", but cor(d$workload, d$wellbeing) is ", round(exp_w, 3), ". Check that you correlated workload with wellbeing, and not with autonomy."))
         } else {
-          list(pass = TRUE, message = paste0("Autonomy r = ", sub("0.", ".", round(exp_a, 3), fixed = TRUE), "; workload r = ", sub("0.", ".", round(exp_w, 3), fixed = TRUE), ". Same outcome, opposite directions. A correlation is only ever a description of these 480 employees - it is not evidence that giving someone autonomy would raise their wellbeing."))
+          list(pass = TRUE, message = paste0("Autonomy r = ", sub("0.", ".", format(round(exp_a, 2), nsmall = 2), fixed = TRUE), "; workload r = ", sub("0.", ".", format(round(exp_w, 2), nsmall = 2), fixed = TRUE), ". Same outcome, opposite directions. A correlation is only ever a description of these 480 employees - it is not evidence that giving someone autonomy would raise their wellbeing."))
         }
       }
     `,

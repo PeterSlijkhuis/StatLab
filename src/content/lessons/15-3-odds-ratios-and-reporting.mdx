@@ -46,7 +46,7 @@ message, not a warning, and the intervals are the better ones.
     { text: 'Yes, because the interval does not contain 1', correct: true, response: 'Right. On the odds-ratio scale, 1 means no effect - the value 0 has been transformed away.' },
     { text: 'No, because the interval contains values below 1', response: 'Every value in the interval is below 1, which is what a protective effect looks like.' },
     { text: 'Yes, because the interval does not contain 0', response: 'True but irrelevant: an odds ratio can never be 0, so that test would call everything significant.' },
-    { text: 'Impossible to tell without the p-value', response: 'A 95% interval and a test at .05 carry the same information. The interval also tells you the plausible sizes.' },
+    { text: 'Impossible to tell without the p-value', response: 'A 95% interval and a two-sided test at .05 carry the same information when both come from the same method; a profile interval and the Wald z can disagree in borderline cases. Here the interval is far from 1, so both agree, and it also tells you the plausible sizes.' },
   ]}
 />
 
