@@ -178,7 +178,7 @@ export const DESIGNS: Design[] = [
     effectMeaning: 'the share of "yes" you expect in each group.',
     defaultEffect: 0.45,
     assumes:
-      'Two groups of equal size and the normal approximation that base R\'s power.prop.test() uses. prop.test() and chisq.test() apply a continuity correction by default, which costs about 3 to 5 percentage points of power: use correct = FALSE, or add about 10 to 15% more people; with small expected counts (under about 5 in a cell), plan by simulation instead.',
+      'Two groups of equal size and the normal approximation that base R\'s power.prop.test() uses. prop.test() and chisq.test() apply a continuity correction by default, which costs about 2 to 6 percentage points of power, most with small groups: use correct = FALSE, or add about 10 to 20% more people; with small expected counts (under about 5 in a cell), plan by simulation instead.',
   },
   {
     id: 'chi-square',
@@ -356,7 +356,7 @@ export function presets(design: Design, factors?: { layout: Layout; which: Which
     return [{ value: 0.36, label: 'Typical (d = 0.36)', note: 'Between small and medium: the median effect found in social psychology (Lovakov & Agadullina, 2021). An honest default when you have nothing else.', recommended: true }, ...cohen];
   }
   if (design.id === 'correlation') {
-    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'Between small and medium: a typical correlation in psychology (Gignac & Szodorai, 2016). An honest default when you have nothing else.', recommended: true }, ...cohen];
+    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'Between small and medium: a typical correlation in individual-differences research (Gignac & Szodorai, 2016). An honest default when you have nothing else.', recommended: true }, ...cohen];
   }
   return cohen;
 }
