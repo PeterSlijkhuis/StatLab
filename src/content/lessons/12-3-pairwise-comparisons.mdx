@@ -24,7 +24,8 @@ emm`} />
 
 With department as the only predictor these match the raw group means exactly.
 They usually stop matching as soon as the model contains anything else; then they are
-the predicted means with the other predictors held at their average, which is
+the predicted means with any numeric predictors held at their mean and averaged
+equally over the levels of any other factors, which is
 what makes `emmeans` worth learning rather than just averaging by hand.
 
 <Predict
@@ -77,7 +78,7 @@ completely different scientific ones. Report the interval.
   id="q-tukey"
   question="A reviewer asks why you used Tukey rather than simply reporting all six unadjusted tests."
   choices={[
-    { text: 'Because Tukey gives smaller p-values, so more results are significant', response: 'The opposite: adjusted p-values are always larger. Adjustment costs power and buys control of the error rate.' },
+    { text: 'Because Tukey gives smaller p-values, so more results are significant', response: 'The opposite: adjusted p-values are never smaller than unadjusted ones, and usually larger. Adjustment costs power and buys control of the error rate.' },
     { text: 'Because six tests at .05 each give roughly a one-in-four chance of at least one false positive if the tests were independent (a little less here, because they share groups), and Tukey holds that risk near .05 across the whole family', correct: true, response: 'Correct, and that is exactly how to phrase it to a reviewer.' },
     { text: 'Because the data are not normally distributed', response: 'Tukey adjusts for multiplicity. It has nothing to do with the shape of the data.' },
     { text: 'Because the overall F was significant, which requires a post-hoc test', response: 'A significant F does not require anything. It tells you a difference exists; you then decide which comparisons your question needs.' },

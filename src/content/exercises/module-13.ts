@@ -115,7 +115,7 @@ export const module13: ExerciseDef[] = [
                 isTRUE(all.equal(sort(as.vector(value)), sort(as.vector(cells)), tolerance = 1e-6, check.attributes = FALSE))) found <- TRUE
           }
           if (!found) {
-            list(pass = FALSE, message = paste0("No column of cell_means holds the four mean change scores, which are ", paste(round(sort(as.vector(cells)), 2), collapse = ", "), ". Check that you summarised change (engagement_t2 minus engagement_t1) rather than engagement itself."))
+            list(pass = FALSE, message = paste0("No column of cell_means holds the four mean change scores, which are ", paste(sprintf("%.2f", sort(as.vector(cells))), collapse = ", "), ". Check that you summarised change (engagement_t2 minus engagement_t1) rather than engagement itself."))
           } else if (!is.numeric(boost) || length(boost) != 1L) {
             list(pass = FALSE, message = "boost should be a single number.")
           } else if (isTRUE(all.equal(boost, corner, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -189,7 +189,7 @@ export const module13: ExerciseDef[] = [
         } else if (isTRUE(all.equal(f_training, exp_int, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the interaction's F (", round(exp_int, 2), "), on the training:mentoring row. The training main effect is on the row called training."))
         } else if (isTRUE(all.equal(f_training, as.vector(default3["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
-          list(pass = FALSE, message = paste0("Mentoring is still on R's default treatment contrasts, so that F (", round(as.vector(default3["training", "F value"]), 2), ") is not the main effect of training. With mentoring treatment-coded, a type III test of training asks about training among employees with NO mentoring only: a simple effect wearing a main effect's name. With contrasts = list(training = contr.sum, mentoring = contr.sum) the same row becomes ", round(exp_f, 2), "."))
+          list(pass = FALSE, message = paste0("Mentoring is on R's default treatment contrasts, so that F (", round(as.vector(default3["training", "F value"]), 2), ") is not the main effect of training. With mentoring treatment-coded, a type III test of training asks about training among employees with NO mentoring only: a simple effect wearing a main effect's name. With contrasts = list(training = contr.sum, mentoring = contr.sum) the same row becomes ", round(exp_f, 2), "."))
         } else if (isTRUE(all.equal(f_training, as.vector(type2["training", "F value"]), tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("That is the type II F (", round(as.vector(type2["training", "F value"]), 2), "). Type II tests each main effect while ignoring the interaction, which is only defensible when the interaction is negligible. This exercise asks for type III."))
         } else if (!isTRUE(all.equal(f_training, exp_f, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -242,12 +242,15 @@ export const module13: ExerciseDef[] = [
         exp_no <- as.vector(cells["Yes", "No"] - cells["No", "No"])
         exp_yes <- as.vector(cells["Yes", "Yes"] - cells["No", "Yes"])
         overall <- mean(d$change[d$training == "Yes"]) - mean(d$change[d$training == "No"])
+        t2cells <- tapply(d$engagement_t2, list(d$training, d$mentoring), mean)
         if (!is.numeric(no_m) || length(no_m) != 1L || !is.numeric(yes_m) || length(yes_m) != 1L) {
           list(pass = FALSE, message = "Both should be single numbers.")
         } else if (isTRUE(all.equal(no_m, yes_m, tolerance = 1e-12, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("Your two simple effects are identical, so you have reported the overall training effect (", round(overall, 2), ") twice. The whole point of a simple effect is that it differs between the levels of the other factor - here they are ", round(exp_no, 2), " and ", round(exp_yes, 2), "."))
         } else if (isTRUE(all.equal(no_m, -exp_no, tolerance = 1e-6, check.attributes = FALSE)) && isTRUE(all.equal(yes_m, -exp_yes, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = "Both of your differences run backwards. Each simple effect is the training-Yes cell minus the training-No cell within that level of mentoring.")
+        } else if (isTRUE(all.equal(no_m, as.vector(t2cells["Yes", "No"] - t2cells["No", "No"]), tolerance = 1e-6, check.attributes = FALSE)) && isTRUE(all.equal(yes_m, as.vector(t2cells["Yes", "Yes"] - t2cells["No", "Yes"]), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = "Those are differences in engagement at time 2, not in the change score. Compute change = engagement_t2 - engagement_t1 first, then take the differences.")
         } else if (!isTRUE(all.equal(no_m, exp_no, tolerance = 1e-6, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("effect_no_mentoring is ", round(no_m, 4), " but the training effect among employees without mentoring is ", round(exp_no, 4), ". Hold mentoring at No and take the difference across training."))
         } else if (!isTRUE(all.equal(yes_m, exp_yes, tolerance = 1e-6, check.attributes = FALSE))) {

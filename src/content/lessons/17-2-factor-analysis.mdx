@@ -89,7 +89,8 @@ traits a questionnaire measures, use factors.
 
 An exploratory analysis finds a structure in one dataset. To test that
 structure, specify it in advance and fit a **confirmatory factor analysis** to
-new data. In RStudio, with the `lavaan` package:
+new data. In RStudio, with the `lavaan` package (here `new_items` stands for a
+fresh sample with the same six items):
 
 ```r
 library(lavaan)
@@ -97,7 +98,7 @@ model <- "
   pressure =~ deadlines + overtime + too_much
   support  =~ help + listened + feedback
 "
-fit <- cfa(model, data = items)
+fit <- cfa(model, data = new_items)
 summary(fit, fit.measures = TRUE, standardized = TRUE)
 ```
 

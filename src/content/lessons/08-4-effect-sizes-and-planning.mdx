@@ -1,5 +1,5 @@
 A p-value answers one question: how surprising would data like these be if there were no effect? It does not say how big
-the effect is, and it tends to shrink as the sample grows even when the effect stays
+the effect is, and when there is a real effect it tends to shrink as the sample grows even though the effect stays
 the same. The size of an effect needs its own number, and that number is also
 what you need to plan how large a study should be.
 
@@ -54,7 +54,7 @@ The true d is 0.50. The study found 0.64, and it was significant.
   id="p-winners"
   question="Imagine many small studies of this effect, and only the significant ones get published. How do the published effect sizes compare with the true d of 0.50?"
   choices={[
-    { text: 'They average out at 0.50, because each study is unbiased', response: 'Each study is, but the filter is not. Throwing away the studies that happened to land low leaves the ones that landed high.' },
+    { text: 'They average out at 0.50, because each study is unbiased', response: 'Each study\'s estimate is very nearly unbiased, but the filter is not. Throwing away the studies that happened to land low leaves the ones that landed high.' },
     { text: 'They are too large on average', correct: true, response: 'Right. With a small sample, only an estimate that happens to land high clears the significance bar, so the published record overstates the effect.' },
     { text: 'They are too small on average, because small studies lack power', response: 'Low power means many studies miss the effect. The ones that do not miss it are the lucky, high estimates.' },
   ]}

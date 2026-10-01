@@ -394,7 +394,7 @@ export const module03: ExerciseDef[] = [
   {
     id: 'm3-4-b',
     prompt:
-      'How consistently do the five items measure one thing? Compute Cronbach\'s alpha for q1, q2, q3_r, q4 and q5 and store it in alpha. The formula is in the starter code.',
+      'How consistently do the five items agree with each other? Compute Cronbach\'s alpha for q1, q2, q3_r, q4 and q5 and store it in alpha. The formula is in the starter code.',
     starterCode:
       '# survey, with q3_r already added, is in your environment.\nitems <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]\nk <- ncol(items)\n\n# alpha = k / (k - 1) * (1 - sum of the item variances / variance of the total)\nalpha <- ',
     setupCode: REVERSED,
@@ -434,7 +434,7 @@ export const module03: ExerciseDef[] = [
         } else if (abs(got - target) > 1e-6) {
           list(pass = FALSE, message = paste0("alpha is ", round(got, 3), ", but it should be ", round(target, 3), ". The formula uses variances, var(), both for the items and for the total, rowSums()."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: alpha = ", format(round(target, 2), nsmall = 2), ". Acceptable, and the lesson shows which item is holding it back."))
+          list(pass = TRUE, message = paste0("Correct: alpha = ", sub("^0", "", format(round(target, 2), nsmall = 2)), ". Acceptable, and the lesson shows which item is holding it back."))
         }
       }
     `,

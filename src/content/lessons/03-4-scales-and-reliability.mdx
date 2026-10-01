@@ -85,7 +85,7 @@ total_variance <- var(rowSums(items))
 
 k / (k - 1) * (1 - item_variances / total_variance)`} />
 
-Alpha is 0.74. Rough conventions call .70 acceptable and .80 good for research
+Alpha is .74. Rough conventions call .70 acceptable and .80 good for research
 use. Alpha also rises with the number of items, so a long scale can reach .80
 with items that agree only weakly.
 
@@ -104,7 +104,7 @@ same thing.
 
 sapply(names(items), function(item) alpha_of(items[, names(items) != item]))`} />
 
-Dropping any of q1 to q4 lowers alpha. Dropping q5 raises it to 0.82, and its
+Dropping any of q1 to q4 lowers alpha. Dropping q5 raises it to .82, and its
 correlations with the other items were close to zero. The coffee question does
 not belong in a wellbeing scale. With a real questionnaire, you would look at
 the wording before you drop anything, and you would report which items you
@@ -118,7 +118,7 @@ you when an item looks as if it still needs reversing.
   question="You forget to reverse q3 and compute alpha on the original five items. What happens?"
   choices={[
     { text: 'Nothing much, alpha only looks at variances', response: 'The total variance depends on how the items move together, and an unreversed item moves against the rest.' },
-    { text: 'Alpha collapses towards zero, because q3 cancels the other items out', correct: true, response: 'Right. Here it drops from 0.74 to 0.02. A suspiciously low alpha is often an item nobody reversed.' },
+    { text: 'Alpha collapses towards zero, because q3 cancels the other items out', correct: true, response: 'Right. Here it drops from .74 to .02. A suspiciously low alpha is often an item nobody reversed.' },
     { text: 'Alpha goes up, because there is more variation', response: 'The items vary as much as before, but the total varies less, because q3 pulls against the others. Alpha goes down.' },
   ]}
 />

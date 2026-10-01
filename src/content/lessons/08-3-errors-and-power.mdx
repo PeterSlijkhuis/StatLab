@@ -2,7 +2,7 @@ A hypothesis test makes a decision, and a decision can be wrong in two
 directions. Both have names, and only one of them gets talked about.
 
 - The null is **true** and you **reject** it — a **Type I error**. You announce
-  an effect that is not there. Its long-run rate is exactly α, because that is
+  an effect that is not there. When the test's assumptions hold, its long-run rate is α, because that is
   what α was defined to be.
 - The null is **false** and you **fail to reject** it — a **Type II error**. You
   miss a real effect. Its rate is called β.
@@ -105,7 +105,8 @@ shows the Type I side of the trade; the power curve above shows the other side.
 ## What to do with a non-significant result
 
 Say what it is. "We did not detect an effect" is honest; "there is no effect" is
-not, unless the study had the power to have seen one. A non-significant result
+not. Even a well-powered study can only rule out effects larger than those it
+could detect, and its confidence interval shows which those are. A non-significant result
 from an underpowered study is uninformative, and a confidence interval says so
 much better than a p-value does — a wide interval that includes zero tells the
 reader plainly that the study could not distinguish "nothing" from "quite a lot".

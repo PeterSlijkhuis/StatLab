@@ -42,7 +42,7 @@ export const module11: ExerciseDef[] = [
           alone <- as.vector(coef(lm(wellbeing ~ workload, data = d))["workload"])
           terms_in <- names(coef(model2))
           if (!identical(sort(terms_in), sort(c("(Intercept)", "autonomy", "workload")))) {
-            list(pass = FALSE, message = paste0("model2 should have exactly two predictors, autonomy and workload. Yours has: ", paste(setdiff(terms_in, "(Intercept)"), collapse = ", "), ". A star between predictors adds an interaction term as well; a plus sign is what you want here."))
+            list(pass = FALSE, message = paste0("model2 should have exactly two predictors, autonomy and workload. Yours has: ", paste(setdiff(terms_in, "(Intercept)"), collapse = ", "), if (any(grepl(":", terms_in))) ". A star between predictors adds an interaction term as well; a plus sign is what you want here." else ". Use exactly those two, joined with a plus sign."))
           } else if (!is.numeric(b) || length(b) != 1L) {
             list(pass = FALSE, message = "b_workload should be a single number: filter tidy() to the workload row and pull(estimate).")
           } else if (isTRUE(all.equal(b, exp_autonomy, tolerance = 1e-6, check.attributes = FALSE))) {
@@ -248,7 +248,7 @@ export const module11: ExerciseDef[] = [
         } else if (!isTRUE(all.equal(df_resid, exp_den, tolerance = 1e-9, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("df_resid is ", df_resid, " but should be ", exp_den, "."))
         } else {
-          list(pass = TRUE, message = paste0("F(", exp_num, ", ", exp_den, ") = ", round(exp_f, 2), ", R-squared = ", sub("0.", ".", round(exp_r2, 3), fixed = TRUE), ". Those are the three numbers the first sentence of an APA regression report needs; the coefficients go in the sentences after it."))
+          list(pass = TRUE, message = paste0("F(", exp_num, ", ", exp_den, ") = ", round(exp_f, 2), ", R-squared = ", sub("0.", ".", round(exp_r2, 3), fixed = TRUE), ". Together with the model's p-value, those numbers make the first sentence of an APA regression report; the coefficients go in the sentences after it."))
         }
       }
     `,

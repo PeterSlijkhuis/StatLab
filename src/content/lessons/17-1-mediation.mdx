@@ -43,7 +43,7 @@ engagement.
   id="p-mediation-test"
   question="How should you decide whether the indirect effect of 1.78 is more than chance?"
   choices={[
-    { text: 'Check that a and b are both significant', response: 'That is part of the old Baron and Kenny steps. It never estimates the indirect effect or gives it an interval, so a reader cannot judge how large it is.' },
+    { text: 'Check that a and b are both significant', response: 'Checking that a and b are both significant (the joint significance test) is a reasonable test, but it never estimates the indirect effect or gives it an interval, so a reader cannot judge how large it is.' },
     { text: 'Divide it by its standard error and compare with a normal distribution (the Sobel test)', response: 'The Sobel test assumes a × b is normally distributed, and a product of two estimates usually is not. It is no longer recommended.' },
     { text: 'Bootstrap a confidence interval for a × b', correct: true, response: 'Right. Resampling makes no assumption about the shape of the product, and it is the current standard.' },
   ]}
@@ -73,11 +73,15 @@ supported.
 Mediation is a causal story, and the statistics cannot make it true.
 
 - **Order in time.** The predictor should come before the mediator, and the
-  mediator before the outcome. Engagement here was measured after training,
-  which helps. Performance was not measured later still.
+  mediator before the outcome. Engagement here was measured at the end of the
+  year, which helps, but performance was not measured later still. Order alone
+  is not enough: trained employees were already about 1.8 points more engaged at
+  the start of the year (engagement_t1), so part of the a path existed before
+  training.
 - **No hidden common cause.** If some third thing, such as a good manager, raised
-  both engagement and performance, the b path would be inflated, and randomising
-  training does not protect against that.
+  both engagement and performance, the b path would be inflated; if it raised
+  both training uptake and engagement, the a path would be. Randomising training
+  protects the a path but not the b path.
 - **Consistent with, not proof of.** With data from one study, write that the
   pattern is consistent with mediation.
 
@@ -123,6 +127,6 @@ macro for SPSS, model 4, fits the same model.
     { text: 'Training was associated with higher engagement (a = 4.07), which in turn was associated with higher performance (b = 0.44). The indirect effect was 1.78, 95% bootstrap CI [1.19, 2.40], based on 1,000 resamples; the direct effect was small and non-significant (c′ = -0.16, p = .82). The pattern is consistent with engagement mediating the effect of training.', correct: true, response: 'Correct: every path, the indirect effect with its interval and how it was computed, and a causal claim no stronger than the design allows.' },
     { text: 'Training caused higher performance through engagement (Sobel test, p < .001).', response: 'The Sobel test is no longer recommended, and "caused" overstates what these data can show.' },
     { text: 'Because the direct effect was not significant, training does not affect performance.', response: 'The total effect of training is 1.62 and significant. The point of mediation is that it runs through engagement.' },
-    { text: 'Both a and b were significant, so there was mediation.', response: 'That is the old steps approach. Report and test the indirect effect itself, with its interval.' },
+    { text: 'Both a and b were significant, so there was mediation.', response: 'Both significant paths are consistent with mediation, but this reports no indirect effect and no interval. Report the indirect effect itself, with its bootstrap interval.' },
   ]}
 />
