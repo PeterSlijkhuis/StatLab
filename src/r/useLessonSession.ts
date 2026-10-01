@@ -3,7 +3,7 @@ import type { RObject, WebR } from 'webr';
 import { createLessonEnv, destroyEnv } from './environments';
 import { ensurePackages, fetchDataset, prepareSession } from './session';
 import { restoreUploads } from './uploads';
-import { getWebR, setStatus } from './webrClient';
+import { getWebR, onRestart, setStatus } from './webrClient';
 
 /** What the hook needs from a lesson: its identity, and what it must attach. */
 export type SessionLesson = { id: string; packages?: string[] };
@@ -25,6 +25,10 @@ export function useLessonSession(
   const packages = lesson?.packages;
   const [webR, setWebR] = useState<WebR | null>(null);
   const [env, setEnv] = useState<RObject | null>(null);
+  // "Restart R" replaces the R instance. Counting restarts reruns the effect
+  // below on the new R, so the page and the code typed into it stay put.
+  const [restarts, setRestarts] = useState(0);
+  useEffect(() => onRestart(() => setRestarts((count) => count + 1)), []);
 
   useEffect(() => {
     if (key === null) return;
@@ -66,7 +70,7 @@ export function useLessonSession(
       // After a restart the old R is gone along with its environments.
       if (created && createdBy) destroyEnv(createdBy, created).catch(() => {});
     };
-  }, [key]);
+  }, [key, restarts]);
 
   return { webR, env };
 }
