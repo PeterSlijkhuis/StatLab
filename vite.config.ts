@@ -4,7 +4,7 @@ import mdx from '@mdx-js/rollup';
 import remarkGfm from 'remark-gfm';
 
 export default defineConfig({
-  base: '/statlab/',
+  base: '/StatLab/',
   plugins: [
     // GFM for the tables in lessons. Single tildes stay plain text: R formulas
     // such as y ~ x appear in prose, and two of them would strike out the words between.

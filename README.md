@@ -268,5 +268,5 @@ partner logos are in `src/assets/logos/`, picked up by file name;
 see the README there to replace one.
 
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/statlab/"><img alt="Open StatLab" src="https://img.shields.io/badge/Try_it_now-peterslijkhuis.github.io%2Fstatlab-4f46e5?style=for-the-badge&logo=r&logoColor=white"></a>
+  <a href="https://peterslijkhuis.github.io/StatLab/"><img alt="Open StatLab" src="https://img.shields.io/badge/Try_it_now-peterslijkhuis.github.io%2FStatLab-4f46e5?style=for-the-badge&logo=r&logoColor=white"></a>
 </p>
