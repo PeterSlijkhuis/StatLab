@@ -1,16 +1,16 @@
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/statlab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 64 lessons, 89 exercises, 0 installs." width="100%"></a>
+  <a href="https://peterslijkhuis.github.io/StatLab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 64 lessons, 89 exercises, 0 installs." width="100%"></a>
 </p>
 
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/statlab/"><img alt="Open StatLab" src="https://img.shields.io/badge/Open_StatLab-Start_learning_now-4f46e5?style=for-the-badge&logo=r&logoColor=white"></a>
+  <a href="https://peterslijkhuis.github.io/StatLab/"><img alt="Open StatLab" src="https://img.shields.io/badge/Open_StatLab-Start_learning_now-4f46e5?style=for-the-badge&logo=r&logoColor=white"></a>
   <a href="#see-it-in-action"><img alt="Watch the tour" src="https://img.shields.io/badge/Watch-the_tour-0ea5e9?style=for-the-badge"></a>
   <a href="docs/readme/launch.mp4"><img alt="Play the 20 second video" src="https://img.shields.io/badge/Play-20_second_video-db2777?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/PeterSlijkhuis/statlab/actions/workflows/deploy.yml"><img alt="Deploy status" src="https://github.com/PeterSlijkhuis/statlab/actions/workflows/deploy.yml/badge.svg?branch=main"></a>
-  <img alt="webR version" src="https://img.shields.io/github/package-json/dependency-version/PeterSlijkhuis/statlab/webr?label=webR&logo=r&logoColor=white&color=276DC3">
+  <a href="https://github.com/PeterSlijkhuis/StatLab/actions/workflows/deploy.yml"><img alt="Deploy status" src="https://github.com/PeterSlijkhuis/StatLab/actions/workflows/deploy.yml/badge.svg?branch=main"></a>
+  <img alt="webR version" src="https://img.shields.io/github/package-json/dependency-version/PeterSlijkhuis/StatLab/webr?label=webR&logo=r&logoColor=white&color=276DC3">
   <img alt="React 18 and TypeScript" src="https://img.shields.io/badge/React_18-TypeScript-3178C6?logo=typescript&logoColor=white">
   <img alt="No install, no account" src="https://img.shields.io/badge/install-none-16a34a">
 </p>
