@@ -4,7 +4,7 @@ import config from '../vite.config';
 
 describe('vite config', () => {
   test('base path matches the GitHub Pages project path', () => {
-    expect(config.base).toBe('/statlab/');
+    expect(config.base).toBe('/StatLab/');
   });
 
   test('base path is absolute and ends in a slash, as Vite requires', () => {
