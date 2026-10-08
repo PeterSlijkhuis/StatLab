@@ -99,3 +99,19 @@ test('the dark mode button switches the theme and remembers it', () => {
   act(() => button.click());
   expect(document.documentElement.dataset.theme).toBe('light');
 });
+
+test('until a theme is picked, the page follows the system setting as it changes', () => {
+  localStorage.removeItem('statlab.theme');
+  document.documentElement.dataset.theme = 'light';
+  let listener: ((event: { matches: boolean }) => void) | undefined;
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: (_: string, fn: typeof listener) => { listener = fn; }, removeEventListener: () => {} }));
+  renderSidebar();
+  act(() => listener?.({ matches: true }));
+  expect(document.documentElement.dataset.theme).toBe('dark');
+  expect(screen.getByRole('button', { name: 'Dark mode' }).getAttribute('aria-pressed')).toBe('true');
+  // A choice the student made wins over the system.
+  localStorage.setItem('statlab.theme', 'dark');
+  act(() => listener?.({ matches: false }));
+  expect(document.documentElement.dataset.theme).toBe('dark');
+  vi.unstubAllGlobals();
+});
