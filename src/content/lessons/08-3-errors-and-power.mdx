@@ -40,10 +40,10 @@ kind you are holding.
 
 <Predict
   id="p-power"
-  question="Now the null is false: mean exam score is really 73.3, and we will test it against 70. Out of 1000 studies of 100 students each at alpha = .05, how many do you expect to come out significant?"
+  question="Now the null is false: mean exam score is really 73.9, and we will test it against 70. Out of 1000 studies of 100 students each at alpha = .05, how many do you expect to come out significant?"
   choices={[
-    { text: 'All 1000, because the effect is real', response: 'A real effect does not guarantee detection. With this much noise and 100 students, a good fraction of studies will miss it.' },
-    { text: 'About 750', correct: true, response: 'Close to right. The design has about 75% power here - which means roughly one study in four fails to find an effect that is genuinely present.' },
+    { text: 'All 1000, because the effect is real', response: 'A real effect does not guarantee detection. With this much noise and 100 students, some studies will still miss it.' },
+    { text: 'About 900', correct: true, response: 'Close to right. The design has about 90% power here - which means roughly one study in ten fails to find an effect that is genuinely present.' },
     { text: 'About 50, matching alpha', response: 'That is the rate when the null is TRUE. When it is false the rejection rate is power, and power is far higher than alpha for a detectable effect.' },
   ]}
 />
@@ -56,7 +56,7 @@ p_values <- replicate(1000, {
 
 mean(p_values < 0.05)`} />
 
-Roughly three quarters. Which means roughly a quarter of these studies —
+Roughly nine in ten. Which means roughly one in ten of these studies —
 correctly run, correctly analysed, with a genuine effect present — report
 nothing. Had one of them been your own analysis, you would have concluded there was no
 effect, and you would have been wrong.
@@ -86,7 +86,7 @@ curve_data %>%
   theme_classic()`} />
 
 - **Sample size.** The one you control. Power climbs steeply and then flattens;
-  the conventional target of .80 needs about 110 students here.
+  the conventional target of .80 needs about 80 students here.
 - **Effect size.** Set by the world. A bigger gap is easier to see, and this one
   is modest.
 - **α.** Lowering it to .01 to be safer about false positives lowers power at

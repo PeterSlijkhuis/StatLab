@@ -12,9 +12,9 @@ population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
 
 population %>% summarise(mu = mean(exam_score), sigma = sd(exam_score), n = n())`} />
 
-Two numbers: a mean of about 73.3 and a standard deviation of about 12.4. (sd()
-divides by n − 1; the textbook's population σ divides by N and gives 12.35
-instead of 12.36, a difference that changes nothing in this module.) The
+Two numbers: a mean of about 73.9 and a standard deviation of about 12.1. (sd()
+divides by n − 1; the textbook's population σ divides by N and gives 12.122
+instead of 12.124, a difference that changes nothing in this module.) The
 claim of this lesson is that those two numbers are almost the whole story.
 
 <CodeBlock id="hist" code={`library(ggplot2)
@@ -53,11 +53,11 @@ rest of this module treats it as if it were the truth.
 
 <Predict
   id="p-height"
-  question="dnorm(73.3, mean = 73.3, sd = 12.4) returns 0.0322. What does that number tell you?"
+  question="dnorm(73.9, mean = 73.9, sd = 12.1) returns 0.0330. What does that number tell you?"
   choices={[
-    { text: 'About 3.2% of students score exactly 73.3', response: 'No student scores *exactly* 73.3 in any meaningful sense, and a density is not a percentage. Read on — this is the confusion the lesson exists to clear up.' },
-    { text: 'The height of the curve at 73.3, which only becomes a probability once you multiply it by a width', correct: true, response: 'Exactly. A density is a height. Probability is height times width, which is to say area.' },
-    { text: 'About 3.2% of students score below 73.3', response: 'That is what pnorm() would tell you, and the answer would be close to 50%, not 3.2%.' },
+    { text: 'About 3.3% of students score exactly 73.9', response: 'No student scores *exactly* 73.9 in any meaningful sense, and a density is not a percentage. Read on — this is the confusion the lesson exists to clear up.' },
+    { text: 'The height of the curve at 73.9, which only becomes a probability once you multiply it by a width', correct: true, response: 'Exactly. A density is a height. Probability is height times width, which is to say area.' },
+    { text: 'About 3.3% of students score below 73.9', response: 'That is what pnorm() would tell you, and the answer would be close to 50%, not 3.3%.' },
   ]}
 />
 
@@ -80,13 +80,13 @@ pnorm(85, mean = mu, sd = sigma) - pnorm(65, mean = mu, sd = sigma)
 # And the model can be checked against the population it describes.
 mean(population$exam_score < 60)`} />
 
-Compare the first line with the last. The model says about 14 per cent of students score
-below 60; the population itself says about 15 per cent. Close, not identical —
+Compare the first line with the last. The model says about 12.6 per cent of students score
+below 60; the population itself says 13.3 per cent. Close, not identical —
 which is what "the data are approximately normal" means in practice.
 
 Notice also what the area of a single point must be. A point has no width, so
-`pnorm(73.3, mu, sigma) - pnorm(73.3, mu, sigma)` is exactly zero: the probability of scoring
-*exactly* 73.3 is zero under a continuous model. That is not a paradox. It is
+`pnorm(73.9, mu, sigma) - pnorm(73.9, mu, sigma)` is exactly zero: the probability of scoring
+*exactly* 73.9 is zero under a continuous model. That is not a paradox. It is
 the price of modelling a score as a real number rather than as a count.
 
 ## See it move
@@ -114,9 +114,9 @@ at 1 however wide the curve spreads.
   id="i-5-1"
   question="You are writing up the distribution of exam scores for a methods report. Which sentence reports what you have actually computed?"
   choices={[
-    { text: 'Exam scores were approximately normally distributed (μ = 73.31, σ = 12.36). Under this model, 14% of students are expected to score below 60.', correct: true, response: 'Correct. It names the model, gives the two parameters in APA form, and reports the tail area as an expected proportion rather than as a claim about any one student.' },
-    { text: 'The density of exam scores at 60 was .018, so 1.8% of students scored 60.', response: 'That is dnorm(60), a height. Heights are not probabilities, and no student scores exactly 60 under a continuous model.' },
-    { text: 'The probability that a student scored exactly 60 was .14.', response: '.14 is the area to the LEFT of 60, covering every score below it. The probability of any exact score under a continuous model is zero.' },
-    { text: 'Exam scores were normally distributed (μ = 73.31, σ = 12.36), so 14% of students scored below 60.', response: 'Two problems. "Were normally distributed" overstates it (the fit is close, not exact), and the 14% is what the model expects, while the population itself holds about 15%.' },
+    { text: 'Exam scores were approximately normally distributed (μ = 73.89, σ = 12.12). Under this model, 13% of students are expected to score below 60.', correct: true, response: 'Correct. It names the model, gives the two parameters in APA form, and reports the tail area as an expected proportion rather than as a claim about any one student.' },
+    { text: 'The density of exam scores at 60 was .017, so 1.7% of students scored 60.', response: 'That is dnorm(60), a height. Heights are not probabilities, and no student scores exactly 60 under a continuous model.' },
+    { text: 'The probability that a student scored exactly 60 was .13.', response: '.13 is the area to the LEFT of 60, covering every score below it. The probability of any exact score under a continuous model is zero.' },
+    { text: 'Exam scores were normally distributed (μ = 73.89, σ = 12.12), so 13% of students scored below 60.', response: 'Two problems. "Were normally distributed" overstates it (the fit is close, not exact), and the 13% is what the model expects (12.6%), while the population itself holds 13.3%.' },
   ]}
 />

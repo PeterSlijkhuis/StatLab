@@ -35,7 +35,10 @@ function writeWellbeingPopulation() {
   for (let i = 1; i <= N; i += 1) {
     const programme = rng() < 0.5 ? 'Psychology' : 'Business';
     // Stress is skewed: most students low, a long tail of very stressed ones.
-    const stress = Math.min(40, -12 * Math.log(Math.max(rng(), Number.EPSILON)));
+    // The scale runs 0 to 40, like the Perceived Stress Scale. Wrapping a draw
+    // past 40 back round to the start keeps the exponential shape inside the
+    // scale (it is memoryless), where clipping piled 190 students onto 40.
+    const stress = (-12 * Math.log(Math.max(rng(), Number.EPSILON))) % 40;
     const sleep = Math.min(11, Math.max(3, normal(rng, 7.2 - stress * 0.03, 1.1)));
     const exam = Math.min(100, Math.max(0, normal(rng, 62 + sleep * 2.4 - stress * 0.45, 11)));
     rows.push([i, programme, stress.toFixed(2), sleep.toFixed(2), exam.toFixed(1)].join(','));
