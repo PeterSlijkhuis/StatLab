@@ -7,8 +7,8 @@
 .ci-svg { width: 100%; height: auto; background: #f8fafc; border-radius: 4px; }
 .ci-svg line { cursor: pointer; }
 .ci-readout { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
-.ci-readout th { text-align: left; font-weight: 500; color: #475569; padding: 0.2rem 0.5rem 0.2rem 0; }
+.ci-readout th { text-align: left; font-weight: 500; color: var(--muted); padding: 0.2rem 0.5rem 0.2rem 0; }
 .ci-readout td { padding: 0.2rem 1.25rem 0.2rem 0; font-variant-numeric: tabular-nums; font-weight: 600; }
-.ci-single { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border-left: 3px solid #1d4ed8; background: #eff6ff; font-size: 0.9rem; }
-.ci-note { margin: 0.5rem 0 0; color: #475569; font-size: 0.85rem; }
+.ci-single { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border-left: 3px solid #1d4ed8; background: var(--brand-tint); font-size: 0.9rem; }
+.ci-note { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.85rem; }
 

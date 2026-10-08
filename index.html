@@ -19,6 +19,14 @@
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
+    <script>
+      // Before the first paint, so a dark page never flashes white. Matches THEME_KEY and the bar colours in Sidebar.tsx.
+      var theme = null;
+      try { theme = localStorage.getItem('statlab.theme'); } catch (error) {}
+      theme = theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+      if (theme === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b1120');
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

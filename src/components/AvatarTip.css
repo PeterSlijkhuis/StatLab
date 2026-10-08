@@ -2,19 +2,19 @@
 .avatar-tip .avatar { flex: none; border-radius: 50%; box-shadow: var(--shadow-sm); }
 .avatar-tip-bubble {
   position: relative; flex: 1; min-width: 0; padding: 0.65rem 0.85rem; border-radius: var(--radius);
-  border: 1px solid #fcd34d; background: var(--warn-soft); color: #78350f; line-height: 1.45;
+  border: 1px solid var(--warn-line); background: var(--warn-soft); color: var(--warn-ink); line-height: 1.45;
   animation: pop-in var(--medium) var(--ease) both;
 }
 .avatar-tip-bubble::before {
   content: ""; position: absolute; left: -7px; top: 1rem; width: 12px; height: 12px; transform: rotate(45deg);
   background: inherit; border-left: inherit; border-bottom: inherit;
 }
-.avatar-tip-error .avatar-tip-bubble { border-color: #fca5a5; background: var(--danger-soft); color: #7f1d1d; }
+.avatar-tip-error .avatar-tip-bubble { border-color: var(--danger-line); background: var(--danger-soft); color: var(--danger-ink); }
 .avatar-tip-bubble p { margin: 0; }
 .avatar-tip-bubble p + p { margin-top: 0.4rem; }
 @media (prefers-reduced-motion: reduce) { .avatar-tip-bubble { animation: none; } }
-.avatar-tip-coach .avatar-tip-bubble { border-color: #99f6e4; background: #f0fdfa; color: var(--ink); }
-.avatar-tip-right .avatar-tip-bubble { border-color: #86efac; background: #f0fdf4; color: #14532d; }
+.avatar-tip-coach .avatar-tip-bubble { border-color: var(--teal-line); background: var(--teal-tint); color: var(--ink); }
+.avatar-tip-right .avatar-tip-bubble { border-color: var(--success-line); background: var(--success-tint); color: var(--success-ink); }
 .avatar-tip-title { font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
 .avatar-tip-bubble ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
 .avatar-tip-bubble li + li { margin-top: 0.3rem; }

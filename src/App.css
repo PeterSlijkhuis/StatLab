@@ -20,6 +20,9 @@
   --brand-2: #2563eb;
   --brand-soft: #eef0ff;
   --brand-ink: #3730a3;
+  --brand-line: #c7d2fe;
+  --brand-tint: #f5f7ff;
+  --on-brand: #fff;
   --gradient: linear-gradient(135deg, #6366f1 0%, #2563eb 55%, #0ea5e9 100%);
 
   --success: #16a34a;
@@ -31,6 +34,20 @@
   --teal: #0d9488;
   --teal-soft: #ccfbf1;
 
+  /* Text, border and pale-fill shades of each state colour. */
+  --success-ink: #166534;
+  --success-line: #86efac;
+  --success-tint: #f0fdf4;
+  --warn-ink: #92400e;
+  --warn-line: #fcd34d;
+  --warn-tint: #fffbeb;
+  --danger-ink: #991b1b;
+  --danger-line: #fca5a5;
+  --danger-tint: #fef2f2;
+  --teal-ink: #0f766e;
+  --teal-line: #99f6e4;
+  --teal-tint: #f0fdfa;
+
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
@@ -41,6 +58,50 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 150ms;
   --medium: 260ms;
+}
+
+/* Dark theme. index.html sets data-theme before the first paint, from the
+   student's saved choice or else their system setting. Code output, R plots
+   and the simulations keep their own fixed colours: they are figures. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1120;
+  --surface: #131a2a;
+  --surface-2: #1c2436;
+  --ink: #e7ebf3;
+  --ink-2: #c5ccda;
+  --muted: #98a3b8;
+  --line: #273149;
+  --line-strong: #36425e;
+
+  --brand: #8b93f8;
+  --brand-2: #6cb0fb;
+  --brand-soft: #232a52;
+  --brand-ink: #c7d2fe;
+  --brand-line: #3e4787;
+  --brand-tint: #181e3d;
+  --on-brand: #0b1120;
+
+  --success-soft: #0e2618;
+  --warn-soft: #33250a;
+  --danger-soft: #3a1515;
+  --teal-soft: #0e2a28;
+  --success-ink: #86efac;
+  --success-line: #1f6b3d;
+  --success-tint: #0c1f15;
+  --warn-ink: #fcd34d;
+  --warn-line: #7a5a12;
+  --warn-tint: #241b08;
+  --danger-ink: #fca5a5;
+  --danger-line: #7f2a2a;
+  --danger-tint: #261010;
+  --teal-ink: #5eead4;
+  --teal-line: #1d5e57;
+  --teal-tint: #0b201e;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 
 /* Author `display` declarations outrank the user-agent [hidden] rule, so a
@@ -60,10 +121,10 @@ h2 { font-size: 1.45rem; font-weight: 750; }
 a { color: var(--brand-2); text-underline-offset: 2px; }
 a:hover { color: var(--brand); }
 :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
-.skip-link { position: absolute; left: 0.75rem; top: -4rem; z-index: 100; padding: 0.6rem 1rem; border-radius: var(--radius-sm); background: var(--brand); color: #fff; font-weight: 650; text-decoration: none; }
+.skip-link { position: absolute; left: 0.75rem; top: -4rem; z-index: 100; padding: 0.6rem 1rem; border-radius: var(--radius-sm); background: var(--brand); color: var(--on-brand); font-weight: 650; text-decoration: none; }
 .skip-link:focus { top: 0.75rem; }
 .app-main:focus { outline: none; }
-::selection { background: #c7d2fe; }
+::selection { background: var(--brand-line); }
 /* The system text cursor can be white and hard to see on a light page: use a white I-beam with a black outline. */
 :root { --text-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round'%3E%3Cpath d='M8 4h8M8 20h8M12 4v16' stroke='%23000' stroke-width='4'/%3E%3Cpath d='M8 4h8M8 20h8M12 4v16' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E") 12 12, text; }
 :where(p, li, h1, h2, h3, h4, h5, h6, td, th, pre, code, blockquote, figcaption, dd, dt, textarea,
@@ -164,6 +225,7 @@ button { font: inherit; }
 .sidebar-lesson.complete .sidebar-lesson-dot { border-color: var(--success); background: var(--success); }
 .sidebar-lesson.active .sidebar-lesson-dot { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
 .sidebar-lesson-icon { flex: none; width: 1.1rem; text-align: center; }
+button.sidebar-lesson { width: 100%; border: 0; background: none; font: inherit; font-size: 0.88rem; text-align: left; cursor: pointer; }
 
 /* R status: an error sits in the page, where it cannot be missed; the busy and
    ready states float as a small pill so they never push the lesson down. */
@@ -173,13 +235,13 @@ button { font: inherit; }
   animation: pill-in var(--medium) var(--ease) both;
 }
 .r-status.ready::before, .r-status.busy::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 50%; flex: none; }
-.r-status.ready { color: #166534; }
+.r-status.ready { color: var(--success-ink); }
 .r-status.ready::before { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
-.r-status.busy { color: #92400e; }
+.r-status.busy { color: var(--warn-ink); }
 .r-status.busy::before { background: var(--warn); animation: pulse 1.2s ease-in-out infinite; }
 .r-status.error {
   display: block; max-width: 48rem; margin: 0 auto 1.25rem; border-radius: var(--radius); padding: 0.9rem 1.1rem;
-  background: var(--danger-soft); color: #991b1b; border: 1px solid #fecaca;
+  background: var(--danger-soft); color: var(--danger-ink); border: 1px solid var(--danger-line);
 }
 .r-status.error p { margin: 0 0 0.5rem; }
 .r-status-detail { font-family: var(--mono); font-size: 0.75rem; word-break: break-all; }
@@ -206,8 +268,8 @@ button { font: inherit; }
 .hero-eyebrow { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0; padding: 0.25rem 0.7rem 0.25rem 0.35rem; border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-size: 0.8rem; font-weight: 650; }
 .home-tagline { margin: 0 0 0.35rem; font-size: 1.15rem; font-weight: 600; color: #fff; }
 .hero-sub { margin: 0 0 1.4rem; max-width: 34rem; color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; }
-.hero .button-primary { background: #fff; color: var(--brand-ink); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25); }
-.hero .button-primary:hover { color: var(--brand); }
+.hero .button-primary { background: #fff; color: #3730a3; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25); }
+.hero .button-primary:hover { color: #4f46e5; }
 .hero-ring { position: relative; z-index: 1; }
 .progress-ring { width: 9.5rem; height: 9.5rem; }
 .progress-ring circle { fill: none; stroke-width: 11; }
@@ -238,8 +300,8 @@ button { font: inherit; }
   padding: 1.1rem 1.15rem 0.9rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line);
   box-shadow: var(--shadow-sm); transition: transform var(--medium) var(--ease), box-shadow var(--medium), border-color var(--medium);
 }
-.module-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: #c7d2fe; }
-.module-card.done { border-color: #bbf7d0; }
+.module-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--brand-line); }
+.module-card.done { border-color: var(--success-line); }
 .module-card-head { display: flex; align-items: center; gap: 0.7rem; }
 .module-card-head h3 { margin: 0; font-size: 1.05rem; }
 .module-card-number { flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 10px; background: var(--brand-soft); color: var(--brand-ink); font-weight: 800; }
@@ -272,18 +334,18 @@ button { font: inherit; }
 .lesson h1 { margin: 0; }
 .lesson-chips { margin: 0.8rem 0 0; }
 .chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.8rem; font-weight: 650; background: var(--brand-soft); color: var(--brand-ink); transition: background var(--medium), color var(--medium); }
-.chip-done { background: var(--success-soft); color: #166534; }
+.chip-done { background: var(--success-soft); color: var(--success-ink); }
 .lesson { font-size: 1.04rem; color: var(--ink-2); }
 .lesson h2 { margin: 2.75rem 0 0.9rem; padding-top: 0.25rem; font-size: 1.5rem; }
 .lesson h2::before { content: ""; display: block; width: 2.5rem; height: 4px; margin-bottom: 0.75rem; border-radius: 999px; background: var(--gradient); }
 .lesson p, .lesson li { max-width: 42rem; }
 .lesson strong { color: var(--ink); }
 .lesson blockquote {
-  margin: 1.5rem 0; padding: 0.9rem 1.2rem; border-radius: var(--radius); border: 1px solid #dbe2ff;
-  color: var(--ink-2); background: linear-gradient(180deg, #f5f7ff, #eef1ff);
+  margin: 1.5rem 0; padding: 0.9rem 1.2rem; border-radius: var(--radius); border: 1px solid var(--brand-line);
+  color: var(--ink-2); background: linear-gradient(180deg, var(--brand-tint), var(--brand-tint));
 }
 .lesson blockquote p { margin: 0.3rem 0; }
-.lesson code { background: var(--surface-2); color: #3b3f9e; padding: 0.1rem 0.35rem; border-radius: 5px; font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
+.lesson code { background: var(--surface-2); color: var(--brand-ink); padding: 0.1rem 0.35rem; border-radius: 5px; font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
 .lesson table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1.25rem 0; }
 .lesson th, .lesson td { padding: 0.45rem 0.9rem 0.45rem 0; text-align: left; border-bottom: 1px solid var(--line); }
 .lesson th { color: var(--ink); font-size: 0.9rem; }
@@ -311,7 +373,7 @@ button { font: inherit; }
 
 .lesson-finish { max-width: 48rem; margin: 3.5rem auto 0; padding: 1.4rem; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .page-lesson .lesson-finish { margin-left: max(0px, calc((100% - 65rem) / 2)); }
-.lesson-finish.complete { border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, var(--surface) 70%); }
+.lesson-finish.complete { border-color: var(--success-line); background: linear-gradient(180deg, var(--success-tint), var(--surface) 70%); }
 .lesson-finish-status { display: flex; gap: 0.9rem; align-items: center; }
 .lesson-finish-icon { font-size: 2rem; }
 .lesson-finish.complete .lesson-finish-icon { animation: bounce-in 700ms var(--ease) both; }
@@ -364,7 +426,7 @@ button { font: inherit; }
   border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); border-radius: 999px;
   padding: 0.35rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;
 }
-.model-index-filters button[aria-pressed='true'] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.model-index-filters button[aria-pressed='true'] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 .model-index-empty { color: var(--muted); padding: 1.5rem 0; }
 .model-index-section { margin-top: 1.6rem; }
 .model-index-section h3 { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.05rem; }
@@ -392,7 +454,7 @@ button { font: inherit; }
 }
 .model-card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: auto; padding-top: 0.2rem; }
 .model-card-tags .model-badge { font-size: 0.7rem; padding: 0.1rem 0.5rem; }
-.model-chooser-answer { border: 1px solid #99f6e4; border-radius: var(--radius-lg); padding: 1.2rem 1.3rem; max-width: 36rem; background: linear-gradient(180deg, #f0fdfa, var(--surface)); box-shadow: var(--shadow); animation: pop-in var(--medium) var(--ease) both; }
+.model-chooser-answer { border: 1px solid var(--teal-line); border-radius: var(--radius-lg); padding: 1.2rem 1.3rem; max-width: 36rem; background: linear-gradient(180deg, var(--teal-tint), var(--surface)); box-shadow: var(--shadow); animation: pop-in var(--medium) var(--ease) both; }
 .model-chooser-answer pre { background: #0f172a; color: #e2e8f0; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); overflow-x: auto; margin: 0; }
 .model-chooser-answer code, .model-chooser-help code { overflow-wrap: anywhere; }
 .model-chooser-code { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; margin: 0.9rem 0; }
@@ -403,9 +465,9 @@ button { font: inherit; }
 .model-chooser-trail li:not(:last-child)::after { content: '\203A'; margin-left: 0.4rem; }
 .model-chooser-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; }
 .model-badge { display: inline-block; line-height: 1.4; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid transparent; }
-.model-badge.taught { background: #dcfce7; color: #166534; border-color: #86efac; }
-.model-badge.beyond { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-.model-badge.runs-here { background: var(--brand-soft); color: var(--brand-ink); border-color: #c7d2fe; }
+.model-badge.taught { background: var(--success-soft); color: var(--success-ink); border-color: var(--success-line); }
+.model-badge.beyond { background: var(--warn-soft); color: var(--warn-ink); border-color: var(--warn-line); }
+.model-badge.runs-here { background: var(--brand-soft); color: var(--brand-ink); border-color: var(--brand-line); }
 .model-badge.rstudio { background: var(--surface-2); color: var(--ink-2); border-color: var(--line-strong); }
 .link-button { border: none; background: none; color: var(--brand-2); text-decoration: underline; cursor: pointer; padding: 0; font-size: inherit; }
 @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
@@ -454,7 +516,7 @@ button { font: inherit; }
     position: sticky; top: 0; z-index: 40;
     padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) 0.5rem max(0.75rem, env(safe-area-inset-left));
     padding-top: max(0.5rem, env(safe-area-inset-top));
-    background: rgba(255, 255, 255, 0.82); backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px);
+    background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px);
     border-bottom: 1px solid var(--line);
   }
   .topbar-menu {
