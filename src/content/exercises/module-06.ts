@@ -187,7 +187,7 @@ export const module06: ExerciseDef[] = [
           expected <- sigma / sqrt(40)
           # 1e-3 rather than 1e-6: admits a population SD computed with denominator N
           # instead of sd()'s n - 1, which differs by ~1e-4 here. Both wrong answers
-          # below (sigma ~10.6, sigma/40 ~0.27) are far outside this band.
+          # below (sigma ~9.2, sigma/40 ~0.23) are far outside this band.
           # check.attributes = FALSE on each comparison: a second guard, so names never pick the wrong branch.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = TRUE, message = paste0("Correct: ", round(expected, 3), ". Individual students vary by about ", round(sigma, 2), ", but sample means of 40 vary by only ", round(expected, 3), "."))

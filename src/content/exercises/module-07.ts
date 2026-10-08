@@ -122,7 +122,7 @@ export const module07: ExerciseDef[] = [
           # sort(): an interval written upper-first is the same interval.
           value <- sort(value)
           if (isTRUE(all.equal(value, expected, tolerance = 1e-6, check.attributes = FALSE))) {
-            list(pass = TRUE, message = paste0("Correct: [", round(expected[1], 2), ", ", round(expected[2], 2), "]. The population mean is 73.31, so this interval does contain it - which about 19 intervals in 20 will."))
+            list(pass = TRUE, message = paste0("Correct: [", round(expected[1], 2), ", ", round(expected[2], 2), "]. The population mean is 73.89, so this interval does contain it - which about 19 intervals in 20 will."))
           } else if (isTRUE(all.equal(value, sort(m + c(-1, 1) * 1.96 * se), tolerance = 1e-6, check.attributes = FALSE))) {
             list(pass = FALSE, message = "You used 1.96, which comes from the normal distribution and assumes you KNOW the SD. You estimated it from 50 students, so the multiplier is qt(0.975, df = 49) = 2.01 - a slightly wider interval, and that extra width is the price of not knowing sigma.")
           } else if (isTRUE(all.equal(value, sort(m + c(-1, 1) * se), tolerance = 1e-6, check.attributes = FALSE))) {
