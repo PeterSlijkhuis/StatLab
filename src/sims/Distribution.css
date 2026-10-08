@@ -6,7 +6,7 @@
 .distribution-svg { width: 100%; height: auto; background: #f8fafc; border-radius: 4px; }
 .distribution-axis { font-size: 11px; fill: #475569; }
 .distribution-readout { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
-.distribution-readout th { text-align: left; font-weight: 500; color: #475569; padding: 0.2rem 0.5rem 0.2rem 0; }
+.distribution-readout th { text-align: left; font-weight: 500; color: var(--muted); padding: 0.2rem 0.5rem 0.2rem 0; }
 .distribution-readout td { padding: 0.2rem 1.25rem 0.2rem 0; font-variant-numeric: tabular-nums; font-weight: 600; }
-.distribution-note { margin: 0.5rem 0 0; color: #475569; font-size: 0.85rem; }
+.distribution-note { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.85rem; }
 

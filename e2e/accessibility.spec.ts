@@ -20,24 +20,31 @@ async function violations(page: Page) {
   return results.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.map((n) => n.target.join(' ')).slice(0, 5).join(' | ')}`);
 }
 
-test('every page passes the automated WCAG 2.1 AA checks', async ({ page }) => {
-  test.setTimeout(600_000);
-  const found: string[] = [];
-  for (const path of PAGES) {
-    await page.goto(path);
-    await expect(page.locator('main h1').first()).toBeVisible();
-    for (const v of await violations(page)) found.push(`${path}: ${v}`);
-  }
-  expect(found, found.join('\n')).toEqual([]);
-});
+// Both themes: the dark one has its own colours, so its own contrast to get right.
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(`${colorScheme} theme`, () => {
+    test.use({ colorScheme });
 
-test('answer feedback passes the automated WCAG 2.1 AA checks', async ({ page }) => {
-  await page.goto('./lesson/03-4');
-  await expect(page.locator('main h1').first()).toBeVisible();
-  // Answer every choice block so the right, wrong and coach bubbles are all on the page.
-  for (const block of await page.locator('.choice-block').all()) {
-    const option = block.getByRole('button').first();
-    if (await option.isEnabled()) await option.click();
-  }
-  expect(await violations(page)).toEqual([]);
-});
+    test('every page passes the automated WCAG 2.1 AA checks', async ({ page }) => {
+      test.setTimeout(600_000);
+      const found: string[] = [];
+      for (const path of PAGES) {
+        await page.goto(path);
+        await expect(page.locator('main h1').first()).toBeVisible();
+        for (const v of await violations(page)) found.push(`${path}: ${v}`);
+      }
+      expect(found, found.join('\n')).toEqual([]);
+    });
+
+    test('answer feedback passes the automated WCAG 2.1 AA checks', async ({ page }) => {
+      await page.goto('./lesson/03-4');
+      await expect(page.locator('main h1').first()).toBeVisible();
+      // Answer every choice block so the right, wrong and coach bubbles are all on the page.
+      for (const block of await page.locator('.choice-block').all()) {
+        const option = block.getByRole('button').first();
+        if (await option.isEnabled()) await option.click();
+      }
+      expect(await violations(page)).toEqual([]);
+    });
+  });
+}
