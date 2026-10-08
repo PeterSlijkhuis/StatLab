@@ -11,6 +11,9 @@ import Logo from './Logo';
 
 /** Read by the script in index.html, which applies the theme before React loads. */
 const THEME_KEY = 'statlab.theme';
+/** The browser bar colour for each theme, the same as in index.html. */
+const LIGHT_BAR = '#f8fafc';
+const DARK_BAR = '#0b1120';
 
 type Props = {
   /** Whether the drawer is showing, on screens narrow enough to have one. */
@@ -26,12 +29,27 @@ export default function Sidebar({ open = false }: Props) {
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   const progress = getProgress();
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark');
-  function toggleTheme() {
-    const next = dark ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem(THEME_KEY, next); } catch { /* Private mode: it still switches for this visit. */ }
-    setDark(!dark);
+  function applyTheme(isDark: boolean) {
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? DARK_BAR : LIGHT_BAR);
+    setDark(isDark);
   }
+  function toggleTheme() {
+    try { localStorage.setItem(THEME_KEY, dark ? 'light' : 'dark'); } catch { /* Private mode: it still switches for this visit. */ }
+    applyTheme(!dark);
+  }
+  // Until the student picks a theme, follow the system setting as it changes.
+  useEffect(() => {
+    const query = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!query) return;
+    function onChange(event: MediaQueryListEvent) {
+      let saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch { /* Treated as no choice made. */ }
+      if (!saved) applyTheme(event.matches);
+    }
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
   const stats = courseStats(progress);
 
   // One module open at a time by default: the one holding the current lesson.
