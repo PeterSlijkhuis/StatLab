@@ -18,7 +18,7 @@ sigma <- sd(population$exam_score)
 pnorm(85, mean = mu, sd = sigma)
 
 # Probability in, score out.
-qnorm(0.828, mean = mu, sd = sigma)
+qnorm(0.820, mean = mu, sd = sigma)
 
 # Round trip: qnorm undoes pnorm.
 qnorm(pnorm(85, mean = mu, sd = sigma), mean = mu, sd = sigma)`} />
@@ -41,7 +41,7 @@ qnorm(0.10, mean = mu, sd = sigma, lower.tail = FALSE)
 # Check it against the population the model describes.
 mean(population$exam_score > qnorm(0.90, mean = mu, sd = sigma))`} />
 
-The model puts the distinction cut-off at 89.1, and 504 of the actual 5000
+The model puts the distinction cut-off at 89.4, and 509 of the actual 5000
 students, just over 10 per cent, clear it. Two numbers, a mean and an SD, were enough
 to answer a question nobody had asked when the data were collected.
 
@@ -92,9 +92,9 @@ the cut with 0.025 to its left sits at about −1.96.
   id="i-5-3"
   question="The exam board asks you to justify a distinction cut-off of 89. Which sentence reports the calculation honestly?"
   choices={[
-    { text: 'Modelling exam scores as normal (μ = 73.31, σ = 12.36), the 90th percentile falls at 89.14; 10% of students would be expected to score above that cut-off.', correct: true, response: 'Correct. It names the model and its parameters, gives the quantile, and states the consequence as an expectation rather than a certainty.' },
-    { text: 'The top 10% of students scored 89.14.', response: 'A cut-off is not a group, and 89.14 is not anyone’s score. It is the boundary above which the top decile falls.' },
+    { text: 'Modelling exam scores as normal (μ = 73.89, σ = 12.12), the 90th percentile falls at 89.43; 10% of students would be expected to score above that cut-off.', correct: true, response: 'Correct. It names the model and its parameters, gives the quantile, and states the consequence as an expectation rather than a certainty.' },
+    { text: 'The top 10% of students scored 89.43.', response: 'A cut-off is not a group, and 89.43 is not anyone’s score. It is the boundary above which the top decile falls.' },
     { text: 'The probability of scoring above 89 was 1.28.', response: '1.28 is qnorm(0.90) on the standard normal — a z-score. Probabilities cannot exceed 1.' },
-    { text: 'Exactly 500 of the 5000 students scored above 89.14, because 10% of 5000 is 500.', response: 'That is what the model predicts, not what the data did. Counting the actual population gives a number close to 500 but not equal to it.' },
+    { text: 'Exactly 500 of the 5000 students scored above 89.43, because 10% of 5000 is 500.', response: 'That is what the model predicts, not what the data did. Counting the actual population gives a number close to 500 but not equal to it.' },
   ]}
 />
