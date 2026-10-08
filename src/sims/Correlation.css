@@ -5,10 +5,10 @@
 .correlation-slider input[type="range"] { width: 11rem; }
 .correlation-slider span { font-variant-numeric: tabular-nums; min-width: 3rem; }
 .correlation-controls button { padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--brand-ink); cursor: pointer; font-weight: 600; transition: background var(--fast), border-color var(--fast); }
-.correlation-controls button:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: default; }
+.correlation-controls button:disabled { border-color: var(--line-strong); color: var(--muted); cursor: default; }
 .correlation-readout { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
-.correlation-readout th { text-align: left; font-weight: 500; color: #475569; padding: 0.2rem 0.5rem 0.2rem 0; }
+.correlation-readout th { text-align: left; font-weight: 500; color: var(--muted); padding: 0.2rem 0.5rem 0.2rem 0; }
 .correlation-readout td { padding: 0.2rem 1.25rem 0.2rem 0; font-variant-numeric: tabular-nums; font-weight: 600; }
-.correlation-score { margin: 0.5rem 0 0; color: #475569; font-size: 0.85rem; }
-.correlation-verdict { margin: 0.35rem 0 0; padding: 0.5rem 0.75rem; border-left: 3px solid #b45309; background: #fffbeb; font-size: 0.88rem; }
+.correlation-score { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.85rem; }
+.correlation-verdict { margin: 0.35rem 0 0; padding: 0.5rem 0.75rem; border-left: 3px solid var(--warn-ink); background: var(--warn-tint); font-size: 0.88rem; }
 

@@ -2,7 +2,7 @@
 .file-upload-compact { margin: 0.5rem 0 0.75rem; padding: 0.55rem 0.7rem; }
 .file-upload-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
 .file-upload button {
-  padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: #fff;
+  padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-brand);
   cursor: pointer; font-size: 0.88rem; font-weight: 650; transition: background var(--fast);
 }
 .file-upload button:hover:not(:disabled) { background: var(--brand-ink); }
@@ -10,7 +10,7 @@
 .file-upload button.secondary { background: var(--surface); color: var(--brand-ink); border-color: var(--line-strong); padding: 0.25rem 0.75rem; font-size: 0.82rem; }
 .file-upload button.secondary:hover:not(:disabled) { background: var(--brand-soft); }
 .file-upload-note { color: var(--muted); font-size: 0.85rem; flex: 1 1 16rem; }
-.file-upload-error { margin: 0.6rem 0 0; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--danger-soft); border: 1px solid #fca5a5; color: #7f1d1d; font-size: 0.88rem; }
+.file-upload-error { margin: 0.6rem 0 0; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--danger-soft); border: 1px solid var(--danger-line); color: var(--danger-ink); font-size: 0.88rem; }
 .file-upload-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
 .file-upload-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem; padding: 0.45rem 0.6rem; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--line); }
 .file-upload-name { font-weight: 650; color: var(--ink); font-size: 0.88rem; }

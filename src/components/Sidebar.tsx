@@ -9,6 +9,9 @@ import Avatar from './Avatar';
 import Credits from './Credits';
 import Logo from './Logo';
 
+/** Read by the script in index.html, which applies the theme before React loads. */
+const THEME_KEY = 'statlab.theme';
+
 type Props = {
   /** Whether the drawer is showing, on screens narrow enough to have one. */
   open?: boolean;
@@ -22,6 +25,13 @@ export default function Sidebar({ open = false }: Props) {
   // useSyncExternalStore snapshot; a counter re-renders on each store write.
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   const progress = getProgress();
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark');
+  function toggleTheme() {
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem(THEME_KEY, next); } catch { /* Private mode: it still switches for this visit. */ }
+    setDark(!dark);
+  }
   const stats = courseStats(progress);
 
   // One module open at a time by default: the one holding the current lesson.
@@ -122,6 +132,7 @@ export default function Sidebar({ open = false }: Props) {
           <li><NavLink to="/sample-size" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🎯</span>How many participants?</NavLink></li>
           <li><NavLink to="/review" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🔁</span>Review quiz</NavLink></li>
           <li><NavLink to="/workspace" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">⌨️</span>R Workspace</NavLink></li>
+          <li><button type="button" className="sidebar-lesson" aria-pressed={dark} onClick={toggleTheme}><span className="sidebar-lesson-icon" aria-hidden="true">🌙</span>Dark mode</button></li>
         </ul>
       </div>
 
