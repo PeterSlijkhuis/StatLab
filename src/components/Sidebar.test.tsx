@@ -86,3 +86,16 @@ describe('Sidebar', () => {
     expect(link.className).toContain('complete');
   });
 });
+
+test('the dark mode button switches the theme and remembers it', () => {
+  document.documentElement.dataset.theme = 'light';
+  renderSidebar();
+  const button = screen.getByRole('button', { name: 'Dark mode' });
+  expect(button.getAttribute('aria-pressed')).toBe('false');
+  act(() => button.click());
+  expect(document.documentElement.dataset.theme).toBe('dark');
+  expect(localStorage.getItem('statlab.theme')).toBe('dark');
+  expect(button.getAttribute('aria-pressed')).toBe('true');
+  act(() => button.click());
+  expect(document.documentElement.dataset.theme).toBe('light');
+});

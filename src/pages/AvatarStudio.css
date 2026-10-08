@@ -43,7 +43,7 @@
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm); text-align: center;
 }
 .avatar-card .avatar { border-radius: 50%; }
-.avatar-card.owned { background: var(--success-soft); border-color: #bbf7d0; }
+.avatar-card.owned { background: var(--success-soft); border-color: var(--success-line); }
 .avatar-card .button { padding: 0.4rem 0.9rem; font-size: 0.88rem; }
 .avatar-card .button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 .avatar-short { font-size: 0.75rem; color: var(--muted); }

@@ -6,10 +6,10 @@
 .leastsquares-slider input[type="range"] { width: 10rem; }
 .leastsquares-slider span { font-variant-numeric: tabular-nums; min-width: 3rem; }
 .leastsquares-readout { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
-.leastsquares-readout th { text-align: left; font-weight: 500; color: #475569; padding: 0.2rem 0.5rem 0.2rem 0; }
+.leastsquares-readout th { text-align: left; font-weight: 500; color: var(--muted); padding: 0.2rem 0.5rem 0.2rem 0; }
 .leastsquares-readout td { padding: 0.2rem 1.25rem 0.2rem 0; font-variant-numeric: tabular-nums; font-weight: 600; }
 .leastsquares-equation { margin: 0.5rem 0 0; font-size: 0.9rem; }
 .leastsquares-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
 .leastsquares-actions button { padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--brand-ink); cursor: pointer; font-weight: 600; transition: background var(--fast), border-color var(--fast); }
-.leastsquares-note { margin: 0.75rem 0 0; color: #475569; font-size: 0.85rem; }
+.leastsquares-note { margin: 0.75rem 0 0; color: var(--muted); font-size: 0.85rem; }
 

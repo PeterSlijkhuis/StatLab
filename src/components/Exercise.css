@@ -1,10 +1,10 @@
 .exercise {
-  position: relative; border: 1px solid #99f6e4; border-radius: var(--radius-lg); padding: 1.15rem; margin: 2rem 0;
-  background: linear-gradient(180deg, #f0fdfa, var(--surface) 7rem); box-shadow: var(--shadow);
+  position: relative; border: 1px solid var(--teal-line); border-radius: var(--radius-lg); padding: 1.15rem; margin: 2rem 0;
+  background: linear-gradient(180deg, var(--teal-tint), var(--surface) 7rem); box-shadow: var(--shadow);
   transition: border-color var(--medium), box-shadow var(--medium);
 }
-.exercise-passed { border-color: #86efac; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12), var(--shadow); }
-.exercise-label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0 0 0.45rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--teal-soft); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; color: #0f766e; }
+.exercise-passed { border-color: var(--success-line); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12), var(--shadow); }
+.exercise-label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0 0 0.45rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--teal-soft); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal-ink); }
 .exercise-prompt { margin: 0 0 0.85rem; font-weight: 650; color: var(--ink); }
 .exercise-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
 .exercise-actions button {
@@ -13,20 +13,20 @@
 }
 .exercise-actions button:hover:not(:disabled) { background: #0f766e; }
 .exercise-actions button:active:not(:disabled) { transform: scale(0.97); }
-.exercise-actions button.secondary { background: var(--surface); color: #0f766e; border-color: #99f6e4; }
+.exercise-actions button.secondary { background: var(--surface); color: var(--teal-ink); border-color: var(--teal-line); }
 .exercise-actions button.secondary:hover:not(:disabled) { background: var(--teal-soft); }
 .exercise-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
 .exercise-hints { margin: 0; }
 .exercise-hints li { animation: pop-in var(--medium) var(--ease) both; }
 .exercise-outcome { padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); margin: 0.7rem 0; animation: pop-in var(--medium) var(--ease) both; }
 .exercise-outcome p { margin: 0; }
-.outcome-pass { background: var(--success-soft); border: 1px solid #86efac; color: #14532d; font-weight: 600; }
+.outcome-pass { background: var(--success-soft); border: 1px solid var(--success-line); color: var(--success-ink); font-weight: 600; }
 .outcome-pass p::before { content: "✓ "; }
-.outcome-fail { background: var(--warn-soft); border: 1px solid #fcd34d; color: #78350f; animation-name: nudge; }
-.outcome-student-error { background: var(--danger-soft); border: 1px solid #fca5a5; color: #7f1d1d; }
+.outcome-fail { background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn-ink); animation-name: nudge; }
+.outcome-student-error { background: var(--danger-soft); border: 1px solid var(--danger-line); color: var(--danger-ink); }
 .outcome-broken-check { background: #ede9fe; border: 1px solid #c4b5fd; color: #4c1d95; }
 .exercise-solution { background: #0f172a; color: #e2e8f0; padding: 0.8rem; border-radius: var(--radius-sm); overflow-x: auto; font-family: var(--mono); font-size: 0.86rem; animation: pop-in var(--medium) var(--ease) both; }
-.exercise-missing { color: var(--danger); font-weight: 600; }
+.exercise-missing { color: var(--danger-ink); font-weight: 600; }
 @keyframes nudge { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 .exercise-task .exercise-prompt { margin: 0; }
 .exercise-advice { font-size: 0.9rem; color: var(--muted); }
