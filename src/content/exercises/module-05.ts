@@ -38,10 +38,10 @@ export const module05: ExerciseDef[] = [
           population <- read.csv("data/wellbeing-population.csv")
           mu <- mean(population$exam_score)
           sigma <- sd(population$exam_score)
-          expected <- pnorm(60, mean = mu, sd = sigma)   # 0.140774
+          expected <- pnorm(60, mean = mu, sd = sigma)   # 0.125920
           # tolerance 1e-3, not 1e-6: a student who computes the SD with denominator N
-          # rather than sd()'s n - 1 lands on 0.140750 - the same answer to every digit
-          # anyone would report. The three wrong answers are 0.859, 0.018 and 1.000,
+          # rather than sd()'s n - 1 lands on 0.125896 - the same answer to every digit
+          # anyone would report. The three wrong answers are 0.874, 0.017 and 1.000,
           # all far outside this band.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = TRUE, message = paste0("Correct: ", round(expected, 4), ". Under this normal model about ", round(100 * expected), " out of every 100 students score below 60, and the actual count in the population is ", sum(population$exam_score < 60), " out of 5000 - the model is close, not exact."))
@@ -99,10 +99,10 @@ export const module05: ExerciseDef[] = [
           population <- read.csv("data/wellbeing-population.csv")
           mu <- mean(population$exam_score)
           sigma <- sd(population$exam_score)
-          expected <- (85 - mu) / sigma    # 0.946517
+          expected <- (85 - mu) / sigma    # 0.916170
           # tolerance 1e-3 for the same reason as m5-1-a: an SD computed with
-          # denominator N gives 0.946612, which rounds identically at two decimals.
-          # The wrong answers are 11.69, 6.88 and -0.95.
+          # denominator N gives 0.916262, which rounds identically at two decimals.
+          # The wrong answers are 11.11, 7.01 and -0.92.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = TRUE, message = paste0("Correct: z = ", round(expected, 2), ". That student is just under one standard deviation above the mean, which puts them above about ", round(100 * pnorm(expected)), " per cent of students."))
           } else if (isTRUE(all.equal(value, -expected, tolerance = 1e-3, check.attributes = FALSE))) {
@@ -155,8 +155,8 @@ export const module05: ExerciseDef[] = [
           list(pass = FALSE, message = "Both z_exam and z_sleep should be single numbers.")
         } else {
           population <- read.csv("data/wellbeing-population.csv")
-          want_exam <- (85 - mean(population$exam_score)) / sd(population$exam_score)      # 0.946517
-          want_sleep <- (9.1 - mean(population$sleep_hours)) / sd(population$sleep_hours)  # 1.996967
+          want_exam <- (85 - mean(population$exam_score)) / sd(population$exam_score)      # 0.916170
+          want_sleep <- (9.1 - mean(population$sleep_hours)) / sd(population$sleep_hours)  # 1.986021
           # tolerance 1e-3 throughout, as in m5-2-a: an SD computed with denominator N
           # is within 1e-4 of sd(), and no wrong answer here is closer than 0.25.
           ok_exam <- isTRUE(all.equal(z_exam, want_exam, tolerance = 1e-3, check.attributes = FALSE))
@@ -219,9 +219,9 @@ export const module05: ExerciseDef[] = [
           population <- read.csv("data/wellbeing-population.csv")
           mu <- mean(population$exam_score)
           sigma <- sd(population$exam_score)
-          expected <- qnorm(0.90, mean = mu, sd = sigma)   # 89.13958
-          # tolerance 1e-4: an SD computed with denominator N gives 89.13800, a
-          # relative difference of 1.8e-5. The wrong answers are 57.5, 1.28 and
+          expected <- qnorm(0.90, mean = mu, sd = sigma)   # 89.42980
+          # tolerance 1e-4: an SD computed with denominator N gives 89.42825, a
+          # relative difference of 1.7e-5. The wrong answers are 58.4, 1.28 and
           # essentially 0, so nothing plausible sneaks through this band.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-4, check.attributes = FALSE))) {
             list(pass = TRUE, message = paste0("Correct: ", round(expected, 2), ". In the actual population ", sum(population$exam_score > expected), " of 5000 students score above it - close to the 500 the model predicts."))
@@ -281,8 +281,8 @@ export const module05: ExerciseDef[] = [
           sigma <- sd(population$exam_score)
           lower <- pnorm(65, mean = mu, sd = sigma)
           upper <- pnorm(85, mean = mu, sd = sigma)
-          expected <- upper - lower   # 0.577321
-          # tolerance 1e-3, as in m5-1-a: the denominator-N SD gives 0.577290.
+          expected <- upper - lower   # 0.588578
+          # tolerance 1e-3, as in m5-1-a: the denominator-N SD gives 0.588624.
           if (isTRUE(all.equal(value, expected, tolerance = 1e-3, check.attributes = FALSE))) {
             list(pass = TRUE, message = paste0("Correct: ", round(expected, 4), ". Just under three students in five fall in that twenty-point band, and the actual population count is ", sum(population$exam_score > 65 & population$exam_score < 85), " of 5000."))
           } else if (value > 1) {

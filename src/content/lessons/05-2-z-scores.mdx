@@ -21,7 +21,7 @@ population %>%
 
 <Predict
   id="p-compare"
-  question="Exam scores average 73.3 with an SD of 12.4; sleep averages 6.85 hours with an SD of 1.13. Which is further from its own mean: an exam score of 85, or 9.1 hours of sleep?"
+  question="Exam scores average 73.9 with an SD of 12.1; sleep averages 6.89 hours with an SD of 1.11. Which is further from its own mean: an exam score of 85, or 9.1 hours of sleep?"
   choices={[
     { text: 'The exam score, because 85 is a much bigger number', response: 'Size on the original scale tells you nothing: 85 out of 100 and 9.1 hours are not comparable quantities until you standardise.' },
     { text: 'The sleep figure', correct: true, response: 'Yes. 85 is under one SD above the exam mean; 9.1 hours is two SDs above the sleep mean. Run the next block to confirm it.' },
@@ -37,7 +37,7 @@ sleep_sd <- sd(population$sleep_hours)
 (85 - exam_mu) / exam_sd
 (9.1 - sleep_mu) / sleep_sd`} />
 
-An exam score of 85 is 0.95 SDs above the mean. Sleeping 9.1 hours is 2.00 SDs
+An exam score of 85 is 0.92 SDs above the mean. Sleeping 9.1 hours is 1.99 SDs
 above the mean. The sleeper is the more unusual of the two, and no amount of staring at "85" and
 "9.1" would have told you that.
 
@@ -94,7 +94,7 @@ about two standard errors of the population mean" becomes the confidence interva
   id="q-z"
   question="A student's exam score has z = −1.5. Which statement is correct?"
   choices={[
-    { text: 'They scored 1.5 points below the mean', response: 'A z-score is not in the original units. −1.5 means 1.5 standard deviations, which here is about 18.5 exam points.' },
+    { text: 'They scored 1.5 points below the mean', response: 'A z-score is not in the original units. −1.5 means 1.5 standard deviations, which here is about 18.2 exam points.' },
     { text: 'They scored 1.5 standard deviations below the mean, placing them in roughly the bottom 7% of students', correct: true, response: 'Right: pnorm(-1.5) is .067, so about 7 students in 100 score below them.' },
     { text: 'They scored better than 1.5% of students', response: 'The −1.5 is a distance in SDs, not a percentage. Feed it to pnorm() to get a percentage.' },
     { text: 'Their score is invalid, because z-scores cannot be negative', response: 'Half of all z-scores are negative — every value below the mean has one.' },
@@ -107,9 +107,9 @@ about two standard errors of the population mean" becomes the confidence interva
   id="i-5-2"
   question="A colleague asks you to describe, in a sentence fit for a report, the student who scored 85. Which one is right?"
   choices={[
-    { text: 'The student scored 0.95 standard deviations above the population mean (μ = 73.31, σ = 12.36, z = 0.95), placing them at approximately the 83rd percentile.', correct: true, response: 'Correct. It gives the parameters the z was computed from and converts the z into a percentile, which is what a reader actually wants.' },
-    { text: 'The student scored better than 95% of their peers (z = 0.95).', response: 'The 0.95 is a distance in standard deviations, not a percentile. pnorm(0.95) = .83, so the figure is 83%, not 95%.' },
-    { text: 'The student scored 95% of the population mean (z = 0.95).', response: 'A z-score is not a ratio to the mean. It is a count of standard deviations away from it.' },
-    { text: 'The student score was significant (z = 0.95, p < .05).', response: 'Nothing has been tested. A z-score describes where one value sits in a distribution; it is not a hypothesis test, and 0.95 would not be significant in any case.' },
+    { text: 'The student scored 0.92 standard deviations above the population mean (μ = 73.89, σ = 12.12, z = 0.92), placing them at approximately the 82nd percentile.', correct: true, response: 'Correct. It gives the parameters the z was computed from and converts the z into a percentile, which is what a reader actually wants.' },
+    { text: 'The student scored better than 92% of their peers (z = 0.92).', response: 'The 0.92 is a distance in standard deviations, not a percentile. pnorm(0.92) = .82, so the figure is 82%, not 92%.' },
+    { text: 'The student scored 92% of the population mean (z = 0.92).', response: 'A z-score is not a ratio to the mean. It is a count of standard deviations away from it.' },
+    { text: 'The student score was significant (z = 0.92, p < .05).', response: 'Nothing has been tested. A z-score describes where one value sits in a distribution; it is not a hypothesis test, and 0.92 would not be significant in any case.' },
   ]}
 />

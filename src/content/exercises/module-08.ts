@@ -271,17 +271,18 @@ export const module08: ExerciseDef[] = [
         } else {
           # A band, not a value: power here is estimated by simulation, and every
           # legitimate route draws its own random numbers. The true value for
-          # n = 100 against mu = 70 is about .75, and 1000 replicates give a
-          # standard error of about .013, so .67 to .85 is about six standard errors
-          # either way. The wrong answers land at about .24 (the complement),
-          # .05 (alpha), .06 (the mean p-value) and .12 (n = 10).
-          if (value >= 0.67 && value <= 0.85) {
+          # n = 100 against mu = 70 is about .89, and 1000 replicates give a
+          # standard error of about .010, so .83 to .95 is about six standard errors
+          # either way. The wrong answers land at about .11 (the complement),
+          # .14 (n = 10), .03 (alpha) and .02 (the mean p-value). The first two are
+          # too close to tell apart by value, so they share a message.
+          if (value >= 0.83 && value <= 0.95) {
             list(pass = TRUE, message = paste0("About ", round(100 * value), " studies in 100 would detect this effect. That is the power of the design - and it means roughly ", round(100 * (1 - value)), " in 100 would miss it and report a non-significant result, even though the effect is genuinely there."))
-          } else if (value >= 0.15 && value <= 0.33) {
-            list(pass = FALSE, message = "That is the proportion of studies that FAILED to reject - the Type II error rate. Power is its complement: count p_values below alpha, not above it.")
-          } else if (value <= 0.10) {
+          } else if (value >= 0.09 && value <= 0.20) {
+            list(pass = FALSE, message = "That is far below this design's power. Two mistakes land here. You may have counted the studies that FAILED to reject, which is the Type II error rate: power is its complement, so count p_values below alpha, not above it. Or each study has far fewer than the 100 students the exercise specifies.")
+          } else if (value < 0.09) {
             list(pass = FALSE, message = "That is close to alpha, the rejection rate you get when the null is TRUE. Power is the rejection rate when the null is FALSE, so the test has to be against mu = 70 - a value the population mean is genuinely not equal to. (If you averaged the p-values instead of counting rejections, that also lands here.)")
-          } else if (value < 0.67) {
+          } else if (value < 0.83) {
             list(pass = FALSE, message = paste0("A power of ", round(value, 2), " is too low for this design. Check the sample size inside replicate(): the exercise specifies 100 students per study, and power climbs steeply with n."))
           } else {
             list(pass = FALSE, message = paste0("A power of ", round(value, 2), " is higher than this design can deliver. Check that alpha is 0.05 and that each study samples 100 students."))
@@ -340,7 +341,7 @@ export const module08: ExerciseDef[] = [
         } else if (abs(abs(got) - abs(target)) > 1e-6) {
           list(pass = FALSE, message = paste0("d is ", round(got, 3), ", but it should be ", round(target, 3), ". Check the pooled SD: each group's variance times its n - 1, added, divided by n1 + n2 - 2, then the square root."))
         } else {
-          list(pass = TRUE, message = paste0("Correct: d = ", format(round(abs(target), 2), nsmall = 2), ". The whole population's d is 0.50, so this significant small study overestimates the effect, as significant small studies tend to."))
+          list(pass = TRUE, message = paste0("Correct: d = ", format(round(abs(target), 2), nsmall = 2), ". The whole population's d is 0.47, so this significant small study overestimates the effect, as significant small studies tend to."))
         }
       }
     `,
