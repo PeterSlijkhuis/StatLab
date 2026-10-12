@@ -43,6 +43,15 @@ describe('Distribution', () => {
     }
   });
 
+  test('a narrower SD pulls the cut back inside the slider range', () => {
+    render(<Distribution />);
+    fireEvent.change(screen.getByLabelText(/Cut-off/), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/Standard deviation/), { target: { value: '3' } });
+    // The slider now ends at 70 + 4 * 3 = 82, and the readout follows it.
+    expect((screen.getByLabelText(/Cut-off/) as HTMLInputElement).value).toBe('82');
+    expect(screen.getByTestId('z-score').textContent).toContain('4.00');
+  });
+
   test('the curve is described in words for screen readers', () => {
     render(<Distribution />);
     expect(screen.getByRole('img').getAttribute('aria-label'))

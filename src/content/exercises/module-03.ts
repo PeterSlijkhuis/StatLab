@@ -94,6 +94,8 @@ export const module03: ExerciseDef[] = [
       'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nspread <- employees %>%\n  summarise(\n    sd_wellbeing = sd(wellbeing),\n    iqr_wellbeing = quantile(wellbeing, 0.75),\n    range_wellbeing = max(wellbeing) - min(wellbeing)\n  )',
       // The largest score, with the subtraction forgotten.
       'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nspread <- employees %>%\n  summarise(\n    sd_wellbeing = sd(wellbeing),\n    iqr_wellbeing = IQR(wellbeing),\n    range_wellbeing = max(wellbeing)\n  )',
+      // range() itself, which the lesson warns returns the two endpoints: summarise() gives two rows.
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nspread <- employees %>%\n  summarise(\n    sd_wellbeing = sd(wellbeing),\n    iqr_wellbeing = IQR(wellbeing),\n    range_wellbeing = range(wellbeing)\n  )',
     ],
     alternateSolutions: [
       // The IQR written out as the gap between the quartiles, and diff(range()).
@@ -108,7 +110,10 @@ export const module03: ExerciseDef[] = [
         got <- answer("spread")
         d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
         needed <- c("sd_wellbeing", "iqr_wellbeing", "range_wellbeing")
-        if (!is.data.frame(got) || nrow(got) != 1L) {
+        if (is.data.frame(got) && nrow(got) == 2L && "range_wellbeing" %in% names(got) &&
+            isTRUE(all.equal(as.vector(got$range_wellbeing), as.vector(range(d$wellbeing)), tolerance = 1e-6, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("range() returns two numbers, the smallest and the largest score, so spread came out with two rows. The range as a distance is one number: max(wellbeing) - min(wellbeing), which is ", round(max(d$wellbeing) - min(d$wellbeing), 2), "."))
+        } else if (!is.data.frame(got) || nrow(got) != 1L) {
           list(pass = FALSE, message = "spread should be a one-row data frame with three columns.")
         } else if (!all(needed %in% names(got))) {
           list(pass = FALSE, message = paste0("spread is missing the column(s): ", paste(setdiff(needed, names(got)), collapse = ", "), "."))
