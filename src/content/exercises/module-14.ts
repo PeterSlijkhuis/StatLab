@@ -227,6 +227,9 @@ export const module14: ExerciseDef[] = [
       'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["(Intercept)", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
       // A one-sample test on the time 2 scores, which runs and answers nothing.
       'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2)$statistic',
+      // The textbook's REML = FALSE: a maximum-likelihood fit, whose t is close to
+      // the paired t but not equal to it.
+      'library(dplyr)\nlibrary(tidyr)\nlibrary(lmerTest)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nlong_d <- d %>%\n  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%\n  mutate(time = factor(time, levels = c("engagement_t1", "engagement_t2"), labels = c("t1", "t2")))\nm_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d, REML = FALSE)\nt_lmer <- summary(m_time)$coefficients["timet2", "t value"]\nt_paired <- t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic',
     ],
     alternateSolutions: [
       // The paired test written the other way round: the t flips sign, and the
@@ -251,6 +254,7 @@ export const module14: ExerciseDef[] = [
         reference <- lmerTest::lmer(engagement ~ time + (1 | employee_id), data = long)
         exp_t <- as.vector(coef(summary(reference))[2, "t value"])
         exp_intercept_t <- as.vector(coef(summary(reference))[1, "t value"])
+        ml_t <- as.vector(coef(summary(lmerTest::lmer(engagement ~ time + (1 | employee_id), data = long, REML = FALSE)))[2, "t value"])
         exp_paired <- as.vector(t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic)
         unpaired <- as.vector(t.test(d$engagement_t2, d$engagement_t1)$statistic)
         if (!inherits(m_time, "merMod")) {
@@ -259,6 +263,8 @@ export const module14: ExerciseDef[] = [
           list(pass = FALSE, message = "Both t statistics should be single numbers.")
         } else if (isTRUE(all.equal(t_lmer, exp_intercept_t, tolerance = 1e-4, check.attributes = FALSE))) {
           list(pass = FALSE, message = "t_lmer is the intercept's t, which tests whether engagement at time 1 differs from zero. The row you want is the one named after the second level of time.")
+        } else if (isTRUE(all.equal(abs(t_lmer), abs(ml_t), tolerance = 1e-4, check.attributes = FALSE))) {
+          list(pass = FALSE, message = paste0("That t (", round(ml_t, 3), ") comes from a maximum-likelihood fit, REML = FALSE. The textbook recommends ML for fixed effects, but the exact match with the paired t-test holds for lmer's default REML fit. Leave REML = FALSE out and t_lmer becomes ", round(exp_t, 3), "."))
         } else if (!isTRUE(all.equal(abs(t_lmer), abs(exp_t), tolerance = 1e-4, check.attributes = FALSE))) {
           list(pass = FALSE, message = paste0("t_lmer is ", round(t_lmer, 4), " but the fixed effect of time has t = ", round(exp_t, 4), "."))
         } else if (isTRUE(all.equal(abs(t_paired), abs(unpaired), tolerance = 1e-6, check.attributes = FALSE))) {

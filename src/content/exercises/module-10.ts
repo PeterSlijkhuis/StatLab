@@ -262,6 +262,8 @@ export const module10: ExerciseDef[] = [
       'd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nbreaks <- quantile(d$workload, probs = c(0, 1/3, 2/3, 1))\nd$third <- cut(d$workload, breaks = breaks, include.lowest = TRUE, labels = FALSE)\nwl_means <- aggregate(wellbeing ~ third, data = d, FUN = mean)',
       // The same table with an extra column of SDs, which is still one row per third.
       'library(dplyr)\nlibrary(broom)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nwl_means <- d %>%\n  mutate(third = ntile(workload, 3)) %>%\n  group_by(third) %>%\n  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())',
+      // aggregate() with several summaries: the means arrive inside one matrix column.
+      'library(dplyr)\nd <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nmodel_wl <- lm(wellbeing ~ workload, data = d)\nd$third <- ntile(d$workload, 3)\nwl_means <- aggregate(wellbeing ~ third, data = d, FUN = function(x) c(mean = mean(x), sd = sd(x)))',
     ],
     check: `
       if (!has_answer("model_wl") || !has_answer("wl_means")) {
@@ -288,12 +290,10 @@ export const module10: ExerciseDef[] = [
         } else if (nrow(wl_means) != 3L) {
           list(pass = FALSE, message = paste0("wl_means has ", nrow(wl_means), " rows. ntile(workload, 3) splits the employees into three groups, so the table should have three."))
         } else {
-          numeric_cols <- vapply(wl_means, is.numeric, logical(1))
-          means_col <- NULL
-          for (nm in names(wl_means)[numeric_cols]) {
-            if (isTRUE(all.equal(as.vector(wl_means[[nm]]), expected, tolerance = 1e-6, check.attributes = FALSE))) means_col <- nm
-          }
-          if (is.null(means_col)) {
+          # numeric_columns(): aggregate() with a FUN returning several summaries
+          # stores them as one matrix column, which a plain column scan misses.
+          found_means <- any(vapply(numeric_columns(wl_means), function(col) isTRUE(all.equal(col, expected, tolerance = 1e-6, check.attributes = FALSE)), logical(1)))
+          if (!found_means) {
             list(pass = FALSE, message = paste0("No column of wl_means holds the mean wellbeing of the three workload thirds, which are ", paste(round(expected, 1), collapse = ", "), ". Check that you split on workload rather than on wellbeing."))
           } else if (b >= 0) {
             list(pass = FALSE, message = "Your model's workload slope is not negative, which contradicts the table: mean wellbeing falls as workload rises. Check which variable you put on the right of the tilde.")

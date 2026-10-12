@@ -32,7 +32,9 @@ function curvePoints(mu: number, sigma: number): { x: number; value: number }[] 
 export default function Distribution() {
   const [mu, setMu] = useState(70);
   const [sigma, setSigma] = useState(10);
-  const [cut, setCut] = useState(70);
+  const [rawCut, setCut] = useState(70);
+  // Kept inside the slider's range, so a narrower SD cannot leave the readout on a cut the slider no longer shows.
+  const cut = Math.min(Math.max(rawCut, mu - 4 * sigma), mu + 4 * sigma);
   const [axis, setAxis] = useState<'raw' | 'z'>('raw');
 
   // One memo, so the curve, the shading and every number below it are read off
