@@ -99,6 +99,11 @@ deviance, 514.30 - 451.47 = 62.83, on 2 degrees of freedom.
 `anova(m_left, test = "LRT")` on the model alone answers a different question: it
 tests each predictor in turn, in the order of the formula.
 
+Lesson 15-3 reads them in full, but the next step is one function: `exp()` of a
+log-odds coefficient is an **odds ratio**, the factor by which the odds are
+multiplied for each extra unit of the predictor. Below 1 the odds shrink; above 1
+they grow.
+
 <Exercise id="m15-2-b" />
 
 <Quiz

@@ -101,7 +101,8 @@ model <- "
   total := c + a * b
 "
 set.seed(1)
-fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000)
+# fixed.x = FALSE: without it, some lavaan versions drop a quarter of the draws as failed
+fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000, fixed.x = FALSE)
 parameterEstimates(fit, boot.ci.type = "perc")
 ```
 
