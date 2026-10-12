@@ -186,7 +186,7 @@ export const module07: ExerciseDef[] = [
           value <- as.numeric(value)
           # A band, not a value: a 95 per cent procedure captures mu about 95 times
           # in 100, and the count has an SD of about 2.2, so anything from 86 up is
-          # an honest result. Every wrong answer below lands at 100, 5, 0.95 or ~60.
+          # an honest result. Every wrong answer below lands at 100, 9, 0.91 or 48.
           if (value > 0 && value < 1) {
             list(pass = FALSE, message = paste0("That is the PROPORTION (", round(value, 2), "). The exercise asks for the count out of 100, so use sum() rather than mean()."))
           } else if (isTRUE(all.equal(value, 100, tolerance = 1e-9))) {
