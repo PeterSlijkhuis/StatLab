@@ -3,12 +3,16 @@ import { StrictMode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { setAdvanced } from '../state/settings';
 import { findLesson } from '../content/manifest';
 import { DATASET_FILES } from '../r/session';
 import ModelChooser, { TREE, WhereItRuns, type Answer, type Node } from './ModelChooser';
 import { browserSupport } from '../r/packages';
 import { allAnswers, GROUPS as SECTIONS, packagesIn, packagesMissingHere } from './modelTree';
+
+// Most tests walk to every answer, the advanced ones included.
+beforeEach(() => setAdvanced(true));
 
 function Location() {
   const location = useLocation();
@@ -577,4 +581,14 @@ test("the browser's Back button goes back one question, not off the page", async
   await user.click(screen.getByRole('button', { name: 'Browser back' }));
   expect(heading().textContent).toBe(first);
   expect(screen.getByTestId('location').textContent).toBe('/which-model');
+});
+
+describe('without Advanced topics', () => {
+  test('the list holds only what the core course teaches, and an advanced answer says how to see it', async () => {
+    setAdvanced(false);
+    renderChooser('/which-model?model=mediation');
+    expect(screen.getByText(/goes beyond the book and the BMS course/)).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Beyond this course' })).toBeNull();
+    expect(screen.getByText(/switch on Advanced topics under Settings for the rest/)).toBeDefined();
+  });
 });

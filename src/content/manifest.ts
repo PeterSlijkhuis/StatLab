@@ -151,6 +151,14 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         file: '03-4-scales-and-reliability',
         exercises: ['m3-4-a', 'm3-4-b'],
       },
+      {
+        // Kept its id from when it sat in Module 17, so saved progress still
+        // finds it. The BMS guide teaches factor analysis, so it is core.
+        id: '17-2',
+        title: 'Exploratory factor analysis',
+        file: '17-2-factor-analysis',
+        exercises: ['m17-2-a'],
+      },
     ],
   },
   {
@@ -540,19 +548,13 @@ export const PLANNED_MODULES: ModuleMeta[] = [
   {
     id: 'module-17',
     number: 17,
-    title: 'Mediation, factors and reports',
+    title: 'Mediation and reports',
     lessons: [
       {
         id: '17-1',
         title: 'Mediation',
         file: '17-1-mediation',
         exercises: ['m17-1-a'],
-      },
-      {
-        id: '17-2',
-        title: 'Exploratory factor analysis',
-        file: '17-2-factor-analysis',
-        exercises: ['m17-2-a'],
       },
       {
         id: '17-3',

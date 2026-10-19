@@ -3,7 +3,25 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { findLesson } from '../content/manifest';
 import { allAnswers, follow, GROUPS, packagesDownloaded, packagesMissingHere, pathTo, SHIPS_WITH_R, TREE, type Answer, type Node } from './modelTree';
 import { CUES, matchQuestion, type CueId } from './questionMatcher';
+import { visibleModules } from '../content/parts';
+import { useAdvanced } from '../state/settings';
 import './ModelChooser.css';
+
+/** Lessons in the core course, the part shown without Advanced topics. */
+const CORE_LESSONS = new Set(visibleModules(false).flatMap((module) => module.lessons.map((lesson) => lesson.id)));
+
+/** Whether the course itself teaches this model, outside the advanced modules. */
+export function inCore(answer: Answer): boolean {
+  return Boolean(answer.lessonId && CORE_LESSONS.has(answer.lessonId));
+}
+
+function BeyondNote({ answer }: { answer: Answer }) {
+  return (
+    <p className="advanced-note">
+      <span aria-hidden="true">🎓 </span>{answer.model} goes beyond the book and the BMS course. Switch on Advanced topics under Settings to see when to use it and how to run it.
+    </p>
+  );
+}
 
 export { TREE, type Answer, type Node } from './modelTree';
 
@@ -75,6 +93,8 @@ function AnswerCard({ answer }: { answer: Answer }) {
     }
   }
   useEffect(() => setCopied(false), [answer]);
+  const advanced = useAdvanced();
+  if (!advanced && !inCore(answer)) return <BeyondNote answer={answer} />;
 
   return (
     <>
@@ -142,7 +162,9 @@ const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,
 function Index({ onPick }: { onPick: (id: string) => void }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const entries = useMemo(() => allAnswers(), []);
+  const advanced = useAdvanced();
+  const all = useMemo(() => allAnswers(), []);
+  const entries = advanced ? all : all.filter(({ answer }) => inCore(answer));
 
   const words = fold(query).split(/\s+/).filter(Boolean);
   const shown = entries.filter(({ answer }) => {
@@ -159,7 +181,7 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
     <section className="model-index" aria-labelledby="model-index-title">
       <div className="model-index-head">
         <h2 id="model-index-title">Browse all {entries.length} models</h2>
-        <p>Already know what you need? Search by name, or by the traditional test you know it as.</p>
+        <p>Already know what you need? Search by name, or by the traditional test you know it as.{!advanced && ' This list holds the models the course teaches; switch on Advanced topics under Settings for the rest.'}</p>
       </div>
       <div className="model-index-tools">
         <label className="model-index-search">
@@ -170,13 +192,13 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
           </svg>
           <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search, for example mediation or a traditional test" />
         </label>
-        <div className="model-index-filters" role="group" aria-label="Show">
+        {advanced && <div className="model-index-filters" role="group" aria-label="Show">
           {FILTERS.map((option) => (
             <button key={option.id} type="button" aria-pressed={filter === option.id} onClick={() => setFilter(option.id)}>
               {option.label}
             </button>
           ))}
-        </div>
+        </div>}
       </div>
 
       {sections.length === 0 && <p className="model-index-empty">No model matches. Try another word, or answer the questions above.</p>}
