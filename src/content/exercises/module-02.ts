@@ -291,4 +291,67 @@ export const module02: ExerciseDef[] = [
       'names_to is the column that will hold engagement_t1 and engagement_t2 as labels; values_to holds the scores.',
     ],
   },
+  {
+    id: 'm2-4-a',
+    prompt:
+      'Recode workload into workload_level: below 4 is "low", 4 up to but not including 7 is "medium", and 7 or more is "high". Store it in employees as an ordered factor with the levels in that order, and store table(employees$workload_level) in level_counts.',
+    starterCode:
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\n\n# case_when() for the bands, then factor() for the order.\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    \n  ))\n\nlevel_counts <- ',
+    solution:
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    workload < 4 ~ "low",\n    workload >= 4 & workload < 7 ~ "medium",\n    workload >= 7 ~ "high"\n  )) %>%\n  mutate(workload_level = factor(workload_level, levels = c("low", "medium", "high"), ordered = TRUE))\nlevel_counts <- table(employees$workload_level)',
+    wrongAnswers: [
+      // Plain text: the counts are right but the order is alphabetical (high, low, medium).
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    workload < 4 ~ "low",\n    workload >= 4 & workload < 7 ~ "medium",\n    workload >= 7 ~ "high"\n  ))\nlevel_counts <- table(employees$workload_level)',
+      // <= where < was asked: a workload of exactly 4 lands in "low".
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    workload <= 4 ~ "low",\n    workload > 4 & workload <= 7 ~ "medium",\n    workload > 7 ~ "high"\n  )) %>%\n  mutate(workload_level = factor(workload_level, levels = c("low", "medium", "high"), ordered = TRUE))\nlevel_counts <- table(employees$workload_level)',
+      // The order is set, but not marked as meaningful.
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    workload < 4 ~ "low",\n    workload >= 4 & workload < 7 ~ "medium",\n    workload >= 7 ~ "high"\n  )) %>%\n  mutate(workload_level = factor(workload_level, levels = c("low", "medium", "high")))\nlevel_counts <- table(employees$workload_level)',
+    ],
+    alternateSolutions: [
+      // The earlier conditions are already false, so each line only needs its upper bound; TRUE catches the rest.
+      'library(dplyr)\nemployees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees <- employees %>%\n  mutate(workload_level = case_when(\n    workload < 4 ~ "low",\n    workload < 7 ~ "medium",\n    TRUE ~ "high"\n  ))\nemployees$workload_level <- factor(employees$workload_level, levels = c("low", "medium", "high"), ordered = TRUE)\nlevel_counts <- table(employees$workload_level)',
+      // cut() with right = FALSE makes each band include its lower bound.
+      'employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)\nemployees$workload_level <- cut(employees$workload, breaks = c(-Inf, 4, 7, Inf), labels = c("low", "medium", "high"), right = FALSE, ordered_result = TRUE)\nlevel_counts <- table(employees$workload_level)',
+    ],
+    check: `
+      if (!has_answer("employees") || !has_answer("level_counts")) {
+        list(pass = FALSE, message = "I need employees (with a workload_level column) and level_counts.")
+      } else {
+        employees <- answer("employees")
+        level_counts <- answer("level_counts")
+        d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+        expected <- ifelse(d$workload < 4, "low", ifelse(d$workload < 7, "medium", "high"))
+        wrong_edges <- ifelse(d$workload <= 4, "low", ifelse(d$workload <= 7, "medium", "high"))
+        if (!is.data.frame(employees) || !("workload_level" %in% names(employees))) {
+          list(pass = FALSE, message = "employees has no workload_level column. Assign the result of mutate() back to employees.")
+        } else if (nrow(employees) != nrow(d)) {
+          list(pass = FALSE, message = paste0("employees has ", nrow(employees), " rows, but the file has ", nrow(d), ". Recoding adds a column; it should not drop anyone."))
+        } else if (any(is.na(employees$workload_level))) {
+          list(pass = FALSE, message = paste0(sum(is.na(employees$workload_level)), " employees got NA. case_when() gives NA to rows that match no condition, so check that the three bands cover every workload, or that the labels in factor() are spelled exactly as in case_when()."))
+        } else if (!setequal(unique(as.character(employees$workload_level)), c("low", "medium", "high"))) {
+          list(pass = FALSE, message = "workload_level should hold exactly three values: low, medium and high.")
+        } else if (!all(as.character(employees$workload_level) == expected) && all(as.character(employees$workload_level) == wrong_edges)) {
+          list(pass = FALSE, message = "The edges are off: a workload of exactly 4 should be medium and exactly 7 should be high. Use < for the upper bound of each band and >= for the lower bound.")
+        } else if (!all(as.character(employees$workload_level) == expected)) {
+          list(pass = FALSE, message = "Some employees are in the wrong band. Below 4 is low, 4 up to but not including 7 is medium, 7 or more is high.")
+        } else if (!is.factor(employees$workload_level)) {
+          list(pass = FALSE, message = "The bands are right, but workload_level is plain text, so tables list it alphabetically: high, low, medium. Turn it into a factor with levels = c(\\"low\\", \\"medium\\", \\"high\\").")
+        } else if (!identical(levels(employees$workload_level), c("low", "medium", "high"))) {
+          list(pass = FALSE, message = paste0("The levels are in the order ", paste(levels(employees$workload_level), collapse = ", "), ". Give factor() levels = c(\\"low\\", \\"medium\\", \\"high\\")."))
+        } else if (!is.ordered(employees$workload_level)) {
+          list(pass = FALSE, message = "The order is right, but R does not know it means something. Add ordered = TRUE to factor(), so the levels print as low < medium < high.")
+        } else if (length(level_counts) != 3L || !identical(names(level_counts), c("low", "medium", "high")) || !isTRUE(all.equal(as.vector(level_counts), as.vector(table(factor(expected, levels = c("low", "medium", "high")))), check.attributes = FALSE))) {
+          list(pass = FALSE, message = "level_counts should be table(employees$workload_level), made after the recoding.")
+        } else {
+          counts <- table(factor(expected, levels = c("low", "medium", "high")))
+          list(pass = TRUE, message = paste0("Correct: ", counts[["low"]], " low, ", counts[["medium"]], " medium and ", counts[["high"]], " high, in that order. An ordered factor is how R stores an ordinal variable."))
+        }
+      }
+    `,
+    hints: [
+      'Each line of case_when() is a condition, a tilde and a label: workload < 4 ~ "low".',
+      'The middle band needs two conditions joined with &: workload >= 4 & workload < 7.',
+      'Then factor(workload_level, levels = c("low", "medium", "high"), ordered = TRUE) fixes the order.',
+    ],
+  },
 ];

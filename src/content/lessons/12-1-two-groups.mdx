@@ -76,6 +76,23 @@ tool and Welch's version is the honest one. Normality matters mainly at small
 *n*; with 480 employees the Central Limit Theorem from Module 6 covers moderate
 skew.
 
+BMS courses also test the equal-spread assumption directly, with **Levene's
+test** from the car package. Its null hypothesis is that the groups have the same
+variance in the population.
+
+<CodeBlock id="c-levene" code={`library(car)
+
+leveneTest(wellbeing ~ remote, data = d)
+
+t.test(wellbeing ~ remote, data = d, var.equal = FALSE)`} />
+
+Levene's test is far from significant, F(1, 478) = 0.05, p = .82, so the pooled
+test above is fine here. Welch's test, the second line, drops the equal-variance
+assumption and gives t(364.31) = -2.64, p = .009: the same conclusion. Its sign
+is negative because `t.test()` subtracts in level order, No minus Yes, where the
+model reported Yes minus No. When Levene's test is significant, or the SDs and
+group sizes are both clearly unequal, report Welch's version.
+
 For a small sample with clear skew or extreme outliers, the rank-based
 alternative is the Mann-Whitney test, `wilcox.test(wellbeing ~ remote, data = d)`
 — one line in the chooser, and not what this course teaches as its default.

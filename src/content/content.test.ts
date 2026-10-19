@@ -313,9 +313,9 @@ describe('lesson content', () => {
     }
   });
 
-  test('Module 2 defines exactly its five exercises, in order', () => {
+  test('Module 2 defines exactly its six exercises, in order', () => {
     expect(module02.map((exercise) => exercise.id)).toEqual([
-      'm2-1-a', 'm2-1-b', 'm2-2-a', 'm2-2-b', 'm2-3-a',
+      'm2-1-a', 'm2-1-b', 'm2-2-a', 'm2-2-b', 'm2-3-a', 'm2-4-a',
     ]);
   });
 

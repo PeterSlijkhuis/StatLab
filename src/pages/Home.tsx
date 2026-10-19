@@ -56,7 +56,7 @@ export default function Home() {
         <div className="hero-text">
           <p className="hero-eyebrow"><Logo size={18} /> University of Twente</p>
           <h1>StatLab</h1>
-          <p className="home-tagline">Data analysis and statistics in R for psychology and business students, in short, hands-on lessons.</p>
+          <p className="home-tagline">Data analysis and statistics in R for BMS bachelor students, in short, hands-on lessons that follow the R used in the Research Methods and Statistics courses.</p>
           <p className="hero-sub">Everything runs in your browser. Nothing is installed, files you open stay in your browser and are never sent anywhere, and your progress stays on this computer.</p>
           {target && (
             <Link to={`/lesson/${target.id}`} className="button-primary hero-cta home-resume">
@@ -109,6 +109,14 @@ export default function Home() {
           </div>
         </section>
       ))}
+
+      <section className="home-help">
+        <h2>Help with your own research</h2>
+        <p>
+          StatLab teaches the methods. For advice on your own study, such as a design, a choice of analysis or an R or SPSS problem in a thesis, BMS students and staff can ask the{' '}
+          <a href="https://www.utwente.nl/en/bms/m-store/" target="_blank" rel="noreferrer">BMS Methodology Shop</a>, which also keeps a step-by-step guide to choosing a statistical test.
+        </p>
+      </section>
 
       <section className="home-save">
         <h2>Your progress</h2>

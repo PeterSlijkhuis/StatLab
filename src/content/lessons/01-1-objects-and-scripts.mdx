@@ -32,7 +32,14 @@ repeating either number.
 Names are case sensitive: `hours` and `Hours` are two different objects, and
 asking for one when you stored the other is the first error almost everyone
 meets. A name may not start with a number and may not contain a space, which is
-why R code is full of `mean_score` and `engagement_t1`.
+why R code is full of `mean_score` and `engagement_t1`. BMS courses, like the
+tidyverse style guide, use only lowercase letters, numbers and underscores in
+names, such as `freq_table_1`.
+
+Every object you create is kept in the **global environment**: the collection of
+everything your session has stored so far. In RStudio it is listed in the
+Environment pane, top right. When R says "object not found", that list is the
+first place to look.
 
 ## Comments
 
@@ -43,6 +50,12 @@ doing.
 <CodeBlock id="comment" code={`# Weekly pay, before tax.
 weekly_pay <- hours * rate
 weekly_pay`} />
+
+A readable script starts with a comment that says what it is for, and splits the
+work into parts with a heading comment that ends in four dashes, such as
+`# Read the data ----`. RStudio lets you fold and jump between those parts. Put
+a space after every comma and around `<-`, `==` and `+`, just as you would put a
+space after a comma in English.
 
 <Predict
   id="p-vector"
