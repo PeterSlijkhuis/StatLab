@@ -113,6 +113,11 @@ removed and why.
 In RStudio, `psych::alpha(items)` does all of this in one call, and it warns
 you when an item looks as if it still needs reversing.
 
+BMS psychometrics courses go further with three more packages: CTT, whose
+`itemAnalysis()` reports alpha, alpha if an item is dropped and the item-rest
+correlations; Lambda4, whose `guttman()` gives Guttman's lambda 2, a reliability
+coefficient that is never below alpha; and mirt, for item response theory models.
+
 <Quiz
   id="q-alpha"
   question="You forget to reverse q3 and compute alpha on the original five items. What happens?"

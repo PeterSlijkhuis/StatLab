@@ -95,6 +95,26 @@ a difference. The degrees of freedom are `n − 2`. The p-value should sit very
 close to `p_perm`, because both are measuring the same tail area, one by
 simulating it and one by looking it up.
 
+"Looking it up" used to mean a table at the back of a textbook. In R, the
+`p` functions give the area beyond a statistic, and the `q` functions give the
+critical value for an area. You need them whenever you computed a *t* or a χ²
+by hand and want its p-value without a table.
+
+<CodeBlock id="p-and-q" code={`# Two-sided p-value for t = 2.68 with 478 degrees of freedom:
+# the area in one tail, doubled.
+pt(2.68, df = 478, lower.tail = FALSE) * 2
+
+# The critical t for alpha = .05, two-sided: 2.5% in each tail.
+qt(0.025, df = 478, lower.tail = FALSE)
+
+# The same pair for a chi-square statistic with 1 degree of freedom.
+pchisq(3.84, df = 1, lower.tail = FALSE)
+qchisq(0.05, df = 1, lower.tail = FALSE)`} />
+
+`lower.tail = FALSE` asks for the area above the value, which is the tail a test
+statistic falls in. A *t*-test is two-sided, so its p-value is twice one tail; a
+chi-square test only has an upper tail, so nothing is doubled.
+
 <Exercise id="m8-2-b" />
 
 ## Reporting it

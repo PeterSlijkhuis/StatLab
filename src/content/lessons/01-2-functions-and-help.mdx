@@ -39,9 +39,11 @@ Naming an argument also frees you from its position. `seq(to = 9, from = 1, by =
 works, and `seq(9, 1, 2)` fails: R matches by position, so 9 becomes `from` and
 1 becomes `to`, and it stops with "wrong sign in 'by' argument".
 
-> **In RStudio,** `?round` opens the full help page: every argument, the value
-> returned, and worked examples at the bottom. Here, `args()` gives you the
-> argument list, which is what you need nine times out of ten.
+> **In RStudio,** `?round` opens the full help page in the Help pane, bottom
+> right: every argument, the value returned, and worked examples at the bottom.
+> `??round` searches the help of every installed package, for when you do not
+> know which function you need. Here, `args()` gives you the argument list,
+> which is what you need nine times out of ten.
 
 ## Missing values
 

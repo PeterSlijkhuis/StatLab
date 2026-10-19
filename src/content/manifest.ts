@@ -114,6 +114,12 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         file: '02-3-wide-and-long',
         exercises: ['m2-3-a'],
       },
+      {
+        id: '02-4',
+        title: 'Missing values, recoding and joining',
+        file: '02-4-missing-and-recoding',
+        exercises: ['m2-4-a'],
+      },
     ],
   },
   {
@@ -297,6 +303,7 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Tables of counts',
         file: '09-2-tables-of-counts',
         exercises: ['m9-2-a'],
+        packages: ['janitor'],
       },
       {
         id: '09-3',
@@ -365,6 +372,7 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Checking the model',
         file: '11-4-checking-the-model',
         exercises: ['m11-4-a', 'm11-4-b'],
+        packages: ['car', 'lmtest'],
       },
     ],
   },
@@ -378,6 +386,7 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Two groups',
         file: '12-1-two-groups',
         exercises: ['m12-1-a', 'm12-1-b'],
+        packages: ['car'],
       },
       {
         id: '12-2',

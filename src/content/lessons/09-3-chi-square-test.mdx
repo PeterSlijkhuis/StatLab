@@ -86,7 +86,27 @@ Rough benchmarks for a table with two columns: .10 is small, .30 medium, .50
 large. They are a starting point, not a verdict; what counts as large depends
 on the field.
 
+In RStudio, `cramerV(counts, ci = TRUE)` from the rcompanion package, which the
+BMS reference guide uses, gives the same V with a confidence interval.
+
 <Exercise id="m9-3-b" />
+
+## One variable against expected proportions
+
+The same statistic can test a single categorical variable against proportions
+you state in advance. This is the **goodness-of-fit test**. Suppose the 480
+employees are a random sample from a larger company that says its four
+departments are equally large. Do the counts fit that claim?
+
+<CodeBlock id="c-gof" code={`table(d$department)
+
+chisq.test(table(d$department), p = c(0.25, 0.25, 0.25, 0.25))`} />
+
+The expected count is 480 × 0.25 = 120 for every department, and the observed
+counts of 100 to 132 are no further from it than chance would easily produce:
+χ²(3) = 5.07, p = .17. The proportions in `p` must add up to 1 and follow the
+order of the table, which is the order of the levels. The degrees of freedom
+are the number of categories minus 1.
 
 ## When the test cannot be trusted
 

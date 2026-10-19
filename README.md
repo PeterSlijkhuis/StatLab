@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/StatLab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 64 lessons, 89 exercises, 0 installs." width="100%"></a>
+  <a href="https://peterslijkhuis.github.io/StatLab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 65 lessons, 90 exercises, 0 installs." width="100%"></a>
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  Built for psychology and business students at the <strong>University of Twente</strong>.<br>
+  Built for BMS bachelor students at the <strong>University of Twente</strong>, following the R taught in the Research Methods and Statistics courses.<br>
   <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson. Theory, terminology and topic order follow Analysing Data Using Linear Models by S.M. van den Berg (5th ed., University of Twente, 2021; Creative Commons BY-NC-SA licence); the lessons are written independently.</sub>
 </p>
 
@@ -49,7 +49,7 @@
     </td>
     <td width="33%" valign="top">
       <h3>✅ Answers checked by R</h3>
-      89 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
+      90 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
     </td>
     <td width="33%" valign="top">
       <h3>🧑‍🔬 An avatar that coaches</h3>
@@ -165,7 +165,7 @@ live in the browser, and export to a file that imports on any other computer.
 
 ## The course
 
-**18 modules · 64 lessons · 89 checked exercises · 6 interactive simulations.**
+**18 modules · 65 lessons · 90 checked exercises · 6 interactive simulations.**
 From "what is a file path?" to mixed models, logistic regression, mediation and
 Bayes. Statistics is taught the way the course team's own R workshops teach it:
 in tidyverse style and through the linear model. `lm`, `lmer` and `glm` do the

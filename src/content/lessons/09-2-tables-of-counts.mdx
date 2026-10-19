@@ -48,6 +48,32 @@ the table reads as a comparison of rates.
 
 <Exercise id="m9-2-a" />
 
+## The same tables with tabyl()
+
+BMS courses make frequency tables and crosstabs with `tabyl()` from the janitor
+package. It works in a pipe, and the `adorn_` functions add totals, percentages
+and counts to the table it returns.
+
+<CodeBlock id="c-tabyl" code={`library(dplyr)
+library(janitor)
+
+# A frequency table: counts and proportions for one variable.
+d %>% tabyl(department)
+
+# A crosstab with row percentages, a total row and the counts in brackets.
+d %>%
+  tabyl(department, left_company) %>%
+  adorn_totals("row") %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns()`} />
+
+The crosstab shows the same leaving rates as `prop.table(counts, margin = 1)`,
+with the counts next to them. `adorn_percentages("col")` divides by columns
+instead. Keep the steps in this order: totals before percentages, so the total
+row gets its own percentage, then the formatting, then `adorn_ns()` to put the
+counts back next to the percentages.
+
 ## A picture of it
 
 A stacked bar where every bar reaches 100% shows the row proportions. Map the

@@ -25,7 +25,7 @@ export const RECOMMENDED: PackageGroup[] = [
       { name: 'readxl', what: 'Read Excel files (.xls and .xlsx)' },
       { name: 'writexl', what: 'Save a data frame as an Excel file' },
       { name: 'haven', what: 'Read SPSS, Stata and SAS files' },
-      { name: 'janitor', what: 'Clean up column names and count categories' },
+      { name: 'janitor', what: 'Frequency tables and crosstabs with tabyl(), and clean column names' },
     ],
   },
   {
@@ -60,6 +60,8 @@ export const RECOMMENDED: PackageGroup[] = [
     packages: [
       { name: 'broom', what: 'Model results as tidy tables' },
       { name: 'car', what: 'Type II and III ANOVA, Levene test, VIF' },
+      { name: 'lmtest', what: 'Breusch-Pagan test and other model diagnostics' },
+      { name: 'modelr', what: 'Add predictions and residuals to a data frame' },
       { name: 'emmeans', what: 'Estimated marginal means and pairwise comparisons' },
       { name: 'lme4', what: 'Mixed-effects (multilevel) models' },
       { name: 'lmerTest', what: 'p-values for lme4 models' },

@@ -79,6 +79,33 @@ With 480 people the slopes and their intervals are still trustworthy despite
 skewed residuals: the Central Limit Theorem of Module 6 looks after the sampling
 distribution of each slope. Normality matters most in small samples.
 
+## The same checks as tests
+
+The plots are the main check. BMS courses also ask for three tests that put a
+number on what the plots show: the **Shapiro-Wilk test** for normal residuals,
+the **Breusch-Pagan test** for equal spread (from the lmtest package), and the
+**variance inflation factor**, VIF, for multicollinearity (from the car package).
+
+<CodeBlock id="c-tests" code={`library(car)
+library(lmtest)
+
+shapiro.test(residuals(model))
+bptest(model)
+vif(model)`} />
+
+Both tests reject: W = .86 and BP = 57.46, df = 3, both p < .001. The
+Shapiro-Wilk test confirms the skew from the Q-Q plot. The Breusch-Pagan test
+says the spread of the residuals is not the same everywhere, and it is the same
+tail again: refit without the 28 employees whose residual is below -15 and BP
+drops to 4.40, p = .22. Both tests answer "is the assumption exactly true?", and
+with 480 people they detect small departures too, so read them together with the
+plots, not instead of them.
+
+The VIFs are all close to 1, so the three predictors carry largely separate
+information. A VIF above 5, or 10 by a more lenient rule, means a predictor is
+largely predictable from the others and its standard error is inflated, which
+Lesson 11-1 called multicollinearity.
+
 ## Influential cases
 
 A case is **influential** when leaving it out moves the fitted line. **Cook's
