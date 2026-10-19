@@ -1,3 +1,4 @@
+import Advanced from '../components/Advanced';
 import CodeBlock from '../components/CodeBlock';
 import Exercise from '../components/Exercise';
 import FolderTree from '../components/FolderTree';
@@ -9,6 +10,7 @@ import Simulation from '../components/Simulation';
 import SymbolTable from '../components/SymbolTable';
 
 export const mdxComponents = {
+  Advanced,
   CodeBlock,
   Exercise,
   FolderTree,

@@ -178,7 +178,7 @@ their traditional names.
 | 0 | Before you start | RStudio Projects, files, folders and paths, and what R's symbols mean, with a cheat sheet | |
 | 1 | First steps in R | Objects, functions, help, packages and `library()` | |
 | 2 | Working with data | `read.csv`, factors and data types, the pipe, `select`, `filter`, `mutate`, wide and long data, missing values, recoding, joins, Excel and SPSS files | |
-| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha | |
+| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha, exploratory factor analysis | |
 | 4 | Visualising data | ggplot2 as layers, facets, and an APA-ready figure | |
 | **Inference** | | | |
 | 5 | The normal distribution | Density, z-scores and probabilities | Distribution |
@@ -195,7 +195,47 @@ their traditional names.
 | 15 | Binary and count outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting, Poisson regression for counts | |
 | **Advanced** (switch on under Settings, Advanced topics) | | | |
 | 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
-| 17 | Mediation, factors and reports | Indirect effects with bootstrap intervals, exploratory factor analysis, reproducible reports with Quarto | |
+| 17 | Mediation and reports | Indirect effects with bootstrap intervals, reproducible reports with Quarto | |
+
+Modules 0 to 15 follow van den Berg's book and the R taught in the BMS
+courses. Everything beyond them, the Advanced modules and a few sections
+inside core lessons (Fisher's exact test, robust and bootstrap intervals,
+nested random effects) and the model chooser's answers the course does not
+teach, appears only after switching on **Advanced topics** under Settings.
+
+### Read along in the book
+
+Each lesson links to the chapter of the
+[online book](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/index.html)
+that covers it. The map lives in `src/content/reading.ts`, and a test checks
+that every chapter is used.
+
+| Ch | Topic (links to the chapter) | StatLab lessons |
+|---|---|---|
+| 1 | [Variables, variation and co-variation](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/intro.html) | 2-1, 2-3, 3-1 to 3-3, 4-1 to 4-3, 5-1 to 5-3, 9-2 |
+| 2 | [Inference about a mean](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/mean.html) | 6-1 to 8-4 |
+| 3 | [Inference about a proportion](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/prop.html) | 9-1 |
+| 4 | [Simple and multiple regression](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/simple.html) | 10-1, 10-2, 11-1, 11-2 |
+| 5 | [Inference for linear models](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/inf-lm.html) | 10-3, 11-3 |
+| 6 | [Categorical predictors](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/categorical.html) | 12-1, 12-2 |
+| 7 | [Assumptions](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/assumptions.html) | 11-4 |
+| 8 | [Non-parametric alternatives](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/nonpar1.html) | 10-4, 12-4 |
+| 9 | [Moderation](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/moderation.html) | 13-1 to 13-3 |
+| 10 | [Contrasts](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/contrasts.html) | 12-2, 13-2 |
+| 11 | [Post-hoc comparisons](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/post-hoc.html) | 12-3 |
+| 12 | [Linear mixed models](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/mixed.html) | 14-1 to 14-3 |
+| 13 | [Pre, mid and post designs](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/premidpost.html) | 14-4 |
+| 14 | [Non-parametric tests for repeated measures](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/nonpar2.html) | 14-5 |
+| 15 | [Logistic regression](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/logistic.html) | 15-1 to 15-3 |
+| 16 | [Poisson regression and chi-square](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/poissonrevised.html) | 9-3, 15-4 |
+| A | [The normal distribution](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/appnormal.html) | 5-1 to 5-3 |
+| A | [The t-distribution](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/appt.html) | 7-1, 8-2 |
+
+Chapters of the BMS guide *Intro R for BMS Bachelor programs*: 1 (R and
+RStudio) goes with Modules 0 to 2, 2 (handling data files) with Module 2,
+3 and 4 (univariate and bivariate analysis) with Modules 3, 4, 9, 10 and 12,
+5 (multivariate analysis) with Modules 11, 14 and 15, and 6 (psychometrics)
+with Lessons 3-4 and 17-2.
 
 ### How a lesson works
 

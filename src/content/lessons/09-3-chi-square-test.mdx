@@ -114,7 +114,12 @@ The chi-square distribution is an approximation, and it needs enough data.
 The usual rule is an **expected** count of at least 5 in every cell, or at least
 in 80% of them, none below 1. `chisq.test()` warns you ("Chi-squared approximation may be incorrect") as soon
 as any expected count is below 5, which is stricter than the 80% rule.
-Then use Fisher's exact test, which makes no such approximation.
+Then the p-value cannot be trusted, and the table needs more data, or fewer
+categories by merging small ones.
+
+<Advanced>
+
+Another option is Fisher's exact test, which makes no such approximation.
 
 <CodeBlock id="c-fisher" code={`small <- d[d$site == "Hengelo" & d$department %in% c("Marketing", "Sales"), ]
 small_counts <- table(droplevels(small$department), small$left_company)
@@ -128,6 +133,8 @@ gives p = .68, with an odds ratio of 0.64 and a 95% CI from 0.07 to 4.77: the
 data are compatible with anything from a strong effect one way to a strong
 effect the other. With 29 people the test is inconclusive, not evidence of no
 difference.
+
+</Advanced>
 
 The test also needs each person counted once, in one cell. A table of 480
 answers from 120 people, each asked four times, breaks that. Module 14 builds

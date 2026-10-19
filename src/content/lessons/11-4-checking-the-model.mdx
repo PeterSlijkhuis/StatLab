@@ -150,11 +150,15 @@ distance tells you where to look, not what to throw away.
 - **Curve in the residuals:** the relationship is not a straight line. Add a
   squared term, `I(x^2)`, or transform a skewed predictor with `log()`.
 - **Funnel:** the spread grows with the fitted values. Transforming a skewed,
-  positive outcome with `log()` often fixes it, and robust standard errors
-  (the `sandwich` package, in RStudio) keep the slopes and repair their SEs.
-- **Small sample, clearly non-normal residuals:** bootstrap the interval.
-  Resample employees with replacement, refit, and take the middle 95% of the
-  slopes.
+  positive outcome with `log()` often fixes it.
+
+<Advanced>
+
+Two more remedies go beyond the course. Robust standard errors (the `sandwich`
+package, in RStudio) keep the slopes and repair their SEs when the spread is
+unequal. For a small sample with clearly non-normal residuals, bootstrap the
+interval: resample employees with replacement, refit, and take the middle 95%
+of the slopes.
 
 <CodeBlock id="c-boot" code={`set.seed(114)
 slopes <- replicate(1000, {
@@ -169,6 +173,8 @@ rbind(
 
 The two intervals nearly agree, which is the Central Limit Theorem at work
 again. With 30 people they might not.
+
+</Advanced>
 
 For a simple comparison of two groups there are rank-based tests too:
 `wilcox.test()` for two groups and `kruskal.test()` for several. They answer a
