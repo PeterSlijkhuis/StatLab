@@ -18,6 +18,8 @@ export type LessonMeta = {
 export type ModuleMeta = {
   id: string;
   number: number;
+  /** Shown in place of "Module {number}" for a module outside the numbered run. */
+  badge?: string;
   title: string;
   lessons: LessonMeta[];
 };
@@ -26,11 +28,53 @@ export type ModuleMeta = {
  * The curriculum as planned: spec §7, Module 0 and the fourteen modules after
  * it, Module 9 on counts and proportions (inserted later, which moved the old
  * Modules 9 to 15 up one; see migrate() in src/state/progress.ts), then the
- * advanced Modules 16 and 17. A module appears in MODULES below only once every one of its
+ * advanced Modules 16 and 17. The research methods module (badge RM) comes
+ * first, as in the BMS psychology course, without renumbering the others.
+ * A module appears in MODULES below only once every one of its
  * lesson files exists, so this list can be complete while the course is still
  * being written.
  */
 export const PLANNED_MODULES: ModuleMeta[] = [
+  {
+    id: 'module-rm',
+    // Internal only: the badge is what students see.
+    number: -1,
+    badge: 'RM',
+    title: 'Research methods',
+    lessons: [
+      {
+        id: 'rm-1',
+        title: 'Empirical research and research questions',
+        file: 'rm-1-research-questions',
+        exercises: [],
+      },
+      {
+        id: 'rm-2',
+        title: 'Units, variables and measurement',
+        file: 'rm-2-units-and-variables',
+        exercises: ['mrm-2-a'],
+      },
+      {
+        id: 'rm-3',
+        title: 'Who ends up in the sample',
+        file: 'rm-3-sampling',
+        exercises: ['mrm-3-a'],
+      },
+      {
+        id: 'rm-4',
+        title: 'Causality and third variables',
+        file: 'rm-4-causality-and-third-variables',
+        exercises: ['mrm-4-a'],
+        packages: ['janitor'],
+      },
+      {
+        id: 'rm-5',
+        title: 'Research designs',
+        file: 'rm-5-research-designs',
+        exercises: ['mrm-5-a'],
+      },
+    ],
+  },
   {
     id: 'module-00',
     number: 0,
@@ -132,6 +176,7 @@ export const PLANNED_MODULES: ModuleMeta[] = [
         title: 'Summarising a column',
         file: '03-1-summaries',
         exercises: ['m3-1-a', 'm3-1-b'],
+        packages: ['janitor'],
       },
       {
         id: '03-2',
@@ -590,6 +635,16 @@ export const MODULES: ModuleMeta[] = PLANNED_MODULES.filter((module) =>
 );
 
 export const ALL_LESSONS: LessonMeta[] = MODULES.flatMap((module) => module.lessons);
+
+/** "Module 3", or the badge of a module outside the numbered run. */
+export function moduleLabel(module: ModuleMeta): string {
+  return module.badge ?? `Module ${module.number}`;
+}
+
+/** "Lesson 3-2" or "Lesson RM-1": the id, as the guide and review show it. */
+export function lessonLabel(lesson: LessonMeta): string {
+  return `Lesson ${lesson.id.replace(/^0/, '').toUpperCase()}`;
+}
 
 export function findLesson(id: string): LessonMeta | undefined {
   return ALL_LESSONS.find((lesson) => lesson.id === id);

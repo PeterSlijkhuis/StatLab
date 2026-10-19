@@ -1,0 +1,82 @@
+Statistics answers questions, but only some kinds of question. Before any data
+is collected, a study needs a question that data can actually answer. This
+module covers the research methods that come before the analysis: what makes a
+question empirical, who and what you measure, who ends up in the sample, when a
+relationship can be read as cause and effect, and how a design protects that
+reading.
+
+## Three kinds of question
+
+Not every question can be settled with data.
+
+- A **normative** question asks what *should* be: "Should the university ban
+  phones in lectures?" Data can inform it, but the answer also rests on values.
+- A **conceptual** question asks what a word means: "What do we mean by
+  student wellbeing?" It is settled by definition and argument.
+- An **empirical** question asks what *is*: "Do students who use their phone in
+  lectures score lower on the exam?" Observation can answer it.
+
+Research in the social sciences starts from empirical questions, though a
+normative question is often the reason the study is done at all.
+
+<Predict
+  id="p-kind"
+  question="Which of these is an empirical question?"
+  choices={[
+    { text: 'Should first-year students have fewer exams?', response: 'That asks what ought to happen. Data about stress or results could feed the debate, but the answer also depends on what you value.' },
+    { text: 'What is burnout?', response: 'That is a conceptual question: it asks for a definition, which is settled by argument, not by measuring.' },
+    { text: 'Do first-year students with more exams report more stress?', correct: true, response: 'Right. It names who is studied, what is measured, and a relation that observation can confirm or reject.' },
+  ]}
+/>
+
+## Describing or explaining
+
+Empirical questions come in two kinds.
+
+- A **descriptive** question asks how things are: "What share of BMS students
+  sleeps less than seven hours?" It involves one variable, or several described
+  side by side.
+- An **explanatory** question asks why: "Does sleep explain differences in exam
+  scores?" It links an independent variable (the possible cause) to a dependent
+  variable (the outcome).
+
+A good empirical research question names three things: the **units** (who or
+what is studied), the **variables** (what is measured about them) and the
+**setting** (where and when). "Do BMS students at the University of Twente who
+sleep more score higher on their first statistics exam, in the 2025-2026
+academic year?" names all three. "Does sleep matter?" names none of them.
+
+## The wheel of science
+
+Theory and observation feed each other in a cycle, sometimes drawn as the
+**wheel of science**. Going from theory to a hypothesis to observation is
+**deduction**: you derive what you expect to see and check it. Going from
+observations to a general pattern to theory is **induction**. A hypothesis is a
+testable statement about the expected relation, such as "students who sleep
+more score higher on the exam", and it comes with a direction you can check.
+
+Data can contradict a hypothesis but never prove a theory once and for all.
+People tend to notice and remember the evidence that fits what they already
+believe. That is **confirmation bias**, and it is the reason a study states its
+hypothesis and its test before the data come in.
+
+## Research for decisions
+
+Organisations commission research to make better decisions. A policy decision
+runs through phases, and research can support each one: describing the problem,
+choosing between options, and evaluating the choice. An evaluation before a
+policy starts, judging which option is likely to work, is an **ex ante**
+evaluation. One while it runs, checking whether it is carried out as planned,
+is a **process** evaluation. One afterwards, judging whether it worked, is an
+**ex post** evaluation.
+
+<Quiz
+  id="q-explanatory"
+  question="A municipality asks: did the new youth centre, opened two years ago, reduce nuisance reports in the neighbourhood? Which description fits?"
+  choices={[
+    { text: 'A descriptive question and an ex ante evaluation', response: 'The centre is already open, so this looks back, and it asks whether the centre caused a change, not just how many reports there are.' },
+    { text: 'An explanatory question and an ex post evaluation', correct: true, response: 'Correct. It asks whether one thing (the centre) changed another (nuisance reports), after the policy has run.' },
+    { text: 'A normative question and a process evaluation', response: 'Nothing here asks what should be done, and a process evaluation checks whether the policy is carried out as planned, not whether it worked.' },
+    { text: 'A conceptual question and an ex post evaluation', response: 'The question does not ask what nuisance means. It asks whether the reports went down because of the centre.' },
+  ]}
+/>

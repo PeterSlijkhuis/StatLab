@@ -1,7 +1,7 @@
 import { allAnswers } from '../pages/modelTree';
 import { matchQuestion } from '../pages/questionMatcher';
 import { LESSON_KEYWORDS, PAGE_ENTRIES } from './guideIndex';
-import { findLesson, MODULES } from './manifest';
+import { findLesson, lessonLabel, moduleLabel, MODULES } from './manifest';
 
 /** A place on the site the helper can send a student to. */
 export type GuideHit = { to: string; title: string; detail: string };
@@ -27,8 +27,8 @@ const ENTRIES: Entry[] = [
   ...MODULES.flatMap((module) =>
     module.lessons.map((lesson) => ({
       to: `/lesson/${lesson.id}`,
-      title: `Lesson ${lesson.id.replace(/^0/, '')}: ${lesson.title}`,
-      detail: `Module ${module.number}: ${module.title}`,
+      title: `${lessonLabel(lesson)}: ${lesson.title}`,
+      detail: `${moduleLabel(module)}: ${module.title}`,
       titleWords: new Set(words(lesson.title)),
       words: new Set(words(`${module.title} ${LESSON_KEYWORDS[lesson.id] ?? ''}`)),
     })),
@@ -66,7 +66,7 @@ export function guide(text: string): GuideHit[] {
   const answer = best && allAnswers().find((entry) => entry.answer.id === best.id)?.answer;
   if (answer) {
     const lesson = answer.lessonId ? findLesson(answer.lessonId) : undefined;
-    const teaching: GuideHit[] = lesson ? [{ to: `/lesson/${lesson.id}`, title: `Lesson ${lesson.id.replace(/^0/, '')}: ${lesson.title}`, detail: `Where the course teaches ${answer.model.toLowerCase()}` }] : [];
+    const teaching: GuideHit[] = lesson ? [{ to: `/lesson/${lesson.id}`, title: `${lessonLabel(lesson)}: ${lesson.title}`, detail: `Where the course teaches ${answer.model.toLowerCase()}` }] : [];
     const rest = hits.filter((hit) => !teaching.some((t) => t.to === hit.to));
     return [{ to: `/which-model?model=${answer.id}`, title: `Likely analysis: ${answer.model}`, detail: 'Suggested from the words in your question. The model chooser explains it.' }, ...teaching, ...rest].slice(0, 4);
   }

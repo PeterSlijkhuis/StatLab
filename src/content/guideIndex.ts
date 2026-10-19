@@ -5,6 +5,11 @@
  * student would ask. guide.test.ts checks every lesson has an entry.
  */
 export const LESSON_KEYWORDS: Record<string, string> = {
+  'rm-1': 'research question empirical normative conceptual descriptive explanatory hypothesis wheel of science deduction induction confirmation bias evaluation ex ante ex post policy',
+  'rm-2': 'unit of analysis observation data matrix measurement level nominal ordinal interval ratio dichotomous d-noir ecological fallacy operationalisation conceptualisation primary secondary data starwars glimpse',
+  'rm-3': 'sample sampling population frame response rate random stratified cluster convenience snowball quota purposive bias error representative',
+  'rm-4': 'causality cause third variable spurious crosstab contingency epsilon percentage difference elaboration confounder mediator moderator explanation interpretation specification replication tabyl',
+  'rm-5': 'research design experiment random assignment control group pretest posttest time series validity internal external threats placebo double blind regression to the mean history maturation attrition',
   '00-1': 'start beginner begin new first never used r install rstudio program project panes setup',
   '00-2': 'file folder path directory working directory setwd save load where',
   '00-3': 'arrow assign equals symbol operator compare logical true false na missing quotes text',
