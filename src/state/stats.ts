@@ -42,19 +42,21 @@ export type CourseStats = {
   streak: number;
 };
 
-export function courseStats(progress: Progress): CourseStats {
-  const lessonsComplete = ALL_LESSONS.filter((lesson) => lessonStatus(lesson, progress) === 'complete').length;
-  const passed = ALL_LESSONS.reduce((sum, lesson) => sum + exercisesPassed(lesson, progress), 0);
+export function courseStats(progress: Progress, lessons: LessonMeta[] = ALL_LESSONS): CourseStats {
+  const completeIn = (list: LessonMeta[]) => list.filter((lesson) => lessonStatus(lesson, progress) === 'complete').length;
+  const passedIn = (list: LessonMeta[]) => list.reduce((sum, lesson) => sum + exercisesPassed(lesson, progress), 0);
   const quizzesRight = Object.values(progress.lessons).reduce(
     (sum, lesson) => sum + Object.values(lesson.quizzes).filter(Boolean).length,
     0,
   );
+  // Points count every lesson, shown or not, so hiding a part never takes back
+  // points a student has already earned or spent.
   return {
-    lessonsComplete,
-    lessonsTotal: ALL_LESSONS.length,
-    exercisesPassed: passed,
-    exercisesTotal: ALL_LESSONS.reduce((sum, lesson) => sum + lesson.exercises.length, 0),
-    points: passed * POINTS.exercise + quizzesRight * POINTS.quiz + lessonsComplete * POINTS.lesson + (progress.bonus ?? 0),
+    lessonsComplete: completeIn(lessons),
+    lessonsTotal: lessons.length,
+    exercisesPassed: passedIn(lessons),
+    exercisesTotal: lessons.reduce((sum, lesson) => sum + lesson.exercises.length, 0),
+    points: passedIn(ALL_LESSONS) * POINTS.exercise + quizzesRight * POINTS.quiz + completeIn(ALL_LESSONS) * POINTS.lesson + (progress.bonus ?? 0),
     streak: currentStreak(progress),
   };
 }
