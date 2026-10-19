@@ -9,7 +9,7 @@ import { getProgress, subscribeProgress, touchLesson } from '../state/progress';
 import { exercisesPassed, lessonStatus, moduleOf } from '../state/stats';
 import { visibleModules } from '../content/parts';
 import { useAdvanced } from '../state/settings';
-import { READING } from '../content/reading';
+import { APPENDIX_NAMES, bookAppendixHref, bookChapterHref, READING, type Reading } from '../content/reading';
 import { R_MATERIALS, REFERENCE_BOOK } from '../components/Credits';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
@@ -92,23 +92,7 @@ export default function Lesson() {
                 </span>
               </p>
             )}
-            {module && READING[module.number] && (
-              <p className="lesson-reading">
-                <span aria-hidden="true">📖 </span>Read along:{' '}
-                {READING[module.number].book && (
-                  <>
-                    <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer"><cite>{REFERENCE_BOOK.title}</cite></a>
-                    , chapter{READING[module.number].book!.length > 2 ? 's' : ''} {READING[module.number].book}
-                  </>
-                )}
-                {READING[module.number].book && READING[module.number].guide && '; '}
-                {READING[module.number].guide && (
-                  <>
-                    <cite>{R_MATERIALS.guide.title}</cite>, chapter{READING[module.number].guide!.length > 2 ? 's' : ''} {READING[module.number].guide}
-                  </>
-                )}
-              </p>
-            )}
+            {READING[meta.id] && <ReadAlong reading={READING[meta.id]} />}
           </header>
           {Content ? <Content components={mdxComponents} /> : <p>Loading lesson…</p>}
         </article>
@@ -123,5 +107,35 @@ export default function Lesson() {
         previous={previous}
       />
     </LessonProvider>
+  );
+}
+
+/** The chapters of the book and the BMS guide that cover this lesson. */
+function ReadAlong({ reading }: { reading: Reading }) {
+  const links = [
+    ...(reading.book ?? []).map((chapter) => ({ href: bookChapterHref(chapter), text: `chapter ${chapter}` })),
+    ...(reading.appendix ?? []).map((key) => ({ href: bookAppendixHref(key), text: APPENDIX_NAMES[key] })),
+  ];
+  return (
+    <p className="lesson-reading">
+      <span aria-hidden="true">📖 </span>Read along:{' '}
+      {links.length > 0 && (
+        <>
+          <cite>{REFERENCE_BOOK.title}</cite>,{' '}
+          {links.map((link, index) => (
+            <span key={link.href}>
+              {index > 0 && ', '}
+              <a href={link.href} target="_blank" rel="noopener noreferrer">{link.text}</a>
+            </span>
+          ))}
+        </>
+      )}
+      {links.length > 0 && reading.guide && '; '}
+      {reading.guide && (
+        <>
+          <cite>{R_MATERIALS.guide.title}</cite>, chapter{reading.guide.length > 2 ? 's' : ''} {reading.guide}
+        </>
+      )}
+    </p>
   );
 }
