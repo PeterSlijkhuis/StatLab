@@ -24,7 +24,7 @@ export const REFERENCE_BOOK = {
   href: 'https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf',
   licenceHref: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
   /** The book to read along in, online. */
-  onlineHref: 'https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/',
+  onlineHref: 'https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/index.html',
 };
 
 /** The R material BMS courses teach from, which the R lessons follow. */
