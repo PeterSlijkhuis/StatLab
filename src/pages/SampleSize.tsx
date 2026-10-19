@@ -238,9 +238,9 @@ function Choice<T>({ options, chosen, onPick }: { options: Option<T>[]; chosen: 
         const earlier = chosen !== undefined && option.value === chosen;
         return (
           <li key={option.label}>
-            <button type="button" className={earlier ? 'flagged' : undefined} aria-labelledby={`${id}-${i}-label`} aria-describedby={`${id}-${i}-more`} onClick={() => onPick(option.value)}>
+            <button type="button" className={earlier ? 'flagged' : undefined} aria-describedby={`${id}-${i}-more`} onClick={() => onPick(option.value)}>
               <span className="mc-option-label" id={`${id}-${i}-label`}>{option.label}</span>
-              <span id={`${id}-${i}-more`} className="mc-option-more">
+              <span id={`${id}-${i}-more`} className="mc-option-more" aria-hidden="true">
                 {earlier && <span className="mc-flag">Your earlier choice</span>}
                 {option.tag && <span className="ss-tag">{option.tag}</span>}
                 <span className="ss-option-note">{option.note}</span>
