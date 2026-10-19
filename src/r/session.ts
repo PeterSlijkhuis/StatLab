@@ -16,7 +16,7 @@ export const CORE_PACKAGES = ['dplyr', 'ggplot2', 'tidyr', 'broom'] as const;
  * declaring a package the course does not know about — a typo in a manifest
  * entry would otherwise surface as a silent install failure mid-lesson.
  */
-export const ON_DEMAND_PACKAGES = ['emmeans', 'car', 'lme4', 'lmerTest'] as const;
+export const ON_DEMAND_PACKAGES = ['emmeans', 'car', 'lme4', 'lmerTest', 'janitor', 'lmtest'] as const;
 
 export const KNOWN_PACKAGES = [...CORE_PACKAGES, ...ON_DEMAND_PACKAGES] as const;
 

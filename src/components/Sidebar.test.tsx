@@ -49,6 +49,16 @@ describe('Sidebar', () => {
     expect(screen.getByText('The Central Limit Theorem')).toBeDefined();
   });
 
+  test('hides the advanced modules until the student switches them on', () => {
+    renderSidebar();
+    expect(screen.queryByText('Advanced')).toBeNull();
+    const toggle = screen.getByRole('button', { name: 'Advanced topics' });
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    act(() => toggle.click());
+    expect(screen.getByText('Advanced')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Advanced topics' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
   test('links each lesson to its route', () => {
     renderSidebar();
     const link = screen.getByRole('link', { name: 'The sampling distribution' });

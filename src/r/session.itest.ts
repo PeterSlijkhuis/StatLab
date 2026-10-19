@@ -105,6 +105,28 @@ describe('the modelling packages', () => {
   // reshape only, and the chooser's mixed-model leaf becomes reference material
   // rather than a link to a lesson. Finding that out here costs one run;
   // finding it out at Module 14 costs the module.
+  // Lessons 9-2 and 11-4 run tabyl() and bptest(), the BMS reference guide's
+  // choices for crosstabs and the equal-variance test.
+  test('janitor and lmtest install, and the lesson calls run', async () => {
+    const real = new WebR();
+    await real.init();
+    try {
+      await ensurePackages(real, [...CORE_PACKAGES, 'janitor', 'lmtest']);
+      const result = await evaluateR(
+        real,
+        'suppressMessages({ library(dplyr); library(janitor); library(lmtest) })\n' +
+          'd <- data.frame(g = rep(c("a", "b"), 30), y = rep(0:1, each = 30), x = rnorm(60))\n' +
+          't <- d %>% tabyl(g, y) %>% adorn_totals("row") %>% adorn_percentages("row") %>% adorn_pct_formatting(digits = 1) %>% adorn_ns()\n' +
+          'b <- bptest(lm(x ~ g, data = d))\n' +
+          'c(class(t)[1], class(b))',
+      );
+      expect(result.errored, result.output.map((o) => o.data).join('\n')).toBe(false);
+      expect(result.output.map((o) => o.data).join('\n')).toContain('tabyl');
+    } finally {
+      await real.close();
+    }
+  }, 300_000);
+
   test('emmeans, car, lme4 and lmerTest install and attach', async () => {
     const real = new WebR();
     await real.init();

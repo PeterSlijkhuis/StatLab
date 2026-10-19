@@ -4,19 +4,23 @@ takes two categorical variables at once, and the tool is a table of counts.
 
 <CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
 
-counts <- table(d$department, d$left_company)
+counts <- table(d$left_company, d$department)
 counts`} />
 
 Each cell counts the people with that combination: Engineering and stayed,
 Engineering and left, and so on. The first variable you give `table()` goes
 down the side, the second across the top. This is a **contingency table**, or a
-cross-table.
+crosstab.
+
+BMS courses lay a crosstab out one way: the **independent variable in the
+columns** and the dependent variable in the rows. Department might influence
+leaving, so department goes across the top and `left_company` down the side.
 
 ## Totals
 
 <CodeBlock id="c-margins" code={`addmargins(counts)`} />
 
-The row totals are the department sizes and the column totals are how many
+The column totals are the department sizes and the row totals are how many
 stayed and left overall. All the margins add up to 480.
 
 <Predict
@@ -34,23 +38,53 @@ stayed and left overall. All the margins add up to 480.
 `prop.table()` turns counts into proportions, and its `margin` argument decides
 what adds up to 1. The choice is the whole analysis.
 
-<CodeBlock id="c-rows" code={`# margin = 1: each ROW adds up to 1. Of each department, what share left?
-round(prop.table(counts, margin = 1), 3)`} />
-
-<CodeBlock id="c-columns" code={`# margin = 2: each COLUMN adds up to 1. Of the leavers, which department were they in?
+<CodeBlock id="c-columns" code={`# margin = 2: each COLUMN adds up to 1. Of each department, what share left?
 round(prop.table(counts, margin = 2), 3)`} />
 
-The two tables answer different questions. Rows give each department's leaving
-rate: Support loses about 31% of its people, Sales about 16%. Columns describe
-the leavers: a third of everyone who left came from Support. Put the variable
-that might do the influencing, department, in the rows and divide by rows, and
-the table reads as a comparison of rates.
+<CodeBlock id="c-rows" code={`# margin = 1: each ROW adds up to 1. Of the leavers, which department were they in?
+round(prop.table(counts, margin = 1), 3)`} />
+
+The two tables answer different questions. Columns give each department's
+leaving rate: Support loses about 31% of its people, Sales about 16%. Rows
+describe the leavers: a third of everyone who left came from Support. With the
+independent variable in the columns, the rule is: **percentage within the
+columns, compare along the rows**. The difference between two departments'
+percentages, in percentage points, is the **percentage difference** (epsilon)
+from the research methods lessons.
 
 <Exercise id="m9-2-a" />
 
+## The same tables with tabyl()
+
+BMS courses make frequency tables and crosstabs with `tabyl()` from the janitor
+package. It works in a pipe, and the `adorn_` functions add totals, percentages
+and counts to the table it returns.
+
+<CodeBlock id="c-tabyl" code={`library(dplyr)
+library(janitor)
+
+# A frequency table: counts and proportions for one variable.
+d %>% tabyl(department)
+
+# A crosstab: the dependent variable first (rows), the independent second
+# (columns), with column percentages, a total row and the counts in brackets.
+d %>%
+  tabyl(left_company, department) %>%
+  adorn_totals("row") %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns() %>%
+  adorn_title("combined")`} />
+
+The crosstab shows the same leaving rates as `prop.table(counts, margin = 2)`,
+with the counts next to them. Keep the steps in this order: totals before
+percentages, so the total row gets its own percentage, then the formatting,
+then `adorn_ns()` to put the counts back next to the percentages.
+`adorn_title("combined")` names both variables in the corner.
+
 ## A picture of it
 
-A stacked bar where every bar reaches 100% shows the row proportions. Map the
+A stacked bar where every bar reaches 100% shows the column proportions. Map the
 outcome to `fill` and ask `geom_bar()` for `position = "fill"`.
 
 <CodeBlock id="c-plot" code={`library(ggplot2)
@@ -70,7 +104,7 @@ lesson.
   id="q-margin"
   question="A report says: 'Of all employees who left, 34% worked in Support, so Support has a 34% leaving rate.' What went wrong?"
   choices={[
-    { text: 'Nothing, 34% is correct', response: '34% is a column proportion: a share of the leavers. The leaving rate is a share of Support, which is a row proportion.' },
+    { text: 'Nothing, 34% is correct', response: '34% is a share of the leavers, the row percentage here. The leaving rate is a share of Support, the column percentage.' },
     { text: 'It divided by the wrong margin: 34% is the share of leavers from Support, while the leaving rate is the share of Support who left', correct: true, response: 'Exactly. The same cell divided by a different total answers a different question.' },
     { text: 'It should have used counts instead of percentages', response: 'Percentages are the right idea. The problem is which total they are a percentage of.' },
   ]}
@@ -78,11 +112,11 @@ lesson.
 
 <Interpret
   id="i-9-2"
-  question="Your row proportions show leaving rates of 25.8% in Engineering, 18.0% in Marketing, 15.9% in Sales and 30.8% in Support. What can you write before any test?"
+  question="Your column percentages show leaving rates of 25.8% in Engineering, 18.0% in Marketing, 15.9% in Sales and 30.8% in Support. What can you write before any test?"
   choices={[
     { text: 'Leaving rates ranged from 15.9% in Sales to 30.8% in Support (Table 1). Whether this variation exceeds what sampling alone would produce is tested below.', correct: true, response: 'Correct. It describes the rates accurately and leaves the inference to the test.' },
     { text: 'Support employees are twice as likely to leave as Sales employees because of their working conditions.', response: 'The table describes; it does not explain. Nothing here says why.' },
     { text: 'Department significantly affects leaving.', response: 'No test has been run, and "affects" claims a cause the data cannot show.' },
-    { text: 'Most people who left came from Support.', response: 'A third did, which is not most. And that is a column proportion, not what these row rates say.' },
+    { text: 'Most people who left came from Support.', response: 'A third did, which is not most. And that is a share of the leavers, not what these leaving rates say.' },
   ]}
 />

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import Credits from '../components/Credits';
 import Logo from '../components/Logo';
 import { ALL_LESSONS, findLesson, MODULES } from '../content/manifest';
-import { PARTS } from '../content/parts';
+import { visibleModules, visibleParts } from '../content/parts';
+import { useAdvanced } from '../state/settings';
 import {
   exportProgress,
   getProgress,
@@ -32,7 +33,8 @@ export default function Home() {
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   const progress = getProgress();
-  const stats = courseStats(progress);
+  const advanced = useAdvanced();
+  const stats = courseStats(progress, visibleModules(advanced).flatMap((module) => module.lessons));
   const resumeId = lastVisitedLesson();
   const resume = resumeId ? findLesson(resumeId) : undefined;
   // A returning student picks up where they were; a new one starts at lesson 1.
@@ -56,7 +58,7 @@ export default function Home() {
         <div className="hero-text">
           <p className="hero-eyebrow"><Logo size={18} /> University of Twente</p>
           <h1>StatLab</h1>
-          <p className="home-tagline">Data analysis and statistics in R for psychology and business students, in short, hands-on lessons.</p>
+          <p className="home-tagline">Data analysis and statistics in R for BMS bachelor students, in short, hands-on lessons that follow the R used in the Research Methods and Statistics courses.</p>
           <p className="hero-sub">Everything runs in your browser. Nothing is installed, files you open stay in your browser and are never sent anywhere, and your progress stays on this computer.</p>
           {target && (
             <Link to={`/lesson/${target.id}`} className="button-primary hero-cta home-resume">
@@ -77,7 +79,7 @@ export default function Home() {
         <li className="stat-tile"><span className="stat-emoji" aria-hidden="true">✅</span><strong>{stats.exercisesPassed}/{stats.exercisesTotal}</strong><span>exercises solved</span></li>
       </ul>
 
-      {PARTS.map((part, partIndex) => (
+      {visibleParts(advanced).map((part, partIndex) => (
         <section key={part.title} className="home-part">
           <header className="home-part-header">
             <p className="home-part-eyebrow">Part {partIndex + 1}</p>
@@ -90,7 +92,7 @@ export default function Home() {
               return (
                 <article key={module.id} className={`module-card${done === total ? ' done' : ''}`}>
                   <div className="module-card-head">
-                    <span className="module-card-number">{done === total ? '✓' : module.number}</span>
+                    <span className="module-card-number">{done === total ? '✓' : module.badge ?? module.number}</span>
                     <h3>{module.title}</h3>
                   </div>
                   <div className="meter" role="progressbar" aria-label={`${module.title}: lessons done`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>
@@ -109,6 +111,14 @@ export default function Home() {
           </div>
         </section>
       ))}
+
+      <section className="home-help">
+        <h2>Help with your own research</h2>
+        <p>
+          StatLab teaches the methods. For advice on your own study, such as a design, a choice of analysis or an R or SPSS problem in a thesis, BMS students and staff can ask the{' '}
+          <a href="https://www.utwente.nl/en/bms/m-store/" target="_blank" rel="noreferrer">BMS Methodology Shop</a>, which also keeps a step-by-step guide to choosing a statistical test.
+        </p>
+      </section>
 
       <section className="home-save">
         <h2>Your progress</h2>

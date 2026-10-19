@@ -83,6 +83,26 @@ packages this course never touches, and everything here downloads into your
 browser. So each lesson attaches exactly what it needs, by name. The functions
 are identical either way.
 
+## The packages BMS courses use
+
+BMS bases its R teaching on the tidyverse, plus a short list of specialised
+packages. You will meet most of them in this course.
+
+| Package | What for | In this course |
+|---|---|---|
+| tidyverse | ggplot2, dplyr, tidyr, readr and the rest of the core | from Module 2 |
+| readxl, haven | reading Excel and SPSS files (installed with the tidyverse, attached separately) | Lesson 2-4 |
+| broom | model output as a tidy table with `tidy()` | from Module 10 |
+| janitor | frequency tables and crosstabs with `tabyl()` | Lesson 9-2 |
+| car | Levene's test and the variance inflation factor | Lessons 11-4 and 12-1 |
+| lmtest | the Breusch-Pagan test for equal variances | Lesson 11-4 |
+| lme4, lmerTest | linear mixed models, with approximate p-values | Module 14 |
+| psych | reliability and factor analysis | Lessons 3-4 and 17-2 |
+
+Your course tells you which ones to install and attach at the start. Like broom,
+readxl and haven are installed along with the tidyverse but are not attached by
+`library(tidyverse)`, so each needs its own `library()` line.
+
 <Quiz
   id="q-1-3"
   question="A classmate sends you a script that starts with library(ggplot2) and it fails on their machine with 'there is no package called ggplot2'. What do they need to do?"

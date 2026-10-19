@@ -41,6 +41,19 @@ keeps too many. In RStudio, `psych::fa.parallel(items)` runs parallel analysis,
 which compares the eigenvalues with those of random data and is the better
 guide.
 
+Before the analysis, BMS courses also check that the items are suitable for one.
+In RStudio, with the psych package attached:
+
+```r
+KMO(items)                                       # Kaiser-Meyer-Olkin measure
+cortest.bartlett(cor(items), n = nrow(items))    # Bartlett's test of sphericity
+```
+
+The KMO measure says how much of the correlation the items share, from 0 to 1;
+below about .5 the items have too little in common for a factor analysis.
+Bartlett's test asks whether the correlation matrix differs from one with no
+correlations at all, and should be significant.
+
 <Predict
   id="p-rotation"
   question="Work pressure and manager support are probably related: people under more pressure may also get more help from their manager. Should the two factors be allowed to correlate?"
@@ -67,7 +80,10 @@ efa$PVAL`} />
   each.
 - The chi-square test asks whether two factors reproduce the correlations. A
   large p-value, here .70 (χ²(4) = 2.22), means the test found no evidence that
-  two factors fall short, so two factors are an adequate description.
+  two factors fall short, so two factors are an adequate description. With a
+  large sample this test rejects even when the factors describe the data well,
+  so BMS courses ask you to base the decision on the scree plot and the loadings,
+  not on this p-value.
 
 <Exercise id="m17-2-a" />
 

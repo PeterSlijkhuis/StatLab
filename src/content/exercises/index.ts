@@ -17,9 +17,10 @@ import { module14 } from './module-14';
 import { module15 } from './module-15';
 import { module16 } from './module-16';
 import { module17 } from './module-17';
+import { moduleRm } from './module-rm';
 
 export const ALL_EXERCISES: ExerciseDef[] = [
-  ...module00,
+  ...moduleRm, ...module00,
   ...module01, ...module02, ...module03, ...module04, ...module05,
   ...module06, ...module07, ...module08, ...module09, ...module10, ...module11,
   ...module12, ...module13, ...module14, ...module15, ...module16, ...module17,
