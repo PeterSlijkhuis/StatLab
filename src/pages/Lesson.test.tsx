@@ -169,8 +169,8 @@ describe('Lesson lifecycle across a param-only navigation', () => {
 
   test('a lesson points to the book chapters to read along', () => {
     render(<Harness initialPath="/lesson/06-1" />);
-    expect(screen.getByText(/chapter 2/).textContent).toContain('Read along');
-    expect(screen.getByRole('link', { name: 'Analysing Data Using Linear Models' }).getAttribute('href')).toContain('posit.cloud');
+    expect(screen.getByText(/Read along/).textContent).toContain('Analysing Data Using Linear Models');
+    expect(screen.getByRole('link', { name: 'chapter 2' }).getAttribute('href')).toMatch(/posit\.cloud\/mean\.html$/);
   });
 
   test('a lesson whose MDX file is missing still records a visit', async () => {
