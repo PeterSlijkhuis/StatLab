@@ -493,11 +493,11 @@ export default function ModelChooser() {
                 const flagged = option.label === ahead;
                 return (
                   <li key={option.label}>
-                    <button type="button" className={flagged ? 'flagged' : undefined} aria-labelledby={`${id}-label`} aria-describedby={`${id}-more`} onClick={() => go([...path, option.label])}>
+                    <button type="button" className={flagged ? 'flagged' : undefined} aria-describedby={`${id}-more`} onClick={() => go([...path, option.label])}>
                       <span className="mc-option-label" id={`${id}-label`}>
                         {option.label}
                       </span>
-                      <span id={`${id}-more`} className="mc-option-more">
+                      <span id={`${id}-more`} className="mc-option-more" aria-hidden="true">
                         {flagged && <span className="mc-flag">{planned.suggested ? 'Suggested' : 'Your earlier choice'}</span>}
                         <span className="mc-option-example">{option.example}</span>
                         <span className="mc-option-tech">{option.tech}</span>
