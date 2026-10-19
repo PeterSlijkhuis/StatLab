@@ -175,6 +175,14 @@ library(haven)
 survey <- read_sav("data/survey.sav")
 ```
 
+Some course scripts use the older foreign package instead, which comes with R
+and turns labelled codes into factors straight away:
+
+```r
+library(foreign)
+survey <- read.spss("data/survey.sav", to.data.frame = TRUE)
+```
+
 An SPSS file often stores its codebook inside the data: a label for each
 variable and for each value, such as 1 = "woman". `haven` keeps them as
 attributes, which `attr()` shows:

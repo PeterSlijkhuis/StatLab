@@ -92,7 +92,7 @@ export default function Home() {
               return (
                 <article key={module.id} className={`module-card${done === total ? ' done' : ''}`}>
                   <div className="module-card-head">
-                    <span className="module-card-number">{done === total ? '✓' : module.number}</span>
+                    <span className="module-card-number">{done === total ? '✓' : module.badge ?? module.number}</span>
                     <h3>{module.title}</h3>
                   </div>
                   <div className="meter" role="progressbar" aria-label={`${module.title}: lessons done`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>

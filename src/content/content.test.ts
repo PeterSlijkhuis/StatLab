@@ -174,7 +174,7 @@ describe('lesson content', () => {
     expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
     for (const module of PLANNED_MODULES) {
       expect(module.id, `${module.id} does not match number ${module.number}`).toBe(
-        `module-${String(module.number).padStart(2, '0')}`,
+        module.badge ? `module-${module.badge.toLowerCase()}` : `module-${String(module.number).padStart(2, '0')}`,
       );
     }
   });
@@ -535,10 +535,10 @@ describe('Module 0', () => {
     '00-4-symbols-pick-and-pipe',
   ];
 
-  test('its four lesson files exist and Module 0 opens the course', () => {
+  test('its four lesson files exist and Module 0 opens the numbered run, after research methods', () => {
     for (const file of lessons) expect(sources[`./lessons/${file}.mdx`], `missing ${file}`).toBeDefined();
-    expect(MODULES[0].id).toBe('module-00');
-    expect(ALL_LESSONS[0].id).toBe('00-1');
+    expect(MODULES.map((module) => module.id).slice(0, 2)).toEqual(['module-rm', 'module-00']);
+    expect(ALL_LESSONS.find((lesson) => lesson.id.startsWith('0'))?.id).toBe('00-1');
   });
 
   test('Module 0 defines exactly the exercises the manifest lists, in order', () => {

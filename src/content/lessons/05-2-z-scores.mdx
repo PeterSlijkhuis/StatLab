@@ -46,7 +46,7 @@ above the mean. The sleeper is the more unusual of the two, and no amount of sta
 ## Standardising a whole column
 
 A z-score is not only for single values. Standardise a whole column and you get
-a variable with a mean of 0 and an SD of 1 — the same distribution, relabelled.
+a variable with a mean of 0 and an SD of 1: the same distribution, relabelled.
 
 <CodeBlock id="standardise" code={`library(ggplot2)
 
@@ -63,14 +63,48 @@ standardised %>%
 
 Compare that histogram with the one in the last lesson. It is the same shape. It
 has simply been slid so its centre is at 0 and squeezed so one SD is one unit.
-Standardising never changes the shape of a distribution — a point worth keeping,
+Standardising never changes the shape of a distribution. That point is worth keeping,
 because students often expect it to "make the data normal". It does not.
 
-## The 68–95–99.7 rule
+R does the same in one step with `scale()`, which subtracts the mean and divides
+by the SD. It returns a one-column matrix, so wrap it in `as.numeric()` when you
+store it as a column.
+
+<CodeBlock id="scale" code={`standardised <- standardised %>%
+  mutate(z_exam_scale = as.numeric(scale(exam_score)))
+
+# The same numbers both ways.
+all.equal(standardised$z_exam, standardised$z_exam_scale)`} />
+
+## Reversing, and combining into an index
+
+Because z-scores share a scale, you can add them up. Say you want one number for
+how well rested a student is, from sleep and stress. More sleep means better
+rested, but more stress means worse, so first **reverse** stress by multiplying
+its z-score by −1. Then the average of the two z-scores is a simple **composite
+index**.
+
+<CodeBlock id="index" code={`standardised <- standardised %>%
+  mutate(
+    z_sleep = as.numeric(scale(sleep_hours)),
+    z_stress_reversed = as.numeric(scale(stress)) * -1,
+    rested = (z_sleep + z_stress_reversed) / 2
+  )
+
+standardised %>%
+  select(sleep_hours, stress, z_sleep, z_stress_reversed, rested) %>%
+  head()`} />
+
+A positive `rested` means better rested than the average student on the two
+measures together. Without the reversal, a lot of stress would have cancelled
+out a lot of sleep, and the index would mean nothing.
+
+## The empirical rule
 
 For a normal distribution, the proportions within one, two and three SDs of the
-mean are fixed. They are worth memorising, because they turn a z-score into an
-intuition immediately.
+mean are fixed: about 68, 95 and 99.7 per cent. This is the **empirical rule**,
+or the 68-95-99.7 rule. It is worth memorising, because it turns a z-score into
+an intuition immediately.
 
 <CodeBlock id="rule" code={`# What the normal model predicts.
 pnorm(1) - pnorm(-1)
@@ -86,8 +120,12 @@ standardised %>%
   )`} />
 
 About 68 per cent within one SD, 95 per cent within two, 99.7 per cent within
-three — and the population agrees to within a percentage point or so. Hold on to
-the middle one. In two modules' time, "95 per cent of sample means lie within
+three, and the population agrees to within a percentage point or so.
+
+The rule also works in counts. Of 300 students on a roughly normal exam, about
+68%, or 204, score within one SD of the mean. The other 32% split evenly over
+the two tails, so about 16%, or 48 students, score more than one SD above it.
+Hold on to the middle number, 95.  In two modules' time, "95 per cent of sample means lie within
 about two standard errors of the population mean" becomes the confidence interval.
 
 <Quiz
@@ -97,7 +135,7 @@ about two standard errors of the population mean" becomes the confidence interva
     { text: 'They scored 1.5 points below the mean', response: 'A z-score is not in the original units. −1.5 means 1.5 standard deviations, which here is about 18.2 exam points.' },
     { text: 'They scored 1.5 standard deviations below the mean, placing them in roughly the bottom 7% of students', correct: true, response: 'Right: pnorm(-1.5) is .067, so about 7 students in 100 score below them.' },
     { text: 'They scored better than 1.5% of students', response: 'The −1.5 is a distance in SDs, not a percentage. Feed it to pnorm() to get a percentage.' },
-    { text: 'Their score is invalid, because z-scores cannot be negative', response: 'Half of all z-scores are negative — every value below the mean has one.' },
+    { text: 'Their score is invalid, because z-scores cannot be negative', response: 'Half of all z-scores are negative: every value below the mean has one.' },
   ]}
 />
 

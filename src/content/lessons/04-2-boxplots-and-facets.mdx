@@ -18,7 +18,7 @@ Each box is one department, and it is built from the summaries you already
 computed:
 
 - the thick line is the **median**;
-- the box spans the **quartiles** — the middle half of the department, so its
+- the box spans the **quartiles**, the middle half of the department, so its
   height is the IQR;
 - the whiskers reach out to the furthest observation within 1.5 IQRs of the box
   (ggplot2 measures from the quartiles, as does the textbook's worked wage
@@ -41,6 +41,38 @@ the whole of Lesson 3-3, and it took one line of code.
     { text: 'The taller box has more outliers', response: 'Outliers are the points drawn beyond the whiskers, and they do not change the height of the box itself.' },
   ]}
 />
+
+## Whiskers by hand
+
+The course computes a boxplot by hand with **Tukey's method**. Sort the values
+and find the median. The first quartile Q1 is the median of the lower half and
+Q3 the median of the upper half; with an odd number of values, the median
+itself counts in both halves. Then IQR = Q3 − Q1, and any value below
+Q1 − 1.5 × IQR or above Q3 + 1.5 × IQR is an outlier. The whiskers stop at the
+most extreme values inside those limits.
+
+R's `fivenum()` gives Tukey's five numbers: minimum, Q1, median, Q3, maximum.
+
+<CodeBlock id="tukey" code={`x <- c(2, 4, 7, 8, 10, 11, 20)
+five <- fivenum(x)
+five
+
+iqr <- five[4] - five[2]
+c(lower = five[2] - 1.5 * iqr, upper = five[4] + 1.5 * iqr)`} />
+
+Q1 is 5.5 and Q3 is 10.5, so IQR = 5 and the upper limit is 18: the value 20 is
+an outlier, and the upper whisker stops at 11.
+
+`quantile()` and `IQR()`, which ggplot2 also uses, follow a different rule by
+default. In large samples the difference is negligible; in small ones a
+quartile can shift a little.
+
+<CodeBlock id="quartile-rules" code={`y <- c(5, 7, 8, 12, 15, 18, 21, 22, 24, 25, 28, 30)
+fivenum(y)[c(2, 4)]
+quantile(y, c(0.25, 0.75))`} />
+
+Tukey gives 10 and 24.5, `quantile()` 11 and 24.25. On an exam done by hand, use
+Tukey's method.
 
 A boxplot hides the group sizes, so report them alongside it:
 

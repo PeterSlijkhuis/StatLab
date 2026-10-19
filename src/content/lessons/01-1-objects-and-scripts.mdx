@@ -41,6 +41,17 @@ everything your session has stored so far. In RStudio it is listed in the
 Environment pane, top right. When R says "object not found", that list is the
 first place to look.
 
+The R scripts in BMS courses often start by emptying it, so that objects left
+over from an earlier session cannot sneak into a fresh run:
+
+```r
+rm(list = ls())
+```
+
+`ls()` lists every object, and `rm()` removes them. Do it at the top of a
+script, never halfway, and keep in mind that it does not detach packages.
+Restarting R does both.
+
 ## Comments
 
 Everything after a `#` on a line is ignored by R. It is written for the human

@@ -35,6 +35,16 @@ export const R_MATERIALS = {
   shop: { title: 'BMS Methodology Shop', href: 'https://www.utwente.nl/en/bms/m-store/' },
 };
 
+/** The research methods course's own readers, which the RM lessons follow. */
+export const RM_MATERIALS = {
+  course: { title: 'Introduction to Research Methodology', where: 'BMS psychology bachelor, Module 1' },
+  shortGuide: {
+    title: 'A short guide to asking research questions, to hypothesis construction and to basic data analysis using crosstabs',
+    author: 'Van der Kolk',
+  },
+  decisionMaking: { title: 'Decision making and empirical research', author: 'Van der Kolk' },
+};
+
 export const PARTNERS = [
   { key: 'utwente', name: 'University of Twente', href: 'https://www.utwente.nl/en/' },
   { key: 'bmslab', name: 'The BMS Lab', href: 'https://bmslab.utwente.nl/' },
@@ -77,7 +87,7 @@ export default function Credits({ variant = 'full' }: Props) {
           <a href={REFERENCE_BOOK.href} target="_blank" rel="noopener noreferrer">
             <cite>{REFERENCE_BOOK.title}</cite>
           </a>{' '}
-          by {REFERENCE_BOOK.author} (5th ed., University of Twente, 2021), licensed under a{' '}
+          by {REFERENCE_BOOK.author} (University of Twente; the online book is the 2024 edition), licensed under a{' '}
           <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
             Creative Commons BY-NC-SA licence
           </a>
@@ -93,6 +103,13 @@ export default function Credits({ variant = 'full' }: Props) {
           <a href={R_MATERIALS.course.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.course.title}</a>{' '}
           course. For help with your own research, ask the{' '}
           <a href={R_MATERIALS.shop.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.shop.title}</a>.
+        </p>
+      )}
+      {variant === 'full' && (
+        <p className="credits-book">
+          The research methods lessons follow <cite>{RM_MATERIALS.course.title}</cite> ({RM_MATERIALS.course.where})
+          and H. van der Kolk's readers{' '}
+          <cite>{RM_MATERIALS.shortGuide.title}</cite> and <cite>{RM_MATERIALS.decisionMaking.title}</cite>.
         </p>
       )}
       {variant === 'full' && (

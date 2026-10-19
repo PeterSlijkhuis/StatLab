@@ -10,7 +10,7 @@ import { exercisesPassed, lessonStatus, moduleOf } from '../state/stats';
 import { visibleModules } from '../content/parts';
 import { useAdvanced } from '../state/settings';
 import { APPENDIX_NAMES, bookAppendixHref, bookChapterHref, READING, type Reading } from '../content/reading';
-import { R_MATERIALS, REFERENCE_BOOK } from '../components/Credits';
+import { R_MATERIALS, REFERENCE_BOOK, RM_MATERIALS } from '../components/Credits';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
   '../content/lessons/*.mdx',
@@ -80,7 +80,7 @@ export default function Lesson() {
           <header className="lesson-header">
             {module && (
               <p className="lesson-crumb">
-                <span className="lesson-crumb-module">Module {module.number} · {module.title}</span>
+                <span className="lesson-crumb-module">{module.badge ? module.title : `Module ${module.number} · ${module.title}`}</span>
                 <span className="lesson-crumb-step">Lesson {position} of {module.lessons.length}</span>
               </p>
             )}
@@ -134,6 +134,12 @@ function ReadAlong({ reading }: { reading: Reading }) {
       {reading.guide && (
         <>
           <cite>{R_MATERIALS.guide.title}</cite>, chapter{reading.guide.length > 2 ? 's' : ''} {reading.guide}
+        </>
+      )}
+      {(links.length > 0 || reading.guide) && reading.shortGuide && '; '}
+      {reading.shortGuide && (
+        <>
+          {RM_MATERIALS.shortGuide.author}, <cite>{RM_MATERIALS.shortGuide.title}</cite>, section{reading.shortGuide.length > 2 ? 's' : ''} {reading.shortGuide}
         </>
       )}
     </p>

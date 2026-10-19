@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { guide } from '../content/guide';
-import { ALL_LESSONS, findLesson } from '../content/manifest';
+import { ALL_LESSONS, findLesson, lessonLabel } from '../content/manifest';
 import { currentLook } from '../state/avatar';
 import { getProgress, lastVisitedLesson } from '../state/progress';
 import Avatar from './Avatar';
@@ -62,7 +62,7 @@ export default function SiteGuide() {
           {text.trim() === '' ? (
             <>
               <Link className="site-guide-hit" to={`/lesson/${last.id}`}>
-                <strong>{lastVisitedLesson() ? 'Carry on' : 'Start here'}: Lesson {last.id.replace(/^0/, '')}</strong>
+                <strong>{lastVisitedLesson() ? 'Carry on' : 'Start here'}: {lessonLabel(last)}</strong>
                 <span>{last.title}</span>
               </Link>
               <p className="site-guide-note">Or try:</p>

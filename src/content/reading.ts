@@ -14,15 +14,28 @@ export function bookChapterHref(chapter: number): string {
   return `${BOOK_BASE}${BOOK_CHAPTERS[chapter - 1]}.html`;
 }
 
-export type Reading = { book?: number[]; appendix?: (keyof typeof BOOK_APPENDICES)[]; guide?: string };
+export type Reading = {
+  book?: number[];
+  appendix?: (keyof typeof BOOK_APPENDICES)[];
+  /** Chapters of the BMS guide "Intro R for BMS Bachelor programs". */
+  guide?: string;
+  /** Sections of van der Kolk's short guide to research questions, hypotheses and crosstabs. */
+  shortGuide?: string;
+};
 
 /**
  * Where each lesson's material sits in the course's sources: chapters of the
- * online book, and of the BMS guide "Intro R for BMS Bachelor programs".
+ * online book, of the BMS guide "Intro R for BMS Bachelor programs", and
+ * sections of the research methods course's short guide.
  * Shown at the top of the lesson so a student can read along. A lesson the
  * sources do not cover (the advanced modules, mostly) has no entry.
  */
 export const READING: Record<string, Reading> = {
+  'rm-1': { shortGuide: '1 and 2' },
+  'rm-2': { book: [1], shortGuide: '3 and 4' },
+  'rm-3': { book: [2] },
+  'rm-4': { book: [4], shortGuide: '3 and 5' },
+  'rm-5': { shortGuide: '1' },
   '00-1': { guide: '1' },
   '00-2': { guide: '1' },
   '00-3': { guide: '1' },

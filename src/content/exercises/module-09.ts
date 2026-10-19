@@ -65,20 +65,20 @@ export const module09: ExerciseDef[] = [
   {
     id: 'm9-2-a',
     prompt:
-      'Which department loses the most people? Cross department with left_company, then turn the counts into row proportions, so that each department adds up to 1 and the second column is its leaving rate. Store the result in leave_rates.',
-    starterCode: `${LOAD}\n\ncounts <- table(d$department, d$left_company)\ncounts\n\nleave_rates <- `,
-    solution: `${LOAD}\ncounts <- table(d$department, d$left_company)\nleave_rates <- prop.table(counts, margin = 1)`,
+      'Which department loses the most people? Cross left_company (rows) with department (columns), then turn the counts into column proportions, so that each department adds up to 1 and the second row is its leaving rate. Store the result in leave_rates.',
+    starterCode: `${LOAD}\n\ncounts <- table(d$left_company, d$department)\ncounts\n\nleave_rates <- `,
+    solution: `${LOAD}\ncounts <- table(d$left_company, d$department)\nleave_rates <- prop.table(counts, margin = 2)`,
     wrongAnswers: [
       // Every cell as a share of all 480 people.
-      `${LOAD}\ncounts <- table(d$department, d$left_company)\nleave_rates <- prop.table(counts)`,
-      // Column proportions: which departments the leavers came from.
-      `${LOAD}\ncounts <- table(d$department, d$left_company)\nleave_rates <- prop.table(counts, margin = 2)`,
+      `${LOAD}\ncounts <- table(d$left_company, d$department)\nleave_rates <- prop.table(counts)`,
+      // Row proportions: which departments the leavers came from.
+      `${LOAD}\ncounts <- table(d$left_company, d$department)\nleave_rates <- prop.table(counts, margin = 1)`,
       // The counts, never turned into proportions.
-      `${LOAD}\nleave_rates <- table(d$department, d$left_company)`,
+      `${LOAD}\nleave_rates <- table(d$left_company, d$department)`,
     ],
     alternateSolutions: [
-      // Dividing each row by its total.
-      `${LOAD}\ncounts <- table(d$department, d$left_company)\nleave_rates <- counts / rowSums(counts)`,
+      // The course's own way, tabyl() with column percentages.
+      `${LOAD}\nlibrary(dplyr)\nlibrary(janitor)\nleave_rates <- d %>% tabyl(left_company, department) %>% adorn_percentages("col")`,
       // The leaving rate directly, as the mean of a 0-1 column per department.
       `${LOAD}\nleave_rates <- aggregate(left_company ~ department, data = d, FUN = mean)`,
     ],
@@ -99,11 +99,11 @@ export const module09: ExerciseDef[] = [
           top <- levels(d$department)[which.max(rates)]
           list(pass = TRUE, message = paste0("Correct. ", top, " loses ", round(100 * max(rates)), "% of its people and the lowest department ", round(100 * min(rates)), "%. Whether a gap that size could be chance is the next lesson's question."))
         } else if (any(values > 1, na.rm = TRUE)) {
-          list(pass = FALSE, message = "Those are still counts. Departments differ in size, so compare proportions: prop.table(counts, margin = 1).")
+          list(pass = FALSE, message = "Those are still counts. Departments differ in size, so compare proportions: prop.table(counts, margin = 2).")
         } else if (found(by_column)) {
-          list(pass = FALSE, message = "Those are column proportions: of everyone who left, which department they came from. The question is about each department's own rate, so divide by the row totals with margin = 1.")
+          list(pass = FALSE, message = "Those are row proportions: of everyone who left, which department they came from. The question is about each department's own rate, so divide by the column totals, the department sizes, with margin = 2.")
         } else if (abs(sum(values, na.rm = TRUE) - 1) < 1e-6) {
-          list(pass = FALSE, message = "Every cell is a share of all 480 employees, so the whole table adds up to 1. Give prop.table() margin = 1 so that each department adds up to 1 instead.")
+          list(pass = FALSE, message = "Every cell is a share of all 480 employees, so the whole table adds up to 1. Give prop.table() margin = 2 so that each department adds up to 1 instead.")
         } else {
           list(pass = FALSE, message = paste0("I expected the four leaving rates, from ", round(min(rates), 3), " to ", round(max(rates), 3), ", and could not find them in leave_rates."))
         }
@@ -111,8 +111,8 @@ export const module09: ExerciseDef[] = [
     `,
     hints: [
       'prop.table() turns a table of counts into proportions. Its margin argument says what should add up to 1.',
-      'margin = 1 means rows: each department then adds up to 1.',
-      'leave_rates <- prop.table(counts, margin = 1)',
+      'margin = 2 means columns: each department then adds up to 1.',
+      'leave_rates <- prop.table(counts, margin = 2)',
     ],
   },
   {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { ALL_LESSONS, MODULES } from './manifest';
+import { ALL_LESSONS } from './manifest';
+import { visibleModules } from './parts';
 import { BOOK_CHAPTERS, READING } from './reading';
 
 describe('read-along references', () => {
@@ -17,7 +18,7 @@ describe('read-along references', () => {
   });
 
   test('every lesson in the core course has something to read along', () => {
-    for (const module of MODULES.filter((m) => m.number <= 15)) {
+    for (const module of visibleModules(false)) {
       for (const lesson of module.lessons) expect(READING[lesson.id], lesson.id).toBeDefined();
     }
   });
