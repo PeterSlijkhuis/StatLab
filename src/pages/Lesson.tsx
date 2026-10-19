@@ -7,6 +7,10 @@ import { useLessonSession } from '../r/useLessonSession';
 import { LessonFinish, ReadingProgress, SectionGuide, useReveal } from '../components/LessonChrome';
 import { getProgress, subscribeProgress, touchLesson } from '../state/progress';
 import { exercisesPassed, lessonStatus, moduleOf } from '../state/stats';
+import { visibleModules } from '../content/parts';
+import { useAdvanced } from '../state/settings';
+import { APPENDIX_NAMES, bookAppendixHref, bookChapterHref, READING, type Reading } from '../content/reading';
+import { R_MATERIALS, REFERENCE_BOOK, RM_MATERIALS } from '../components/Credits';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
   '../content/lessons/*.mdx',
@@ -19,6 +23,7 @@ export default function Lesson() {
   const [Content, setContent] = useState<ComponentType<{ components?: unknown }> | null>(null);
   const { webR, env } = useLessonSession(meta ?? null);
   const article = useRef<HTMLElement | null>(null);
+  const advanced = useAdvanced();
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   useReveal(article, Content);
@@ -54,7 +59,11 @@ export default function Lesson() {
     );
   }
 
-  const { previous, next } = lessonNeighbours(meta.id);
+  const { previous, next: following } = lessonNeighbours(meta.id);
+  // The core course ends at Module 15 unless the student switched on the
+  // advanced topics; an advanced lesson opened by link still leads on.
+  const shown = (id: string) => visibleModules(advanced).some((module) => module.lessons.some((lesson) => lesson.id === id));
+  const next = following && (shown(following.id) || !shown(meta.id)) ? following : undefined;
   const module = moduleOf(meta.id);
   const position = module ? module.lessons.findIndex((lesson) => lesson.id === meta.id) + 1 : 0;
   const progress = getProgress();
@@ -71,7 +80,7 @@ export default function Lesson() {
           <header className="lesson-header">
             {module && (
               <p className="lesson-crumb">
-                <span className="lesson-crumb-module">Module {module.number} · {module.title}</span>
+                <span className="lesson-crumb-module">{module.badge ? module.title : `Module ${module.number} · ${module.title}`}</span>
                 <span className="lesson-crumb-step">Lesson {position} of {module.lessons.length}</span>
               </p>
             )}
@@ -83,6 +92,7 @@ export default function Lesson() {
                 </span>
               </p>
             )}
+            {READING[meta.id] && <ReadAlong reading={READING[meta.id]} />}
           </header>
           {Content ? <Content components={mdxComponents} /> : <p>Loading lesson…</p>}
         </article>
@@ -97,5 +107,41 @@ export default function Lesson() {
         previous={previous}
       />
     </LessonProvider>
+  );
+}
+
+/** The chapters of the book and the BMS guide that cover this lesson. */
+function ReadAlong({ reading }: { reading: Reading }) {
+  const links = [
+    ...(reading.book ?? []).map((chapter) => ({ href: bookChapterHref(chapter), text: `chapter ${chapter}` })),
+    ...(reading.appendix ?? []).map((key) => ({ href: bookAppendixHref(key), text: APPENDIX_NAMES[key] })),
+  ];
+  return (
+    <p className="lesson-reading">
+      <span aria-hidden="true">📖 </span>Read along:{' '}
+      {links.length > 0 && (
+        <>
+          <cite>{REFERENCE_BOOK.title}</cite>,{' '}
+          {links.map((link, index) => (
+            <span key={link.href}>
+              {index > 0 && ', '}
+              <a href={link.href} target="_blank" rel="noopener noreferrer">{link.text}</a>
+            </span>
+          ))}
+        </>
+      )}
+      {links.length > 0 && reading.guide && '; '}
+      {reading.guide && (
+        <>
+          <cite>{R_MATERIALS.guide.title}</cite>, chapter{reading.guide.length > 2 ? 's' : ''} {reading.guide}
+        </>
+      )}
+      {(links.length > 0 || reading.guide) && reading.shortGuide && '; '}
+      {reading.shortGuide && (
+        <>
+          {RM_MATERIALS.shortGuide.author}, <cite>{RM_MATERIALS.shortGuide.title}</cite>, section{reading.shortGuide.length > 2 ? 's' : ''} {reading.shortGuide}
+        </>
+      )}
+    </p>
   );
 }

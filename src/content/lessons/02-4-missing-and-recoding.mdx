@@ -1,0 +1,208 @@
+Real data needs cleaning before it can be analysed. A code such as 99 stands for
+"no answer", a column has an awkward name, a number has to become a category,
+the information you need sits in a second file, or the data
+arrives as an Excel or SPSS file. This lesson covers the dplyr
+tools for each of those, the same ones the BMS reference guide *Intro R for BMS
+Bachelor programs* lists in its chapter on handling data files.
+
+## Missing values coded as numbers
+
+R has exactly one way to say that a value is missing: `NA`, not available.
+Questionnaire software and SPSS files often use a number instead, such as 99.
+R cannot know that 99 means "no answer", so it would happily average it.
+
+<CodeBlock id="survey" code={`library(dplyr)
+
+survey <- data.frame(
+  id = 1:6,
+  Age = c(23, 31, 99, 45, 27, 38),
+  satisfaction = c(4, 2, 5, 99, 3, 4),
+  contract = c("full-time", "part-time", "full-time", "Don't know", "part-time", "full-time")
+)
+
+survey`} />
+
+`na_if()` turns one chosen value into `NA`. In the same pipeline, `rename()`
+gives `Age` a lowercase name. Note the order inside `rename()`: the new name
+comes first, then the old one.
+
+<CodeBlock id="na-if" code={`survey <- survey %>%
+  rename(age = Age) %>%
+  mutate(
+    age = na_if(age, 99),
+    satisfaction = na_if(satisfaction, 99),
+    contract = na_if(contract, "Don't know")
+  )
+
+survey`} />
+
+## Counting the holes
+
+`is.na()` gives TRUE for every missing value, so the compare-then-sum idiom from
+Module 1 counts them. `colSums()` does it for every column at once.
+
+<CodeBlock id="count-na" code={`sum(is.na(survey$age))
+
+colSums(is.na(survey))`} />
+
+## Pairwise or listwise
+
+There are two ways to deal with the missing values, and they give different
+answers.
+
+- **Pairwise deletion** leaves a person out only of the calculations that need
+  the missing value. That is what `na.rm = TRUE` does.
+- **Listwise deletion** drops every person who is missing anything, before any
+  calculation. That is what `na.omit()` does to a data frame.
+
+<CodeBlock id="pairwise-listwise" code={`# Pairwise: each mean uses everyone who answered that question.
+mean(survey$age, na.rm = TRUE)
+mean(survey$satisfaction, na.rm = TRUE)
+
+# Listwise: only people who answered everything.
+complete <- na.omit(survey)
+nrow(complete)
+mean(complete$age)
+mean(complete$satisfaction)`} />
+
+The mean age changed from 32.8 to 29.75, although nobody's age changed. Person
+4 was dropped for a missing satisfaction score, and their age of 45 went with
+them. Listwise deletion can throw away a lot of real data, so check how many
+rows `na.omit()` leaves before you rely on it. To drop people only for one
+variable, filter on it: `filter(!is.na(age))`, where `!` means "not".
+
+<Predict
+  id="p-listwise"
+  question="lm() drops every row with a missing value on any variable in the model. Which of the two kinds of deletion is that?"
+  choices={[
+    { text: 'Listwise: a person missing one predictor is dropped from the whole model', correct: true, response: 'Yes. A model is one calculation, so a row that is missing anything it needs cannot take part. Compare nobs(model) with nrow(data) to see how many people a model actually used.' },
+    { text: 'Pairwise: each coefficient uses the people who have that predictor', response: 'Each coefficient is estimated together with the others, from one set of rows. A row missing any variable in the formula is left out of all of them.' },
+    { text: 'Neither: lm() fills in the missing values with the mean', response: 'lm() never invents values. Filling in a mean is a decision you would have to make yourself, and it usually makes the standard errors too small.' },
+  ]}
+/>
+
+## From numbers to categories: case_when()
+
+`case_when()` recodes a range of values into a category. Each line is a
+condition, a tilde `~`, and the value to give the rows where that condition
+holds. Here tenure becomes three bands.
+
+<CodeBlock id="case-when" code={`employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+employees <- employees %>%
+  mutate(tenure_band = case_when(
+    tenure_years < 2 ~ "new",
+    tenure_years >= 2 & tenure_years < 10 ~ "established",
+    tenure_years >= 10 ~ "long-serving"
+  ))
+
+table(employees$tenure_band)`} />
+
+The counts are right, but the order is alphabetical: "established" before "new".
+The new column is plain text, and text has no order of its own.
+
+## Ordered factors
+
+An **ordered factor** is a factor whose levels have a ranking, which is how R
+stores an ordinal variable. `factor()` with `levels =` sets the order, and
+`ordered = TRUE` says that order means something.
+
+<CodeBlock id="ordered" code={`employees <- employees %>%
+  mutate(tenure_band = factor(tenure_band,
+    levels = c("new", "established", "long-serving"),
+    ordered = TRUE
+  ))
+
+table(employees$tenure_band)
+head(employees$tenure_band)`} />
+
+The levels now print with `<` between them, and every table and plot follows
+that order. A plain factor with `levels =` would also fix the order; `ordered =
+TRUE` adds that comparisons such as `tenure_band >= "established"` make sense.
+
+## Dummy variables: ifelse()
+
+A dummy variable is 1 for one group and 0 for everyone else. `ifelse()` takes a
+condition, the value for TRUE and the value for FALSE.
+
+<CodeBlock id="dummy" code={`employees <- employees %>%
+  mutate(remote_dummy = ifelse(remote == "Yes", 1, 0))
+
+table(employees$remote, employees$remote_dummy)`} />
+
+Every "Yes" became 1 and every "No" became 0. You rarely need to do this before
+fitting a model, because `lm()` builds dummies from a factor by itself, as
+Module 12 shows. It is useful when a dummy has to be a column you can see, sum or
+average.
+
+<Exercise id="m2-4-a" />
+
+## Adding a column from another table: left_join()
+
+Sometimes the information you need is in a second file. Here a small table says
+which province each site is in. `left_join()` keeps every row of the first table
+and adds the matching columns of the second, matched on the column named in
+`by`.
+
+<CodeBlock id="join" code={`sites <- data.frame(
+  site = c("Almelo", "Apeldoorn", "Deventer", "Enschede", "Hengelo", "Zwolle"),
+  province = c("Overijssel", "Gelderland", "Overijssel", "Overijssel", "Overijssel", "Overijssel")
+)
+
+employees <- employees %>%
+  left_join(sites, by = "site")
+
+employees %>% select(employee_id, site, province) %>% head(3)
+table(employees$province)`} />
+
+The key has to be spelled the same way in both tables. A site written as
+"zwolle" in one file and "Zwolle" in the other does not match, and those rows
+get `NA` for province, without an error. After a join, check for new missing
+values with `sum(is.na(employees$province))`.
+
+## Other file types
+
+`read.csv()`, which Lesson 2-1 used, is part of base R. The tidyverse
+alternative `read_csv()`, from readr, does the same job and returns a tibble, a data frame that prints more
+compactly. Excel and SPSS files need a package each. In RStudio, with the file
+in your project's data folder:
+
+```r
+library(readxl)
+survey <- read_excel("data/survey.xlsx")
+
+library(haven)
+survey <- read_sav("data/survey.sav")
+```
+
+Some course scripts use the older foreign package instead, which comes with R
+and turns labelled codes into factors straight away:
+
+```r
+library(foreign)
+survey <- read.spss("data/survey.sav", to.data.frame = TRUE)
+```
+
+An SPSS file often stores its codebook inside the data: a label for each
+variable and for each value, such as 1 = "woman". `haven` keeps them as
+attributes, which `attr()` shows:
+
+```r
+attr(survey$gender, "label")    # what the variable is
+attr(survey$gender, "labels")   # what each code means
+```
+
+`as_factor(survey$gender)`, from haven, turns the coded numbers into a factor
+with those labels as levels. And in RStudio, `View(survey)`, with a capital V,
+opens any data frame as a spreadsheet.
+
+<Quiz
+  id="q-2-4"
+  question="A questionnaire codes 'no answer' as 99. You run mean(survey$age, na.rm = TRUE) without changing anything first. What happens?"
+  choices={[
+    { text: 'R averages the 99s as real ages, so the mean is too high', correct: true, response: 'Right. To R, 99 is a number like any other. na.rm = TRUE removes only NA, so turn the code into NA first with na_if(age, 99).' },
+    { text: 'R recognises 99 as missing and skips it', response: 'R has no idea what 99 means in your questionnaire. Only NA counts as missing.' },
+    { text: 'R stops with an error about missing values', response: 'There is nothing for R to complain about: every value is a number. That is why the mistake is easy to miss.' },
+    { text: 'The mean is NA', response: 'The mean is NA only when a value is NA and na.rm is not set. Here no value is NA yet.' },
+  ]}
+/>

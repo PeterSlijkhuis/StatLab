@@ -1,0 +1,97 @@
+A research question names units and variables. Data puts them in a grid: the
+**data matrix**, with one row per unit and one column per variable. Every
+dataset in this course is one, and so is every spreadsheet you will get from a
+survey tool.
+
+## Units of analysis and of observation
+
+The **unit of analysis** is what your conclusions are about: students,
+employees, schools, countries. The **unit of observation** is what you actually
+measure. They often coincide, but not always. You can survey individual
+employees (observation) to compare departments (analysis) by averaging within
+each department.
+
+Moving between levels has a trap. If countries with more internet users also
+have higher average incomes, that does not show that the individuals who use
+the internet are the richer ones. Concluding something about individuals from
+data about groups is the **ecological fallacy**.
+
+## A data matrix in R
+
+The dplyr package ships a small data matrix about Star Wars characters. Each
+row is a character, each column something recorded about them.
+
+<CodeBlock id="c-starwars" code={`library(dplyr)
+
+glimpse(starwars)
+colnames(starwars)`} />
+
+`glimpse()` lists every variable with its type and its first values, and
+`colnames()` gives just the names. In RStudio, `View(starwars)` opens the same
+matrix as a spreadsheet you can scroll through.
+
+## Levels of measurement
+
+How you may summarise a variable depends on its **level of measurement**. The
+course uses the mnemonic **D-NOIR**:
+
+- **Dichotomous**: two categories, such as passed or failed.
+- **Nominal**: categories without an order, such as eye colour or programme.
+- **Ordinal**: ordered categories without equal steps, such as "never,
+  sometimes, often" or a ranking.
+- **Interval**: equal steps but no true zero, such as temperature in degrees
+  Celsius or a score on a 1 to 7 scale.
+- **Ratio**: equal steps and a true zero, such as height, income or the number
+  of exams taken.
+
+Categories also have to be **exhaustive**, so every unit fits in one, and
+**mutually exclusive**, so no unit fits in two. Age groups "18 to 25, 25 to 35"
+fail the second test: a 25-year-old fits both.
+
+<Predict
+  id="p-level"
+  question="Students rate a lecture from 1 (very bad) to 5 (very good). Which level is that, strictly speaking?"
+  choices={[
+    { text: 'Nominal', response: 'The categories have an order: 5 is better than 4. Nominal categories have none.' },
+    { text: 'Ordinal', correct: true, response: 'Right. The order is clear, but nothing guarantees the step from 1 to 2 is as large as from 4 to 5. In practice such scores are often treated as interval, especially when several items are averaged.' },
+    { text: 'Ratio', response: 'A rating of 0 does not exist and does not mean "no quality at all", so there is no true zero.' },
+  ]}
+/>
+
+R stores the level in the column's type. Numbers are `numeric` or `integer`,
+categories are `character` or `factor`. R does not know whether your numbers
+are ordinal or ratio, so the decision what to compute stays yours.
+
+<CodeBlock id="c-classes" code={`class(starwars$height)
+class(starwars$eye_color)
+table(starwars$sex)`} />
+
+A count per category, as `table()` gives, works at every level. A mean only
+makes sense from interval level upwards.
+
+<Exercise id="mrm-2-a" />
+
+## From concept to number
+
+A research question uses concepts, such as "stress" or "social support". To
+measure one, you first make it precise (**conceptualisation**: what exactly do
+we mean, and which dimensions does it have?) and then decide how to observe it
+(**operationalisation**: which questions, scale or observation, with which
+answer categories?). The result of measuring is a score per unit, which goes in
+the data matrix.
+
+The usual **data collection methods** are questionnaires, interviews,
+observation, experiments and existing documents or records. Data you collect
+yourself for your question is **primary data**. Data someone else collected,
+such as a national statistics office or an earlier study, is **secondary
+data**: cheaper and often larger, but measured for someone else's purpose.
+
+<Quiz
+  id="q-ecological"
+  question="Across the twelve Dutch provinces, those with more sports clubs per resident have lower average BMI. Which conclusion follows?"
+  choices={[
+    { text: 'Members of sports clubs have a lower BMI than non-members.', response: 'That is the ecological fallacy. The data are about provinces, so they say nothing about which individuals in a province have the lower BMI.' },
+    { text: 'At province level, more sports clubs go together with a lower average BMI.', correct: true, response: 'Correct. The unit of analysis is the province, and the conclusion stays at that level.' },
+    { text: 'Building more sports clubs lowers BMI.', response: 'Two steps too far: it switches to a causal claim, and nothing here rules out a third variable such as average income.' },
+  ]}
+/>

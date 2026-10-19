@@ -167,6 +167,12 @@ describe('Lesson lifecycle across a param-only navigation', () => {
     await waitFor(() => expect(screen.getByText('lesson-06-2-body ready=true')).toBeDefined());
   });
 
+  test('a lesson points to the book chapters to read along', () => {
+    render(<Harness initialPath="/lesson/06-1" />);
+    expect(screen.getByText(/Read along/).textContent).toContain('Analysing Data Using Linear Models');
+    expect(screen.getByRole('link', { name: 'chapter 2' }).getAttribute('href')).toMatch(/posit\.cloud\/mean\.html$/);
+  });
+
   test('a lesson whose MDX file is missing still records a visit', async () => {
     render(<Harness initialPath="/lesson/06-missing" />);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Missing Lesson' })).toBeDefined());

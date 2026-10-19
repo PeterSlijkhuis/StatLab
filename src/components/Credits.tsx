@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 import { addBonusPoint } from '../state/progress';
+import { BOOK_BASE } from '../content/reading';
 import './Credits.css';
 
 // Logo files are picked up from src/assets/logos by name, so adding
@@ -23,6 +24,25 @@ export const REFERENCE_BOOK = {
   author: 'S.M. van den Berg',
   href: 'https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf',
   licenceHref: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+  /** The book to read along in, online. */
+  onlineHref: `${BOOK_BASE}index.html`,
+};
+
+/** The R material BMS courses teach from, which the R lessons follow. */
+export const R_MATERIALS = {
+  guide: { title: 'Intro R for BMS Bachelor programs', author: 'CODE staff, BMS' },
+  course: { title: 'Intro R', href: 'https://jsteinrucke-intro-r.share.connect.posit.cloud/' },
+  shop: { title: 'BMS Methodology Shop', href: 'https://www.utwente.nl/en/bms/m-store/' },
+};
+
+/** The research methods course's own readers, which the RM lessons follow. */
+export const RM_MATERIALS = {
+  course: { title: 'Introduction to Research Methodology', where: 'BMS psychology bachelor, Module 1' },
+  shortGuide: {
+    title: 'A short guide to asking research questions, to hypothesis construction and to basic data analysis using crosstabs',
+    author: 'Van der Kolk',
+  },
+  decisionMaking: { title: 'Decision making and empirical research', author: 'Van der Kolk' },
 };
 
 export const PARTNERS = [
@@ -67,11 +87,29 @@ export default function Credits({ variant = 'full' }: Props) {
           <a href={REFERENCE_BOOK.href} target="_blank" rel="noopener noreferrer">
             <cite>{REFERENCE_BOOK.title}</cite>
           </a>{' '}
-          by {REFERENCE_BOOK.author} (5th ed., University of Twente, 2021), licensed under a{' '}
+          by {REFERENCE_BOOK.author} (University of Twente; the online book is the 2024 edition), licensed under a{' '}
           <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
             Creative Commons BY-NC-SA licence
           </a>
-          . StatLab's lessons are written independently.
+          . Read it along with the course in the{' '}
+          <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer">online book</a>.
+          StatLab's lessons are written independently.
+        </p>
+      )}
+      {variant === 'full' && (
+        <p className="credits-book">
+          The R lessons follow the R taught in the BMS Research Methods and Statistics courses: the reference guide{' '}
+          <cite>{R_MATERIALS.guide.title}</cite> ({R_MATERIALS.guide.author}) and the{' '}
+          <a href={R_MATERIALS.course.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.course.title}</a>{' '}
+          course. For help with your own research, ask the{' '}
+          <a href={R_MATERIALS.shop.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.shop.title}</a>.
+        </p>
+      )}
+      {variant === 'full' && (
+        <p className="credits-book">
+          The research methods lessons follow <cite>{RM_MATERIALS.course.title}</cite> ({RM_MATERIALS.course.where})
+          and H. van der Kolk's readers{' '}
+          <cite>{RM_MATERIALS.shortGuide.title}</cite> and <cite>{RM_MATERIALS.decisionMaking.title}</cite>.
         </p>
       )}
       {variant === 'full' && (

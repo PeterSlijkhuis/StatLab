@@ -71,7 +71,7 @@ distribution is, and they disagree on purpose.
   with 480 people the two differ only in the second decimal.
 - The **interquartile range** is the width of the middle half of the company: the
   distance from the 25th to the 75th percentile. It ignores the tails entirely.
-- The **range** — largest minus smallest — is built from exactly two people, so
+- The **range**, largest minus smallest, is built from exactly two people, so
   it is the least stable of the three and the easiest to quote.
 
 Watch out for R's `range()`: it returns the two endpoints, not the distance
@@ -82,6 +82,31 @@ between them.
 max(employees$wellbeing) - min(employees$wellbeing)`} />
 
 <Exercise id="m3-1-b" />
+
+## Which centre fits the level of measurement
+
+The mean needs numbers with equal steps, so it fits interval and ratio
+variables. For an ordinal variable, use the **median**. For a nominal variable,
+such as department, only the **mode** is left: the most frequent category. A
+frequency table shows it straight away. BMS courses make one with `tabyl()`
+from the janitor package.
+
+<CodeBlock id="tabyl" code={`library(janitor)
+
+employees %>%
+  tabyl(department) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting(digits = 1)`} />
+
+Support is the mode. When a variable has missing values, `tabyl()` adds a
+`valid_percent` column, the percentages among the people with an answer. The
+Star Wars data that comes with dplyr has four characters with no recorded sex.
+
+<CodeBlock id="valid" code={`starwars %>%
+  tabyl(sex) %>%
+  adorn_pct_formatting(digits = 1)`} />
+
+Report the valid percentages, and say how many values were missing.
 
 <Quiz
   id="q-3-1"

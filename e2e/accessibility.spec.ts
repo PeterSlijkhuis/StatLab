@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test';
 // Scroll-in animations fade text from transparent, which axe would flag mid-fade.
 test.use({ reducedMotion: 'reduce' });
 
-const LESSONS = [...readFileSync('src/content/manifest.ts', 'utf8').matchAll(/id: '(\d\d-\d)'/g)].map((m) => m[1]);
+const LESSONS = [...readFileSync('src/content/manifest.ts', 'utf8').matchAll(/id: '((?:\d\d|rm)-\d)'/g)].map((m) => m[1]);
 const PAGES = ['./', './workspace', './which-model', './sample-size', './review', './avatar', ...LESSONS.map((id) => `./lesson/${id}`)];
 
 async function violations(page: Page) {

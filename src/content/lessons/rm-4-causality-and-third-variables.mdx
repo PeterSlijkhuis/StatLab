@@ -1,0 +1,146 @@
+An explanatory hypothesis claims that X affects Y. Data can support that claim
+only if three conditions hold:
+
+1. **Time order**: X comes before Y. This is mostly settled by theory and
+   design, not by the data.
+2. **Association**: X and Y go together in the data.
+3. **No third variable** explains the association away. A relationship that a
+   third variable creates is **spurious**, like the classic one between the
+   number of storks and the number of babies across regions, which both depend
+   on how rural a region is.
+
+This lesson tests a hypothesis with a crosstab and then checks it against a
+third variable, the way the course reader by Van der Kolk does.
+
+## The data
+
+Do EU regions that receive a lot of money from the EU support the EU more? For
+360 regions we know the money received (low or high), public support for the EU
+(low or high) and economic development (low or high). The data come as a
+**reduced data matrix**: one row per combination, with the number of regions
+that have it. `uncount()` from tidyr turns that back into one row per region.
+
+<CodeBlock id="c-data" code={`library(dplyr)
+library(tidyr)
+library(janitor)
+
+reduced <- data.frame(
+  money       = c("high", "high", "high", "high", "low", "low", "low", "low"),
+  support     = c("high", "high", "low", "low", "high", "high", "low", "low"),
+  development = c("low", "high", "low", "high", "low", "high", "low", "high"),
+  n           = c(10, 60, 60, 80, 2, 13, 95, 40)
+)
+regions <- reduced %>% uncount(n)
+nrow(regions)`} />
+
+## The bivariate table
+
+The course convention for a crosstab: the **independent variable in the
+columns**, the dependent variable in the rows, and percentages that add up to
+100 within each column. Then you compare along the rows. `tabyl()` takes the
+row variable first and the column variable second.
+
+<CodeBlock id="c-xy" code={`regions %>%
+  tabyl(support, money) %>%
+  adorn_totals("row") %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0) %>%
+  adorn_ns()`} />
+
+Of the regions receiving little money, 10% show high support; of those
+receiving a lot, 33%. The **percentage difference**, written E (epsilon), is
+33 − 10 = 23 percentage points, in the expected direction.
+
+Is 23 points a meaningful difference? The course uses a rule of thumb that
+depends on the number of cases N: the difference should be at least
+
+- 5 points when N is 1100 or more,
+- 10 points when N is between 200 and 1100,
+- 15 points when N is between 100 and 200,
+- 20 points when N is between 50 and 100.
+
+With N = 360 the bar is 10 points, so 23 points counts. Module 9 replaces this
+rule of thumb with a proper test.
+
+<Predict
+  id="p-spurious"
+  question="Does this table show that EU money raises support for the EU?"
+  choices={[
+    { text: 'Yes, the difference is large and in the expected direction', response: 'That settles condition 2 only. A third variable could still create the association.' },
+    { text: 'Not yet: time order and third variables still have to be checked', correct: true, response: 'Right. An association is necessary for a causal claim, never sufficient.' },
+  ]}
+/>
+
+## Adding a test variable
+
+Economic development could be related to both the money a region receives and
+its support for the EU. To check, split the table by development: one
+**partial table** per value of the test variable. A third argument to `tabyl()`
+does exactly that and returns a list of tables, which the `adorn_` functions
+handle one by one.
+
+<CodeBlock id="c-partial" code={`regions %>%
+  tabyl(support, money, development) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0)`} />
+
+Among low-development regions (N = 167) the difference is 14 − 2 = 12 points.
+Among high-development regions (N = 193) it is 43 − 25 = 18 points. Both
+partial tables have N between 100 and 200, so each needs 15 points.
+
+The relationship has weakened in both tables compared with the original 23
+points. Applied strictly, the rule of thumb says it disappears among
+low-development regions and stays among high-development ones. Numbers this
+close to the bar are fragile, which is one reason Module 9 brings in a test.
+
+The other expectations concern the test variable itself. Is development related
+to the money a region receives, and to support?
+
+<CodeBlock id="c-tx" code={`regions %>%
+  tabyl(money, development) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0)`} />
+
+High-development regions receive a lot of money more often (73%) than
+low-development ones (42%). Now the same for support, which is the exercise.
+
+<Exercise id="mrm-4-a" />
+
+## Elaboration models
+
+What a test variable does to the original relationship decides how you read it.
+The course distinguishes these **elaboration models**:
+
+- **Replication**: the relationship stays the same in every partial table.
+- **Addition**: the relationship stays the same, and the test variable also
+  affects Y on its own.
+- **Full explanation**: the relationship disappears, and the test variable
+  comes *before* X and affects both. The original relationship was spurious.
+  The test variable is a **confounder**.
+- **Partial explanation**: as full explanation, but the relationship only
+  weakens.
+- **Full interpretation**: the relationship disappears, and the test variable
+  comes *between* X and Y: X affects it, and it affects Y. The test variable is
+  an intervening variable, or **mediator**.
+- **Partial interpretation**: as full interpretation, but the relationship only
+  weakens.
+- **Specification**: the relationship differs between the partial tables, for
+  example strong for one value of the test variable and absent for the other.
+  The test variable is a **moderator**, and this is an **interaction**.
+
+Explanation and interpretation give the *same* tables. Only the time order,
+which comes from theory, tells them apart: does development come before EU
+money, or does EU money raise development? Module 11 does the same with
+regression ("holding constant"), Module 13 with interactions, and the Advanced
+mediation lesson with mediators.
+
+<Quiz
+  id="q-elaboration"
+  question="A firm finds that employees who take a training course earn more. Split by education, the difference disappears in both partial tables, and better-educated employees both take the course more often and earn more. Education was completed before employment. Which model fits?"
+  choices={[
+    { text: 'Full interpretation', response: 'That needs the test variable to come between X and Y, caused by the training. Education came before the course.' },
+    { text: 'Full explanation', correct: true, response: 'Correct. The relationship disappears, and the test variable precedes both: education is a confounder, and the training effect was spurious.' },
+    { text: 'Specification', response: 'Specification needs the relationship to differ between the partial tables. Here it disappears in both.' },
+    { text: 'Replication', response: 'Replication means the relationship survives unchanged. Here it disappears.' },
+  ]}
+/>

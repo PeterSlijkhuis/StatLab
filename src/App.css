@@ -316,6 +316,13 @@ button.sidebar-lesson { width: 100%; border: 0; background: none; font: inherit;
 .lesson-link.complete a::before { border-color: var(--success); background: var(--success); }
 .lesson-link a:hover { color: var(--brand); }
 
+.lesson-reading { margin: 0.4rem 0 0; font-size: 0.9rem; color: var(--muted); }
+.advanced-note { margin: 1.2rem 0; padding: 0.6rem 0.9rem; border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); color: var(--muted); font-size: 0.9rem; }
+.advanced-section { margin: 1.2rem 0; padding: 0.2rem 1rem 0.6rem; border-left: 3px solid var(--line-strong); }
+.advanced-label { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+.home-help { margin-top: 3rem; padding: 1.4rem 1.5rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.home-help h2 { margin-top: 0; font-size: 1.2rem; }
+.home-help p { color: var(--ink-2); margin-bottom: 0; }
 .home-save { margin-top: 3rem; padding: 1.4rem 1.5rem; border-radius: var(--radius); background: var(--surface); border: 1px dashed var(--line-strong); }
 .home-save h2 { margin-top: 0; font-size: 1.2rem; }
 .home-save p { color: var(--ink-2); }

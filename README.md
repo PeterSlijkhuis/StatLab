@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://peterslijkhuis.github.io/StatLab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 18 modules, 64 lessons, 89 exercises, 0 installs." width="100%"></a>
+  <a href="https://peterslijkhuis.github.io/StatLab/"><img src="docs/readme/hero.svg" alt="StatLab: learn statistics by doing it in R, right in your browser. 19 modules, 70 lessons, 94 exercises, 0 installs." width="100%"></a>
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  Built for psychology and business students at the <strong>University of Twente</strong>.<br>
+  Built for BMS bachelor students at the <strong>University of Twente</strong>, following the R taught in the Research Methods and Statistics courses.<br>
   <sub>Made by dr. P.J.H. Slijkhuis and dr. V.d.C. Resendez Gomez, based on materials provided by dr. S.J. Watson. Theory, terminology and topic order follow Analysing Data Using Linear Models by S.M. van den Berg (5th ed., University of Twente, 2021; Creative Commons BY-NC-SA licence); the lessons are written independently.</sub>
 </p>
 
@@ -49,7 +49,7 @@
     </td>
     <td width="33%" valign="top">
       <h3>✅ Answers checked by R</h3>
-      89 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
+      94 exercises are marked by R itself. A wrong answer gets feedback on the <em>specific</em> mistake, not just a red cross.
     </td>
     <td width="33%" valign="top">
       <h3>🧑‍🔬 An avatar that coaches</h3>
@@ -165,8 +165,8 @@ live in the browser, and export to a file that imports on any other computer.
 
 ## The course
 
-**18 modules · 64 lessons · 89 checked exercises · 6 interactive simulations.**
-From "what is a file path?" to mixed models, logistic regression, mediation and
+**19 modules · 70 lessons · 94 checked exercises · 6 interactive simulations.**
+From research questions and "what is a file path?" to mixed models, logistic regression, mediation and
 Bayes. Statistics is taught the way the course team's own R workshops teach it:
 in tidyverse style and through the linear model. `lm`, `lmer` and `glm` do the
 work, and the t-test, ANOVA and chi-square appear as those same models under
@@ -174,11 +174,13 @@ their traditional names.
 
 | | Module | What it covers | Simulation |
 |---|---|---|---|
+| **Research methods** | | | |
+| RM | Research methods | Empirical research questions, units and variables, D-NOIR levels of measurement, sampling, crosstabs with epsilon, causality and the elaboration models, research designs and threats to validity | |
 | **Foundations** | | | |
 | 0 | Before you start | RStudio Projects, files, folders and paths, and what R's symbols mean, with a cheat sheet | |
 | 1 | First steps in R | Objects, functions, help, packages and `library()` | |
-| 2 | Working with data | `read.csv`, factors, the pipe, `select`, `filter`, `mutate`, wide and long data | |
-| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha | |
+| 2 | Working with data | `read.csv`, factors and data types, the pipe, `select`, `filter`, `mutate`, wide and long data, missing values, recoding, joins, Excel and SPSS files | |
+| 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha, exploratory factor analysis | |
 | 4 | Visualising data | ggplot2 as layers, facets, and an APA-ready figure | |
 | **Inference** | | | |
 | 5 | The normal distribution | Density, z-scores and probabilities | Distribution |
@@ -193,9 +195,56 @@ their traditional names.
 | 13 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
 | 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test, group by time designs, pre, mid and post, Wilcoxon and Friedman tests | |
 | 15 | Binary and count outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting, Poisson regression for counts | |
-| **Advanced** | | | |
+| **Advanced** (switch on under Settings, Advanced topics) | | | |
 | 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
-| 17 | Mediation, factors and reports | Indirect effects with bootstrap intervals, exploratory factor analysis, reproducible reports with Quarto | |
+| 17 | Mediation and reports | Indirect effects with bootstrap intervals, reproducible reports with Quarto | |
+
+The Research methods module follows the BMS psychology course
+*Introduction to Research Methodology* and H. van der Kolk's readers. Modules 0
+to 15 follow van den Berg's book and the R taught in the BMS courses. Everything beyond them, the Advanced modules and a few sections
+inside core lessons (Fisher's exact test, robust and bootstrap intervals,
+nested random effects) and the model chooser's answers the course does not
+teach, appears only after switching on **Advanced topics** under Settings.
+
+### Read along in the book
+
+Each lesson links to the chapter of the
+[online book](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/index.html)
+that covers it. The map lives in `src/content/reading.ts`, and a test checks
+that every chapter is used.
+
+| Ch | Topic (links to the chapter) | StatLab lessons |
+|---|---|---|
+| 1 | [Variables, variation and co-variation](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/intro.html) | RM-2, 2-1, 2-3, 3-1 to 3-3, 4-1 to 4-3, 5-1 to 5-3, 9-2 |
+| 2 | [Inference about a mean](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/mean.html) | RM-3, 6-1 to 8-4 |
+| 3 | [Inference about a proportion](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/prop.html) | 9-1 |
+| 4 | [Simple and multiple regression](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/simple.html) | RM-4, 10-1, 10-2, 11-1, 11-2 |
+| 5 | [Inference for linear models](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/inf-lm.html) | 10-3, 11-3 |
+| 6 | [Categorical predictors](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/categorical.html) | 12-1, 12-2 |
+| 7 | [Assumptions](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/assumptions.html) | 11-4 |
+| 8 | [Non-parametric alternatives](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/nonpar1.html) | 10-4, 12-4 |
+| 9 | [Moderation](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/moderation.html) | 13-1 to 13-3 |
+| 10 | [Contrasts](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/contrasts.html) | 12-2, 13-2 |
+| 11 | [Post-hoc comparisons](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/post-hoc.html) | 12-3 |
+| 12 | [Linear mixed models](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/mixed.html) | 14-1 to 14-3 |
+| 13 | [Pre, mid and post designs](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/premidpost.html) | 14-4 |
+| 14 | [Non-parametric tests for repeated measures](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/nonpar2.html) | 14-5 |
+| 15 | [Logistic regression](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/logistic.html) | 15-1 to 15-3 |
+| 16 | [Poisson regression and chi-square](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/poissonrevised.html) | 9-3, 15-4 |
+| A | [The normal distribution](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/appnormal.html) | 5-1 to 5-3 |
+| A | [The t-distribution](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/appt.html) | 7-1, 8-2 |
+
+Chapters of the BMS guide *Intro R for BMS Bachelor programs*: 1 (R and
+RStudio) goes with Modules 0 to 2, 2 (handling data files) with Module 2,
+3 and 4 (univariate and bivariate analysis) with Modules 3, 4, 9, 10 and 12,
+5 (multivariate analysis) with Modules 11, 14 and 15, and 6 (psychometrics)
+with Lessons 3-4 and 17-2.
+
+The research methods lessons point to sections of Van der Kolk's *A short guide
+to asking research questions, to hypothesis construction and to basic data
+analysis using crosstabs*: 1 and 2 (research questions) with RM-1, 3 and 4
+(units, variables and data matrices) with RM-2, 3 and 5 (crosstabs and
+elaboration) with RM-4, and 1 (designs) with RM-5.
 
 ### How a lesson works
 
@@ -241,6 +290,19 @@ Theory, terminology and topic order follow
 [Creative Commons BY-NC-SA licence](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 StatLab's lessons follow its theory, terminology and topic order but are
 written independently.
+Every lesson links to the chapters to read along in the
+[online book](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/index.html).
+
+The R lessons follow the R taught in the BMS Research Methods and Statistics
+courses: the reference guide *Intro R for BMS Bachelor programs* (CODE staff,
+BMS) and the [Intro R](https://jsteinrucke-intro-r.share.connect.posit.cloud/)
+course. For help with your own research, ask the
+[BMS Methodology Shop](https://www.utwente.nl/en/bms/m-store/).
+
+The research methods lessons follow *Introduction to Research Methodology*
+(BMS psychology bachelor, Module 1) and H. van der Kolk's readers *A short
+guide to asking research questions, to hypothesis construction and to basic
+data analysis using crosstabs* and *Decision making and empirical research*.
 
 RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with
 or endorsed by Posit.

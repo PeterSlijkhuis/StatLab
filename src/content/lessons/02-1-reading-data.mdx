@@ -72,6 +72,32 @@ happens to appear in the file. That alphabetical order will matter again in
 Module 12, where the first level becomes the reference group: the group every
 other group is compared against.
 
+## Kinds of values
+
+Every column of a data frame is a vector, and a vector holds one kind of value.
+`class()` tells you which. These are the kinds you will meet, with the variables
+each is used for.
+
+<CodeBlock id="classes" code={`class(TRUE)
+class(3L)
+class(3.5)
+class("Sales")
+class(employees$department)`} />
+
+- **logical**: TRUE or FALSE, for yes/no variables.
+- **integer**: whole numbers, often counts. The `L` in `3L` makes one by hand.
+- **numeric**: numbers in general, decimals included, for interval and ratio
+  variables.
+- **character**: text. Fine for names and comments, but a categorical variable
+  should become a factor.
+- **factor**: a fixed set of categories, for nominal variables. An **ordered
+  factor**, which Lesson 2-4 makes, is the version for ordinal variables.
+
+Because a vector holds one kind only, mixing them makes R convert:
+`c(1, 2, "three")` turns all three into text. A number column that arrives as
+character usually means one cell in the file holds something that is not a
+number.
+
 ## Counting and summarising
 
 <CodeBlock id="table" code={`table(employees$department)

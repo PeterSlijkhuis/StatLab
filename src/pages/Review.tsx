@@ -9,7 +9,7 @@ import { getProgress } from '../state/progress';
 import { firstUnfinished } from '../state/stats';
 import './ModelChooser.css';
 
-const label = (lessonId: string) => `Lesson ${lessonId.replace(/^0/, '')}`;
+const label = (lessonId: string) => `Lesson ${lessonId.replace(/^0/, '').toUpperCase()}`;
 
 export default function Review() {
   const [round, setRound] = useState<BankQuiz[] | null>(null);

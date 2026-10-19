@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { MODULES } from '../content/manifest';
-import { PARTS } from '../content/parts';
+import { visibleModules, visibleParts } from '../content/parts';
+import { setAdvanced, useAdvanced } from '../state/settings';
 import { getProgress, subscribeProgress } from '../state/progress';
 import { courseStats, lessonStatus, moduleOf, moduleProgress } from '../state/stats';
 import { currentLook, pointsToSpend } from '../state/avatar';
@@ -50,7 +51,8 @@ export default function Sidebar({ open = false }: Props) {
     query.addEventListener('change', onChange);
     return () => query.removeEventListener('change', onChange);
   }, []);
-  const stats = courseStats(progress);
+  const advanced = useAdvanced();
+  const stats = courseStats(progress, visibleModules(advanced).flatMap((module) => module.lessons));
 
   // One module open at a time by default: the one holding the current lesson.
   // Opening another by hand keeps both open until the page changes.
@@ -97,7 +99,7 @@ export default function Sidebar({ open = false }: Props) {
         <span title="Lessons finished">{stats.lessonsComplete}/{stats.lessonsTotal}</span>
       </div>
 
-      {PARTS.map((part) => (
+      {visibleParts(advanced).map((part) => (
         <div key={part.title} className="sidebar-part">
           <p className="sidebar-part-title">{part.title}</p>
           {MODULES.filter((module) => (part.modules as readonly number[]).includes(module.number)).map((module) => {
@@ -112,8 +114,8 @@ export default function Sidebar({ open = false }: Props) {
               <section key={module.id} className={`sidebar-module${isOpen ? ' open' : ''}${done === total ? ' done' : ''}`}>
                 <h2>
                   <button type="button" className="sidebar-module-toggle" aria-expanded={isOpen} aria-controls={panelId} aria-describedby={`${panelId}-count`} onClick={() => toggle(module.id)}>
-                    <span className="sidebar-module-number" aria-hidden="true">{done === total ? '✓' : module.number}</span>
-                    <span className="sidebar-module-title"><span className="visually-hidden">{module.number}. </span>{module.title}</span>
+                    <span className="sidebar-module-number" aria-hidden="true">{done === total ? '✓' : module.badge ?? module.number}</span>
+                    <span className="sidebar-module-title"><span className="visually-hidden">{module.badge ?? module.number}. </span>{module.title}</span>
                     <span className="sidebar-module-count" aria-hidden="true">{done}/{total}</span>
                     <svg className="sidebar-chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </button>
@@ -150,7 +152,14 @@ export default function Sidebar({ open = false }: Props) {
           <li><NavLink to="/sample-size" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🎯</span>How many participants?</NavLink></li>
           <li><NavLink to="/review" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🔁</span>Review quiz</NavLink></li>
           <li><NavLink to="/workspace" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">⌨️</span>R Workspace</NavLink></li>
+        </ul>
+      </div>
+
+      <div className="sidebar-part sidebar-reference">
+        <p className="sidebar-part-title">Settings</p>
+        <ul>
           <li><button type="button" className="sidebar-lesson" aria-pressed={dark} onClick={toggleTheme}><span className="sidebar-lesson-icon" aria-hidden="true">🌙</span>Dark mode</button></li>
+          <li><button type="button" className="sidebar-lesson" aria-pressed={advanced} onClick={() => setAdvanced(!advanced)} title="Show Modules 16 and 17, which go beyond the BMS course"><span className="sidebar-lesson-icon" aria-hidden="true">🎓</span>Advanced topics</button></li>
         </ul>
       </div>
 

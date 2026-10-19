@@ -1,0 +1,107 @@
+The previous lesson checked for third variables after the data were in. A good
+design rules many of them out before any data are collected. Designs are
+written in a short notation:
+
+- **X** is the intervention, or treatment.
+- **O** is an observation, a measurement.
+- **R** means the groups were formed by random assignment; **N** means they
+  were not (a non-equivalent group, such as an existing class).
+
+Time runs from left to right, and each line is one group.
+
+## Designs from weak to strong
+
+A **one-shot case study**, `X O`, measures once after the intervention. With
+nothing to compare against, it shows almost nothing.
+
+A **one-group pretest-posttest design**, `O X O`, measures before and after.
+Any change could also come from something else that happened in between.
+
+An **interrupted time series**, `O O O X O O O`, measures several times before
+and after. A trend that was already there before X is then visible, and a jump
+right after X is more convincing.
+
+A **non-equivalent control group design** adds a comparison group that was not
+randomised:
+
+```
+N  O  X  O
+N  O     O
+```
+
+A **pretest-posttest control group design** assigns people to the groups at
+random. This is the classic **experiment**:
+
+```
+R  O  X  O
+R  O     O
+```
+
+Random assignment makes the groups equal *on average* in everything, measured
+or not, so a difference afterwards can be put down to X or to chance, and
+chance is what a statistical test measures. A **posttest-only control group
+design**, `R X O` against `R O`, drops the pretest and avoids its side effects.
+
+## Random assignment in R
+
+`sample()` shuffles a vector. Shuffle a list of 240 "treatment" and 240
+"control" labels, and each of 480 employees gets one at random.
+
+<CodeBlock id="c-assign" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+set.seed(4)
+d$group <- sample(rep(c("treatment", "control"), each = nrow(d) / 2))
+table(d$group)
+aggregate(tenure_years ~ group, data = d, FUN = mean)`} />
+
+The two groups differ a little in tenure, but only by chance. Compare that with
+the `training` column in the same data: employees *chose* whether to follow the
+training, so anything that drove that choice, such as motivation, travels along
+with it. That is **self-selection**, and it is what random assignment removes.
+
+<Exercise id="mrm-5-a" />
+
+## Validity and its threats
+
+A study has **internal validity** when its conclusion about cause and effect
+holds for the people studied. It has **external validity** when the conclusion
+generalises to other people, settings and times. Random assignment protects
+internal validity; random *sampling* (previous lesson) protects external
+validity. They are different steps, and an experiment on first-year
+psychology students can be internally valid and still say little about
+employees.
+
+The usual **threats to internal validity**, each a rival explanation for a
+change from O to O:
+
+- **History**: something else happened between the measurements, such as a
+  news event.
+- **Maturation**: participants changed by themselves, by getting older, more
+  tired or more experienced.
+- **Testing**: the first measurement affects the second, for example because
+  people remember the questions.
+- **Instrumentation**: the measuring instrument or the observer changed.
+- **Regression to the mean**: a group selected for extreme scores scores less
+  extreme the next time, even without any intervention.
+- **Selection**: the groups differed before X, because they were not
+  randomised.
+- **Attrition**: participants drop out, and those who drop out differ from
+  those who stay.
+- **Social interaction**: groups learn from each other, compete, or the
+  control group feels disadvantaged.
+
+Experiments also guard against expectations. A **placebo** gives the control
+group something that looks like the treatment but lacks its active part. In a
+**double blind** study neither the participants nor the researchers who measure
+them know who got what.
+
+<Quiz
+  id="q-regression"
+  question="A school gives extra tutoring to the 30 pupils with the lowest test scores. On the next test they score higher. Which threat could explain that without any tutoring effect?"
+  choices={[
+    { text: 'Regression to the mean', correct: true, response: 'Correct. Pupils picked for extreme low scores include many who had a bad day; on average they score closer to the mean next time anyway. A randomised control group of low scorers would show how much.' },
+    { text: 'Attrition', response: 'Nothing says pupils dropped out between the two tests.' },
+    { text: 'Instrumentation', response: 'That would need the test or the scoring to change. The improvement here is expected even with an identical test.' },
+    { text: 'Social interaction', response: 'There is no control group here to interact with.' },
+  ]}
+/>

@@ -1,0 +1,108 @@
+You almost never measure everyone you want to say something about. You measure
+a sample and generalise. Whether that generalisation holds depends far more on
+*how* the sample was drawn than on how large it is.
+
+## Population, frame and sample
+
+- The **population** is everyone your conclusion is about: all BMS bachelor
+  students this year, say.
+- The **sampling frame** is the list you actually draw from: the student
+  administration's mailing list. People missing from the frame can never end up
+  in the sample.
+- The **sample** is who you invite, and the **response rate** is the share of
+  them who actually take part. If 400 are invited and 120 respond, the response
+  rate is 30%.
+
+## Probability and non-probability samples
+
+In a **probability sample** every unit in the frame has a known chance, larger
+than zero, of being selected.
+
+- A **simple random sample** gives every unit the same chance, like drawing
+  names from a hat.
+- A **stratified sample** first splits the population into groups (strata),
+  such as programmes, and draws at random within each, so every group is
+  represented in a fixed number.
+- A **cluster sample** draws whole groups at random, such as tutorial groups,
+  and measures everyone in the chosen groups.
+
+In a **non-probability sample** the chances are unknown.
+
+- A **convenience sample** takes whoever is easy to reach.
+- A **purposive sample** picks units deliberately for a reason, such as
+  experts.
+- A **snowball sample** asks participants to recruit others.
+- A **quota sample** fills fixed numbers per group, like stratified sampling,
+  but without drawing at random within the groups.
+
+## Seeing the difference in R
+
+The course dataset `wellbeing-population.csv` holds all 5000 students of an
+imaginary programme pair, so here you can compare samples with the truth.
+
+<CodeBlock id="c-population" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+mean(population$stress)`} />
+
+A simple random sample of 100 lands close to that mean.
+
+<CodeBlock id="c-random" code={`set.seed(1)
+random_sample <- population %>% slice_sample(n = 100)
+mean(random_sample$stress)`} />
+
+Now a convenience sample: you hand out questionnaires at an 8:45 lecture, and
+only the students who slept at least seven hours made it there.
+
+<CodeBlock id="c-convenience" code={`set.seed(1)
+lecture_sample <- population %>%
+  filter(sleep_hours >= 7) %>%
+  slice_sample(n = 100)
+mean(lecture_sample$stress)`} />
+
+<Predict
+  id="p-bigger"
+  question="Would asking 1000 students at the 8:45 lecture, instead of 100, fix the estimate?"
+  choices={[
+    { text: 'Yes, a larger sample is always more accurate', response: 'A larger sample only shrinks the random scatter. Every student in it still slept at least seven hours, so the estimate stays too low.' },
+    { text: 'No, it would estimate the wrong value more precisely', correct: true, response: 'Right. Size reduces random error, not the systematic error built in by who could be selected.' },
+  ]}
+/>
+
+Repeating each method many times shows the pattern.
+
+<CodeBlock id="c-repeat" code={`set.seed(2)
+random_means <- replicate(500, mean(slice_sample(population, n = 100)$stress))
+rested <- population %>% filter(sleep_hours >= 7)
+lecture_means <- replicate(500, mean(slice_sample(rested, n = 100)$stress))
+
+c(true = mean(population$stress), random = mean(random_means), lecture = mean(lecture_means))`} />
+
+The random samples scatter around the true mean: that scatter is **sampling
+error**, and it shrinks as samples get larger. The lecture samples scatter
+around a value about two points too low: that is **bias**, a systematic error
+that no sample size removes. Nonresponse works the same way when the people who
+do not respond differ from those who do.
+
+A stratified sample draws a fixed number from each group. In dplyr, group first
+and then draw.
+
+<CodeBlock id="c-stratified" code={`set.seed(3)
+per_programme <- population %>%
+  group_by(programme) %>%
+  slice_sample(n = 20) %>%
+  ungroup()
+count(per_programme, programme)`} />
+
+<Exercise id="mrm-3-a" />
+
+<Quiz
+  id="q-quota"
+  question="A researcher stands in the Vrijhof and interviews 50 Business and 50 Psychology students, whoever walks by first. What kind of sample is this?"
+  choices={[
+    { text: 'A stratified sample', response: 'The fixed numbers per programme look stratified, but within each programme nobody was drawn at random.' },
+    { text: 'A quota sample', correct: true, response: 'Correct. Fixed quotas per group, filled by convenience. The chances of being selected are unknown, so bias is possible within each group.' },
+    { text: 'A simple random sample', response: 'Students who never pass through the Vrijhof had no chance at all of being selected.' },
+    { text: 'A cluster sample', response: 'No groups were drawn as whole groups. Individuals were picked until each quota was full.' },
+  ]}
+/>
