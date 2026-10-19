@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import Credits from '../components/Credits';
 import Logo from '../components/Logo';
 import { ALL_LESSONS, findLesson, MODULES } from '../content/manifest';
-import { PARTS } from '../content/parts';
+import { visibleModules, visibleParts } from '../content/parts';
+import { useAdvanced } from '../state/settings';
 import {
   exportProgress,
   getProgress,
@@ -32,7 +33,8 @@ export default function Home() {
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   const progress = getProgress();
-  const stats = courseStats(progress);
+  const advanced = useAdvanced();
+  const stats = courseStats(progress, visibleModules(advanced).flatMap((module) => module.lessons));
   const resumeId = lastVisitedLesson();
   const resume = resumeId ? findLesson(resumeId) : undefined;
   // A returning student picks up where they were; a new one starts at lesson 1.
@@ -77,7 +79,7 @@ export default function Home() {
         <li className="stat-tile"><span className="stat-emoji" aria-hidden="true">✅</span><strong>{stats.exercisesPassed}/{stats.exercisesTotal}</strong><span>exercises solved</span></li>
       </ul>
 
-      {PARTS.map((part, partIndex) => (
+      {visibleParts(advanced).map((part, partIndex) => (
         <section key={part.title} className="home-part">
           <header className="home-part-header">
             <p className="home-part-eyebrow">Part {partIndex + 1}</p>

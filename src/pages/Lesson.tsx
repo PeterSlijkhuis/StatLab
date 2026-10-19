@@ -7,6 +7,8 @@ import { useLessonSession } from '../r/useLessonSession';
 import { LessonFinish, ReadingProgress, SectionGuide, useReveal } from '../components/LessonChrome';
 import { getProgress, subscribeProgress, touchLesson } from '../state/progress';
 import { exercisesPassed, lessonStatus, moduleOf } from '../state/stats';
+import { visibleModules } from '../content/parts';
+import { useAdvanced } from '../state/settings';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
   '../content/lessons/*.mdx',
@@ -19,6 +21,7 @@ export default function Lesson() {
   const [Content, setContent] = useState<ComponentType<{ components?: unknown }> | null>(null);
   const { webR, env } = useLessonSession(meta ?? null);
   const article = useRef<HTMLElement | null>(null);
+  const advanced = useAdvanced();
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   useReveal(article, Content);
@@ -54,7 +57,11 @@ export default function Lesson() {
     );
   }
 
-  const { previous, next } = lessonNeighbours(meta.id);
+  const { previous, next: following } = lessonNeighbours(meta.id);
+  // The core course ends at Module 15 unless the student switched on the
+  // advanced topics; an advanced lesson opened by link still leads on.
+  const shown = (id: string) => visibleModules(advanced).some((module) => module.lessons.some((lesson) => lesson.id === id));
+  const next = following && (shown(following.id) || !shown(meta.id)) ? following : undefined;
   const module = moduleOf(meta.id);
   const position = module ? module.lessons.findIndex((lesson) => lesson.id === meta.id) + 1 : 0;
   const progress = getProgress();

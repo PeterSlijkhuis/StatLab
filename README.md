@@ -177,7 +177,7 @@ their traditional names.
 | **Foundations** | | | |
 | 0 | Before you start | RStudio Projects, files, folders and paths, and what R's symbols mean, with a cheat sheet | |
 | 1 | First steps in R | Objects, functions, help, packages and `library()` | |
-| 2 | Working with data | `read.csv`, factors, the pipe, `select`, `filter`, `mutate`, wide and long data | |
+| 2 | Working with data | `read.csv`, factors and data types, the pipe, `select`, `filter`, `mutate`, wide and long data, missing values, recoding, joins, Excel and SPSS files | |
 | 3 | Describing data | `group_by` and `summarise`, mean versus median, surprises in a summary, scale scores and Cronbach's alpha | |
 | 4 | Visualising data | ggplot2 as layers, facets, and an APA-ready figure | |
 | **Inference** | | | |
@@ -193,7 +193,7 @@ their traditional names.
 | 13 | Interactions and factorial designs | `a * b`, sum-to-zero contrasts, Type III tests with `car`, interaction plots | |
 | 14 | Repeated measures and nested data | `lmer` with `(1 \| id)`, fixed and random effects, the paired t-test, group by time designs, pre, mid and post, Wilcoxon and Friedman tests | |
 | 15 | Binary and count outcomes | `glm(..., family = binomial)`, log odds, odds ratios and reporting, Poisson regression for counts | |
-| **Advanced** | | | |
+| **Advanced** (switch on under Settings, Advanced topics) | | | |
 | 16 | Bayesian statistics | Prior, likelihood and posterior, credible intervals, Bayes factors, Bayesian regression | |
 | 17 | Mediation, factors and reports | Indirect effects with bootstrap intervals, exploratory factor analysis, reproducible reports with Quarto | |
 
