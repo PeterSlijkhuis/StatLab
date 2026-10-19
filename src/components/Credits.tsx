@@ -23,6 +23,15 @@ export const REFERENCE_BOOK = {
   author: 'S.M. van den Berg',
   href: 'https://ris.utwente.nl/ws/portalfiles/portal/253344321/Analysing_data_using_linear_models_5th_Ed_January_2021.pdf',
   licenceHref: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+  /** The book to read along in, online. */
+  onlineHref: 'https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/',
+};
+
+/** The R material BMS courses teach from, which the R lessons follow. */
+export const R_MATERIALS = {
+  guide: { title: 'Intro R for BMS Bachelor programs', author: 'CODE staff, BMS' },
+  course: { title: 'Intro R', href: 'https://jsteinrucke-intro-r.share.connect.posit.cloud/' },
+  shop: { title: 'BMS Methodology Shop', href: 'https://www.utwente.nl/en/bms/m-store/' },
 };
 
 export const PARTNERS = [
@@ -71,7 +80,18 @@ export default function Credits({ variant = 'full' }: Props) {
           <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
             Creative Commons BY-NC-SA licence
           </a>
-          . StatLab's lessons are written independently.
+          . Read it along with the course in the{' '}
+          <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer">online book</a>.
+          StatLab's lessons are written independently.
+        </p>
+      )}
+      {variant === 'full' && (
+        <p className="credits-book">
+          The R lessons follow the R taught in the BMS Research Methods and Statistics courses: the reference guide{' '}
+          <cite>{R_MATERIALS.guide.title}</cite> ({R_MATERIALS.guide.author}) and the{' '}
+          <a href={R_MATERIALS.course.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.course.title}</a>{' '}
+          course. For help with your own research, ask the{' '}
+          <a href={R_MATERIALS.shop.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.shop.title}</a>.
         </p>
       )}
       {variant === 'full' && (

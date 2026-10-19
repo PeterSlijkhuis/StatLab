@@ -316,6 +316,7 @@ button.sidebar-lesson { width: 100%; border: 0; background: none; font: inherit;
 .lesson-link.complete a::before { border-color: var(--success); background: var(--success); }
 .lesson-link a:hover { color: var(--brand); }
 
+.lesson-reading { margin: 0.4rem 0 0; font-size: 0.9rem; color: var(--muted); }
 .home-help { margin-top: 3rem; padding: 1.4rem 1.5rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
 .home-help h2 { margin-top: 0; font-size: 1.2rem; }
 .home-help p { color: var(--ink-2); margin-bottom: 0; }

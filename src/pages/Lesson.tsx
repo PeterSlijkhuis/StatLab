@@ -9,6 +9,8 @@ import { getProgress, subscribeProgress, touchLesson } from '../state/progress';
 import { exercisesPassed, lessonStatus, moduleOf } from '../state/stats';
 import { visibleModules } from '../content/parts';
 import { useAdvanced } from '../state/settings';
+import { READING } from '../content/reading';
+import { R_MATERIALS, REFERENCE_BOOK } from '../components/Credits';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
   '../content/lessons/*.mdx',
@@ -88,6 +90,23 @@ export default function Lesson() {
                 <span className={`chip${passed === total ? ' chip-done' : ''}`}>
                   {passed === total ? '✓ ' : ''}{passed}/{total} exercise{total === 1 ? '' : 's'} solved
                 </span>
+              </p>
+            )}
+            {module && READING[module.number] && (
+              <p className="lesson-reading">
+                <span aria-hidden="true">📖 </span>Read along:{' '}
+                {READING[module.number].book && (
+                  <>
+                    <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer"><cite>{REFERENCE_BOOK.title}</cite></a>
+                    , chapter{READING[module.number].book!.length > 2 ? 's' : ''} {READING[module.number].book}
+                  </>
+                )}
+                {READING[module.number].book && READING[module.number].guide && '; '}
+                {READING[module.number].guide && (
+                  <>
+                    <cite>{R_MATERIALS.guide.title}</cite>, chapter{READING[module.number].guide!.length > 2 ? 's' : ''} {READING[module.number].guide}
+                  </>
+                )}
               </p>
             )}
           </header>
