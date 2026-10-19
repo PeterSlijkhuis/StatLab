@@ -241,6 +241,14 @@ Theory, terminology and topic order follow
 [Creative Commons BY-NC-SA licence](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 StatLab's lessons follow its theory, terminology and topic order but are
 written independently.
+Every lesson links to the chapters to read along in the
+[online book](https://019c2310-d1f3-c202-b65d-2af52db09a6c.share.connect.posit.cloud/).
+
+The R lessons follow the R taught in the BMS Research Methods and Statistics
+courses: the reference guide *Intro R for BMS Bachelor programs* (CODE staff,
+BMS) and the [Intro R](https://jsteinrucke-intro-r.share.connect.posit.cloud/)
+course. For help with your own research, ask the
+[BMS Methodology Shop](https://www.utwente.nl/en/bms/m-store/).
 
 RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with
 or endorsed by Posit.
