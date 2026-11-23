@@ -62,8 +62,9 @@ export function courseStats(progress: Progress, lessons: LessonMeta[] = ALL_LESS
 }
 
 /** The first lesson not yet complete, for a student with no lesson to resume. */
-export function firstUnfinished(progress: Progress): LessonMeta | undefined {
-  return ALL_LESSONS.find((lesson) => lessonStatus(lesson, progress) !== 'complete');
+export function firstUnfinished(progress: Progress, lessons: LessonMeta[] = ALL_LESSONS): LessonMeta | undefined {
+  // Pass the lessons on show, or a student who finished the core course is sent to a hidden one.
+  return lessons.find((lesson) => lessonStatus(lesson, progress) !== 'complete');
 }
 
 export function moduleOf(lessonId: string): ModuleMeta | undefined {

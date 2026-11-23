@@ -34,11 +34,12 @@ export default function Home() {
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   const progress = getProgress();
   const advanced = useAdvanced();
-  const stats = courseStats(progress, visibleModules(advanced).flatMap((module) => module.lessons));
+  const shown = visibleModules(advanced).flatMap((module) => module.lessons);
+  const stats = courseStats(progress, shown);
   const resumeId = lastVisitedLesson();
   const resume = resumeId ? findLesson(resumeId) : undefined;
   // A returning student picks up where they were; a new one starts at lesson 1.
-  const target = resume ?? firstUnfinished(progress) ?? ALL_LESSONS[0];
+  const target = resume ?? firstUnfinished(progress, shown) ?? ALL_LESSONS[0];
   const percent = Math.round((stats.lessonsComplete / stats.lessonsTotal) * 100);
 
   async function onImport(file: File) {

@@ -11,6 +11,10 @@ Time runs from left to right, and each line is one group.
 
 ## Designs from weak to strong
 
+A **correlational design**, a single `O`, measures X and Y once, at the same
+time, in one group, as most surveys do. It can show association, but not time
+order, and every third variable is left open.
+
 A **one-shot case study**, `X O`, measures once after the intervention. With
 nothing to compare against, it shows almost nothing.
 
@@ -39,7 +43,16 @@ R  O     O
 
 Random assignment makes the groups equal *on average* in everything, measured
 or not, so a difference afterwards can be put down to X or to chance, and
-chance is what a statistical test measures. A **posttest-only control group
+chance is what a statistical test measures.
+
+The three general types of design differ in which of the three conditions for
+a causal claim (Lesson RM-4) they can test:
+
+| Design | Association | Time order | No third variable |
+| --- | --- | --- | --- |
+| Correlational, `O` | Yes | No | No |
+| Interrupted time series, `O O O X O O O` | Yes | Yes | No |
+| Randomised experiment, `R O X O` / `R O O` | Yes | Yes | Yes | A **posttest-only control group
 design**, `R X O` against `R O`, drops the pretest and avoids its side effects.
 
 ## Random assignment in R
@@ -66,7 +79,7 @@ with it. That is **self-selection**, and it is what random assignment removes.
 A study has **internal validity** when its conclusion about cause and effect
 holds for the people studied. It has **external validity** when the conclusion
 generalises to other people, settings and times. Random assignment protects
-internal validity; random *sampling* (previous lesson) protects external
+internal validity; random *sampling* (Lesson RM-3) protects external
 validity. They are different steps, and an experiment on first-year
 psychology students can be internally valid and still say little about
 employees.
