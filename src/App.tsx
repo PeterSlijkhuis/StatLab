@@ -16,6 +16,7 @@ import Review from './pages/Review';
 import AvatarStudio from './pages/AvatarStudio';
 import { fetchDataset, prepareSession } from './r/session';
 import { getWebR, onRestart } from './r/webrClient';
+import { useT } from './i18n/t';
 import './App.css';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
 
   // Below the desktop breakpoint the sidebar is a drawer behind the menu
   // button. On wider screens the CSS always shows it and ignores this flag.
+  const t = useT();
   const [navOpen, setNavOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement | null>(null);
   const page = useRef<HTMLDivElement | null>(null);
@@ -88,7 +90,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <a href="#main" className="skip-link">Skip to content</a>
+      <a href="#main" className="skip-link">{t('Skip to content')}</a>
       <header className="topbar">
         <button
           ref={menuButton}
@@ -103,7 +105,7 @@ export default function App() {
               ? <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               : <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
           </svg>
-          <span>{navOpen ? 'Close' : 'Lessons'}</span>
+          <span>{t(navOpen ? 'Close' : 'Lessons')}</span>
         </button>
         <Link to="/" className="topbar-home"><Logo /> StatLab</Link>
       </header>

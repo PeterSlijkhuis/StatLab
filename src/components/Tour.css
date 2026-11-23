@@ -20,3 +20,9 @@
 .tour-skip { font: inherit; font-size: 0.9rem; background: none; border: 0; padding: 0.4rem 0.2rem; color: var(--muted); text-decoration: underline; cursor: pointer; }
 .tour-skip:hover { color: var(--brand-ink); }
 @media (prefers-reduced-motion: reduce) { .tour-spotlight { transition: none; } }
+
+.tour-language {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+}

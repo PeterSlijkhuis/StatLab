@@ -25,6 +25,7 @@
       try { theme = localStorage.getItem('statlab.theme'); } catch (error) {}
       theme = theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.dataset.theme = theme;
+      try { if (localStorage.getItem('statlab.language') === 'nl') document.documentElement.lang = 'nl'; } catch (error) {}
       if (theme === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b1120');
     </script>
     <div id="root"></div>

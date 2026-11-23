@@ -34,4 +34,15 @@ describe('Tour', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start learning' }));
     expect(localStorage.getItem(TOUR_KEY)).toBe('done');
   });
+
+  it('switches the whole tour to Dutch from the first step', () => {
+    render(<Tour />);
+    act(() => vi.advanceTimersByTime(500));
+    fireEvent.click(screen.getByRole('button', { name: 'Nederlands' }));
+    expect(screen.getByRole('dialog', { name: 'Welkom bij StatLab' })).toBeTruthy();
+    expect(document.documentElement.lang).toBe('nl');
+    expect(localStorage.getItem('statlab.language')).toBe('nl');
+    fireEvent.click(screen.getByRole('button', { name: 'English' }));
+    expect(screen.getByRole('dialog', { name: 'Welcome to StatLab' })).toBeTruthy();
+  });
 });

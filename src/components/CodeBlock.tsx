@@ -5,6 +5,7 @@ import { getDraft, saveDraft } from '../state/progress';
 import OutputPane from './OutputPane';
 import REditor from './REditor';
 import './CodeBlock.css';
+import { useT } from '../i18n/t';
 
 type Props = {
   id: string;
@@ -47,17 +48,18 @@ export default function CodeBlock({ id, code }: Props) {
     }
   }
 
+  const t = useT();
   return (
     <div className="code-block">
       <REditor value={source} onChange={edit} />
       <div className="code-block-actions">
         <button type="button" onClick={run} disabled={!ready || running}>
-          {running ? 'Running…' : 'Run'}
+          {t(running ? 'Running…' : 'Run')}
         </button>
         <button type="button" onClick={reset} className="secondary">
-          Reset
+          {t('Reset')}
         </button>
-        {!ready && <span className="code-block-hint">R is still starting…</span>}
+        {!ready && <span className="code-block-hint">{t('R is still starting…')}</span>}
       </div>
       <OutputPane result={result} running={running} />
     </div>

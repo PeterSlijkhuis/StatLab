@@ -4,6 +4,7 @@ import { markQuiz } from '../state/progress';
 import { POINTS } from '../state/stats';
 import AvatarTip from './AvatarTip';
 import './ChoiceBlock.css';
+import { useT } from '../i18n/t';
 
 export type Choice = {
   text: string;
@@ -43,10 +44,11 @@ export default function ChoiceBlock({ id, kind, question, choices, onAnswer }: P
   }
 
   const selection = chosen === null ? null : choices[chosen];
+  const t = useT();
 
   return (
     <section className={`choice-block choice-${kind}`}>
-      <p className="choice-label"><span aria-hidden="true">{ICONS[kind]}</span> {LABELS[kind]}</p>
+      <p className="choice-label"><span aria-hidden="true">{ICONS[kind]}</span> {t(LABELS[kind])}</p>
       <p className="choice-question">{question}</p>
       <ul className="choice-options">
         {choices.map((choice, index) => (
@@ -72,19 +74,19 @@ export default function ChoiceBlock({ id, kind, question, choices, onAnswer }: P
       {/* The student's own avatar answers every choice. Predictions are never
           wrong, so the avatar just says what actually happens. */}
       {selection && kind === 'predict' && (
-        <AvatarTip tone="coach" title="Let's see">
+        <AvatarTip tone="coach" title={t('Let\'s see')}>
           <p>{selection.response}</p>
         </AvatarTip>
       )}
       {selection && kind !== 'predict' && !selection.correct && (
         <AvatarTip tone="wrong">
-          <p><strong>Not quite. </strong>{selection.response}</p>
+          <p><strong>{t('Not quite.')} </strong>{selection.response}</p>
         </AvatarTip>
       )}
       {selection && kind !== 'predict' && selection.correct && (
         <AvatarTip tone="right" className="choice-right">
           <p>
-            <strong>Correct. </strong>{selection.response}
+            <strong>{t('Correct.')} </strong>{selection.response}
             <span className="points-pop" aria-hidden="true">+{POINTS.quiz}</span>
           </p>
         </AvatarTip>
