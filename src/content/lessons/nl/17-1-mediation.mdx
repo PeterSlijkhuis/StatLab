@@ -1,0 +1,130 @@
+Getrainde werknemers presteren iets beter. Een theorie zegt waarom: training verhoogt
+betrokkenheid, en betrokken mensen presteren beter. **Mediatie-analyse** vraagt of de data bij
+dat verhaal passen, door het effect van training te splitsen in het deel dat via betrokkenheid
+loopt en het deel dat dat niet doet.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+total_model <- lm(performance ~ training, data = d)
+coef(total_model)`} />
+
+Getrainde werknemers presteren ongeveer 1,6 punten beter. Dat is het **totale effect**, *c*
+genoemd.
+
+## Drie regressies, vijf getallen
+
+Naast het totale effect heeft het mediatiemodel nog twee regressies nodig.
+
+- Het **a-pad**: voorspelt training de mediator, betrokkenheid?
+- Het **b-pad**: voorspelt betrokkenheid prestatie, bij constant gehouden training?
+
+<CodeBlock id="c-paths" code={`path_a <- lm(engagement_t2 ~ training, data = d)
+path_b <- lm(performance ~ engagement_t2 + training, data = d)
+
+a <- coef(path_a)[["trainingYes"]]
+b <- coef(path_b)[["engagement_t2"]]
+direct <- coef(path_b)[["trainingYes"]]
+total <- coef(total_model)[["trainingYes"]]
+
+c(a = a, b = b, indirect = a * b, direct = direct, total = total)`} />
+
+- **a** = 4,07: getrainde werknemers zijn ongeveer 4 punten betrokkener.
+- **b** = 0,44: elk punt betrokkenheid gaat samen met 0,44 punten prestatie, bij mensen met
+  dezelfde trainingsstatus.
+- Het **indirecte effect**, a × b = 1,78, is het deel van het effect van training dat via
+  betrokkenheid loopt.
+- Het **directe effect**, *c′* = -0,16, is wat overblijft.
+
+Voor lineaire modellen aangepast op dezelfde rijen is indirect plus direct precies het totaal:
+1,78 - 0,16 = 1,62. Hier loopt bijna al het effect via betrokkenheid.
+
+<Predict
+  id="p-mediation-test"
+  question="Hoe bepaal je of het indirecte effect van 1,78 meer is dan toeval?"
+  choices={[
+    { text: 'Controleer dat a en b allebei significant zijn', response: 'Controleren dat a en b allebei significant zijn (de gezamenlijke significantietoets) is een redelijke toets, maar ze schat het indirecte effect nooit en geeft het geen interval, dus een lezer kan niet beoordelen hoe groot het is.' },
+    { text: 'Deel het door zijn standaardfout en vergelijk met een normale verdeling (de Sobel-toets)', response: 'De Sobel-toets neemt aan dat a × b normaal verdeeld is, en een product van twee schattingen is dat meestal niet. Ze wordt niet meer aanbevolen.' },
+    { text: 'Bootstrap een betrouwbaarheidsinterval voor a × b', correct: true, response: 'Juist. Hersampelen maakt geen aanname over de vorm van het product, en het is de huidige standaard.' },
+  ]}
+/>
+
+## Een bootstrapinterval voor het indirecte effect
+
+Trek werknemers met teruglegging, pas beide paden opnieuw aan, vermenigvuldig, en herhaal. De
+middelste 95% van de producten is het interval.
+
+<CodeBlock id="c-boot" code={`set.seed(171)
+indirect_boot <- replicate(1000, {
+  s <- d[sample(nrow(d), replace = TRUE), ]
+  coef(lm(engagement_t2 ~ training, data = s))[["trainingYes"]] *
+    coef(lm(performance ~ engagement_t2 + training, data = s))[["engagement_t2"]]
+})
+
+quantile(indirect_boot, c(0.025, 0.975))`} />
+
+Het interval, ongeveer [1,19; 2,40], sluit nul uit, dus het indirecte effect wordt
+ondersteund.
+
+<Exercise id="m17-1-a" />
+
+## Wat mediatie wel en niet kan laten zien
+
+Mediatie is een causaal verhaal, en de statistiek kan het niet waar maken.
+
+- **Volgorde in de tijd.** De voorspeller moet voor de mediator komen, en de mediator voor de
+  uitkomst. Betrokkenheid is hier aan het eind van het jaar gemeten, wat helpt, maar prestatie
+  is niet nog later gemeten. Volgorde alleen is niet genoeg: getrainde werknemers waren aan het
+  begin van het jaar al ongeveer 1,8 punten betrokkener (engagement_t1), dus een deel van het
+  a-pad bestond al voor de training.
+- **Geen verborgen gemeenschappelijke oorzaak.** Als iets derde, zoals een goede manager,
+  zowel betrokkenheid als prestatie verhoogde, zou het b-pad worden opgeblazen; als het zowel
+  deelname aan training als betrokkenheid verhoogde, het a-pad. Randomiseren van training
+  beschermt het a-pad maar niet het b-pad.
+- **Consistent met, geen bewijs van.** Schrijf bij data uit één studie dat het patroon
+  consistent is met mediatie.
+
+## In RStudio: lavaan
+
+Het pakket `lavaan` past beide paden als één model aan en bootstrapt het indirecte effect voor
+je. Het heeft getallen nodig, dus training wordt 0 en 1.
+
+```r
+library(lavaan)
+d$trained <- as.numeric(d$training == "Yes")
+
+model <- "
+  engagement_t2 ~ a * trained
+  performance ~ b * engagement_t2 + c * trained
+  indirect := a * b
+  total := c + a * b
+"
+set.seed(1)
+# fixed.x = FALSE: without it, some lavaan versions drop a quarter of the draws as failed
+fit <- sem(model, data = d, se = "bootstrap", bootstrap = 1000, fixed.x = FALSE)
+parameterEstimates(fit, boot.ci.type = "perc")
+```
+
+De rij `indirect` geeft dezelfde a × b-schatting met een eigen bootstrapinterval. Verwacht dat
+dat interval dicht bij het interval hierboven ligt, maar er niet identiek aan is: het komt uit
+andere hersteekproeven. De PROCESS-macro voor SPSS, model 4, past hetzelfde model aan.
+
+<Quiz
+  id="q-full-mediation"
+  question="Het directe effect van training is -0,16 en niet significant. Bewijst dat dat betrokkenheid de enige route van training naar prestatie is?"
+  choices={[
+    { text: 'Ja, dat is wat volledige mediatie betekent', response: 'Een niet-significant direct effect is geen bewijs van een nul-effect, en andere mediatoren kunnen de eer met betrokkenheid delen.' },
+    { text: 'Nee: andere mediatoren die met betrokkenheid correleren kunnen een deel dragen, en een niet-significant direct effect is geen nul-effect', correct: true, response: 'Precies. Veel methodologen vermijden de labels volledige en gedeeltelijke mediatie daarom en rapporteren de effecten met hun intervallen.' },
+    { text: 'Nee, omdat het totale effect klein was', response: 'De grootte van het totale effect bepaalt niet hoe het zich over de routes verdeelt.' },
+  ]}
+/>
+
+<Interpret
+  id="i-17-1"
+  question="a = 4,07, b = 0,44, indirect = 1,78 met 95%-bootstrap-BI [1,19; 2,40], direct = -0,16 (p = ,82), totaal = 1,62. Welk verslag is correct?"
+  choices={[
+    { text: 'Training ging samen met hogere betrokkenheid (a = 4,07), die op haar beurt samenging met hogere prestatie (b = 0,44). Het indirecte effect was 1,78, 95%-bootstrap-BI [1,19; 2,40], gebaseerd op 1000 hersteekproeven; het directe effect was klein en niet significant (c′ = -0,16, p = ,82). Het patroon is consistent met betrokkenheid als mediator van het effect van training.', correct: true, response: 'Juist: elk pad, het indirecte effect met zijn interval en hoe het is berekend, en een causale bewering die niet sterker is dan het ontwerp toestaat.' },
+    { text: 'Training veroorzaakte hogere prestatie via betrokkenheid (Sobel-toets, p < ,001).', response: 'De Sobel-toets wordt niet meer aanbevolen, en "veroorzaakte" overdrijft wat deze data kunnen laten zien.' },
+    { text: 'Omdat het directe effect niet significant was, heeft training geen effect op prestatie.', response: 'Het totale effect van training is 1,62 en significant. Het punt van mediatie is dat het via betrokkenheid loopt.' },
+    { text: 'Zowel a als b waren significant, dus er was mediatie.', response: 'Twee significante paden zijn consistent met mediatie, maar dit rapporteert geen indirect effect en geen interval. Rapporteer het indirecte effect zelf, met zijn bootstrapinterval.' },
+  ]}
+/>

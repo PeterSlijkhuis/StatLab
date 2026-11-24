@@ -1,0 +1,153 @@
+Het lineaire model van Deel 3 heeft een Bayesiaanse versie met dezelfde formule. Het verschil
+zit in wat eruit komt: geen schatting met een p-waarde, maar een posteriorverdeling voor elke
+coëfficiënt, met een prior die je bewust kiest.
+
+## De helling als onbekende
+
+Neem het model van welzijn op autonomie uit Les 10-2.
+
+<CodeBlock id="c-lm" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+m_autonomy <- lm(wellbeing ~ autonomy, data = d)
+summary(m_autonomy)$coefficients
+
+b_hat <- coef(m_autonomy)[["autonomy"]]
+se_hat <- summary(m_autonomy)$coefficients["autonomy", "Std. Error"]
+c(b_hat = b_hat, se_hat = se_hat)`} />
+
+De helling is nu de onbekende, zoals het vertrekpercentage dat in Les 16-1 was. Bij een paar
+honderd gevallen wordt wat de data erover zeggen heel goed samengevat door een normale curve
+gecentreerd op de schatting, met de standaardfout als spreiding. Die curve is de likelihood,
+dus de rastermethode werkt precies als eerder.
+
+<CodeBlock id="c-flat" code={`b_grid <- seq(-1, 3, length.out = 4001)
+
+prior_flat <- rep(1, length(b_grid))
+likelihood <- dnorm(b_hat, mean = b_grid, sd = se_hat)
+
+post_flat <- prior_flat * likelihood
+post_flat <- post_flat / sum(post_flat)
+
+# Posterior mean, and a 95% credible interval read off the grid.
+sum(b_grid * post_flat)
+cdf <- cumsum(post_flat)
+c(b_grid[which(cdf >= 0.025)[1]], b_grid[which(cdf >= 0.975)[1]])
+
+confint(m_autonomy)["autonomy", ]`} />
+
+Met een vlakke prior is het posterior gemiddelde de kleinste-kwadratenschatting en komt het
+geloofwaardigheidsinterval op twee decimalen overeen met het betrouwbaarheidsinterval. Dat is
+goed om te weten: **een Bayesiaanse regressie met vlakke prior geeft de getallen die je al
+kent, met de Bayesiaanse lezing erbij.**
+
+## Een sceptische prior
+
+Stel dat de theorie zegt dat de helling van autonomie bescheiden moet zijn, hooguit een punt of
+zo per schaalpunt. Een prior kan dat zeggen: `Normal(0, 0.5)` zet de helling dicht bij nul, en
+maakt hellingen voorbij ongeveer ±1 onwaarschijnlijk.
+
+<Predict
+  id="p-shrink"
+  question="De data zeggen dat de helling ongeveer 1,05 is. De prior zegt dat ze waarschijnlijk dicht bij 0 ligt. Waar komt het posterior gemiddelde uit?"
+  choices={[
+    { text: 'Bij 1,05: de data winnen altijd', response: 'De data winnen in de limiet van een zeer grote steekproef. Hier heeft de prior wat gewicht, dus ze trekt.' },
+    { text: 'Tussen 0 en 1,05, dichter bij 1,05', correct: true, response: 'Ja. De posterior is een compromis, gewogen naar wie van de twee het nauwkeurigst is, en 480 werknemers maken de data nauwkeuriger.' },
+    { text: 'Bij 0,525, precies halverwege', response: 'Halverwege zou betekenen dat de prior en de data even nauwkeurig zijn. De standaardfout van 0,21 is veel smaller dan de prior-SD van 0,5.' },
+  ]}
+/>
+
+<CodeBlock id="c-sceptical" code={`prior_sceptical <- dnorm(b_grid, mean = 0, sd = 0.5)
+
+post_sceptical <- prior_sceptical * likelihood
+post_sceptical <- post_sceptical / sum(post_sceptical)
+sum(b_grid * post_sceptical)
+
+plot(b_grid, post_sceptical, type = "l", col = "steelblue",
+     xlab = "Slope for autonomy", ylab = "Posterior probability")
+lines(b_grid, post_flat, col = "grey50")
+lines(b_grid, prior_sceptical / sum(prior_sceptical), lty = 2)`} />
+
+Het posterior gemiddelde verschuift van 1,05 naar 0,89. Een schatting zo naar nul trekken heet
+**shrinkage** (krimp). Het is een kenmerk: ruisachtige schattingen, vooral de schattingen die
+opvallen, overschatten het ware effect doorgaans, en een verstandige prior corrigeert dat
+voordat een replicatie het moet doen.
+
+## De snelkoppeling: een gewogen gemiddelde
+
+Wanneer zowel de prior als de likelihood normale curves zijn, is de posterior ook een normale
+curve, en is geen raster nodig. Elke bron wordt gewogen naar zijn **precisie**, één gedeeld
+door zijn variantie.
+
+<CodeBlock id="c-formula" code={`prior_sd <- 0.5
+w_data <- 1 / se_hat^2
+w_prior <- 1 / prior_sd^2
+
+post_mean <- (w_data * b_hat + w_prior * 0) / (w_data + w_prior)
+post_sd <- sqrt(1 / (w_data + w_prior))
+c(post_mean = post_mean, post_sd = post_sd)
+
+# A 95% credible interval, and the probability of two claims.
+qnorm(c(0.025, 0.975), mean = post_mean, sd = post_sd)
+pnorm(0, mean = post_mean, sd = post_sd, lower.tail = FALSE)
+pnorm(0.5, mean = post_mean, sd = post_sd, lower.tail = FALSE)`} />
+
+De data wegen ongeveer 22 tegen 4 van de prior, en daarom domineren ze. De laatste twee regels
+zijn het soort antwoord waarvoor een Bayesiaanse regressie dient: het is vrijwel zeker dat de
+helling positief is, en er is ongeveer 98% kans dat ze boven een half punt ligt, een grootte
+waar iemand om kan geven.
+
+<Exercise id="m16-4-a" />
+
+## In RStudio: brms
+
+De snelkoppeling hierboven behandelt één helling tegelijk en leent de standaardfout van
+`lm()`. Het pakket **brms** past het hele model Bayesiaans aan, intercept, hellingen en
+residuele SD samen, door simulatie (Markov chain Monte Carlo). Het breidt uit naar alles in
+Deel 3: meerdere voorspellers, interacties, logistische regressie met `family = bernoulli()`,
+en gemengde modellen met `(1 | id)`.
+
+brms zet elk model om in een programma voor Stan en compileert het, wat een C++-compiler
+vereist. Daarom draait het niet in de browser. Op je eigen computer:
+
+```r
+# Once: install.packages("brms"). Windows also needs Rtools,
+# a Mac the Xcode command line tools.
+library(brms)
+
+fit <- brm(
+  wellbeing ~ autonomy,
+  data = d,
+  prior = prior(normal(0, 0.5), class = b),
+  seed = 1
+)
+
+summary(fit)                     # estimates with 95% credible intervals
+hypothesis(fit, "autonomy > 0")  # the probability of a claim
+pp_check(fit)                    # does the model reproduce the data?
+```
+
+Met deze prior en deze data zou brms een helling moeten geven van ongeveer de 0,89 die je hier
+berekende, aangezien de normale snelkoppeling bij 480 gevallen zeer nauwkeurig is. Verwacht
+geen exacte match: brms trekt steekproeven uit de posterior, dus zijn getallen verschillen een
+beetje in de latere decimalen.
+
+<Quiz
+  id="q-shrinkage"
+  question="Twee studies passen dezelfde Bayesiaanse regressie aan met dezelfde sceptische prior. Studie A heeft 40 deelnemers, studie B heeft 4000. In welke studie trekt de prior de schatting verder naar nul?"
+  choices={[
+    { text: 'Studie A', correct: true, response: 'Juist. Met 40 deelnemers is de standaardfout groot, dus de data wegen weinig tegen de prior.' },
+    { text: 'Studie B', response: 'De grotere studie heeft de kleinere standaardfout, dus haar data wegen veel zwaarder dan de prior.' },
+    { text: 'Evenveel, want de prior is hetzelfde', response: 'De prior is hetzelfde, maar haar gewicht is relatief ten opzichte van de data. Meer data, minder trek.' },
+  ]}
+/>
+
+<Interpret
+  id="i-16-4"
+  question="Een Bayesiaanse regressie van welzijn op autonomie met een Normal(0, 0.5)-prior op de helling geeft een posterior gemiddelde van 0,89, 95%-CrI [0,50; 1,27], en P(helling > 0) > ,999. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Met een Normal(0, 0.5)-prior op de helling ging elk extra punt autonomie samen met 0,89 punten hoger welzijn, 95%-CrI [0,50; 1,27]. De posterior kans op een positief verband was hoger dan ,999.', correct: true, response: 'Juist: de prior wordt genoemd, de schatting heeft haar geloofwaardigheidsinterval, en de kans gaat over de bewering zelf.' },
+    { text: 'Autonomie voorspelde welzijn significant, b = 0,89, p < ,001.', response: 'Een Bayesiaanse analyse geeft geen p-waarde. Rapporteer in plaats daarvan het geloofwaardigheidsinterval en posterior kansen, en noem de prior.' },
+    { text: 'Autonomie verhoogt welzijn met 0,89 punten, 95%-CrI [0,50; 1,27].', response: '"Verhoogt" is een causale bewering, en dit zijn observationele data. Zeg "ging samen met". De prior ontbreekt ook.' },
+    { text: 'Er is 95% kans dat de ware helling 0,89 is.', response: 'De kans hoort bij het interval, 0,50 tot 1,27. De kans op een enkele exacte waarde is nul.' },
+  ]}
+/>

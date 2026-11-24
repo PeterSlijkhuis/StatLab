@@ -1,0 +1,161 @@
+Een p-waarde kan zeggen dat de data verrassend zouden zijn als er niets aan de hand was. Ze kan
+nooit zeggen dat er niets aan de hand *is*: Les 8-2 liet zien dat een grote p geen bewijs voor
+de nulhypothese is. Een **Bayes-factor** kan dat wel. Hij vergelijkt twee hypothesen
+rechtstreeks en zegt welke de data steunen, en hoeveel.
+
+## Hoe goed voorspelde elke hypothese de data?
+
+Een Bayes-factor is een ratio van twee voorspellingen. Elke hypothese zegt hoe waarschijnlijk de
+waargenomen data waren, en de hypothese die ze beter voorspelde, wint steun.
+
+```text
+BF10 = P(data | H1) / P(data | H0)
+```
+
+Een BF10 van 5 betekent dat de data vijf keer zo waarschijnlijk waren onder H1 als onder H0.
+Een BF10 van 0,2 betekent het omgekeerde: vijf keer zo waarschijnlijk onder H0, wat wordt
+geschreven als BF01 = 5. Anders dan een p-waarde kan hij beide kanten op wijzen.
+
+## Een eerste Bayes-factor, met de hand
+
+Het doel van HR is een vertrekpercentage van 20%. Neem twee hypothesen:
+
+- **H0**: het percentage is precies 0,20.
+- **H1**: het percentage kan van alles zijn, waarbij elke waarde van 0 tot 1 vooraf even
+  aannemelijk is (de vlakke prior van Les 16-1).
+
+<CodeBlock id="c-bf-by-hand" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+left_all <- sum(d$left_company)
+n_all <- nrow(d)
+
+# H0 predicts the data with one rate.
+p_data_h0 <- dbinom(left_all, size = n_all, prob = 0.20)
+
+# H1 spreads its prediction over every rate on the grid: average the likelihood.
+p_grid <- seq(0, 1, length.out = 1001)
+p_data_h1 <- mean(dbinom(left_all, size = n_all, prob = p_grid))
+
+bf10 <- p_data_h1 / p_data_h0
+c(BF10 = bf10, BF01 = 1 / bf10)
+
+# The frequentist test of the same null, for comparison.
+binom.test(left_all, n_all, p = 0.20)$p.value`} />
+
+De p-waarde, ,14, zegt alleen dat 20% niet is uitgesloten. De Bayes-factor zegt meer: de data
+zijn ongeveer 7 keer zo waarschijnlijk onder "precies 20%" als onder "alles van 0 tot 1".
+Waarom? Omdat H1 het grootste deel van haar voorspelling verspilde aan percentages als 60% of
+90%, die deze data absurd maken. Dat toont de adder onder het gras bij Bayes-factoren: **ze
+hangen af van wat de alternatieve hypothese voorspelt**, dus een vaag alternatief is makkelijk
+te verslaan. Zeg altijd wat H1 was.
+
+<Predict
+  id="p-scale"
+  question="Een Bayes-factor BF01 = 7 vergelijkt 'geen effect' met 'enig effect'. Hoe sterk is dat?"
+  choices={[
+    { text: 'Bewijs dat er geen effect is', response: 'Geen enkele studie bewijst een nulhypothese. 7 tegen 1 is een bruikbare verschuiving in de odds, geen vonnis.' },
+    { text: 'Matig bewijs voor geen effect', correct: true, response: 'Ja. Volgens de gebruikelijke schaal is 3 tot 10 matig bewijs, hier ten gunste van de nulhypothese.' },
+    { text: 'Niets, want het is lager dan 10', response: 'Er is geen drempel die bewijs aanzet. 7 betekent dat de data één hypothese zeven keer zo sterk verkiezen.' },
+  ]}
+/>
+
+## Een Bayes-factor lezen
+
+De labels die in de psychologie het meest worden gebruikt, de bewerking van Lee en Wagenmakers
+(2013) van de schaal van Jeffreys, zijn ruwe richtlijnen, geen afkapwaarden:
+
+| BF | Bewijs |
+| --- | --- |
+| 1 tot 3 | Anekdotisch, nauwelijks het vermelden waard |
+| 3 tot 10 | Matig |
+| 10 tot 30 | Sterk |
+| 30 tot 100 | Zeer sterk |
+| boven 100 | Extreem |
+
+Dezelfde schaal geldt voor BF01, voor bewijs ten gunste van de nulhypothese.
+
+## Bayes-factoren voor lineaire modellen
+
+Voor de modellen van Deel 3 heeft een goede benadering niets nodig behalve de BIC, die R voor
+elk model berekent:
+
+```text
+BF10 ≈ exp((BIC van het nulmodel - BIC van het alternatief) / 2)
+```
+
+Ze komt overeen met een prior op het effect die breed maar niet absurd is, ter waarde van
+ongeveer één waarneming aan informatie. Vergelijk welzijn met en zonder autonomie als
+voorspeller.
+
+<CodeBlock id="c-bic" code={`m0 <- lm(wellbeing ~ 1, data = d)
+m_autonomy <- lm(wellbeing ~ autonomy, data = d)
+
+exp((BIC(m0) - BIC(m_autonomy)) / 2)`} />
+
+Ongeveer 7000 tegen 1 voor een effect van autonomie: extreem bewijs. Nu mentoring.
+
+<CodeBlock id="c-mentoring" code={`m_mentoring <- lm(wellbeing ~ mentoring, data = d)
+
+summary(m_mentoring)$coefficients
+bf01_mentoring <- exp((BIC(m_mentoring) - BIC(m0)) / 2)
+bf01_mentoring`} />
+
+De p-waarde, ,79, kan "geen effect" niet onderscheiden van "te weinig data". De Bayes-factor
+kan dat wel: BF01 is ongeveer 21, sterk bewijs dat welzijn niet verschilt tussen werknemers met
+en zonder mentoring. Dat is een bevinding die je kunt publiceren, geen mislukking om iets te
+vinden.
+
+## Wanneer p en de Bayes-factor het oneens zijn
+
+<CodeBlock id="c-training" code={`m_training <- lm(wellbeing ~ training, data = d)
+
+summary(m_training)$coefficients["trainingYes", ]
+exp((BIC(m0) - BIC(m_training)) / 2)`} />
+
+Training is significant, *p* = ,039, maar BF10 is ongeveer 0,39: de data verkiezen licht **geen**
+effect. Er is geen tegenstrijdigheid. Met 480 mensen is een resultaat net onder ,05 onder de
+nulhypothese maar zwak verrassend, en het is ook niet wat een echt, betekenisvol effect
+doorgaans zou opleveren. Daarom is een *p* tussen ,01 en ,05 in een grote steekproef zwak
+bewijs, en daarom is een Bayes-factor een nuttige second opinion.
+
+<Exercise id="m16-3-a" />
+
+## In RStudio: het pakket BayesFactor
+
+De BIC-benadering is een verstandige standaard. Het pakket **BayesFactor** berekent
+Bayes-factoren met priors die voor dit doel zijn ontworpen, en laat je kiezen hoe breed het
+alternatief is. Het heeft een pakket nodig dat R in de browser niet heeft, dus voer het uit op
+je eigen computer. Dezelfde vergelijkingen zien er zo uit:
+
+```r
+library(BayesFactor)
+
+ttestBF(formula = wellbeing ~ training, data = d)
+lmBF(wellbeing ~ autonomy, data = d)
+```
+
+De standaardprior verschilt van die welke de BIC impliceert, en het verschil kan een resultaat
+over een label heen verschuiven: voor thuiswerken geeft ze BF10 = 3,28 (matig), waar de BIC 1,62
+gaf (anekdotisch). Rapporteer welke prior je gebruikte, welk hulpmiddel je ook gebruikt. Het
+gratis programma JASP doet hetzelfde via menu's.
+
+<Quiz
+  id="q-bf-meaning"
+  question="Een studie rapporteert BF10 = 0,25 voor een nieuwe interventie. Wat betekent dat?"
+  choices={[
+    { text: 'De interventie heeft 25% kans om te werken', response: 'Een Bayes-factor vergelijkt hoe goed twee hypothesen de data voorspelden. Om er een kans van te maken zijn ook prior-odds nodig.' },
+    { text: 'De data waren 4 keer zo waarschijnlijk als de interventie geen effect heeft als wanneer ze er een heeft', correct: true, response: 'Juist: BF10 = 0,25 is BF01 = 4, matig bewijs voor de nulhypothese.' },
+    { text: 'Het resultaat is niet significant, dus er kan niets worden geconcludeerd', response: 'Dat is de p-waardegewoonte. Een Bayes-factor onder 1 is op zichzelf bewijs, hier voor geen effect.' },
+    { text: 'De effectgrootte is 0,25', response: 'Een Bayes-factor is een ratio van bewijs, geen effectgrootte. Rapporteer de schatting apart.' },
+  ]}
+/>
+
+<Interpret
+  id="i-16-3"
+  question="Welzijn werd vergeleken tussen werknemers met en zonder mentoring: b = -0,25, SE = 0,96, p = ,79, en de BIC-benadering geeft BF01 = 21,1. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Welzijn verschilde niet tussen werknemers met en zonder mentoring, b = -0,25, SE = 0,96, p = ,79. Een Bayes-factor uit de BIC-benadering liet sterk bewijs zien voor geen verschil, BF01 = 21,1.', correct: true, response: 'Juist: de schatting en toets, dan de Bayes-factor met zijn methode, gelezen als bewijs voor de nulhypothese.' },
+    { text: 'Mentoring had geen effect op welzijn, p = ,79, wat de nulhypothese bewijst.', response: 'Een p-waarde kan de nulhypothese niet steunen, en niets bewijst haar. De Bayes-factor is wat de steun kwantificeert.' },
+    { text: 'Er is 21,1% kans dat mentoring werkt, BF01 = 21,1.', response: 'Een Bayes-factor is een ratio, geen percentage, en BF01 verkiest de nulhypothese.' },
+    { text: 'Het bewijs voor een mentoringeffect was sterk, BF01 = 21,1.', response: 'De subscript telt: BF01 is het bewijs voor H0 boven H1. Het is sterk bewijs voor GEEN effect.' },
+  ]}
+/>

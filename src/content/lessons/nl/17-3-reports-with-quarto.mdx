@@ -1,0 +1,124 @@
+Elke analyse in deze cursus eindigde met een getal dat je in een zin kopieerde. Kopiëren is
+waar fouten insluipen, en wanneer de data veranderen, moet elk getal opnieuw worden gevonden en
+gekopieerd. Een **Quarto**-document bewaart de tekst, de code en haar uitvoer in één bestand,
+zodat het verslag elke keer opnieuw uit de data wordt opgebouwd.
+
+> **Deze les is voor RStudio.** De browser kan geen Quarto-documenten renderen, dus er is op
+> deze pagina niets om uit te voeren. Quarto zit in recente versies van RStudio; installeer het
+> in een oudere versie vanaf quarto.org.
+
+## Eén bestand, drie ingrediënten
+
+Kies in RStudio **File > New File > Quarto Document**. Een `.qmd`-bestand is platte tekst met
+drie soorten inhoud.
+
+```markdown
+---
+title: "Wellbeing at work"
+author: "Your name"
+format: docx
+---
+
+## Method
+
+We analysed data from 480 employees.
+
+```
+
+Dat zijn de eerste twee ingrediënten:
+
+1. De **header** tussen de twee `---`-regels, in een formaat dat YAML heet. Hij stelt de titel
+   en de uitvoer in: `docx` voor Word, `html` voor een webpagina, of `pdf` (dat een
+   LaTeX-installatie nodig heeft; voer eenmalig `quarto install tinytex` uit in de Terminal).
+2. **Tekst** in Markdown: `##` begint een kop, `*woord*` is cursief, `**woord**` is vet, en een
+   regel die met `-` begint is een opsommingsteken.
+
+Het derde ingrediënt zijn **codeblokken (chunks)**: R-code tussen een regel met drie backticks
+en `{r}` en een regel met drie backticks.
+
+````markdown
+```{r}
+#| label: fit-model
+#| echo: false
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+model <- lm(wellbeing ~ autonomy + workload, data = d)
+```
+````
+
+Regels die met `#|` beginnen zijn chunkopties. `echo: false` verbergt de code en houdt de
+uitvoer, wat een verslag voor lezers meestal wil. `label` geeft de chunk een naam, en figuren
+en tabellen gebruiken die voor kruisverwijzingen.
+
+## Getallen die zichzelf schrijven
+
+**Inline code** zet een resultaat rechtstreeks in een zin: een enkele backtick, `r`, de code,
+en een afsluitende backtick.
+
+```markdown
+Autonomy predicted wellbeing, *b* = `r round(coef(model)["autonomy"], 2)`.
+```
+
+Wanneer de data veranderen, verandert het getal mee. Dit is de belangrijkste reden om
+verslagen in Quarto te schrijven: niets in de tekst kan van de analyse wegdrijven.
+
+## Renderen
+
+Druk in RStudio op **Render**, of voer `quarto render report.qmd` uit in de Terminal. Quarto
+voert elke chunk van bovenaf uit in een verse R-sessie en schrijft dan het document.
+
+Die verse sessie is een kenmerk. Als het document rendert, draait de analyse vanaf het
+databestand zonder iets dat uit je console is overgebleven, en dat maakt haar reproduceerbaar.
+De gewone eerste fout is een document dat leunt op een object dat je in de console hebt
+gemaakt en nooit in een chunk: het werkt in jouw sessie en faalt bij Render. Het advies van
+Module 0 over projecten en relatieve paden telt hier ook, omdat Quarto `data/workplace.csv`
+zoekt ten opzichte van het `.qmd`-bestand.
+
+## Tabellen en figuren
+
+Een chunk die een plot tekent zet de figuur in het document. Chunkopties voegen een bijschrift
+toe en een label om naar te verwijzen.
+
+````markdown
+```{r}
+#| label: fig-autonomy
+#| fig-cap: "Wellbeing by autonomy."
+library(ggplot2)
+ggplot(d, aes(autonomy, wellbeing)) + geom_point() + theme_classic()
+```
+
+As @fig-autonomy shows, ...
+````
+
+Een label dat met `fig-` begint maakt van `@fig-autonomy` "Figure 1", voor je genummerd.
+Tabellen werken hetzelfde met een `tbl-`-label en `knitr::kable()` om een data frame als tabel
+af te drukken.
+
+Voor APA-stijl bestaan er extensies die de titelpagina, koppen en referenties instellen; zoek
+op "Quarto APA" om de actuele te vinden. Referenties komen uit een `.bib`-bestand dat in de
+header onder `bibliography:` wordt genoemd, en in de tekst wordt geciteerd als `[@author2024]`.
+
+## Een werkwijze die standhoudt
+
+- Eén Quarto-document per analyse, in een RStudio-project, dat het ruwe databestand inleest.
+- Elke stap van ruwe data tot resultaat in een chunk, nooit alleen in de console.
+- Render vaak. Een document dat rendert is een analyse die iemand anders kan controleren.
+
+<Quiz
+  id="q-render-fails"
+  question="Je analyse werkt in de console, maar Render stopt met 'object d not found'. Wat is de meest waarschijnlijke oorzaak?"
+  choices={[
+    { text: 'Quarto kan geen CSV-bestanden lezen', response: 'Het kan het wel. Renderen voert dezelfde R uit, in een verse sessie.' },
+    { text: 'd is in de console gemaakt, niet in een chunk van het document', correct: true, response: 'Juist. Render begint met niets, dus elk object moet binnen het document worden gemaakt. Dat is precies de controle die je wilt.' },
+    { text: 'Het uitvoerformaat moet html zijn om R-code te laten draaien', response: 'Chunks draaien op dezelfde manier voor Word-, PDF- en HTML-uitvoer.' },
+  ]}
+/>
+
+<Quiz
+  id="q-inline"
+  question="Waarom schrijf je b = `r round(coef(model)[2], 2)` in plaats van b = 1,37 te typen?"
+  choices={[
+    { text: 'Het ziet er professioneler uit', response: 'De lezer ziet in beide gevallen 1,37. Het verschil is wat er gebeurt wanneer er iets verandert.' },
+    { text: 'Het getal wordt bij elke render opnieuw uit de data berekend, dus het kan niet verouderen of verkeerd worden getypt', correct: true, response: 'Precies. Dat is het hele argument voor reproduceerbare verslagen.' },
+    { text: 'Tijdschriften eisen het', response: 'Zij ontvangen het gerenderde document, niet de code. Het voordeel is voor jou en voor iedereen die het werk controleert.' },
+  ]}
+/>
