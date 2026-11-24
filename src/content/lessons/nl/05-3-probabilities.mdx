@@ -1,0 +1,102 @@
+Twee vragen komen voortdurend terug, en ze lopen in tegengestelde richting.
+
+1. *Een student scoorde 85. Welk aandeel studenten scoorde lager?* Je hebt een
+   score en wilt een kans. Dat is `pnorm()`.
+2. *Welke score heb je nodig om bij de beste 10 procent te horen?* Je hebt een
+   kans en wilt een score. Dat is `qnorm()`.
+
+Ze zijn elkaars inverse, en bijna elke fout in deze stof is het gebruik van de
+een waar de ander bedoeld was.
+
+<CodeBlock id="both" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+mu <- mean(population$exam_score)
+sigma <- sd(population$exam_score)
+
+# Score in, probability out.
+pnorm(85, mean = mu, sd = sigma)
+
+# Probability in, score out.
+qnorm(0.820, mean = mu, sd = sigma)
+
+# Round trip: qnorm undoes pnorm.
+qnorm(pnorm(85, mean = mu, sd = sigma), mean = mu, sd = sigma)`} />
+
+<Predict
+  id="p-cutoff"
+  question="Je wilt de tentamenscore die alleen de beste 10 procent van de studenten overschrijdt. Welke kans geef je aan qnorm()?"
+  choices={[
+    { text: '0,10, want de vraag zegt 10 procent', response: 'qnorm() werkt altijd vanuit de oppervlakte aan de LINKERkant. De oppervlakte links van de grens voor de beste 10% is 90%, niet 10%.' },
+    { text: '0,90', correct: true, response: 'Juist. Bij de grens ligt 90 procent van de studenten eronder en 10 procent erboven, en qnorm() leest standaard vanaf links.' },
+    { text: '0,05, want de beste 10 procent is verdeeld over twee staarten', response: 'Hier is niets tweezijdig. "De beste 10 procent" is één staart, rechts.' },
+  ]}
+/>
+
+<CodeBlock id="cutoff" code={`qnorm(0.90, mean = mu, sd = sigma)
+
+# Same answer, asked from the other side.
+qnorm(0.10, mean = mu, sd = sigma, lower.tail = FALSE)
+
+# Check it against the population the model describes.
+mean(population$exam_score > qnorm(0.90, mean = mu, sd = sigma))`} />
+
+Het model legt de grens voor een onderscheiding bij 89,4, en 509 van de
+werkelijke 5000 studenten, net boven de 10 procent, halen die. Twee getallen, een
+gemiddelde en een SD, waren genoeg om een vraag te beantwoorden die niemand had
+gesteld toen de data werden verzameld.
+
+<Exercise id="m5-3-a" />
+
+## De middelste 95 procent
+
+Eén paar grenzen blijft je de rest van deze cursus volgen: de twee die 2,5
+procent in elke staart laten en 95 procent in het midden.
+
+<CodeBlock id="middle" code={`# On the standard normal, in z units.
+qnorm(c(0.025, 0.975))
+
+# On the exam scale.
+qnorm(c(0.025, 0.975), mean = mu, sd = sigma)
+
+# Which is the same as going 1.96 SDs either side of the mean.
+mu + c(-1, 1) * 1.96 * sigma`} />
+
+`qnorm(0.975)` is 1,959964, en het is de reden dat 1,96 in elk studieboek over
+statistiek staat. Het is geen magische constante. Het is het punt op de
+standaardnormale curve met 2,5 procent van de oppervlakte erachter, en als je in
+plaats daarvan de middelste 99 procent wilde, zou je `qnorm(0.995)` vragen en 2,58
+krijgen.
+
+Verschuif de grensschuif in de simulatie totdat de oppervlakte links zo dicht
+mogelijk bij 0,975 ligt, en lees de z-score van de grens af. Die komt tussen 1,9
+en 2,0 uit, welk gemiddelde en welke SD je ook instelt (de schuif beweegt in
+halve punten, dus bij een kleine SD worden de stappen grover), want in z-eenheden
+is de curve altijd dezelfde curve; vanwege symmetrie ligt de grens met 0,025 links
+ervan bij ongeveer −1,96.
+
+<Simulation name="distribution" />
+
+<Exercise id="m5-3-b" />
+
+<Quiz
+  id="q-tails"
+  question="Je wilt de twee scores die de middelste 50 procent van de studenten insluiten. Welke aanroep geeft ze?"
+  choices={[
+    { text: 'qnorm(c(0.25, 0.75), mean = mu, sd = sigma)', correct: true, response: 'Juist: 25 procent van de oppervlakte ligt onder de eerste en 25 procent boven de tweede, waardoor de helft van de studenten ertussen valt.' },
+    { text: 'qnorm(c(0.50, 0.50), mean = mu, sd = sigma)', response: 'Beide zijn de mediaan. Een interval heeft twee verschillende grenzen nodig.' },
+    { text: 'pnorm(c(0.25, 0.75), mean = mu, sd = sigma)', response: 'pnorm gaat de verkeerde kant op: het zou 0,25 en 0,75 als tentamenscores behandelen en twee kansen vlak bij nul teruggeven.' },
+    { text: 'qnorm(c(0.025, 0.975), mean = mu, sd = sigma)', response: 'Dat is de middelste 95 procent. Voor de middelste 50 wil je een kwart van de oppervlakte in elke staart.' },
+  ]}
+/>
+
+<Interpret
+  id="i-5-3"
+  question="De tentamencommissie vraagt je een grens van 89 voor een onderscheiding te onderbouwen. Welke zin rapporteert de berekening eerlijk?"
+  choices={[
+    { text: 'Als tentamenscores als normaal worden gemodelleerd (μ = 73,89, σ = 12,12), ligt het 90e percentiel bij 89,43; verwacht wordt dat 10% van de studenten boven die grens scoort.', correct: true, response: 'Juist. De zin noemt het model en zijn parameters, geeft het kwantiel en formuleert het gevolg als verwachting in plaats van als zekerheid.' },
+    { text: 'De beste 10% van de studenten scoorde 89,43.', response: 'Een grens is geen groep, en 89,43 is niemands score. Het is de grens waarboven het beste tiende deel valt.' },
+    { text: 'De kans om boven 89 te scoren was 1,28.', response: '1,28 is qnorm(0.90) op de standaardnormale verdeling, een z-score. Kansen kunnen niet groter zijn dan 1.' },
+    { text: 'Precies 500 van de 5000 studenten scoorde boven 89,43, want 10% van 5000 is 500.', response: 'Dat is wat het model voorspelt, niet wat de data deden. Het tellen van de werkelijke populatie geeft een getal dicht bij 500 maar niet gelijk eraan.' },
+  ]}
+/>

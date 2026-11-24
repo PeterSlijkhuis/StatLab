@@ -1,0 +1,124 @@
+Module 6 vraagt wat er gebeurt als je een steekproef trekt. Eerst is het goed om
+precies te zijn over datgene waaruit je *trekt*. Populaties zijn rommelig, maar
+heel veel ervan lijken genoeg op één bepaalde vorm dat we het geheel met twee
+getallen kunnen beschrijven en er vragen over kunnen beantwoorden met rekenwerk.
+
+Onze populatie van 5000 studenten, een gesimuleerde populatie voor deze cursus, heeft voor iedereen een tentamenscore. Kijk ernaar.
+
+<CodeBlock id="load" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+population %>% summarise(mu = mean(exam_score), sigma = sd(exam_score), n = n())`} />
+
+Twee getallen: een gemiddelde van ongeveer 73,9 en een standaarddeviatie van
+ongeveer 12,1. (sd() deelt door n − 1; de σ van de populatie uit het studieboek
+deelt door N en geeft 12,122 in plaats van 12,124, een verschil dat in deze
+module niets uitmaakt.) De stelling van deze les is dat die twee getallen bijna
+het hele verhaal vertellen.
+
+<CodeBlock id="hist" code={`library(ggplot2)
+
+population %>%
+  ggplot(aes(x = exam_score)) +
+  geom_histogram(bins = 40) +
+  labs(x = "Exam score", y = "Number of students") +
+  theme_classic()`} />
+
+## Een curve in plaats van balken
+
+Een histogram hangt af van hoe je de klassen koos. Maak ze smaller en de balken
+worden lager en grilliger; maak ze breder en de vorm wordt blokkeriger en
+verbergt details. Een **dichtheidscurve** is waar een histogram naartoe gaat als
+de klassen heel smal worden en de verticale as zo is herschaald dat de totale
+oppervlakte onder de curve precies 1 is.
+
+`dnorm()` geeft de hoogte van de normale dichtheidscurve op elk punt. We kunnen
+de curve over de data heen tekenen, waarbij het histogram naar dichtheid wordt
+herschaald zodat beide op dezelfde verticale as staan.
+
+<CodeBlock id="curve" code={`mu <- mean(population$exam_score)
+sigma <- sd(population$exam_score)
+
+population %>%
+  ggplot(aes(x = exam_score)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40) +
+  stat_function(fun = dnorm, args = list(mean = mu, sd = sigma), linewidth = 1) +
+  labs(x = "Exam score", y = "Density") +
+  theme_classic()`} />
+
+De curve is niet de data. Het is een *model* van de data: een gladde idealisering
+met precies twee parameters. Ze past hier goed genoeg om bruikbaar te zijn, en
+de rest van deze module behandelt haar alsof ze de waarheid is.
+
+<Predict
+  id="p-height"
+  question="dnorm(73.9, mean = 73.9, sd = 12.1) geeft 0,0330. Wat zegt dat getal je?"
+  choices={[
+    { text: 'Ongeveer 3,3% van de studenten scoort precies 73,9', response: 'Geen enkele student scoort in enige zinvolle zin *precies* 73,9, en een dichtheid is geen percentage. Lees verder: dit is de verwarring die deze les wil wegnemen.' },
+    { text: 'De hoogte van de curve bij 73,9, die pas een kans wordt als je haar met een breedte vermenigvuldigt', correct: true, response: 'Precies. Een dichtheid is een hoogte. Kans is hoogte maal breedte, oftewel oppervlakte.' },
+    { text: 'Ongeveer 3,3% van de studenten scoort lager dan 73,9', response: 'Dat zou pnorm() je vertellen, en het antwoord zou dicht bij 50% liggen, niet bij 3,3%.' },
+  ]}
+/>
+
+## Kans is oppervlakte
+
+Dit is het enige idee van de les, en het verdient een eigen regel:
+
+> Onder een dichtheidscurve is **kans oppervlakte**, nooit hoogte.
+
+De totale oppervlakte onder de curve is 1, want elke student zit ergens. De
+oppervlakte links van een score is het aandeel studenten eronder, en dat is wat
+`pnorm()` teruggeeft.
+
+<CodeBlock id="area" code={`pnorm(60, mean = mu, sd = sigma)    # proportion below 60
+pnorm(85, mean = mu, sd = sigma)    # proportion below 85
+
+# An area between two scores is one area minus the other.
+pnorm(85, mean = mu, sd = sigma) - pnorm(65, mean = mu, sd = sigma)
+
+# And the model can be checked against the population it describes.
+mean(population$exam_score < 60)`} />
+
+Vergelijk de eerste regel met de laatste. Het model zegt dat ongeveer 12,6
+procent van de studenten onder de 60 scoort; de populatie zelf zegt 13,3 procent.
+Dichtbij, niet identiek, en dat is wat "de data zijn bij benadering normaal" in
+de praktijk betekent.
+
+Merk ook op wat de oppervlakte van één enkel punt moet zijn. Een punt heeft geen
+breedte, dus `pnorm(73.9, mu, sigma) - pnorm(73.9, mu, sigma)` is precies nul:
+de kans om *precies* 73,9 te scoren is nul onder een continu model. Dat is geen
+paradox. Het is de prijs van het modelleren van een score als reëel getal in
+plaats van als telling.
+
+## Zie het bewegen
+
+Versleep het gemiddelde en de standaarddeviatie en kijk hoe de gearceerde
+oppervlakte reageert. Een grotere SD maakt de curve platter: de top zakt, omdat
+de totale oppervlakte 1 moet blijven hoe breed de curve ook uitwaaiert.
+
+<Simulation name="distribution" />
+
+<Quiz
+  id="q-density"
+  question="Je verdubbelt de standaarddeviatie van een normale curve en laat het gemiddelde met rust. Wat gebeurt er met de hoogte van de curve in haar top?"
+  choices={[
+    { text: 'Ze verdubbelt', response: 'De curve wordt breder, en een bredere curve met dezelfde totale oppervlakte moet lager worden, niet hoger.' },
+    { text: 'Ze halveert', correct: true, response: 'Juist. De oppervlakte onder de curve ligt vast op 1, dus als je haar over de dubbele breedte uitsmeert, halveert de hoogte overal rond het midden.' },
+    { text: 'Ze blijft gelijk', response: 'Dan zou de totale oppervlakte verdubbelen, en de totale oppervlakte onder een dichtheidscurve is altijd precies 1.' },
+    { text: 'Het hangt van het gemiddelde af', response: 'Het gemiddelde verschuiven schuift de curve opzij zonder haar vorm te veranderen.' },
+  ]}
+/>
+
+<Exercise id="m5-1-a" />
+
+<Interpret
+  id="i-5-1"
+  question="Je schrijft de verdeling van de tentamenscores op voor een methodenrapport. Welke zin rapporteert wat je werkelijk hebt berekend?"
+  choices={[
+    { text: 'De tentamenscores waren bij benadering normaal verdeeld (μ = 73,89, σ = 12,12). Onder dit model wordt verwacht dat 13% van de studenten onder de 60 scoort.', correct: true, response: 'Juist. De zin noemt het model, geeft de twee parameters in APA-vorm en rapporteert de staartoppervlakte als verwacht aandeel in plaats van als bewering over één student.' },
+    { text: 'De dichtheid van de tentamenscores bij 60 was ,017, dus 1,7% van de studenten scoorde 60.', response: 'Dat is dnorm(60), een hoogte. Hoogtes zijn geen kansen, en onder een continu model scoort niemand precies 60.' },
+    { text: 'De kans dat een student precies 60 scoorde was ,13.', response: ',13 is de oppervlakte LINKS van 60, die alle scores eronder omvat. De kans op een exacte score is onder een continu model nul.' },
+    { text: 'De tentamenscores waren normaal verdeeld (μ = 73,89, σ = 12,12), dus 13% van de studenten scoorde onder de 60.', response: 'Twee problemen. "Waren normaal verdeeld" overdrijft (de pasvorm is goed, niet exact), en die 13% is wat het model verwacht (12,6%), terwijl de populatie zelf 13,3% heeft.' },
+  ]}
+/>

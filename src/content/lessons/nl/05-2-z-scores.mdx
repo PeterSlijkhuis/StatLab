@@ -1,0 +1,156 @@
+Een student scoorde 85 op het tentamen. Een andere slaapt 9,1 uur per nacht.
+Welke van de twee is ongebruikelijker? Je kunt de getallen zo niet vergelijken:
+85 is een score uit 100 en 9,1 is een aantal uren, en ze hebben verschillende
+gemiddelden en verschillende spreiding. Je hebt een gemeenschappelijke munt nodig.
+
+Die munt is de **standaarddeviatie**. Tel hoeveel ervan een waarde van haar eigen
+gemiddelde af zit, en je krijgt een getal dat helemaal geen eenheid meer draagt.
+
+> **z = (waarde − gemiddelde) / SD**
+
+<CodeBlock id="setup" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+population %>%
+  summarise(
+    exam_mu = mean(exam_score), exam_sd = sd(exam_score),
+    sleep_mu = mean(sleep_hours), sleep_sd = sd(sleep_hours)
+  )`} />
+
+<Predict
+  id="p-compare"
+  question="Tentamenscores hebben gemiddeld 73,9 met een SD van 12,1; slaap heeft gemiddeld 6,89 uur met een SD van 1,11. Wat ligt verder van het eigen gemiddelde: een tentamenscore van 85, of 9,1 uur slaap?"
+  choices={[
+    { text: 'De tentamenscore, want 85 is een veel groter getal', response: 'Grootte op de oorspronkelijke schaal zegt niets: 85 uit 100 en 9,1 uur zijn niet vergelijkbaar totdat je standaardiseert.' },
+    { text: 'De slaaphoeveelheid', correct: true, response: 'Ja. 85 ligt minder dan één SD boven het tentamengemiddelde; 9,1 uur ligt twee SD boven het slaapgemiddelde. Voer het volgende blok uit om het te bevestigen.' },
+    { text: 'Ze zijn even ongebruikelijk, want beide liggen boven het gemiddelde', response: 'Boven het gemiddelde zijn is geen hoeveelheid. Hoe VER erboven, gemeten in SD, wel.' },
+  ]}
+/>
+
+<CodeBlock id="z" code={`exam_mu <- mean(population$exam_score)
+exam_sd <- sd(population$exam_score)
+sleep_mu <- mean(population$sleep_hours)
+sleep_sd <- sd(population$sleep_hours)
+
+(85 - exam_mu) / exam_sd
+(9.1 - sleep_mu) / sleep_sd`} />
+
+Een tentamenscore van 85 ligt 0,92 SD boven het gemiddelde. Negen komma een uur
+slapen ligt 1,99 SD boven het gemiddelde. De slaper is de ongebruikelijkste van
+de twee, en geen enkel staren naar "85" en "9,1" had je dat verteld.
+
+<Exercise id="m5-2-a" />
+
+## Een hele kolom standaardiseren
+
+Een z-score is niet alleen voor losse waarden. Standaardiseer een hele kolom en
+je krijgt een variabele met gemiddelde 0 en SD 1: dezelfde verdeling, anders
+gelabeld.
+
+<CodeBlock id="standardise" code={`library(ggplot2)
+
+standardised <- population %>%
+  mutate(z_exam = (exam_score - exam_mu) / exam_sd)
+
+standardised %>% summarise(mean_z = mean(z_exam), sd_z = sd(z_exam))
+
+standardised %>%
+  ggplot(aes(x = z_exam)) +
+  geom_histogram(bins = 40) +
+  labs(x = "Exam score (z)", y = "Number of students") +
+  theme_classic()`} />
+
+Vergelijk dat histogram met dat uit de vorige les. Het heeft dezelfde vorm. Het
+is alleen zo verschoven dat het midden op 0 ligt en zo samengeperst dat één SD
+één eenheid is. Standaardiseren verandert nooit de vorm van een verdeling. Dat is
+het onthouden waard, want studenten verwachten vaak dat het de data "normaal
+maakt". Dat doet het niet.
+
+R doet hetzelfde in één stap met `scale()`, dat het gemiddelde aftrekt en door de
+SD deelt. Het geeft een matrix met één kolom terug, dus verpak het in
+`as.numeric()` als je het als kolom opslaat.
+
+<CodeBlock id="scale" code={`standardised <- standardised %>%
+  mutate(z_exam_scale = as.numeric(scale(exam_score)))
+
+# The same numbers both ways.
+all.equal(standardised$z_exam, standardised$z_exam_scale)`} />
+
+## Omkeren, en combineren tot een index
+
+Omdat z-scores dezelfde schaal delen, kun je ze optellen. Stel dat je één getal
+wilt voor hoe uitgerust een student is, uit slaap en stress. Meer slaap betekent
+beter uitgerust, maar meer stress betekent slechter, dus **keer** eerst stress
+**om** door de z-score met −1 te vermenigvuldigen. Dan is het gemiddelde van de
+twee z-scores een eenvoudige **samengestelde index**.
+
+<CodeBlock id="index" code={`standardised <- standardised %>%
+  mutate(
+    z_sleep = as.numeric(scale(sleep_hours)),
+    z_stress_reversed = as.numeric(scale(stress)) * -1,
+    rested = (z_sleep + z_stress_reversed) / 2
+  )
+
+standardised %>%
+  select(sleep_hours, stress, z_sleep, z_stress_reversed, rested) %>%
+  head()`} />
+
+Een positieve `rested` betekent beter uitgerust dan de gemiddelde student op de
+twee maten samen. Zonder het omkeren had veel stress veel slaap opgeheven, en
+had de index niets betekend.
+
+## De empirische regel
+
+Bij een normale verdeling liggen de aandelen binnen één, twee en drie SD van het
+gemiddelde vast: ongeveer 68, 95 en 99,7 procent. Dit is de **empirische regel**,
+of de 68-95-99,7-regel. Het loont om hem uit je hoofd te leren, want hij maakt van
+een z-score meteen een intuïtie.
+
+<CodeBlock id="rule" code={`# What the normal model predicts.
+pnorm(1) - pnorm(-1)
+pnorm(2) - pnorm(-2)
+pnorm(3) - pnorm(-3)
+
+# What this population actually does.
+standardised %>%
+  summarise(
+    within_1 = mean(abs(z_exam) < 1),
+    within_2 = mean(abs(z_exam) < 2),
+    within_3 = mean(abs(z_exam) < 3)
+  )`} />
+
+Ongeveer 68 procent binnen één SD, 95 procent binnen twee, 99,7 procent binnen
+drie, en de populatie komt daar tot op ongeveer een procentpunt mee overeen.
+
+De regel werkt ook in aantallen. Van 300 studenten op een ruwweg normaal
+tentamen scoort ongeveer 68%, oftewel 204, binnen één SD van het gemiddelde. De
+overige 32% verdeelt zich gelijk over de twee staarten, dus ongeveer 16%, oftewel
+48 studenten, scoort meer dan één SD erboven. Onthoud vooral het middelste
+getal, 95. Over twee modules wordt "95 procent van de steekproefgemiddelden ligt
+binnen ongeveer twee standaardfouten van het populatiegemiddelde" het
+betrouwbaarheidsinterval.
+
+<Quiz
+  id="q-z"
+  question="De tentamenscore van een student heeft z = −1,5. Welke bewering klopt?"
+  choices={[
+    { text: 'Ze scoorden 1,5 punt onder het gemiddelde', response: 'Een z-score staat niet in de oorspronkelijke eenheden. −1,5 betekent 1,5 standaarddeviatie, wat hier ongeveer 18,2 tentamenpunten is.' },
+    { text: 'Ze scoorden 1,5 standaarddeviatie onder het gemiddelde, wat ze in grofweg de onderste 7% van de studenten plaatst', correct: true, response: 'Juist: pnorm(-1.5) is ,067, dus ongeveer 7 van de 100 studenten scoren lager.' },
+    { text: 'Ze scoorden beter dan 1,5% van de studenten', response: 'De −1,5 is een afstand in SD, geen percentage. Geef hem aan pnorm() om een percentage te krijgen.' },
+    { text: 'Hun score is ongeldig, want z-scores kunnen niet negatief zijn', response: 'De helft van alle z-scores is negatief: elke waarde onder het gemiddelde heeft er een.' },
+  ]}
+/>
+
+<Exercise id="m5-2-b" />
+
+<Interpret
+  id="i-5-2"
+  question="Een collega vraagt je in één zin, geschikt voor een rapport, de student te beschrijven die 85 scoorde. Welke is juist?"
+  choices={[
+    { text: 'De student scoorde 0,92 standaarddeviatie boven het populatiegemiddelde (μ = 73,89, σ = 12,12, z = 0,92), wat hen ongeveer op het 82e percentiel plaatst.', correct: true, response: 'Juist. De zin geeft de parameters waaruit de z is berekend en zet de z om in een percentiel, wat een lezer eigenlijk wil weten.' },
+    { text: 'De student scoorde beter dan 92% van de leeftijdsgenoten (z = 0,92).', response: 'De 0,92 is een afstand in standaarddeviaties, geen percentiel. pnorm(0.92) = ,82, dus het getal is 82%, niet 92%.' },
+    { text: 'De student scoorde 92% van het populatiegemiddelde (z = 0,92).', response: 'Een z-score is geen verhouding tot het gemiddelde. Het is een telling van standaarddeviaties ervandaan.' },
+    { text: 'De score van de student was significant (z = 0,92, p < ,05).', response: 'Er is niets getoetst. Een z-score beschrijft waar één waarde in een verdeling zit; het is geen hypothesetoets, en 0,92 zou in elk geval niet significant zijn.' },
+  ]}
+/>
