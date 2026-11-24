@@ -1,0 +1,110 @@
+Een correlatie zegt hoe strak de punten een lijn volgen. Ze zegt niet welke lijn.
+Daarvoor heb je een model nodig, en het model is waar de rest van deze cursus woont.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(mean_autonomy = mean(autonomy), mean_wellbeing = mean(wellbeing), n = n())`} />
+
+## Welke lijn?
+
+Een lijn door een wolk punten is een voorspelregel: geef hem een autonomiescore, en
+hij geeft een voorspelde welzijnsscore terug. Voor elke werknemer is het verschil
+tussen wat de lijn voorspelde en wat ze werkelijk rapporteerden een **residu**.
+
+Er zijn oneindig veel lijnen beschikbaar. R past degene aan die de **som van de
+gekwadrateerde residuen** zo klein mogelijk maakt: de kleinste-kwadratenlijn.
+Kwadrateren voorkomt dat missers boven en onder de lijn elkaar opheffen, wat
+absolute waarden ook zouden doen, maar het maakt ook dat één grote misser veel meer
+kost dan meerdere kleine. Daarom kan één ver weg gelegen punt de lijn merkbaar
+trekken.
+
+<Predict
+  id="p-outlier"
+  question="Je sleept één punt ver boven de wolk, aan de rechterkant. Wat gebeurt er met de kleinste-kwadratenlijn?"
+  choices={[
+    { text: 'Niets: één punt van twaalf kan er niet toe doen', response: 'Het kan wel, en hoe verder van het midden van x het ligt, hoe meer het uitmaakt. Probeer het in de simulatie hieronder.' },
+    { text: 'De lijn kantelt ernaartoe, en des te meer naarmate het verder langs x ligt', correct: true, response: 'Precies. Gekwadrateerde residuen groeien snel, en hefboomwerking groeit met de afstand tot het gemiddelde van x.' },
+    { text: 'De lijn gaat omhoog maar behoudt haar helling', response: 'Dat zou gebeuren bij een punt in het midden van x. Aan de rand verandert ook de helling.' },
+  ]}
+/>
+
+<Simulation name="leastsquares" />
+
+## Het aanpassen
+
+<CodeBlock id="c-fit" code={`model <- lm(wellbeing ~ autonomy, data = d)
+
+model`} />
+
+Lees de formule hardop: **welzijn wordt gemodelleerd door autonomie**. De uitkomst
+staat links van de tilde, de voorspeller rechts. Veel studieboeken noemen de uitkomst
+de **afhankelijke variabele** en de voorspeller de **onafhankelijke variabele**; de
+woorden betekenen hier hetzelfde, en geen van beide claimt een oorzaak. Alles in Deel
+3 is een variatie op die ene regel: voeg een tweede voorspeller toe, maak een
+voorspeller een factor, vermenigvuldig twee voorspellers, voeg een random intercept
+toe, verander de familie. De formule is het model.
+
+Het model alleen printen geeft de twee coëfficiënten en niets anders. `tidy()` maakt
+er een echte tabel van:
+
+<CodeBlock id="c-tidy" code={`model %>% tidy()`} />
+
+- **`(Intercept)`** is het voorspelde welzijn van een werknemer met autonomie 0.
+  Niemand in dit onderzoek scoort 0 op een schaal van 1-10, dus het intercept is hier
+  waar de lijn begint, geen feit over iemand.
+- **`autonomy`** is de helling *b*: de voorspelde verandering in welzijn voor elk extra
+  punt autonomie.
+
+<Exercise id="m10-2-a" />
+
+## De lijn gebruiken
+
+`predict()` laat het model vooruit rekenen. Geef het autonomiewaarden, krijg
+voorspeld welzijn terug.
+
+<CodeBlock id="c-predict" code={`new_people <- data.frame(autonomy = c(3, 5, 7))
+
+new_people %>%
+  mutate(predicted_wellbeing = predict(model, newdata = new_people))`} />
+
+Die drie getallen liggen op gelijke afstand, omdat het model een rechte lijn is en een
+rechte lijn overal één helling heeft. Dat is een aanname, geen ontdekking: het
+spreidingsdiagram uit de vorige les is waar je controleert of ze redelijk is.
+
+## Residuen: wat de lijn miste
+
+<CodeBlock id="c-resid" code={`model %>%
+  augment() %>%
+  select(wellbeing, autonomy, .fitted, .resid) %>%
+  head(8)`} />
+
+`.fitted` is de hoogte van de lijn, `.resid` is de waargenomen waarde min de
+voorspelde. Een residu is geen fout in de data; het is alles aan het welzijn van die
+werknemer dat autonomie niet verklaart, wat hier het grootste deel is.
+
+<Exercise id="m10-2-b" />
+
+<Quiz
+  id="q-least-squares"
+  question="Waarom kwadrateert het aanpassingscriterium de residuen in plaats van hun absolute waarden te nemen?"
+  choices={[
+    { text: 'Om elk residu positief te maken, wat absolute waarden niet doen', response: 'Absolute waarden maken elk residu ook positief. Dat is de reden niet.' },
+    { text: 'Om grote missers veel zwaarder te straffen dan kleine, wat één lijn geeft met een oplossing in gesloten vorm', correct: true, response: 'Juist. Kwadrateren laat een misser van 4 zestien keer zoveel kosten als een misser van 1, en het maakt de beste lijn in één stap berekenbaar in plaats van door zoeken.' },
+    { text: 'Omdat residuen normaal verdeeld zijn', response: 'Normaliteit van residuen is een aanname voor de p-waarden, niet de reden voor het aanpassingscriterium.' },
+    { text: 'Omdat de uitkomst in de formule gekwadrateerd is', response: 'Niets in de formule is gekwadrateerd. wellbeing ~ autonomy is lineair in beide.' },
+  ]}
+/>
+
+<Interpret
+  id="i-10-2"
+  question="Een model van welzijn op autonomie geeft een intercept van 39,00 en een helling van 1,05 (SE = 0,21). Een collega schrijft: 'Werknemers zonder autonomie hebben een welzijnsscore van 39,00.' Wat is er mis, en wat moet er in plaats daarvan staan?"
+  choices={[
+    { text: 'Er is niets mis; 39,00 is de voorspelde score bij autonomie = 0.', response: 'Rekenkundig is het intercept die voorspelling, maar autonomie wordt gemeten van 1 tot 10, dus de bewering extrapoleert voorbij elke waarneming in het onderzoek.' },
+    { text: 'Autonomie was een significante voorspeller van welzijn, b = 1,05, SE = 0,21; het intercept (39,00) is de voorspelde waarde bij autonomie = 0, wat buiten het waargenomen bereik van 1-10 ligt en niet als groep werknemers moet worden geïnterpreteerd.', correct: true, response: 'Juist. Het intercept wordt gerapporteerd als deel van de aangepaste lijn en uitdrukkelijk niet geïnterpreteerd, omdat daar geen werknemer is waargenomen.' },
+    { text: 'Het intercept is het gemiddelde welzijn van de steekproef.', response: 'Dat is alleen waar als de voorspeller gecentreerd is. Hier is het intercept de voorspelling bij autonomie = 0, wat niet de gemiddelde werknemer is.' },
+    { text: 'Het intercept moet uit het model worden gehaald omdat het niet te interpreteren is.', response: 'Het intercept verwijderen dwingt de lijn door de oorsprong, wat de helling flink zou vervormen. Een niet-interpreteerbaar intercept blijft in het model en wordt niet geïnterpreteerd.' },
+  ]}
+/>

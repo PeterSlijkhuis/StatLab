@@ -1,0 +1,131 @@
+Deel 3 van deze cursus gaat over één idee met meerdere namen. Regressie, de
+*t*-toets, ANOVA: statistiekboeken zetten ze in aparte hoofdstukken, en in R zijn
+het één functie. Van hier tot Module 15 pas je modellen aan met `lm()`, `lmer()` en
+`glm()`, en al het andere is een speciaal geval van een van de drie.
+
+De data voor alle zes modules komt uit een onderzoek op de werkvloer: 480 werknemers
+verdeeld over vier afdelingen en zes locaties, elk met een werkdrukbeoordeling, een
+autonomiebeoordeling, een welzijnsscore, tweemaal gemeten betrokkenheid, een
+prestatiebeoordeling en een registratie of ze het bedrijf hebben verlaten.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(ggplot2)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+glimpse(d)`} />
+
+`stringsAsFactors = TRUE` doet hier meer ertoe dan in Module 2. Het maakt van
+`department`, `site`, `remote`, `training` en `mentoring` factoren, en vanaf Module
+12 vertelt een factor `lm()` om groepen te vergelijken in plaats van een label als
+getal te behandelen.
+
+## Begin altijd met de beschrijvende statistiek
+
+Kijk vóór elk model naar wat je hebt. Gemiddelden en SD's voor de variabelen die je
+aan elkaar gaat relateren, en de *n* waaruit ze zijn berekend.
+
+<CodeBlock id="c-descriptives" code={`d %>%
+  summarise(
+    n = n(),
+    mean_autonomy = mean(autonomy), sd_autonomy = sd(autonomy),
+    mean_workload = mean(workload), sd_workload = sd(workload),
+    mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing)
+  )`} />
+
+Dit is geen formaliteit, en niet iets wat je eenmaal doet en vergeet. Elke
+modeluitvoer die je in Deel 3 tegenkomt is een getal waarvan je teken en grootte
+alleen kunt toetsen aan de gemiddelden. Als het model iets verrassends zegt, is de
+beschrijvende statistiek waar je uitzoekt of het een ontdekking of een tikfout is.
+
+<Predict
+  id="p-direction"
+  question="Autonomie is hoeveel controle een werknemer heeft over zijn eigen werk; werkdruk is hoeveel werk er is. Voordat je iets plot: welke kant gaat elk op ten opzichte van welzijn?"
+  choices={[
+    { text: 'Beide positief: meer van alles op het werk gaat samen met je beter voelen', response: 'Twee variabelen kunnen in tegengestelde richting wijzen, en hier doen ze dat. Autonomie is een hulpbron; werkdruk is een eis.' },
+    { text: 'Autonomie positief, werkdruk negatief', correct: true, response: 'Dat is het eisen-hulpbronnenpatroon waar het onderzoek omheen is ontworpen, en de plots hieronder laten het zien.' },
+    { text: 'Beide negatief: werk is een kostenpost', response: 'Werkdruk gedraagt zich zo, maar autonomie niet. Controle over je eigen werk is een hulpbron, geen eis.' },
+    { text: 'Geen van beide: welzijn is een persoonlijkheidstrek en niets op het werk beweegt het', response: 'Dan zouden beide spreidingsdiagrammen vormloze wolken zijn. Dat zijn ze niet: kijk naar de volgende twee blokken.' },
+  ]}
+/>
+
+## Het zien
+
+Een spreidingsdiagram, één punt per werknemer, met de rechte lijn die de wolk het
+best samenvat erdoorheen getekend. `geom_smooth(method = lm)` past precies de lijn
+aan die de volgende les met `lm()` aanpast.
+
+<CodeBlock id="c-scatter-autonomy" code={`d %>%
+  ggplot(aes(x = autonomy, y = wellbeing)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = lm, se = FALSE) +
+  labs(x = "Autonomy (1-10)", y = "Wellbeing", title = "Autonomy and wellbeing") +
+  theme_classic()`} />
+
+<CodeBlock id="c-scatter-workload" code={`d %>%
+  ggplot(aes(x = workload, y = wellbeing)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = lm, se = FALSE) +
+  labs(x = "Workload (1-10)", y = "Wellbeing", title = "Workload and wellbeing") +
+  theme_classic()`} />
+
+> **Verander de y-variabele.** Pas een van de blokken aan om `performance` te
+> gebruiken in plaats van `wellbeing` en voer het opnieuw uit. De verbanden zijn
+> niet hetzelfde: autonomie hangt sterker samen met prestatie dan met welzijn, en
+> werkdruk veel zwakker. Het verband van een voorspeller met de ene uitkomst zegt
+> niets over zijn verband met een andere.
+
+## Het meten
+
+De correlatie *r* geeft een getal aan hoe strak de punten een rechte lijn volgen. Ze
+loopt van −1 via 0 naar +1, heeft geen eenheden en is symmetrisch: de correlatie van
+autonomie met welzijn is de correlatie van welzijn met autonomie.
+
+<CodeBlock id="c-cor" code={`d %>%
+  summarise(
+    r_autonomy = cor(autonomy, wellbeing),
+    r_workload = cor(workload, wellbeing),
+    r_tenure   = cor(tenure_years, wellbeing)
+  )`} />
+
+Drie dingen die *r* niet is, en elk ervan is in een gepubliceerd artikel terechtgekomen:
+
+1. **Ze is geen helling.** *r* is eenheidsloos. Als je welzijn van 0-100 naar 0-1
+   herschaalt, beweegt *r* niet en krimpt de helling met een factor 100.
+2. **Ze is geen percentage.** *r* = ,50 betekent niet de helft van iets. Haar
+   kwadraat wel: *r*² = ,25 is het aandeel van de variantie dat de lijn verklaart.
+3. **Ze is geen oorzaak.** Elke zin in deze module over autonomie en welzijn is een
+   uitspraak over hoe ze samen variëren in deze 480 mensen.
+
+## Gok vóór je rekent
+
+Elke ronde toont een nieuwe wolk van 60 punten. Zet de schuif op je gok voor de
+correlatie en onthul dan het getal. De meeste mensen onderschatten correlaties in het
+midden van het bereik en lezen een r van ,5 als veel zwakker dan ze is, en het enige
+medicijn is oefenen.
+
+<Simulation name="correlation" />
+
+<Exercise id="m10-1-a" />
+
+<Quiz
+  id="q-r-meaning"
+  question="Een onderzoek rapporteert r = -,42 tussen werkdruk en welzijn, n = 480. Welke bewering wordt ondersteund?"
+  choices={[
+    { text: 'Het verminderen van werkdruk zou het welzijn met ,42 punten verhogen.', response: 'Twee fouten tegelijk: r is niet in punten, en een correlatie uit observationele data geeft geen recht op een uitspraak over wat er zou gebeuren als je ingreep.' },
+    { text: 'Werknemers met een zwaardere werkdruk rapporteren gemiddeld lager welzijn, en ongeveer 18% van de variantie in welzijn wordt gedeeld met werkdruk.', correct: true, response: 'Juist. De richting komt van het teken, en ,42 in het kwadraat is ongeveer ,18: de gedeelde variantie.' },
+    { text: '42% van de variantie in welzijn wordt verklaard door werkdruk.', response: 'Dat is r in het kwadraat, niet r. Kwadrateer eerst: ,42 in het kwadraat is ongeveer ,18.' },
+    { text: 'Werkdruk en welzijn zijn bij 58% van de werknemers niet gerelateerd.', response: 'Een correlatie beschrijft de hele steekproef tegelijk. Ze splitst mensen niet in een gerelateerde en een niet-gerelateerde groep.' },
+  ]}
+/>
+
+<Interpret
+  id="i-10-1"
+  question="Een collega stuurt je deze regel voor hun resultatensectie: ze vonden r = -,42 tussen werkdruk en welzijn bij 480 werknemers, p < ,001. Welke zin rapporteert het correct in APA 7-stijl?"
+  choices={[
+    { text: 'Werkdruk was negatief gecorreleerd met welzijn, r(478) = -,42, p < ,001.', correct: true, response: 'Juist. Pearson r heeft n - 2 vrijheidsgraden, het teken blijft staan en de voorloopnul vervalt bij een statistiek die niet boven 1 kan komen.' },
+    { text: 'Werkdruk verlaagde welzijn, r(478) = -,42, p < ,001.', response: '"Verlaagde" is een causale bewering. Er is niets gemanipuleerd; werknemers met een zwaardere werkdruk rapporteerden gewoon lager welzijn.' },
+    { text: 'Werkdruk was negatief gecorreleerd met welzijn, r(480) = -0,42, p = ,000.', response: 'Twee rapportagefouten: df voor r is n - 2, en een p-waarde wordt nooit als ,000 geschreven: rapporteer p < ,001.' },
+    { text: 'Er was een significante correlatie tussen werkdruk en welzijn, r(478) = -,42, p < ,001, wat laat zien dat 42% van het welzijn te danken is aan werkdruk.', response: 'De eerste helft is goed; de staart is tweemaal fout. r in het kwadraat is ongeveer ,18, en "te danken aan" is causaal.' },
+  ]}
+/>
