@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, it, test } from 'vitest';
+import { setLanguage } from '../state/language';
 import { allAnswers } from './modelTree';
 import { CUES, detectCues, matchQuestion, RULE_IDS } from './questionMatcher';
 
@@ -179,5 +180,24 @@ describe('matchQuestion', () => {
 
   test('no cue text uses an em dash', () => {
     expect(JSON.stringify(CUES.map(({ label, why }) => ({ label, why })))).not.toContain('\u2014');
+  });
+});
+
+describe('Dutch questions', () => {
+  afterEach(() => setLanguage('en'));
+  const best = (question: string) => {
+    setLanguage('nl');
+    return matchQuestion(question).suggestions[0]?.id;
+  };
+
+  it.each([
+    ['Hebben thuiswerkers een hoger welzijn dan kantoorwerkers?', 'two-groups'],
+    ['Voorspelt werkdruk of werknemers vertrekken?', 'logistic-regression'],
+    ['Is de betrokkenheid gestegen van de eerste naar de tweede meting?', 'before-after'],
+    ['Voorspelt werkdruk het aantal ziektedagen?', 'poisson-regression'],
+    ['Verschilt welzijn tussen de vier afdelingen?', 'several-groups'],
+    ['Verhoogt training de betrokkenheid via autonomie?', 'mediation'],
+  ])('%s', (question, id) => {
+    expect(best(question)).toBe(id);
   });
 });
