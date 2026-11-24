@@ -1,0 +1,147 @@
+"De andere constant houden" is de uitdrukking die meervoudige regressie nuttig maakt en
+de uitdrukking die studenten in de problemen brengt. Deze les verdient haar en zet er dan
+een hek omheen.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+model3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+model3 %>% tidy()`} />
+
+## Wat de uitdrukking rekenkundig betekent
+
+Neem de werkdrukcoëfficiënt. Hier is hetzelfde getal, op een volledig andere manier
+berekend: haal autonomie en dienstjaren uit zowel werkdruk als welzijn, en regresseer wat
+overblijft van de een op wat overblijft van de ander.
+
+<CodeBlock id="c-partial" code={`resid_wellbeing <- residuals(lm(wellbeing ~ autonomy + tenure_years, data = d))
+resid_workload  <- residuals(lm(workload ~ autonomy + tenure_years, data = d))
+
+coef(lm(resid_wellbeing ~ resid_workload))[2]
+coef(model3)["workload"]`} />
+
+Die twee getallen komen overeen. Dat is wat een meervoudige regressiecoëfficiënt *is*: het
+verband tussen de delen van de uitkomst en de voorspeller die de andere voorspellers niet
+kunnen verklaren. Er werd niets vastgehouden in de wereld; er werd op papier iets
+afgetrokken.
+
+<Predict
+  id="p-holding"
+  question="Het model zegt b = -3,63 voor werkdruk, met autonomie en dienstjaren constant gehouden. Welke bewering staat dat toe?"
+  choices={[
+    { text: 'De werkdruk van een werknemer met één punt verlagen zou hun welzijn met ongeveer 3,6 punten verhogen', response: 'Dat is een bewering over een interventie. Dit ontwerp observeerde werknemers; het veranderde van niemand de werkdruk.' },
+    { text: 'Onder werknemers met dezelfde autonomie en dienstjaren gaat één punt meer werkdruk samen met ongeveer 3,6 punten minder welzijn', correct: true, response: 'Precies: een vergelijking tussen mensen, in de data zoals verzameld.' },
+    { text: 'Werkdruk is drie keer zo belangrijk als autonomie', response: 'Beide worden beoordeeld op schalen van 1-10, maar werkdruk varieert minder dan autonomie (SD 1,35 tegen 2,20), dus één punt betekent op elk iets anders, en "drie keer zo belangrijk" is niet wat een verhouding van hellingen meet.' },
+  ]}
+/>
+
+## De coëfficiënt zien bewegen
+
+<Exercise id="m11-2-a" />
+
+## Een factor onder de voorspellers
+
+Voorspellers hoeven geen getallen te zijn. Zet een factor met twee niveaus in de formule en
+`lm()` codeert hem voor je.
+
+<CodeBlock id="c-remote" code={`levels(d$remote)
+
+model_remote <- lm(wellbeing ~ autonomy + workload + remote, data = d)
+model_remote %>% tidy()`} />
+
+De coëfficiënt heet `remoteYes`, niet `remote`. R nam het eerste niveau, `No`, als
+**referentie**, en de coëfficiënt is hoeveel het andere niveau ervan verschilt. Module 12
+gaat nergens anders over; merk nu op dat een factor één coëfficiënt kost per niveau na het
+eerste.
+
+En kijk elke keer naar de gemiddelden ernaast:
+
+<CodeBlock id="c-remote-means" code={`d %>%
+  group_by(remote) %>%
+  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())`} />
+
+Het ruwe verschil tussen die twee gemiddelden en de `remoteYes`-coëfficiënt zijn
+verschillende getallen, en dat hoort zo: de coëfficiënt is het verschil onder werknemers
+die gematcht zijn op autonomie en werkdruk, de ruwe gemiddelden het verschil onder
+iedereen. Als ze ooit in **tegengestelde** richting wijzen, is er iets belangrijks aan de
+hand (de correctie heeft de vergelijking omgedraaid) en rapporteer je beide, niet alleen
+degene die je verkiest.
+
+<Exercise id="m11-2-b" />
+
+## Wanneer het teken omslaat: de paradox van Simpson
+
+Een variabele constant houden kan meer doen dan een helling laten krimpen. Het kan haar
+omkeren. Hier is een klein gesimuleerd voorbeeld: 1.000 werknemers, hun
+neuroticismescore, hun salaris en hun opleidingsniveau (0, 1 of 2).
+
+<CodeBlock id="c-simpson" code={`set.seed(417)
+n <- 1000
+education <- sample(0:2, n, replace = TRUE)
+neuroticism <- pmin(7, pmax(0, round(1 + 1.5 * education + rnorm(n, 0, 1), 1)))
+salary <- round(50000 - 3000 * neuroticism + 21000 * education + rnorm(n, 0, 8000))
+pay <- data.frame(education = factor(education), neuroticism, salary)
+
+lm(salary ~ neuroticism, data = pay) %>% tidy()
+lm(salary ~ neuroticism + education, data = pay) %>% tidy()`} />
+
+Op zichzelf gaat neuroticisme samen met een **hoger** salaris: ongeveer 5750 meer per punt.
+Houd opleiding constant en de helling is ongeveer 3270 **lager** per punt. Beide getallen
+kloppen; ze beantwoorden verschillende vragen. In deze simulatie scoren de beter opgeleide
+werknemers toevallig hoger op neuroticisme en verdienen ze ook veel meer, dus over alle
+werknemers loopt neuroticisme mee met opleiding. Binnen elk opleidingsniveau verdienen
+neurotischere werknemers minder.
+
+<CodeBlock id="c-simpson-groups" code={`pay %>%
+  group_by(education) %>%
+  summarise(slope = coef(lm(salary ~ neuroticism))[2], mean_neuroticism = mean(neuroticism), mean_salary = mean(salary))`} />
+
+De helling is negatief in elke opleidingsgroep, en positief als de groepen op één hoop
+worden gegooid. Die omkering heet de **paradox van Simpson**. Het is geen fout in de
+rekenkunde. Het is de duidelijkste demonstratie dat een verband in samengevoegde data het
+tegenovergestelde kan zijn van het verband binnen elke groep, dus de vraag welke variabelen
+je constant houdt moet voortkomen uit wat je over de situatie weet.
+
+<Predict
+  id="p-simpson"
+  question="Welke helling voor neuroticisme moet een rapport geven?"
+  choices={[
+    { text: 'De positieve, want die gebruikt alle data zonder correctie', response: 'Beide modellen gebruiken alle data. De ongecorrigeerde helling mengt neuroticisme met opleiding, wat haar hier juist misleidend maakt.' },
+    { text: 'Degene die de onderzoeksvraag beantwoordt: als de vraag over werknemers met dezelfde opleiding gaat, de gecorrigeerde, negatieve helling', correct: true, response: 'Juist. De statistiek kan niet voor je kiezen; de vraag en wat je weet over de causale structuur doen dat wel.' },
+    { text: 'Geen van beide, want de resultaten spreken elkaar tegen', response: 'Ze spreken elkaar niet tegen. Het zijn antwoorden op twee verschillende vragen.' },
+  ]}
+/>
+
+## Wat de uitdrukking niet betekent
+
+1. **Niet causaal.** Corrigeren voor werkdruk haalt werkdruk weg. Het doet niets aan de
+   confounders die je niet hebt gemeten, en in dit onderzoek zijn dat er de meeste.
+2. **Geen interventie.** "Als we de werkdruk verlaagden" is een bewering over een wereld
+   waarin iemand handelde. Dit model beschrijft een wereld waarin niemand dat deed.
+3. **Geen vrijbrief om alles toe te voegen.** Corrigeren voor een variabele die *tussen* de
+   voorspeller en de uitkomst op het causale pad zit, haalt een deel weg van het effect dat
+   je juist wilt zien.
+
+<Quiz
+  id="q-controlling"
+  question="Je onderzoekt of autonomie prestatie voorspelt, en je voegt een maat voor betrokkenheid als controlevariabele aan het model toe. Stel dat betrokkenheid een van de manieren is waarop autonomie prestatie verbetert. Wat heb je gedaan?"
+  choices={[
+    { text: 'Het model verbeterd door een confounder te verwijderen', response: 'Een confounder veroorzaakt zowel de voorspeller als de uitkomst. Betrokkenheid wordt hier veroorzaakt door de voorspeller, wat een ander dier is.' },
+    { text: 'Een deel van het effect weggehaald dat je wilde meten, omdat je corrigeerde voor een variabele op het causale pad', correct: true, response: 'Juist. Corrigeren voor een mediator beantwoordt "het effect van autonomie anders dan via betrokkenheid", wat zelden de gestelde vraag is.' },
+    { text: 'Niets: extra voorspellers zijn altijd veilig', response: 'Dat zijn ze niet. Voor welke variabelen je corrigeert is een vraag over causale structuur, en geen enkele statistiek in de uitvoer kan die voor je beantwoorden.' },
+    { text: 'Multicollineariteit gecreëerd, wat het model ongeldig maakt', response: 'De betrokken correlatie is lang niet hoog genoeg daarvoor, en het probleem is hier niet collineariteit maar wat de correctie betekent.' },
+  ]}
+/>
+
+<Interpret
+  id="i-11-2"
+  question="Je model geeft, voor thuiswerken, b = 2,03, SE = 0,85, t(476) = 2,39, p = ,017, met autonomie en werkdruk ook in het model. Welke zin rapporteert het correct?"
+  choices={[
+    { text: 'Thuiswerken veroorzaakte een toename van 2,03 punten in welzijn, b = 2,03, SE = 0,85, t(476) = 2,39, p = ,017.', response: 'Werknemers werden niet toegewezen aan thuiswerken; ze kozen het of hun functie legde het op. De statistieken kloppen en het werkwoord niet.' },
+    { text: 'Gecontroleerd voor autonomie en werkdruk rapporteerden werknemers die thuiswerkten hoger welzijn dan werknemers op kantoor, b = 2,03, SE = 0,85, t(476) = 2,39, p = ,017.', correct: true, response: 'Juist: de vergelijking wordt genoemd, de referentiegroep is expliciet, en "rapporteerden hoger" blijft op het niveau dat het ontwerp ondersteunt.' },
+    { text: 'Thuiswerken hing significant samen met welzijn, p < ,001.', response: 'Een p-waarde alleen is geen rapport, en deze is verkeerd gerapporteerd: p = ,017, niet < ,001. De lezer kan de richting, de grootte of de precisie niet uit deze zin halen.' },
+    { text: 'Werknemers die thuiswerkten scoorden 2,03 punten hoger op welzijn dan werknemers op kantoor, b = 2,03, SE = 0,85, t(476) = 2,39, p = ,017.', response: 'Dit laat de correctie weg. 2,03 is het verschil onder werknemers gematcht op autonomie en werkdruk, niet het ruwe verschil tussen de twee groepen.' },
+  ]}
+/>

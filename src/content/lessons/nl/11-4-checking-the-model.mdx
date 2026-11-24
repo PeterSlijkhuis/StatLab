@@ -1,0 +1,202 @@
+Elke p-waarde en elk betrouwbaarheidsinterval in deze module rust op aannames:
+onafhankelijke gevallen, een rechtlijnig verband, en residuen die gelijk verspreid en
+ruwweg normaal zijn. Het helpt ook als de pasvorm niet door een handvol gevallen wordt
+bepaald. Les 10-3 controleerde ze op het oog in één regel. Deze les controleert ze goed,
+en laat zien wat een mislukte controle je kan vertellen.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+library(ggplot2)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+model <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+checked <- augment(model, data = d)
+
+checked %>% select(employee_id, wellbeing, .fitted, .resid, .cooksd) %>% head()`} />
+
+`augment()` geeft één rij per werknemer, met de voorspelde waarde, het residu en de afstand
+van Cook als kolommen naast de oorspronkelijke.
+
+## Residuen tegen voorspelde waarden
+
+Als het model klopt, spreiden de residuen zich bij elke voorspelde waarde gelijk rond nul,
+zonder bocht en zonder trechter.
+
+<CodeBlock id="c-resid-fitted" code={`ggplot(checked, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth(se = FALSE, method = "loess", formula = y ~ x) +
+  labs(x = "Fitted wellbeing", y = "Residual") +
+  theme_classic()`} />
+
+Geen bocht en geen trechter, maar wel iets anders: een lange staart van grote negatieve
+residuen onder de wolk, en niets dergelijks erboven.
+
+## Zijn de residuen normaal?
+
+Een **Q-Q-plot** zet de residuen uit tegen de waarden die een normale verdeling zou geven.
+Normale residuen liggen op de lijn.
+
+<CodeBlock id="c-qq" code={`ggplot(checked, aes(sample = .resid)) +
+  stat_qq(alpha = 0.4) +
+  stat_qq_line() +
+  labs(x = "Theoretical quantiles", y = "Residuals") +
+  theme_classic()`} />
+
+<Predict
+  id="p-tail"
+  question="De Q-Q-plot buigt linksonder van de lijn af: een groep werknemers doet het veel slechter dan het model voorspelt. Wat is de nuttigste volgende stap?"
+  choices={[
+    { text: 'Ze verwijderen, want ze breken de normaliteitsaanname', response: 'Gevallen verwijderen omdat ze niet passen is hoe een model uiteindelijk alleen de mensen beschrijft die het al beschrijft. Zoek eerst uit wie het zijn.' },
+    { text: 'Kijken wie ze zijn', correct: true, response: 'Juist. Een cluster grote residuen betekent vaak dat het model iets mist.' },
+    { text: 'Overstappen op een niet-parametrische toets', response: 'Dat gooit het model weg voordat je weet waarom het niet past. De residuen vertellen je misschien iets over de data.' },
+  ]}
+/>
+
+<CodeBlock id="c-who" code={`checked %>%
+  filter(.resid < -15) %>%
+  count(department)`} />
+
+Elk van hen zit bij Engineering. Module 3 vond hetzelfde van de andere kant: het gemiddelde
+van Engineering ligt onder zijn mediaan omdat een minderheid van de ingenieurs het erg
+slecht doet. Het model heeft geen variabele voor wat dat ook is (bijvoorbeeld een
+bereikbaarheidsrooster), dus kan het het niet voorspellen, en de misfit komt in de residuen
+terecht.
+
+Een mislukte controle is vaak een bevinding, geen hinder. Hier wijst ze op een ontbrekende
+voorspeller, en de echte oplossing is hem meten. Afdeling toevoegen helpt, maar kan de
+staart niet wegnemen, omdat de meeste ingenieurs er geen last van hebben.
+
+<CodeBlock id="c-department" code={`with_department <- lm(wellbeing ~ autonomy + workload + tenure_years + department, data = d)
+
+bind_rows(
+  glance(model) %>% mutate(model = "without department"),
+  glance(with_department) %>% mutate(model = "with department")
+) %>% select(model, r.squared, sigma)`} />
+
+Met 480 mensen zijn de hellingen en hun intervallen ondanks scheve residuen nog steeds
+betrouwbaar: de centrale limietstelling uit Module 6 zorgt voor de steekproevenverdeling
+van elke helling. Normaliteit doet er het meest toe in kleine steekproeven.
+
+## Dezelfde controles als toetsen
+
+De plots zijn de hoofdcontrole. BMS-vakken vragen ook om drie toetsen die een getal geven
+aan wat de plots tonen: de **Shapiro-Wilk-toets** voor normale residuen, de
+**Breusch-Pagan-toets** voor gelijke spreiding (uit het pakket lmtest), en de
+**variance inflation factor**, VIF, voor multicollineariteit (uit het pakket car).
+
+<CodeBlock id="c-tests" code={`library(car)
+library(lmtest)
+
+shapiro.test(residuals(model))
+bptest(model)
+vif(model)`} />
+
+Beide toetsen verwerpen: W = ,86 en BP = 57,46, df = 3, beide p < ,001. De Shapiro-Wilk-toets
+bevestigt de scheefheid uit de Q-Q-plot. De Breusch-Pagan-toets zegt dat de spreiding van de
+residuen niet overal gelijk is, en het is weer dezelfde staart: pas opnieuw aan zonder de 28
+werknemers met een residu onder -15 en BP daalt naar 4,40, p = ,22. Beide toetsen
+beantwoorden "is de aanname exact waar?", en met 480 mensen detecteren ze ook kleine
+afwijkingen, dus lees ze samen met de plots, niet in plaats ervan.
+
+De VIF's liggen allemaal dicht bij 1, dus de drie voorspellers dragen grotendeels aparte
+informatie. Een VIF boven 5, of 10 volgens een soepelere regel, betekent dat een voorspeller
+grotendeels voorspelbaar is uit de andere en zijn standaardfout is opgeblazen, wat Les 11-1
+multicollineariteit noemde.
+
+## Invloedrijke gevallen
+
+Een geval is **invloedrijk** wanneer weglaten ervan de aangepaste lijn beweegt. De
+**afstand van Cook** meet dat, één getal per geval. Een gangbare vuistregel markeert gevallen
+boven 4 / n voor nadere beschouwing.
+
+<CodeBlock id="c-cooks" code={`checked %>%
+  arrange(desc(.cooksd)) %>%
+  select(employee_id, department, autonomy, workload, wellbeing, .resid, .cooksd) %>%
+  head(5)`} />
+
+Het bovenste geval heeft de maximale autonomie van 10 en erg laag welzijn: een ongewone
+positie op x (hefboom) samen met een grote misser op y, wat een punt invloed geeft op de
+lijn.
+
+<Exercise id="m11-4-a" />
+
+Wat je ermee doet is een kwestie van rapporteren, niet van verwijderen. Pas opnieuw aan
+zonder het meest invloedrijke geval en kijk of de conclusie verandert. Als dat niet zo is,
+zeg het in één zin. Als het wel zo is, rapporteer beide.
+
+<Exercise id="m11-4-b" />
+
+Elk gemarkeerd geval in één keer weglaten is iets anders.
+
+<CodeBlock id="c-trim" code={`trimmed <- lm(wellbeing ~ autonomy + workload + tenure_years,
+              data = checked %>% filter(.cooksd <= 4 / n()))
+
+bind_rows(
+  tidy(model) %>% mutate(fit = "all 480"),
+  tidy(trimmed) %>% mutate(fit = "flagged cases removed")
+) %>%
+  filter(term == "autonomy") %>%
+  select(fit, estimate, std.error)`} />
+
+De autonomiehelling springt met meer dan de helft, omdat de meeste verwijderde gevallen de
+worstelende ingenieurs zijn, en ze verwijderen herschrijft de populatie. De afstand van Cook
+vertelt je waar je moet kijken, niet wat je moet weggooien.
+
+## Wanneer de aannames flink falen
+
+- **Bocht in de residuen:** het verband is geen rechte lijn. Voeg een kwadratische term
+  toe, `I(x^2)`, of transformeer een scheve voorspeller met `log()`.
+- **Trechter:** de spreiding groeit met de voorspelde waarden. Een scheve, positieve
+  uitkomst transformeren met `log()` lost het vaak op.
+
+<Advanced>
+
+Twee andere middelen gaan verder dan de cursus. Robuuste standaardfouten (het pakket
+`sandwich`, in RStudio) behouden de hellingen en herstellen hun SE's wanneer de spreiding
+ongelijk is. Voor een kleine steekproef met duidelijk niet-normale residuen bootstrap je het
+interval: trek werknemers met teruglegging, pas opnieuw aan, en neem de middelste 95% van de
+hellingen.
+
+<CodeBlock id="c-boot" code={`set.seed(114)
+slopes <- replicate(1000, {
+  rows <- sample(nrow(d), replace = TRUE)
+  coef(lm(wellbeing ~ autonomy + workload + tenure_years, data = d[rows, ]))[["autonomy"]]
+})
+
+rbind(
+  bootstrap = quantile(slopes, c(0.025, 0.975)),
+  usual = confint(model)["autonomy", ]
+)`} />
+
+De twee intervallen komen vrijwel overeen, wat opnieuw de centrale limietstelling aan het
+werk is. Met 30 mensen misschien niet.
+
+</Advanced>
+
+Voor een eenvoudige vergelijking van twee groepen zijn er ook op rangen gebaseerde
+toetsen: `wilcox.test()` voor twee groepen en `kruskal.test()` voor meerdere. Ze
+beantwoorden een iets andere vraag (over rangen, niet over gemiddelden), dus gebruik ze
+wanneer de vraag het toelaat, niet als automatische uitweg.
+
+<Quiz
+  id="q-assumptions"
+  question="Welke aanname is het belangrijkst om te controleren in een grote steekproef?"
+  choices={[
+    { text: 'Normale residuen', response: 'Met honderden gevallen zijn de hellingen sowieso bij benadering normaal verdeeld. Normaliteit doet er het meest toe in kleine steekproeven.' },
+    { text: 'Onafhankelijke waarnemingen en een model met de juiste vorm', correct: true, response: 'Juist. Geen steekproefgrootte redt een model met de verkeerde vorm, of data waarin gevallen niet onafhankelijk zijn, waar Module 14 over gaat.' },
+    { text: 'Dat geen geval een afstand van Cook boven 4 / n heeft', response: 'In een grote steekproef zullen er altijd een paar zijn. De regel wijst naar gevallen die een blik waard zijn, niet naar een schending.' },
+  ]}
+/>
+
+<Interpret
+  id="i-11-4"
+  question="Je residuen zijn linksscheef, alle grootste negatieve residuen zijn ingenieurs, en de autonomiehelling beweegt van 1,34 naar 1,41 zonder het meest invloedrijke geval. Wat komt er in het rapport?"
+  choices={[
+    { text: 'Residuen waren negatief scheef; de grootste negatieve residuen zaten allemaal bij Engineering, wat wijst op een niet-gemeten invloed op welzijn in die afdeling. Gegeven N = 480 is de inferentie over de coëfficiënten hier robuust voor. Het verwijderen van het meest invloedrijke geval veranderde de autonomiecoëfficiënt slechts weinig (b = 1,41 tegen 1,34).', correct: true, response: 'Juist: wat is gecontroleerd, wat is gevonden, waarom de inferentie standhoudt, en de gevoeligheidscontrole in één zin.' },
+    { text: 'Aan alle aannames was voldaan.', response: 'Dat was niet zo, en een lezer die het model opnieuw draait ziet de scheefheid. Zeg wat je vond en waarom het het resultaat niet omverwerpt.' },
+    { text: 'Uitbijters zijn verwijderd met de afstand van Cook om aan de normaliteitsaanname te voldoen.', response: 'Dat zou de worstelende ingenieurs verwijderen en de autonomiehelling van 1,34 naar 2,27 veranderen. Geen opschoonstap, maar een andere analyse.' },
+    { text: 'Omdat de residuen niet normaal waren, zijn de regressieresultaten ongeldig.', response: 'Te sterk. Met 480 werknemers houden de coëfficiënten en hun intervallen stand; de scheefheid is een bevinding over de data, geen fatale fout.' },
+  ]}
+/>

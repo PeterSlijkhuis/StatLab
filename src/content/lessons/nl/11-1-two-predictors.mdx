@@ -1,0 +1,110 @@
+Module 10 eindigde met een model waarin autonomie ongeveer 5% van de variantie in
+welzijn verklaarde. Dat laat 95% onverklaard, en een deel ervan zit gewoon zichtbaar in
+de dataset.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(
+  n = n(),
+  mean_autonomy = mean(autonomy), sd_autonomy = sd(autonomy),
+  mean_workload = mean(workload), sd_workload = sd(workload),
+  mean_tenure = mean(tenure_years), sd_tenure = sd(tenure_years),
+  mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing)
+)`} />
+
+## Een voorspeller toevoegen
+
+Eén teken verandert: een plusteken.
+
+<CodeBlock id="c-fit-two" code={`model1 <- lm(wellbeing ~ autonomy, data = d)
+model2 <- lm(wellbeing ~ autonomy + workload, data = d)
+
+model2 %>% tidy()`} />
+
+De tabel heeft nu drie rijen. Elke helling beantwoordt dezelfde vraag als eerder (hoeveel
+verandert het voorspelde welzijn per eenheid van deze voorspeller) met één bijzin erbij:
+**onder werknemers met dezelfde waarde op de andere voorspeller**.
+
+<Predict
+  id="p-move"
+  question="Vergelijk de autonomiecoëfficiënt in model2 met die in model1. Wat is ermee gebeurd?"
+  choices={[
+    { text: 'Precies hetzelfde getal: een voorspeller toevoegen kan een andere niet veranderen', response: 'Het kan wel, en het gebeurt bijna altijd. Ze blijft alleen precies gelijk als de twee voorspellers volkomen ongecorreleerd zijn, of als de toegevoegde voorspeller geen enkel verband met de uitkomst heeft zodra de eerste in het model zit.' },
+    { text: 'Een beetje anders, omdat autonomie en werkdruk niet onafhankelijk van elkaar zijn', correct: true, response: 'Juist. De grootte van de verschuiving hangt af van hoe sterk de twee voorspellers in deze steekproef samengaan, en van hoe sterk de toegevoegde voorspeller met welzijn samenhangt.' },
+    { text: 'Teruggebracht tot nul, want werkdruk is de echte oorzaak', response: 'Een coëfficiënt kan flink krimpen, maar hier dragen beide voorspellers hun eigen informatie.' },
+  ]}
+/>
+
+<CodeBlock id="c-compare" code={`bind_rows(
+  model1 %>% tidy() %>% mutate(model = "autonomy only"),
+  model2 %>% tidy() %>% mutate(model = "autonomy + workload")
+) %>%
+  filter(term == "autonomy") %>%
+  select(model, term, estimate, std.error)`} />
+
+## Waarom coëfficiënten bewegen
+
+`wellbeing ~ autonomy` alleen aanpassen vraagt: hoe verschilt welzijn tussen werknemers
+die in autonomie verschillen? Die werknemers verschillen ook in werkdruk, dienstjaren en
+al het andere, dus het antwoord bevat stilletjes wat die verschillen bijdragen.
+
+Werkdruk aan het model toevoegen stelt een smallere vraag: hoe verschilt welzijn met
+autonomie onder werknemers met **dezelfde** werkdruk? De coëfficiënt beweegt precies
+zoveel als de antwoorden op die twee vragen verschillen.
+
+<CodeBlock id="c-predcor" code={`d %>% summarise(
+  r_autonomy_workload = cor(autonomy, workload),
+  r_autonomy_tenure = cor(autonomy, tenure_years),
+  r_workload_tenure = cor(workload, tenure_years)
+)`} />
+
+Hoe ver een coëfficiënt beweegt hangt af van twee dingen: hoe sterk de voorspellers met
+elkaar correleren, en hoe sterk de toegevoegde voorspeller met de uitkomst samenhangt.
+Autonomie en werkdruk correleren maar ,14, maar werkdruk hangt zo sterk samen met
+welzijn dat de autonomiehelling toch van 1,05 naar 1,37 ging. Voorspellers die sterk
+correleren (zeg boven ongeveer ,8) gaan strijden om dezelfde variantie, hun
+standaardfouten zwellen op, en de afzonderlijke *b*'s worden onstabiel terwijl het model
+als geheel goed past. Dat is **multicollineariteit**. De signalen zijn grote
+standaardfouten en coëfficiënten die schommelen, soms zelfs van teken wisselen, als een
+sterk gecorreleerde voorspeller wordt toegevoegd of verwijderd.
+
+<Exercise id="m11-1-a" />
+
+## Een derde voorspeller
+
+<CodeBlock id="c-three" code={`model3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+
+model3 %>% tidy()
+model3 %>% glance() %>% select(r.squared, adj.r.squared, statistic, df, df.residual, p.value)`} />
+
+*R*² kan nooit dalen als je een voorspeller toevoegt, zelfs een nutteloze, en in de
+praktijk stijgt ze altijd een beetje: ze is het aandeel variantie dat het aangepaste
+model verklaart, en een extra kolom laat de pasvorm altijd iets dichterbij kronkelen.
+**Gecorrigeerde *R*²** trekt voor elke voorspeller een straf af, dus ze kan dalen. Als de
+twee ver uit elkaar liggen, heeft het model veel voorspellers voor zijn steekproefgrootte,
+en sommige leveren misschien niets op.
+
+<Quiz
+  id="q-adding"
+  question="Je voegt een voorspeller toe die pure ruis is, ongerelateerd aan alles. Wat gebeurt er?"
+  choices={[
+    { text: 'R-kwadraat daalt licht en gecorrigeerd R-kwadraat daalt meer', response: 'R-kwadraat kan niet dalen als een voorspeller wordt toegevoegd. Ze stijgt, al is het maar door een afrondingsfout.' },
+    { text: 'R-kwadraat stijgt licht; gecorrigeerd R-kwadraat daalt meestal', correct: true, response: 'Juist. Gecorrigeerd R-kwadraat gaat alleen omhoog als de |t| van de nieuwe voorspeller boven 1 ligt, wat pure ruis bij toeval ongeveer een keer op de drie haalt. Dat verschil is wat gecorrigeerd R-kwadraat je moet laten zien.' },
+    { text: 'Beide blijven precies gelijk', response: 'Alleen als de ruisvariabele in deze steekproef perfect ongecorreleerd was met de residuen, wat nooit helemaal gebeurt.' },
+    { text: 'Het model wordt ongeldig', response: 'Het blijft een geldig model. Het is alleen een iets slechter model, en gecorrigeerd R-kwadraat is hoe het je dat vertelt.' },
+  ]}
+/>
+
+<Interpret
+  id="i-11-1"
+  question="In een model met alleen autonomie is de autonomiehelling b = 1,05; met werkdruk erbij is ze b = 1,37. Een collega schrijft: 'Het toevoegen van werkdruk bewees dat autonomie een causaal effect van 1,37 op welzijn heeft.' Welke lezing is juist?"
+  choices={[
+    { text: 'De collega heeft gelijk: controleren voor werkdruk haalt de verstoring weg.', response: 'Corrigeren voor één gemeten variabele haalt die variabele weg, niet verstoring in het algemeen. Alles wat niet is gemeten zit er nog in.' },
+    { text: 'Met werkdruk in het model is b = 1,37 het voorspelde verschil in welzijn per punt autonomie onder werknemers met dezelfde werkdruk. Het is een gecorrigeerd verband, geen causaal effect, omdat werkdruk de enige confounder is waarmee rekening is gehouden.', correct: true, response: 'Juist. "Constant houden" is rekenkunde over dit model en deze variabelen, geen vervanging voor een experiment.' },
+    { text: 'De coëfficiënt veranderde, dus autonomie en werkdruk meten hetzelfde.', response: 'Twee maten van hetzelfde zouden bijna perfect gecorreleerd zijn. Een helling die beweegt laat alleen zien dat de twee voorspellers enigszins overlappen.' },
+    { text: 'De verandering van 1,05 naar 1,37 betekent dat werkdruk het effect van autonomie onderdrukt, wat als hoofdbevinding moet worden gerapporteerd.', response: 'De verschuiving is het tonen waard, maar ze beschrijft hoe deze twee voorspellers overlappen, niet een bevinding over autonomie op zichzelf. Rapporteer beide coëfficiënten en laat de lezer de verschuiving zien.' },
+  ]}
+/>
