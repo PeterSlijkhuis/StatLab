@@ -1,3 +1,5 @@
+import { t } from '../i18n/t';
+import { getLanguage } from '../state/language';
 import { factorialF, fFromEta2, type DesignId, type Layout, type Which } from '../stats/power';
 
 /** Everything the sample size page says about one design. */
@@ -339,6 +341,9 @@ export function shortEffect(value: number): string {
   return Math.abs(Number(two) - value) <= 0.005 * Math.abs(value) ? two : String(Number(value.toPrecision(3)));
 }
 
+/** Dutch writes the decimal comma. */
+const dec = (text: string) => (getLanguage() === 'nl' ? text.replace(/\./g, ',') : text);
+
 /** Effect sizes in plain words, for a student with no numbers to go on. */
 export type Preset = { value: number; label: string; note: string; recommended?: boolean };
 
@@ -347,16 +352,18 @@ export function presets(design: Design, factors?: { layout: Layout; which: Which
   const [s, m, l] = design.benchmarks ?? [0, 0, 0];
   // Cohen's height examples compare separate groups, so they fit d, not dz.
   const d = design.symbol === 'd';
+  const example = (text: string) => (d ? ` ${t(text)}` : '');
+  const sym = design.symbol;
   const cohen: Preset[] = [
-    { value: s, label: `Small: subtle (${design.symbol} = ${fmt(design, s)})`, note: `Real, but hard to notice without measuring many people.${d ? ' Cohen\'s example: the height difference between 15- and 16-year-old girls.' : ''}` },
-    { value: m, label: `Medium: noticeable (${design.symbol} = ${fmt(design, m)})`, note: `Visible to a careful observer.${d ? ' Cohen\'s example: the height difference between 14- and 18-year-old girls.' : ''} Common in student projects, but real effects are often smaller.` },
-    { value: l, label: `Large: obvious (${design.symbol} = ${fmt(design, l)})`, note: `Most people would notice it without any statistics.${d ? ' Cohen\'s example: 13- versus 18-year-old girls.' : ''} Rarely realistic; choose it only with a strong reason.` },
+    { value: s, label: t('Small: subtle ({symbol} = {value})', { symbol: sym, value: fmt(design, s) }), note: `${t('Real, but hard to notice without measuring many people.')}${example('Cohen\'s example: the height difference between 15- and 16-year-old girls.')}` },
+    { value: m, label: t('Medium: noticeable ({symbol} = {value})', { symbol: sym, value: fmt(design, m) }), note: `${t('Visible to a careful observer.')}${example('Cohen\'s example: the height difference between 14- and 18-year-old girls.')} ${t('Common in student projects, but real effects are often smaller.')}` },
+    { value: l, label: t('Large: obvious ({symbol} = {value})', { symbol: sym, value: fmt(design, l) }), note: `${t('Most people would notice it without any statistics.')}${example('Cohen\'s example: 13- versus 18-year-old girls.')} ${t('Rarely realistic; choose it only with a strong reason.')}` },
   ];
   if (design.id === 'two-groups') {
-    return [{ value: 0.36, label: 'Typical (d = 0.36)', note: 'Between small and medium: the median effect found in social psychology (Lovakov & Agadullina, 2021). An honest default when you have nothing else.', recommended: true }, ...cohen];
+    return [{ value: 0.36, label: t('Typical (d = {value})', { value: dec('0.36') }), note: t('Between small and medium: the median effect found in social psychology (Lovakov & Agadullina, 2021). An honest default when you have nothing else.'), recommended: true }, ...cohen];
   }
   if (design.id === 'correlation') {
-    return [{ value: 0.2, label: 'Typical (r = .20)', note: 'Between small and medium: a typical correlation in individual-differences research (Gignac & Szodorai, 2016). An honest default when you have nothing else.', recommended: true }, ...cohen];
+    return [{ value: 0.2, label: t('Typical (r = {value})', { value: dec('.20') }), note: t('Between small and medium: a typical correlation in individual-differences research (Gignac & Szodorai, 2016). An honest default when you have nothing else.'), recommended: true }, ...cohen];
   }
   return cohen;
 }
@@ -364,21 +371,21 @@ export function presets(design: Design, factors?: { layout: Layout; which: Which
 /** 2 × 2 effects in plain words: a main effect as Cohen's d, an interaction as the shape of the two simple effects. */
 function factorialPresets(layout: Layout, which: Which, rho = 0.5): Preset[] {
   const f = (delta: number) => Number(shortEffect(factorialF(layout, which, delta, rho)));
-  const show = (delta: number) => `f = ${shortEffect(f(delta))}`;
+  const show = (delta: number) => `f = ${dec(shortEffect(f(delta)))}`;
   if (which === 'interaction') {
     return [
-      { value: f(0.5), label: `The effect disappears (${show(0.5)})`, note: 'One factor has a medium effect (d = 0.50) at one level of the other factor and none at the other level. For example: the training helps, the waiting list does not.', recommended: true },
-      { value: f(0.25), label: `The effect halves (${show(0.25)})`, note: 'A medium effect (d = 0.50) at one level shrinks to a small one (d = 0.25) at the other. Common, and very hard to detect.' },
-      { value: f(1), label: `The effect reverses (${show(1)})`, note: 'A medium effect (d = 0.50) one way at one level, and the same effect the other way at the other level. Rare; choose it only with a strong reason.' },
+      { value: f(0.5), label: t('The effect disappears ({show})', { show: show(0.5) }), note: t('One factor has a medium effect (d = 0.50) at one level of the other factor and none at the other level. For example: the training helps, the waiting list does not.'), recommended: true },
+      { value: f(0.25), label: t('The effect halves ({show})', { show: show(0.25) }), note: t('A medium effect (d = 0.50) at one level shrinks to a small one (d = 0.25) at the other. Common, and very hard to detect.') },
+      { value: f(1), label: t('The effect reverses ({show})', { show: show(1) }), note: t('A medium effect (d = 0.50) one way at one level, and the same effect the other way at the other level. Rare; choose it only with a strong reason.') },
     ];
   }
   return [
-    { value: f(0.2), label: `Small: subtle (d = 0.20, ${show(0.2)})`, note: 'The two levels differ by a fifth of a standard deviation, averaged over the other factor. Real, but hard to notice.' },
-    { value: f(0.5), label: `Medium: noticeable (d = 0.50, ${show(0.5)})`, note: 'Half a standard deviation. Common in student projects, but real effects are often smaller.' },
-    { value: f(0.8), label: `Large: obvious (d = 0.80, ${show(0.8)})`, note: 'Most people would notice it without any statistics. Rarely realistic; choose it only with a strong reason.' },
+    { value: f(0.2), label: t('Small: subtle (d = {d}, {show})', { d: dec('0.20'), show: show(0.2) }), note: t('The two levels differ by a fifth of a standard deviation, averaged over the other factor. Real, but hard to notice.') },
+    { value: f(0.5), label: t('Medium: noticeable (d = {d}, {show})', { d: dec('0.50'), show: show(0.5) }), note: t('Half a standard deviation. Common in student projects, but real effects are often smaller.') },
+    { value: f(0.8), label: t('Large: obvious (d = {d}, {show})', { d: dec('0.80'), show: show(0.8) }), note: t('Most people would notice it without any statistics. Rarely realistic; choose it only with a strong reason.') },
   ];
 }
 
 function fmt(design: Design, value: number): string {
-  return design.id === 'correlation' ? value.toFixed(2).replace(/^0\./, '.') : value.toFixed(2);
+  return dec(design.id === 'correlation' ? value.toFixed(2).replace(/^0\./, '.') : value.toFixed(2));
 }
