@@ -1,0 +1,90 @@
+Het lineaire model vergelijkt groeps**gemiddelden**. Wanneer de scores in een groep
+scheef zijn, of een paar extreme scores een gemiddelde wegtrekken van waar de meeste mensen
+zitten, kun je de groepen in plaats daarvan op **rangen** vergelijken. Met twee groepen is
+dat de Mann-Whitney-toets (`wilcox.test()`); met drie of meer is het de Kruskal-Wallis-toets.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>%
+  group_by(department) %>%
+  summarise(n = n(), mean_wellbeing = mean(wellbeing), median_wellbeing = median(wellbeing))`} />
+
+In Les 12-2 zag je het gemiddelde van Engineering onder zijn mediaan liggen: een staart van
+lage scores trekt het gemiddelde omlaag. Een ranktoets stoort zich niet aan hoe ver die
+staart reikt, alleen aan waar elke werknemer in de totale volgorde valt.
+
+## Rangen, dan een gewone vergelijking
+
+Rangschik alle 480 welzijnsscores samen, van 1 (laagste) tot 480 (hoogste), en kijk dan naar
+de gemiddelde rang in elke afdeling.
+
+<CodeBlock id="c-ranks" code={`d <- d %>% mutate(wellbeing_rank = rank(wellbeing))
+
+d %>%
+  group_by(department) %>%
+  summarise(mean_rank = mean(wellbeing_rank))`} />
+
+Als afdeling geen verschil maakte, zou de gemiddelde rang van elke afdeling dicht bij het
+midden liggen, ongeveer 240. Support zit ver onder de andere. De Kruskal-Wallis-statistiek
+*H* meet hoe ver de gemiddelde rangen rond dat midden uitwaaieren, en onder de
+nulhypothese volgt ze bij benadering een chi-kwadraatverdeling met *k* − 1
+vrijheidsgraden, waarbij *k* het aantal groepen is (de benadering is goed tenzij groepen
+heel klein zijn).
+
+<CodeBlock id="c-kw" code={`kruskal.test(wellbeing ~ department, data = d)`} />
+
+R drukt het af als Kruskal-Wallis chi-squared, en het studieboek rapporteert het als
+χ²(3, N = 480) = 25,55; *H*(3) = 25,55 is hetzelfde resultaat.
+
+De formule is dezelfde die je aan `lm()` zou geven. Wat verandert is de vraag: niet
+"verschillen de gemiddelden?" maar "hebben de groepen de neiging op verschillende plekken
+in de volgorde te zitten?"
+
+<Predict
+  id="p-kw-vs-lm"
+  question="Het lineaire model op dezelfde data geeft F(3, 476) = 4,86, p = ,002. Kruskal-Wallis geeft een kleinere p-waarde. Wat zegt je dat?"
+  choices={[
+    { text: 'De ranktoets heeft altijd meer power, dus moet altijd worden gebruikt', response: 'Niet altijd. Bij ruwweg normale data heeft het lineaire model iets meer power. Hier bevoordeelt de scheefheid rangen.' },
+    { text: 'Beide toetsen vinden een afdelingsverschil; de ranktoets ziet het duidelijker omdat een scheve staart de gemiddelden niet langer vertroebelt', correct: true, response: 'Juist. Ze zijn het eens over de conclusie, en de rangen worden minder afgeleid door de lange lage staart van Engineering.' },
+    { text: 'De twee toetsen spreken elkaar tegen', response: 'Ze zijn het eens: beide verwerpen de nulhypothese. Ze verschillen alleen in hoe sterk.' },
+  ]}
+/>
+
+<Exercise id="m12-4-a" />
+
+## Wat het kost
+
+Een ranktoets beantwoordt een vagere vraag. Ze vertelt je dat de afdelingen verschillen in
+waar hun werknemers doorgaans vallen, niet met hoeveel punten welzijn, en ze komt niet met
+coëfficiënten, betrouwbaarheidsintervallen voor verschillen, of een manier om een covariaat
+toe te voegen. Daarom blijft het lineaire model de standaard in deze cursus, en is de
+ranktoets de controle waar je naar grijpt wanneer de aannames van Les 11-4 in een kleine
+steekproef duidelijk falen.
+
+Om te zien **welke** afdelingen verschillen, volg je op met paarsgewijze Mann-Whitney-toetsen,
+gecorrigeerd voor meervoudige vergelijkingen precies zoals in Les 12-3:
+
+<CodeBlock id="c-pairwise" code={`pairwise.wilcox.test(d$wellbeing, d$department, p.adjust.method = "holm", exact = FALSE)`} />
+
+<Quiz
+  id="q-kw-df"
+  question="Een Kruskal-Wallis-toets vergelijkt vijf teams. Hoeveel vrijheidsgraden heeft H?"
+  choices={[
+    { text: '5', response: 'Een minder dan het aantal groepen: de gemiddelde rangen moeten gemiddeld op het algemene midden uitkomen, wat er een opgebruikt.' },
+    { text: '4', correct: true, response: 'Juist: k - 1, precies zoals voor de F-toets van een factor met k niveaus.' },
+    { text: 'Het aantal werknemers min 5', response: 'Dat zouden residuele vrijheidsgraden zijn. H heeft alleen die tussen de groepen.' },
+  ]}
+/>
+
+<Interpret
+  id="i-12-4"
+  question="kruskal.test() geeft Kruskal-Wallis chi-squared = 25,55, df = 3, p = 1,18e-05 voor welzijn per afdeling, met de mediaan van Support op 41,85 en de andere tussen 46,90 en 48,65. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Een Kruskal-Wallis-toets liet zien dat welzijn verschilde tussen afdelingen, H(3) = 25,55, p < ,001. Support had het laagste mediane welzijn (Mdn = 41,85), tegen 46,90 tot 48,65 in de andere afdelingen.', correct: true, response: 'Juist. De toets, zijn vrijheidsgraden en p staan erin, en de medianen beschrijven het verschil op een manier die bij een ranktoets past.' },
+    { text: 'Werknemers van Support scoorden gemiddeld 6 punten lager, H(3) = 25,55, p < ,001.', response: 'Een ranktoets schat geen verschil in punten. Rapporteer medianen, en gebruik het lineaire model als je een geschat verschil nodig hebt.' },
+    { text: 'De afdelingsgemiddelden verschilden significant, H(3) = 25,55, p < ,001.', response: 'De toets gaat over rangen, niet over gemiddelden. Twee groepen kunnen gelijke gemiddelden hebben en toch op deze toets verschillen.' },
+    { text: 'Welzijn verschilde tussen afdelingen, p = 1,18e-05.', response: 'De statistiek en vrijheidsgraden ontbreken, en APA rapporteert p < ,001 in plaats van de exacte piepkleine waarde.' },
+  ]}
+/>
