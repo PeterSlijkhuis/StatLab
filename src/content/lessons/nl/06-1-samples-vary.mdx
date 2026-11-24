@@ -1,0 +1,81 @@
+Elk onderzoek dat je ooit leest, is gebaseerd op een steekproef. De onderzoekers
+hebben niet iedereen gemeten: ze maten een paar mensen en zeiden daarna iets over
+iedereen. Deze module gaat over waarom dat eigenlijk werkt, en wat het kost.
+
+We hebben hier een ongewoon voorrecht: een complete populatie van 5000 studenten,
+met hun stressscores, slaap en tentamenresultaten. In echt onderzoek zie je dit
+nooit. Omdat we het wel kunnen zien, kunnen we precies bekijken wat er gebeurt
+als je er een steekproef uit trekt.
+
+<CodeBlock id="load" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+nrow(population)
+head(population)`} />
+
+## De populatieparameter
+
+Omdat we iedereen hebben, kunnen we het ware gemiddelde stressniveau berekenen.
+In echt onderzoek bestaat dit getal wel, maar is het onkenbaar. Hier is het:
+
+<CodeBlock id="mu" code={`population %>% summarise(mu = mean(stress))`} />
+
+Statistici noemen dit een **parameter**: een getal dat de populatie beschrijft.
+We schrijven het als μ ("mu"). Houd het in gedachten: alles wat volgt gaat over
+hoe dicht we erbij kunnen komen zonder alle 5000 mensen te meten.
+
+<Predict
+  id="p-sample"
+  question="Als je 25 studenten willekeurig trekt en hun gemiddelde stressscore berekent, wat verwacht je dan?"
+  choices={[
+    { text: 'Precies het populatiegemiddelde', response: 'Bijna nooit. Met slechts 25 van de 5000 studenten zou precies op μ uitkomen toeval zijn.' },
+    { text: 'Dicht bij het populatiegemiddelde, maar niet precies', correct: true, response: 'Ja. Een aselecte steekproef is gemiddeld representatief, maar elke afzonderlijke steekproef wijkt een beetje af.' },
+    { text: 'Iets wat los staat van het populatiegemiddelde', response: 'Niet los ervan: een aselecte steekproef bevat echte informatie over de populatie. Ze is alleen onnauwkeurig.' },
+  ]}
+/>
+
+## Een steekproef trekken
+
+`slice_sample()` trekt willekeurig rijen. `set.seed()` maakt dat toeval
+reproduceerbaar, zodat jij en je buurman dezelfde "willekeurige" steekproef
+krijgen. Dat is onmisbaar als je je werk wilt controleren.
+
+<CodeBlock id="one-sample" code={`set.seed(1)
+my_sample <- population %>% slice_sample(n = 25)
+
+my_sample %>% summarise(sample_mean = mean(stress))`} />
+
+Het verschil tussen jouw steekproefgemiddelde en het populatiegemiddelde heet
+**steekproeffout**. Het is geen vergissing. Niemand heeft iets verkeerd gedaan. Het
+is het onvermijdelijke gevolg van kijken naar sommige mensen in plaats van naar
+allemaal.
+
+> **Verander de seed.** Pas `set.seed(1)` aan naar `set.seed(2)`, dan
+> `set.seed(3)`, en voer het telkens opnieuw uit. Kijk hoe het gemiddelde
+> beweegt.
+
+<Predict
+  id="p-second"
+  question="Je zag het steekproefgemiddelde veranderen toen je de seed veranderde. Wat zegt je dat?"
+  choices={[
+    { text: 'Een van de steekproeven is fout', response: 'Geen van beide is fout. Beide zijn eerlijke aselecte steekproeven; ze bevatten gewoon andere mensen.' },
+    { text: 'Het steekproefgemiddelde is zelf een toevalsgrootheid', correct: true, response: 'Precies. Dit is het kernidee van de hele module: het steekproefgemiddelde heeft een eigen verdeling.' },
+    { text: 'Het populatiegemiddelde is veranderd', response: 'De populatie is niet veranderd: we hebben er niet aan gezeten. Alleen de 25 mensen die we toevallig kozen zijn anders.' },
+  ]}
+/>
+
+## Jouw beurt
+
+<Exercise id="m6-1-a" />
+
+<Quiz
+  id="q-6-1"
+  question="Een onderzoeker trekt een enkelvoudige aselecte steekproef van 30 mensen en vindt een gemiddelde welzijnsscore van 4,2. Het ware populatiegemiddelde is 4,0. Aangenomen dat de metingen nauwkeurig zijn, wat beschrijft het verschil van 0,2 het best?"
+  choices={[
+    { text: 'Bias in de steekproefmethode', response: 'Bias betekent een systematische neiging om aan één kant uit te komen. Dat één aselecte steekproef een beetje afwijkt, is geen bewijs van bias.' },
+    { text: 'Steekproeffout', correct: true, response: 'Juist. Aselecte steekproeven verschillen door puur toeval van de populatie, en dat verschil heeft een naam: steekproeffout.' },
+    { text: 'Een meetfout', response: 'Er is niets verkeerd gemeten. De 30 mensen zijn perfect gemeten: het waren gewoon 30 bepaalde mensen.' },
+    { text: 'Bewijs dat de steekproef te klein is', response: 'Een verschil van 0,2 laat op zichzelf niet zien dat de steekproef te klein was. Elke steekproef, van elke grootte, vertoont enig verschil.' },
+  ]}
+/>

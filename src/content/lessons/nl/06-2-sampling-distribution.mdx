@@ -1,0 +1,91 @@
+In de vorige les zag je één steekproefgemiddelde, dan nog een, dan nog een. Elk
+was een beetje anders. Dat roept een voor de hand liggende vraag op, en het is de
+vraag die inferentiële statistiek mogelijk maakt:
+
+> Als het steekproefgemiddelde willekeurig is, **volgens welke verdeling is het dan willekeurig**?
+
+Het antwoord is dat steekproefgemiddelden een eigen verdeling hebben, de
+**steekproevenverdeling van het gemiddelde**. Het is niet de verdeling van mensen.
+Het is de verdeling van een samenvatting van mensen.
+
+## Een verdeling bouwen met brute kracht
+
+We kunnen haar rechtstreeks bouwen: trek een steekproef, noteer het gemiddelde en
+herhaal dat duizend keer. `replicate()` doet het herhalen. Dit is een van de
+weinige plekken waar we basis-R gebruiken: `mean(sample(population$stress, 10))`
+werkt op één kolom en is goedkoop te herhalen, terwijl een dplyr-pipeline over het
+hele data frame bij elk van de 1000 keer veel meer werk zou doen.
+
+<CodeBlock id="build" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+set.seed(42)
+
+means <- replicate(1000, mean(sample(population$stress, 10)))
+
+length(means)
+head(round(means, 2))`} />
+
+Vergelijk nu de twee verdelingen: individuele studenten en gemiddelden van tien
+studenten.
+
+<CodeBlock id="compare" code={`library(ggplot2)
+
+bind_rows(
+  tibble(value = population$stress, what = "Individual students"),
+  tibble(value = means, what = "Means of 10 students")
+) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 40) +
+  facet_wrap(~ what, ncol = 1) +
+  labs(x = "Stress score", y = "Frequency") +
+  theme_classic()`} />
+
+<Predict
+  id="p-spread"
+  question="Voordat je goed kijkt: welk histogram is meer uitgespreid?"
+  choices={[
+    { text: 'De individuele studenten', correct: true, response: 'Juist. Middelen haalt extremen weg: voor een extreem gemiddelde heb je een hele steekproef extreme mensen nodig, en dat is zeldzaam.' },
+    { text: 'De steekproefgemiddelden', response: 'Kijk nog eens hoe breed elk histogram is langs de gedeelde stressas. Gemiddelden clusteren veel strakker dan individuen.' },
+    { text: 'Ze zijn even uitgespreid', response: 'Vergelijk hoeveel van de gedeelde stressas elk histogram beslaat. De gemiddelden beslaan een veel smaller interval.' },
+  ]}
+/>
+
+## De krimp in cijfers
+
+De standaarddeviatie van de steekproevenverdeling heeft een eigen naam: de
+**standaardfout**. Ze meet hoeveel steekproefgemiddelden rondspringen, en ze is
+waaruit elk betrouwbaarheidsinterval en elke *t*-toets is opgebouwd.
+
+<CodeBlock id="se" code={`# sigma: how much individual students vary
+# se_formula: the formula
+population %>% summarise(sigma = sd(stress), se_formula = sd(stress) / sqrt(10))
+
+sd(means)   # how much means of 10 vary`} />
+
+`se_formula` hoort heel dicht bij `sd(means)` uit te komen. Dat is geen toeval:
+
+**Standaardfout = σ / √n**
+
+<Exercise id="m6-2-a" />
+
+## Zie het bewegen
+
+Versleep de steekproefgrootte en kijk hoe de SD van de steekproefgemiddelden in de
+tabel daalt en bij elke n dicht bij σ/√n blijft. Elk histogram is geschaald op zijn
+eigen waarden, dus lees de getallen op de onderste as af en niet de breedte van de
+balken. Wissel van populatie om te zien dat de krimp optreedt welke vorm je ook als
+uitgangspunt neemt.
+
+<Simulation name="clt" />
+
+<Quiz
+  id="q-6-2"
+  question="Je vervierdubbelt je steekproefgrootte van 25 naar 100. Wat gebeurt er met de standaardfout?"
+  choices={[
+    { text: 'Ze wordt gedeeld door vier', response: 'Dat zou kloppen als we door n deelden. We delen door √n, dus vervierdubbelen van n halveert de standaardfout.' },
+    { text: 'Ze wordt gehalveerd', correct: true, response: 'Juist: √100 / √25 = 2, dus de standaardfout wordt gehalveerd. Precisie is duur: vier keer zoveel data koopt twee keer zoveel precisie.' },
+    { text: 'Ze blijft gelijk', response: 'De steekproefgrootte staat in de formule: σ/√n. Veranderen van n moet de standaardfout veranderen.' },
+    { text: 'Ze verdubbelt', response: 'Meer data maakt schattingen nauwkeuriger, niet minder nauwkeurig. De standaardfout daalt.' },
+  ]}
+/>
