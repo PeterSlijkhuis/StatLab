@@ -1,0 +1,114 @@
+Een p-waarde beantwoordt één vraag: hoe verrassend zouden data als deze zijn als er
+geen effect was? Ze zegt niet hoe groot het effect is, en wanneer er een echt effect
+is, wordt ze meestal kleiner naarmate de steekproef groeit, ook al blijft het effect
+hetzelfde. De grootte van een effect heeft een eigen getal nodig, en dat getal is
+ook wat je nodig hebt om te plannen hoe groot een onderzoek moet zijn.
+
+<CodeBlock id="c-load" code={`population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+population$sleep_group <- ifelse(population$sleep_hours >= 7, "7 or more", "under 7")
+
+set.seed(8241)
+study <- population[sample(nrow(population), 60), ]
+
+a <- study$exam_score[study$sleep_group == "7 or more"]
+b <- study$exam_score[study$sleep_group == "under 7"]
+mean(a) - mean(b)`} />
+
+Dit is het onderzoek met 60 studenten uit Les 8-1 en 8-2. Studenten die zeven uur of
+meer slapen scoorden ongeveer 6,4 punten hoger. Is 6,4 punt veel? Dat hangt af van
+hoeveel tentamenscores variëren, en een ruw verschil zegt dat niet.
+
+## Cohens d
+
+**Cohens d** deelt het verschil door de standaarddeviatie binnen de groepen, zodat
+het in standaarddeviaties te lezen is: d = 1 betekent dat de groepen één SD uit
+elkaar liggen. De SD binnen de groepen poolt de varianties van de twee groepen, elk
+gewogen met zijn vrijheidsgraden.
+
+<CodeBlock id="c-d" code={`pooled_sd <- sqrt(((length(a) - 1) * var(a) + (length(b) - 1) * var(b)) /
+                  (length(a) + length(b) - 2))
+
+d <- (mean(a) - mean(b)) / pooled_sd
+d`} />
+
+De ruwe vuistregels van Cohen zijn 0,2 klein, 0,5 middelgroot en 0,8 groot. Hij bood
+ze aan als laatste redmiddel, voor wanneer een vakgebied niets beters heeft. Een d
+van 0,2 bij sterfte is enorm; een d van 0,8 bij een laboratoriumtaak waar niemand om
+geeft is dat niet.
+
+<Exercise id="m8-4-a" />
+
+## Het effect in de populatie
+
+Deze dataset is de hele populatie, dus hier kun je, uitzonderlijk, het ware effect
+berekenen.
+
+<CodeBlock id="c-true" code={`pa <- population$exam_score[population$sleep_group == "7 or more"]
+pb <- population$exam_score[population$sleep_group == "under 7"]
+pooled <- sqrt(((length(pa) - 1) * var(pa) + (length(pb) - 1) * var(pb)) /
+               (length(pa) + length(pb) - 2))
+
+(mean(pa) - mean(pb)) / pooled`} />
+
+De ware d is 0,47. Het onderzoek vond 0,57, en het was significant.
+
+<Predict
+  id="p-winners"
+  question="Stel je veel kleine onderzoeken naar dit effect voor, waarvan alleen de significante worden gepubliceerd. Hoe verhouden de gepubliceerde effectgroottes zich tot de ware d van 0,47?"
+  choices={[
+    { text: 'Ze middelen uit op 0,47, want elk onderzoek is zuiver', response: 'De schatting van elk onderzoek is vrijwel zuiver, maar het filter is dat niet. Wie de onderzoeken weggooit die toevallig laag uitkwamen, houdt de hoge over.' },
+    { text: 'Ze zijn gemiddeld te groot', correct: true, response: 'Juist. Bij een kleine steekproef komt alleen een schatting die toevallig hoog uitvalt over de significantiedrempel, dus het gepubliceerde bestand overschat het effect.' },
+    { text: 'Ze zijn gemiddeld te klein, want kleine onderzoeken hebben te weinig power', response: 'Weinig power betekent dat veel onderzoeken het effect missen. De onderzoeken die het niet missen zijn de gelukkige, hoge schattingen.' },
+  ]}
+/>
+
+Daarom is één significant klein onderzoek een slechte gids voor hoe groot een
+effect is, en daarom moet een effectgrootte altijd vergezeld gaan van haar
+betrouwbaarheidsinterval.
+
+## Plannen: hoeveel mensen?
+
+Les 8-3 liet zien dat power afhangt van de effectgrootte, de steekproefgrootte en
+α. Leg drie van effect, n, α en power vast en de vierde volgt. `power.t.test()`
+berekent degene die je weglaat. Met `sd = 1` is `delta` Cohens d.
+
+<CodeBlock id="c-power-n" code={`power.t.test(delta = 0.5, sd = 1, sig.level = 0.05, power = 0.8)`} />
+
+Ongeveer 63,8, dus 64 studenten per groep, 128 in totaal, voor 80% power. Rond altijd
+naar boven af: 63 per groep komt net tekort voor de power die je vroeg.
+
+Laat in plaats daarvan `power` weg, en het vertelt wat een geplant ontwerp kan.
+
+<CodeBlock id="c-power-of" code={`power.t.test(n = 20, delta = 0.5, sd = 1)`} />
+
+Twintig per groep geeft ongeveer 34% power: twee onderzoeken op de drie zouden een
+middelgroot effect missen dat er werkelijk is.
+
+<Exercise id="m8-4-b" />
+
+Twee waarschuwingen over plannen. Ten eerste: baseer de effectgrootte op wat ertoe
+doet of op een reeks onderzoeken, niet op één klein significant onderzoek, dat het
+waarschijnlijk overschat. Ten tweede: `power.t.test()` dekt alleen de t-toets; voor
+andere ontwerpen simuleer je zoals Les 8-3 deed, of gebruik je een speciaal
+hulpmiddel zoals G*Power of het pakket `pwr`.
+
+<Quiz
+  id="q-effect-vs-p"
+  question="Onderzoek A: d = 0,10, N = 5000, p < ,001. Onderzoek B: d = 0,60, N = 40, p = ,07. Welk vond het grotere effect?"
+  choices={[
+    { text: 'Onderzoek A, want zijn p-waarde is veel kleiner', response: 'De kleine p komt van de enorme steekproef, niet van een groot effect. Een klein effect bij 5000 mensen is nog steeds klein.' },
+    { text: 'Onderzoek B, hoewel zijn schatting onnauwkeurig is', correct: true, response: 'Juist. Het effect van B is zes keer groter; B kan met 40 mensen alleen toeval niet uitsluiten. Zijn interval zal breed zijn.' },
+    { text: 'Geen van beide, want alleen onderzoek A is significant', response: 'Significantie zegt niets over grootte. Beide onderzoeken hebben een effectgrootte, en die van B is de grotere.' },
+  ]}
+/>
+
+<Interpret
+  id="i-8-4"
+  question="Je onderzoek onder 31 en 29 studenten vond M = 72,97 en M = 66,52, t(58) = 2,20, p = ,032, gepoolde SD = 11,3, dus d = 0,57. Welk rapport is compleet?"
+  choices={[
+    { text: 'Studenten die zeven uur of meer sliepen scoorden hoger (M = 72,97) dan studenten die minder sliepen (M = 66,52), t(58) = 2,20, p = ,032, 95%-BI [0,6; 12,3], d = 0,57.', correct: true, response: 'Juist: beide gemiddelden, de toets, de exacte p, het interval voor het verschil en een gestandaardiseerde effectgrootte.' },
+    { text: 'Slaap had een groot effect op tentamenscores, p = ,032.', response: 'De grootte wordt alleen beweerd, niet gerapporteerd. Volgens de vuistregels van Cohen ligt 0,57 iets boven middelgroot, en met 60 studenten is de schatting te onnauwkeurig om zelfs dat vast te stellen.' },
+    { text: 'Het verschil was zeer significant, t(58) = 2,20, p = ,032, wat laat zien dat slaap veel uitmaakt.', response: 'p = ,032 is in geen enkele bruikbare zin "zeer significant", en een p-waarde zegt nooit hoeveel iets uitmaakt.' },
+    { text: 'Het effect was d = 0,57, dus 57% van de studenten heeft baat bij meer slapen.', response: 'd is een afstand in standaarddeviaties, geen percentage mensen.' },
+  ]}
+/>

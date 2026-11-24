@@ -1,0 +1,115 @@
+Een onderzoek vindt dat studenten die zeven uur of meer slapen hoger scoren op het
+tentamen dan studenten die minder slapen. Het verschil is ongeveer zes en een half
+punt. Voordat iemand kan zeggen of dat iets betekent, moet één vraag worden
+beantwoord:
+
+> **Hoe groot een verschil zou dit onderzoek hebben opgeleverd als slaap helemaal
+> geen verschil maakte?**
+
+Dat is de hele logica van een hypothesetoets, en al het andere in deze module is
+machinerie om die vraag te beantwoorden.
+
+<CodeBlock id="study" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+population$sleep_group <- ifelse(population$sleep_hours >= 7, "7 or more", "under 7")
+
+set.seed(8241)
+study <- population[sample(nrow(population), 60), ]
+
+study %>%
+  group_by(sleep_group) %>%
+  summarise(mean_exam = mean(exam_score), sd_exam = sd(exam_score), n = n())`} />
+
+<CodeBlock id="observed" code={`observed <- mean(study$exam_score[study$sleep_group == "7 or more"]) -
+  mean(study$exam_score[study$sleep_group == "under 7"])
+
+observed`} />
+
+Onthoud dat getal. Het is wat er werkelijk gebeurde, en het staat niet ter
+discussie. De vraag is wat je ermee moet.
+
+<Predict
+  id="p-null"
+  question="Stel dat slaap werkelijk geen effect had op tentamenscores. Welk verschil tussen de twee groepen verwacht je dat dit onderzoek vindt?"
+  choices={[
+    { text: 'Precies nul', response: 'Alleen gemiddeld, over veel onderzoeken heen. Module 6 liet zien dat elke steekproef dicht bij de waarheid uitkomt in plaats van erop.' },
+    { text: 'Gemiddeld nul, maar zelden nul in één onderzoek', correct: true, response: 'Precies. Steekproeffout levert een verschil op, ook als er niets aan de hand is, en de grootte van dat verschil moeten we weten.' },
+    { text: 'Iets wat te onvoorspelbaar is om er iets over te zeggen', response: 'Het is willekeurig, maar de verdeling ervan is geen mysterie: we kunnen haar bouwen, en dat doet de rest van de les.' },
+  ]}
+/>
+
+## Het nulmodel bouwen
+
+Dit is de truc. Als slaap echt geen verschil maakte, dan zou het label dat een
+student draagt, "7 or more" of "under 7", er niet toe doen voor de tentamenscore.
+De labels zouden verwisselbaar zijn.
+
+Maak ze dus verwisselbaar. Schud de zestig tentamenscores over de zestig studenten,
+laat de labels waar ze zijn, en neem het verschil opnieuw. Dat is één onderzoek uit
+een wereld waarin de nulhypothese precies waar is.
+
+<CodeBlock id="one-shuffle" code={`set.seed(3)
+shuffled <- sample(study$exam_score)
+
+mean(shuffled[study$sleep_group == "7 or more"]) -
+  mean(shuffled[study$sleep_group == "under 7"])`} />
+
+Niet nul. Voer het uit met een andere seed en je krijgt een ander niet-nul. Doe het
+tweeduizend keer en je hebt de **nulverdeling**: een grote aselecte steekproef van
+de verschillen die dit onderzoek had kunnen opleveren als slaap niets betekende.
+
+<CodeBlock id="null" code={`library(ggplot2)
+
+set.seed(81)
+null_diffs <- replicate(2000, {
+  shuffled <- sample(study$exam_score)
+  mean(shuffled[study$sleep_group == "7 or more"]) -
+    mean(shuffled[study$sleep_group == "under 7"])
+})
+
+tibble(difference = null_diffs) %>%
+  ggplot(aes(x = difference)) +
+  geom_histogram(bins = 40) +
+  geom_vline(xintercept = observed, linetype = "dashed", linewidth = 1) +
+  labs(x = "Difference in mean exam score under the null", y = "Shuffles") +
+  theme_classic()`} />
+
+Ze is gecentreerd op nul, ze is ruwweg normaal (Module 6 zei dat dat zou gebeuren)
+en de stippellijn is wat jouw onderzoek werkelijk vond. Hypothesetoetsing is
+helemaal: naar dat plaatje kijken en vragen hoe verrassend de stippellijn is.
+
+## Wat deze verdeling wel en niet is
+
+- Het is **niet** de verdeling van tentamenscores. Het is de verdeling van een
+  *verschil tussen twee gemiddelden*, wat veel smaller is.
+- Ze neemt **niet** aan dat slaap ertoe doet. Ze is gebouwd op de aanname dat slaap
+  er niet toe doet, wat de hypothese is die terechtstaat, niet een die geloofd
+  wordt.
+- Een waarde in haar verre staart bewijst **niet** dat de nulhypothese onwaar is. Ze
+  zegt dat het resultaat ongebruikelijk zou zijn als de nulhypothese waar was. Dat
+  zijn verschillende uitspraken, en de volgende les is zorgvuldig over dat verschil.
+
+<Exercise id="m8-1-a" />
+
+<Quiz
+  id="q-null"
+  question="Waarom worden de tentamenscores geschud in plaats van opnieuw uit de populatie getrokken?"
+  choices={[
+    { text: 'Omdat schudden sneller is dan trekken', response: 'Snelheid is de reden niet, en op deze grootte is geen van beide merkbaar langzaam.' },
+    { text: 'Omdat het de werkelijke 60 scores behoudt en alleen vraagt of de labels informatie dragen', correct: true, response: 'Juist. Schudden houdt alles aan de data vast behalve het ene dat getoetst wordt: bij welke groep elke score hoort.' },
+    { text: 'Omdat trekken uit de populatie valsspelen zou zijn, aangezien we data zouden gebruiken die we niet hebben', response: 'Een terecht punt over echt onderzoek, maar het is niet de reden dat schudden werkt. In een echt onderzoek heb je helemaal geen populatie om uit te trekken, en schudden werkt nog steeds.' },
+    { text: 'Omdat de populatie niet normaal verdeeld is', response: 'De schudmethode doet in beide gevallen geen normaliteitsaanname. Dat is een van haar aantrekkelijke kanten, geen reden dat ze hier vereist is.' },
+  ]}
+/>
+
+<Interpret
+  id="i-8-1"
+  question="Hoe moet de nulverdeling die je zojuist bouwde in een resultatensectie worden beschreven?"
+  choices={[
+    { text: 'Studenten die zeven uur of meer sliepen scoorden hoger (M = 73,0) dan studenten die minder sliepen (M = 66,5). In 2000 willekeurige herindelingen van de slaaplabels leverde 3,6% van de herindelingen een verschil op dat in absolute waarde minstens zo groot was.', correct: true, response: 'Juist. De zin rapporteert de waargenomen gemiddelden, noemt de procedure en het aantal herindelingen, en formuleert het aandeel in de staart als eigenschap van de herindelingen, niet als kans over de hypothese.' },
+    { text: 'De nulverdeling laat zien dat het waargenomen verschil aan toeval te wijten was.', response: 'De nulverdeling laat zien wat toeval ALLEEN zou opleveren. Dat het waargenomen verschil in haar staart ligt, is bewijs tegen die verklaring, niet ervoor.' },
+    { text: 'De nulverdeling van tentamenscores was bij benadering normaal, gecentreerd op nul.', response: 'Tentamenscores zijn gecentreerd op 74, niet op nul. Wat op nul gecentreerd is, is de verdeling van het VERSCHIL tussen twee groepsgemiddelden onder de nulhypothese.' },
+    { text: 'Omdat het waargenomen verschil in de staart van de nulverdeling viel, is de nulhypothese onwaar.', response: 'In de staart vallen betekent "zou ongebruikelijk zijn als de nulhypothese waar was". Ongebruikelijke dingen gebeuren; één onderzoek op de twintig levert een staartresultaat op zonder dat er een effect is.' },
+  ]}
+/>
