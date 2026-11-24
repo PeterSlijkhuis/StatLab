@@ -1,0 +1,93 @@
+Alles sinds Module 5 ging over het gemiddelde van een getal. Veel vragen gaan
+helemaal niet over getallen. Is de werknemer vertrokken? Werken ze op afstand?
+Is de student geslaagd? Het antwoord is ja of nee, en wat je samenvat is hoe vaak
+het ja is.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+table(d$left_company)`} />
+
+## Een proportie is een gemiddelde
+
+`left_company` is gecodeerd als 0 voor gebleven en 1 voor vertrokken. Het gemiddelde
+van een kolom nullen en enen is het aandeel enen, dus de proportie die vertrok is
+één regel.
+
+<CodeBlock id="c-mean" code={`mean(d$left_company)
+
+sum(d$left_company) / nrow(d)`} />
+
+Ongeveer 23% van deze 480 werknemers is vertrokken. Dezelfde vraag over het hele
+bedrijf, of over volgend jaar, is de populatievraag, en het steekproefantwoord
+komt met steekproeffout, precies zoals een steekproefgemiddelde in Module 6.
+
+<Predict
+  id="p-se"
+  question="De standaardfout van een proportie is sqrt(p * (1 - p) / n). Met dezelfde 480 mensen, welke proportie wordt het nauwkeurigst vastgelegd?"
+  choices={[
+    { text: 'Een proportie rond 50%', response: 'Dat is de minst nauwkeurige. p * (1 - p) is het grootst bij p = ,5, dus de standaardfout ook.' },
+    { text: 'Een proportie rond 5%', correct: true, response: 'Juist. Als bijna iedereen hetzelfde antwoord geeft, is er weinig ruimte om te variëren, en p * (1 - p) is klein.' },
+    { text: 'Ze zijn allemaal even nauwkeurig, want n is gelijk', response: 'n is gelijk, maar de formule bevat ook p. De spreiding van een ja-of-nee-antwoord hangt af van hoe gelijk de antwoorden zich verdelen.' },
+  ]}
+/>
+
+## Het interval
+
+Het recept uit Module 7 geldt hier ook: de schatting, plus en min ongeveer twee
+standaardfouten.
+
+<CodeBlock id="c-by-hand" code={`p <- mean(d$left_company)
+n <- nrow(d)
+se <- sqrt(p * (1 - p) / n)
+
+c(lower = p - 1.96 * se, upper = p + 1.96 * se)`} />
+
+`prop.test()` bouwt een ander interval, het Wilson-scoreinterval (standaard met een
+continuïteitscorrectie), dat zich beter gedraagt dan schatting ± 1,96 SE wanneer de
+proportie dicht bij 0 of 1 ligt of de steekproef klein is. Het is niet precies op *p*
+gecentreerd. Geef het het aantal ja-antwoorden en het aantal gevallen.
+
+<CodeBlock id="c-prop-test" code={`prop.test(sum(d$left_company), nrow(d))$conf.int`} />
+
+De twee intervallen komen tot op een half procentpunt overeen. Bij een steekproef
+van deze grootte maakt de keuze van het interval nauwelijks uit; bij 30 mensen wel.
+
+<Exercise id="m9-1-a" />
+
+## Toetsen tegen een bekende waarde
+
+Stel dat de sector meldt dat 30% van het personeel vertrekt in de periode die deze
+dataset beslaat. Verschilt dit bedrijf? `prop.test()` neemt de waarde om tegen te
+toetsen als `p`.
+
+<CodeBlock id="c-benchmark" code={`prop.test(sum(d$left_company), nrow(d), p = 0.30)`} />
+
+De logica is de nulverdeling uit Module 8. Als het ware percentage 30% was, zouden
+steekproeven van 480 zelden 23% opleveren, dus de p-waarde is klein. De
+toetsstatistiek heet hier X-squared, en Les 9-3 legt uit waarom.
+
+Voor kleine steekproeven geeft `binom.test()` het exacte antwoord in plaats van een
+benadering. De argumenten zijn dezelfde.
+
+<CodeBlock id="c-binom" code={`binom.test(sum(d$left_company), nrow(d), p = 0.30)`} />
+
+<Quiz
+  id="q-proportion-mean"
+  question="Waarom geeft mean(d$left_company) de proportie die vertrok?"
+  choices={[
+    { text: 'Omdat R 0-1-kolommen speciaal behandelt', response: 'R doet niets bijzonders. Het is gewoon rekenen.' },
+    { text: 'Omdat de som van de enen de vertrekkers telt, en delen door n van de telling een aandeel maakt', correct: true, response: 'Precies. Daarom erft een proportie ook alles wat je over gemiddelden weet, steekproevenverdeling inbegrepen.' },
+    { text: 'Dat doet het niet; het geeft de proportie die bleef', response: 'Vertrekken is gecodeerd als 1, dus de enen zijn de vertrekkers.' },
+  ]}
+/>
+
+<Interpret
+  id="i-9-1"
+  question="109 van de 480 werknemers vertrokken, en prop.test() tegen het sectorpercentage van 30% geeft X-squared(1) = 11,81, p < ,001, 95%-BI [,19; ,27]. Welke zin rapporteert het correct?"
+  choices={[
+    { text: 'Van de 480 werknemers vertrok 22,7%, 95%-BI [19,1%; 26,8%], wat lager is dan het sectorpercentage van 30%, chi-kwadraat(1, N = 480) = 11,81, p < ,001.', correct: true, response: 'Juist: de proportie met haar interval, de benchmark genoemd, en de toets met zijn vrijheidsgraden en N.' },
+    { text: 'Het bedrijf is significant beter dan de sector in het behouden van personeel (p < ,001).', response: 'De p-waarde alleen verbergt de grootte van het verschil, en "beter" leest meer in een vertrekpercentage dan de data zeggen.' },
+    { text: 'Er is 95% kans dat het ware vertrekpercentage tussen 19% en 27% ligt.', response: 'Een betrouwbaarheidsinterval is een uitspraak over de methode: 95% van de op deze manier gebouwde intervallen bevat de ware waarde. Module 7 heeft de details.' },
+    { text: 'Vertrekken verschilde niet van 30%, p < ,001.', response: 'Een kleine p-waarde is bewijs dat het wel verschilde.' },
+  ]}
+/>

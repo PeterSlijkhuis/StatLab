@@ -1,0 +1,169 @@
+Vertrekpercentages liepen uiteen van 16% tot 31% over de vier afdelingen. Als
+afdeling niets met vertrek te maken had, zouden de percentages nog steeds een
+beetje verschillen van steekproef tot steekproef. De chi-kwadraattoets vraagt of ze
+meer verschillen dan dat.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+counts <- table(d$department, d$left_company)
+counts`} />
+
+## Hoe "geen verband" eruit zou zien
+
+Als afdeling en vertrek onafhankelijk waren, zou elke afdeling hetzelfde aandeel van
+zijn mensen verliezen: het totale percentage, 109 van de 480. Engineering heeft 128
+mensen, dus zou 128 × 109 / 480 = 29,1 vertrekkers verwachten. In het algemeen
+verwacht elke cel haar rijtotaal maal haar kolomtotaal, gedeeld door N.
+
+<CodeBlock id="c-expected" code={`expected <- outer(rowSums(counts), colSums(counts)) / sum(counts)
+round(expected, 1)`} />
+
+Verwachte aantallen hoeven geen hele getallen te zijn. Het zijn gemiddelden over alle
+steekproeven die de nulhypothese kan opleveren.
+
+## Eén getal voor de hele tabel
+
+Neem voor elke cel het verschil tussen waargenomen en verwacht, kwadrateer het en
+schaal het met het verwachte aantal. De som over alle cellen is de
+**chi-kwadraatstatistiek**.
+
+<CodeBlock id="c-by-hand" code={`x2 <- sum((counts - expected)^2 / expected)
+x2`} />
+
+Kwadrateren laat elk verschil meetellen, welke kant het ook op gaat. Delen door het
+verwachte aantal betekent dat een verschil van 8 zwaarder weegt in een cel die 20
+verwachtte dan in een die 100 verwachtte.
+
+<Predict
+  id="p-df"
+  question="Hoeveel cellen kun je in een 4 bij 2 tabel met vaste rij- en kolomtotalen vrij invullen voordat de rest bepaald is?"
+  choices={[
+    { text: '8, een per cel', response: 'Zodra in een rij een cel is ingevuld, legt het totaal de andere vast. Er zijn minder cellen vrij dan dat.' },
+    { text: '3', correct: true, response: 'Juist: (rijen - 1) × (kolommen - 1) = 3 × 1. Dat zijn de vrijheidsgraden van de toets.' },
+    { text: '7, een minder dan het aantal cellen', response: 'Dat zou waar zijn als alleen het eindtotaal vastlag. Hier ligt elk rij- en kolomtotaal vast.' },
+  ]}
+/>
+
+## De toets
+
+`chisq.test()` doet al het bovenstaande en vergelijkt de statistiek met haar
+nulverdeling, een chi-kwadraatverdeling met (rijen - 1) × (kolommen - 1)
+vrijheidsgraden.
+
+<CodeBlock id="c-test" code={`test <- chisq.test(counts)
+test
+
+test$expected`} />
+
+X-squared = 9,94 met 3 vrijheidsgraden, p = ,019: afdeling en vertrek hangen in
+deze steekproef samen met meer dan toeval gewoonlijk zou opleveren.
+
+`chisq.test()` geeft ook gestandaardiseerde residuen: het verschil tussen
+waargenomen en verwacht, geschaald zodat elk onder onafhankelijkheid ruwweg als een
+z-score gedraagt. Waarden voorbij ongeveer ±2 markeren de cellen die het resultaat
+bepalen.
+
+<CodeBlock id="c-residuals" code={`round(test$stdres, 2)`} />
+
+Support verloor meer mensen dan onafhankelijkheid voorspelt, en Sales minder.
+
+Voor een 2 bij 2 tabel past `chisq.test()` standaard de continuïteitscorrectie van
+Yates toe, wat de toets iets voorzichtiger maakt. Beide versies worden in de
+literatuur gerapporteerd; zeg welke je gebruikte.
+
+<Exercise id="m9-3-a" />
+
+## Hoe sterk is het?
+
+De chi-kwadraatstatistiek groeit met de steekproefgrootte, dus een grote waarde
+betekent geen groot effect. **Cramérs V** schaalt haar zo dat ze loopt van 0, geen
+samenhang, tot 1, waar de ene variabele de andere volledig voorspelt.
+
+<CodeBlock id="c-cramer" code={`n <- sum(counts)
+k <- min(dim(counts))
+
+v <- sqrt(test$statistic / (n * (k - 1)))
+unname(v)`} />
+
+Ruwe vuistregels voor een tabel met twee kolommen: ,10 is klein, ,30 middelgroot,
+,50 groot. Het zijn een beginpunt, geen oordeel; wat groot is hangt af van het
+vakgebied.
+
+In RStudio geeft `cramerV(counts, ci = TRUE)` uit het pakket rcompanion, dat de
+BMS-gids gebruikt, dezelfde V met een betrouwbaarheidsinterval.
+
+<Exercise id="m9-3-b" />
+
+## Eén variabele tegen verwachte proporties
+
+Dezelfde statistiek kan één categorische variabele toetsen tegen proporties die je
+vooraf opgeeft. Dit is de **aanpassingstoets** (goodness-of-fit). Stel dat de 480
+werknemers een aselecte steekproef zijn uit een groter bedrijf dat zegt dat zijn vier
+afdelingen even groot zijn. Passen de aantallen bij die bewering?
+
+<CodeBlock id="c-gof" code={`table(d$department)
+
+chisq.test(table(d$department), p = c(0.25, 0.25, 0.25, 0.25))`} />
+
+Het verwachte aantal is 480 × 0,25 = 120 voor elke afdeling, en de waargenomen
+aantallen van 100 tot 132 liggen er niet verder vanaf dan toeval gemakkelijk zou
+opleveren: χ²(3) = 5,07, p = ,17. De proporties in `p` moeten tot 1 optellen en de
+volgorde van de tabel volgen, wat de volgorde van de niveaus is. De vrijheidsgraden
+zijn het aantal categorieën min 1.
+
+## Wanneer de toets niet te vertrouwen is
+
+De chi-kwadraatverdeling is een benadering, en ze heeft genoeg data nodig. De
+gebruikelijke regel is een **verwacht** aantal van minstens 5 in elke cel, of in
+minstens 80% ervan, en geen onder 1. `chisq.test()` waarschuwt je ("Chi-squared
+approximation may be incorrect") zodra een verwacht aantal onder 5 ligt, wat strenger
+is dan de 80%-regel. Dan is de p-waarde niet te vertrouwen, en heeft de tabel meer
+data nodig, of minder categorieën door kleine samen te voegen.
+
+<Advanced>
+
+Een andere optie is de exacte toets van Fisher, die zo een benadering niet maakt.
+
+<CodeBlock id="c-fisher" code={`small <- d[d$site == "Hengelo" & d$department %in% c("Marketing", "Sales"), ]
+small_counts <- table(droplevels(small$department), small$left_company)
+small_counts
+
+fisher.test(small_counts)`} />
+
+In deze kleine tabel van 29 mensen verwachten de twee "left"-cellen elk minder dan 4
+vertrekkers, dus de chi-kwadraatbenadering is uitgesloten. De toets van Fisher geeft
+p = ,68, met een oddsratio van 0,64 en een 95%-BI van 0,07 tot 4,77: de data zijn
+verenigbaar met alles van een sterk effect de ene kant op tot een sterk effect de
+andere. Met 29 mensen is de toets niet-conclusief, geen bewijs van geen verschil.
+
+</Advanced>
+
+De toets vereist ook dat elke persoon eenmaal wordt geteld, in één cel. Een tabel
+van 480 antwoorden van 120 mensen, die elk vier keer werden gevraagd, breekt dat.
+Module 14 bouwt de modellen die herhaalde antwoorden aankunnen.
+
+<Quiz
+  id="q-chi-size"
+  question="Twee onderzoeken vinden chi-kwadraat(1) = 12,0. Het ene had 100 mensen, het andere 10.000. Wat weet je over de sterkte van de samenhang?"
+  choices={[
+    { text: 'Ze is in beide gelijk, want de statistiek is gelijk', response: 'De statistiek groeit met N, dus dezelfde waarde betekent heel verschillende effecten bij verschillende steekproefgroottes.' },
+    { text: 'Ze is veel sterker in het onderzoek met 10.000: V = ,35 tegen ,03', response: 'Andersom. V = sqrt(12 / N): ,35 voor 100 mensen, ,03 voor 10.000. Dezelfde statistiek van meer mensen betekent een zwakkere samenhang.' },
+    { text: 'Ze is veel sterker in het onderzoek met 100: V = ,35 tegen ,03', correct: true, response: 'Juist. Het grote onderzoek vond een statistisch duidelijke maar verwaarloosbare samenhang; het kleine een aanzienlijke.' },
+  ]}
+/>
+
+Een chi-kwadraattoets op een 2 bij 2 tabel stelt dezelfde vraag als het vergelijken
+van twee proporties, en, voor een ja-of-nee-uitkomst, dezelfde vraag als logistische
+regressie met één categorische voorspeller. Module 15 bouwt hierop voort: het
+logistische model breidt uit naar meerdere voorspellers en naar numerieke.
+
+<Interpret
+  id="i-9-3"
+  question="chisq.test() op department bij left_company geeft X-squared = 9,94, df = 3, p = ,019, en Cramérs V = ,14. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Vertrek hing samen met afdeling, chi-kwadraat(3, N = 480) = 9,94, p = ,019, Cramérs V = ,14. Support had het hoogste vertrekpercentage (30,8%) en Sales het laagste (15,9%).', correct: true, response: 'Juist: de toets met zijn vrijheidsgraden en N, de exacte p, een effectgrootte, en de richting in gewone woorden.' },
+    { text: 'Afdeling zorgde ervoor dat werknemers vertrokken, chi-kwadraat = 9,94, p < ,05.', response: 'Een observationele tabel kan geen oorzaak aantonen, en de vrijheidsgraden, N en exacte p ontbreken.' },
+    { text: 'Er was een sterk verband tussen afdeling en vertrek, chi-kwadraat(3, N = 480) = 9,94, p = ,019.', response: 'V = ,14 is klein. Significant is niet hetzelfde als sterk, en een lezer heeft de effectgrootte nodig om dat te zien.' },
+    { text: 'Support-medewerkers vertrokken significant vaker dan Sales-medewerkers, chi-kwadraat(3, N = 480) = 9,94, p = ,019.', response: 'De algemene toets zegt dat de percentages niet allemaal gelijk zijn. Ze toetst Support niet tegen Sales; dat zou een aparte vergelijking zijn.' },
+  ]}
+/>
