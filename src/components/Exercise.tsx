@@ -16,6 +16,7 @@ import './Exercise.css';
 import { t as tNow, useT } from '../i18n/t';
 import { NL_EXERCISES } from '../content/exercises/nl';
 import { useLanguage } from '../state/language';
+import { translateFeedback } from '../i18n/feedback';
 
 export default function Exercise({ id }: { id: string }) {
   const { lessonId, webR, env, ready } = useLesson();
@@ -140,7 +141,7 @@ export default function Exercise({ id }: { id: string }) {
 
       {outcome?.status === 'pass' && (
         <AvatarTip tone="right" title={t('Well done')} className="exercise-outcome-pass">
-          <p>{outcome.message}</p>
+          <p>{translateFeedback(outcome.message)}</p>
         </AvatarTip>
       )}
       {outcome?.status === 'broken-check' && (
@@ -154,7 +155,7 @@ export default function Exercise({ id }: { id: string }) {
       {/* Mistakes are explained by the student's own avatar. */}
       {outcome?.status === 'fail' && (
         <AvatarTip tone="wrong">
-          <p>{outcome.message}</p>
+          <p>{translateFeedback(outcome.message)}</p>
           {hintsShown < hints.length && <p>{t('Stuck? Press "Show a hint" and I\'ll give you a nudge.')}</p>}
         </AvatarTip>
       )}
