@@ -1,0 +1,136 @@
+Les 14-3 stelde één vraag over verandering: steeg de betrokkenheid? Echte ontwerpen
+stellen een scherpere vraag. Steeg ze **meer voor de mensen die de training kregen**? En wat
+als er drie metingen zijn, een voor-, een midden- en een nameting, in plaats van twee? Beide
+zijn hetzelfde lineaire gemengde model met één term extra.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+library(lmerTest)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+long_d <- d %>%
+  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%
+  mutate(time = factor(time,
+                       levels = c("engagement_t1", "engagement_t2"),
+                       labels = c("t1", "t2")))
+
+long_d %>%
+  group_by(training, time) %>%
+  summarise(mean_engagement = mean(engagement), n = n(), .groups = "drop")`} />
+
+Vier gemiddelden. Beide groepen stijgen, de getrainde groep het meest. Ze begint ook iets
+hoger, en daarom zou het vergelijken van alleen de tweede meting overdrijven wat de training
+deed.
+
+## Een groep-bij-tijd-interactie
+
+Tijd varieert **binnen** werknemers en training varieert **tussen** hen. Een ontwerp met beide
+heet vaak een gemengd ontwerp, of een split-plot-ontwerp. De vraag "verschilde de verandering
+tussen groepen?" is een interactie, precies zoals in Module 13.
+
+<CodeBlock id="c-mixed" code={`m_mixed <- lmer(engagement ~ time * training + (1 | employee_id), data = long_d)
+
+coef(summary(m_mixed))`} />
+
+Lees de vier vaste effecten zoals in Module 13:
+
+- **`(Intercept)`**: de ongetrainde groep op t1.
+- **`timet2`**: de verandering voor de ongetrainde groep.
+- **`trainingYes`**: hoeveel hoger de getrainde groep op t1 zat dan de ongetrainde.
+- **`timet2:trainingYes`**: hoeveel **meer** de getrainde groep veranderde. Dit is het
+  antwoord op de onderzoeksvraag.
+
+## Hetzelfde antwoord uit veranderingsscores
+
+Met twee meetmomenten en niemand die een meting mist, is de interactie simpelweg een verschil
+tussen de gemiddelde verandering van de twee groepen.
+
+<CodeBlock id="c-change" code={`d <- d %>% mutate(change = engagement_t2 - engagement_t1)
+
+d %>%
+  group_by(training) %>%
+  summarise(mean_change = mean(change))
+
+coef(summary(lm(change ~ training, data = d)))`} />
+
+De helling `trainingYes` op de veranderingsscores is de interactie hierboven, met dezelfde
+*t*. Zoals de gepaarde *t*-toets in Les 14-3 een speciaal geval van het gemengde model was,
+is deze vergelijking van veranderingsscores een speciaal geval van dit model.
+
+<Predict
+  id="p-baseline"
+  question="De getrainde groep begon op t1 1,78 punten hoger. Vertekent dat verschil de interactie?"
+  choices={[
+    { text: 'Ja: de interactie bevat het voorsprongsverschil', response: 'De voorsprong zit in trainingYes. De interactie vergelijkt de veranderingen, en elke verandering wordt gemeten vanaf het eigen t1 van die werknemer.' },
+    { text: 'Nee: de interactie vergelijkt veranderingen, en elke verandering wordt gemeten vanaf het eigen beginpunt van die werknemer', correct: true, response: 'Juist. Dat is het voordeel van meten voor en na, in plaats van alleen na. Het steunt op één aanname: zonder training zouden de twee groepen evenveel zijn veranderd. Een analyse die voor t1 corrigeert, geeft hier bijna hetzelfde antwoord, 2,31 tegenover 2,29.' },
+    { text: 'Dat is zonder randomisatie niet te weten', response: 'Randomisatie telt voor een causale lezing, maar de rekenkunde van de interactie haalt het beginniveau van elke werknemer al weg.' },
+  ]}
+/>
+
+<Exercise id="m14-4-a" />
+
+## Drie metingen: voor, midden, na
+
+De werkplekdata hebben twee metingen. Voor drie is hier een kleine gesimuleerde studie: 60
+werknemers beoordelen hun stress voor een programma, halverwege en erna.
+
+<CodeBlock id="c-waves" code={`set.seed(114)
+n <- 60
+id <- factor(1:n)
+base <- rnorm(n, 30, 6)
+wide <- data.frame(
+  id,
+  pre = round(base + rnorm(n, 0, 3), 1),
+  mid = round(base - 3 + rnorm(n, 0, 3), 1),
+  post = round(base - 5 + rnorm(n, 0, 3), 1)
+)
+
+waves <- wide %>%
+  pivot_longer(cols = c(pre, mid, post), names_to = "wave", values_to = "stress") %>%
+  mutate(wave = factor(wave, levels = c("pre", "mid", "post")))
+
+waves %>%
+  group_by(wave) %>%
+  summarise(mean_stress = mean(stress), sd_stress = sd(stress))`} />
+
+Er zijn twee manieren om tijd in het model te zetten, en ze beantwoorden verschillende
+vragen.
+
+<CodeBlock id="c-factor" code={`m_waves <- lmer(stress ~ wave + (1 | id), data = waves)
+coef(summary(m_waves))
+anova(m_waves)`} />
+
+**Tijd als factor** geeft elke meting zijn eigen gemiddelde: twee dummyvariabelen, vergeleken
+met de voormeting. De *F*-toets vraagt of de drie gemiddelden verschillen.
+
+<CodeBlock id="c-linear" code={`waves <- waves %>% mutate(wave_number = as.numeric(wave) - 1)
+
+m_linear <- lmer(stress ~ wave_number + (1 | id), data = waves)
+coef(summary(m_linear))`} />
+
+**Tijd als getal** (0, 1, 2) past één rechte lijn aan: één helling, de gemiddelde verandering
+per meting. Hier is dat ongeveer −2,35 punten stress per meting. Het kost één vrijheidsgraad
+in plaats van twee, wat power oplevert wanneer de verandering echt gelijkmatig is, en het
+misleidt wanneer ze dat niet is, bijvoorbeeld wanneer alles tussen voor en midden gebeurt.
+
+<Quiz
+  id="q-waves"
+  question="De coëfficiënten voor midden en na van het factormodel zijn -2,44 en -4,70. Is een rechte lijn een eerlijke samenvatting?"
+  choices={[
+    { text: 'Ja: de daling van voor naar midden is ongeveer even groot als van midden naar na, dus één helling van ongeveer -2,35 per meting verliest weinig', correct: true, response: 'Juist. -2,44 en -2,26 zijn stappen van bijna gelijke grootte.' },
+    { text: 'Nee: een rechte lijn kan drie gemiddelden nooit beschrijven', response: 'Dat kan wel, wanneer de stappen gelijk zijn. Kijk alleen naar de stappen.' },
+    { text: 'Alleen als de p-waarde van de helling onder ,05 ligt', response: 'Significantie zegt of er een helling is, niet of een lijn de juiste vorm is.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-4"
+  question="Voor de interactie van training en tijd geeft het model b = 2,29, SE = 0,31, t(478,0) = 7,41, p < ,001. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Een lineair gemengd model met een random intercept per werknemer liet zien dat betrokkenheid meer steeg voor werknemers die training kregen dan voor werknemers zonder training, b = 2,29, SE = 0,31, t(478,0) = 7,41, p < ,001: een gemiddelde stijging van 2,87 punten tegenover 0,58.', correct: true, response: 'Juist. Het model, de interactie en de verandering van beide groepen staan erin, zodat een lezer ziet wat "meer" betekent.' },
+    { text: 'Training verhoogde betrokkenheid met 2,29 punten, b = 2,29, p < ,001.', response: 'De SE en t ontbreken, en niets zegt dat de training gerandomiseerd was, dus "verhoogde" beweert meer dan het ontwerp laat zien.' },
+    { text: 'Getrainde werknemers hadden op t2 een hogere betrokkenheid, b = 2,29, SE = 0,31, t(478,0) = 7,41, p < ,001.', response: 'De interactie gaat over het verschil in verandering, niet over het verschil op t2, dat de voorsprong op t1 zou bevatten.' },
+    { text: 'Beide groepen verbeterden significant, b = 2,29, SE = 0,31, t(478,0) = 7,41, p < ,001.', response: 'Deze interactie toetst of de verbeteringen verschillen, niet of elke verbetering boven nul ligt.' },
+  ]}
+/>

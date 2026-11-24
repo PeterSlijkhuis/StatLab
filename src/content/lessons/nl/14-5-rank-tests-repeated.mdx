@@ -1,0 +1,105 @@
+De ranktoetsen van Les 12-4, Mann-Whitney en Kruskal-Wallis, nemen aan dat elke score van
+een ander persoon komt. Wanneer dezelfde mensen meer dan eens worden gemeten, moeten de ranks
+**binnen** elke persoon worden bepaald, zoals het gemengde model het eigen niveau van elke
+persoon weghaalt. Twee toetsen doen dit: de Wilcoxon signed-rank-toets voor twee metingen, en
+de Friedman-toets, die voor twee of meer werkt (het studieboek beveelt haar zelfs voor twee
+aan; het noemt de toetsingsgrootheid *F*r).
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d <- d %>% mutate(change = engagement_t2 - engagement_t1)
+
+d %>% summarise(median_change = median(change), mean_change = mean(change), n = n())`} />
+
+## Twee metingen: de Wilcoxon signed-rank-toets
+
+Neem de verandering van elke werknemer, rangschik de veranderingen naar grootte zonder naar
+het teken te kijken, en tel dan de ranks van de positieve veranderingen op. Die som is *V* (het
+studieboek noemt haar *T*+). Als de veranderingen symmetrisch rond nul lagen (geen typische
+verandering), zouden de positieve en negatieve veranderingen ongeveer even grote ranksommen
+hebben, en zou *V* dicht bij de helft van het totaal liggen. Veranderingen van precies nul
+worden weggelaten.
+
+<CodeBlock id="c-wilcoxon" code={`wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE)
+
+t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)$statistic`} />
+
+Beide zeggen dat betrokkenheid steeg. De *t*-toets gaat over de gemiddelde verandering; de
+signed-rank-toets vraagt of positieve veranderingen in rank zwaarder wegen dan negatieve. De
+volgorde van de twee kolommen telt: wissel ze om en *V* wordt de ranksom van de **negatieve**
+veranderingen.
+
+<Predict
+  id="p-paired-ranks"
+  question="Wat gaat er mis als je paired = TRUE weglaat?"
+  choices={[
+    { text: 'Niets: R zoekt uit dat de kolommen bij elkaar horen', response: 'R kan niet weten dat rij 1 van de ene kolom dezelfde persoon is als rij 1 van de andere.' },
+    { text: 'R voert de Mann-Whitney-toets uit, die de twee kolommen behandelt als 960 verschillende mensen en negeert dat elke werknemer met zichzelf wordt vergeleken', correct: true, response: 'Juist, dezelfde fout als de gestapelde lm() op 960 rijen in Les 14-1, en ze gooit de power van het ontwerp weg.' },
+    { text: 'De toets weigert te draaien', response: 'Ze draait, en drukt W af in plaats van V. Die stille omschakeling is het gevaar.' },
+  ]}
+/>
+
+<Exercise id="m14-5-a" />
+
+## Drie of meer metingen: de Friedman-toets
+
+Terug naar de gesimuleerde stressstudie met voor-, midden- en nameting uit Les 14-4. De
+Friedman-toets rangschikt de drie scores **binnen** elke persoon (1, 2 of 3), en vraagt dan
+of sommige metingen hogere ranks verzamelen dan andere.
+
+<CodeBlock id="c-waves" code={`set.seed(114)
+n <- 60
+id <- factor(1:n)
+base <- rnorm(n, 30, 6)
+wide <- data.frame(
+  id,
+  pre = round(base + rnorm(n, 0, 3), 1),
+  mid = round(base - 3 + rnorm(n, 0, 3), 1),
+  post = round(base - 5 + rnorm(n, 0, 3), 1)
+)
+
+waves <- wide %>%
+  pivot_longer(cols = c(pre, mid, post), names_to = "wave", values_to = "stress") %>%
+  mutate(wave = factor(wave, levels = c("pre", "mid", "post")))
+
+friedman.test(stress ~ wave | id, data = waves)`} />
+
+De formule leest als "stress naar meting, binnen id". Net als *H* wordt de Friedman-grootheid
+vergeleken met een chikwadraatverdeling met *k* − 1 vrijheidsgraden. Ze vereist dat elke
+persoon op elke meting is gemeten: met de formuleinterface laat één ontbrekende score R
+stoppen met "not an unreplicated complete block design", dus je zou onvolledige mensen eerst
+zelf moeten verwijderen. Dat is dezelfde beperking die de gepaarde *t*-toets had en het
+gemengde model niet heeft.
+
+<CodeBlock id="c-within-ranks" code={`waves %>%
+  group_by(id) %>%
+  mutate(rank_within = rank(stress)) %>%
+  group_by(wave) %>%
+  summarise(mean_rank = mean(rank_within))`} />
+
+De meeste mensen hebben hun hoogste stress bij de voormeting en hun laagste bij de nameting,
+dus de gemiddelde rank daalt van ongeveer 2,6 bij voor tot ongeveer 1,4 bij na.
+
+<Quiz
+  id="q-which-rank-test"
+  question="Zestig patiënten beoordelen hun pijn voor, tijdens en na de behandeling, en de beoordelingen zijn sterk scheef. Welke toets vergelijkt de drie momenten op ranks?"
+  choices={[
+    { text: 'Kruskal-Wallis', response: 'Kruskal-Wallis is voor onafhankelijke groepen. Hier komen dezelfde patiënten bij elk moment voor.' },
+    { text: 'Friedman', correct: true, response: 'Juist: drie of meer gerelateerde metingen, gerangschikt binnen elke patiënt.' },
+    { text: 'Wilcoxon signed-rank', response: 'Die vergelijkt twee gerelateerde metingen. Met drie zou je er drie nodig hebben en een correctie; Friedman doet het in één toets.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-5"
+  question="wilcox.test(d$engagement_t2, d$engagement_t1, paired = TRUE) geeft V = 86094, p < 2.2e-16, en de mediane verandering is 1,6 punten. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Een Wilcoxon signed-rank-toets liet zien dat betrokkenheid bij de tweede meting hoger was dan bij de eerste, V = 86094, p < ,001, met een mediane verandering van 1,6 punten.', correct: true, response: 'Juist: de toets, haar grootheid, p, en een mediaan die de omvang van de verandering beschrijft op een manier die bij een ranktoets past.' },
+    { text: 'Betrokkenheid steeg gemiddeld met 1,73 punten, V = 86094, p < ,001.', response: 'De gemiddelde verandering hoort bij de t-toets. Beschrijf bij een ranktoets de verandering met haar mediaan.' },
+    { text: 'Een Mann-Whitney-toets liet zien dat betrokkenheid steeg, V = 86094, p < ,001.', response: 'Mann-Whitney is de ongepaarde toets, en rapporteert W. Gepaarde data vraagt om de signed-rank-toets.' },
+    { text: 'Betrokkenheid steeg, p < 2.2e-16.', response: 'De toets en haar grootheid ontbreken, en APA schrijft p < ,001 in plaats van de afdrukgrens van R.' },
+  ]}
+/>

@@ -1,0 +1,150 @@
+Twee losse eindjes. Eerst de traditionele naam voor wat je in de vorige les hebt
+aangepast. Dan de andere manier waarop afhankelijkheid een dataset binnenkomt: mensen
+gegroepeerd binnen plaatsen.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+library(lmerTest)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+long_d <- d %>%
+  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%
+  mutate(time = factor(time,
+                       levels = c("engagement_t1", "engagement_t2"),
+                       labels = c("t1", "t2")))
+
+m_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)`} />
+
+## De gepaarde t-toets, die je al hebt uitgevoerd
+
+<CodeBlock id="c-paired" code={`coef(summary(m_time))
+
+t.test(d$engagement_t2, d$engagement_t1, paired = TRUE)`} />
+
+Dezelfde *t*, dezelfde vrijheidsgraden, dezelfde *p*. Met precies twee meetmomenten en
+niemand die een meting mist, doet het random intercept precies wat een gepaarde *t*-toets
+doet: het haalt het eigen niveau van elke werknemer weg voordat het naar de verandering kijkt.
+Deze exacte overeenkomst geldt voor de standaard REML-aanpassing van lmer. Het studieboek
+beveelt `REML = FALSE` aan; met maximum likelihood komen de vrijheidsgraden dicht bij 480 in
+plaats van 479 uit, dus de *t* komt niet meer exact overeen met de gepaarde *t*, al verschilt
+ze maar weinig.
+
+<CodeBlock id="c-differences" code={`differences <- d$engagement_t2 - d$engagement_t1
+
+c(
+  mean_difference = mean(differences),
+  fixed_effect = as.vector(fixef(m_time)[2])
+)
+
+t.test(differences)$statistic`} />
+
+Drie wegen, één getal. Een *t*-toets voor één steekproef op de verschillen, een gepaarde
+*t*-toets op de twee kolommen, en het vaste effect van tijd in het gemengde model zijn
+dezelfde analyse onder drie namen.
+
+<Predict
+  id="p-why-lmer"
+  question="Als de gepaarde t-toets hetzelfde antwoord geeft, waarom dan het gemengde model leren?"
+  choices={[
+    { text: 'Dat hoeft niet; de t-toets is eenvoudiger en verdient de voorkeur', response: 'Ze is eenvoudiger, en ze houdt op te werken zodra het ontwerp verder gaat dan twee metingen.' },
+    { text: 'Omdat het blijft werken met drie of meer metingen, met ontbrekende data, en met andere voorspellers in het model', correct: true, response: 'Precies. De gepaarde t-toets is een speciaal geval; het model is het algemene gereedschap.' },
+    { text: 'Omdat het kleinere p-waarden geeft', response: 'Het geeft in dit speciale geval dezelfde p-waarde, wat het hele punt van de vergelijking hierboven is.' },
+    { text: 'Omdat de gepaarde t-toets normaal verdeelde data vereist en het model niet', response: 'Voor het effect van tijd geven ze dezelfde toets, en beide steunen op normaliteit: de gepaarde t-toets op de verschillen, het gemengde model op zijn random intercepts en residuen. Geen van beide ontsnapt aan de aanname.' },
+  ]}
+/>
+
+En het praktische gevolg, dat in echte data telt:
+
+<CodeBlock id="c-missing" code={`set.seed(4)
+with_gaps <- long_d %>% slice_sample(prop = 0.9)
+
+nrow(with_gaps)
+length(unique(with_gaps$employee_id))
+
+coef(summary(lmer(engagement ~ time + (1 | employee_id), data = with_gaps)))`} />
+
+Negentig procent van de rijen, en veel werknemers dragen nu maar één meting bij. Een gepaarde
+*t*-toets zou elk van die werknemers helemaal laten vallen. Het gemengde model gebruikt wat
+elke persoon heeft.
+
+<Exercise id="m14-3-a" />
+
+## Nesting: mensen binnen plaatsen
+
+De tweede soort afhankelijkheid heeft niets met tijd te maken. De 480 werknemers werken op
+zes locaties, en locatie is een groepering in precies dezelfde zin.
+
+<CodeBlock id="c-site-means" code={`d %>%
+  group_by(site) %>%
+  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())`} />
+
+<CodeBlock id="c-site-model" code={`m_site <- lmer(wellbeing ~ autonomy + workload + (1 | site), data = d)
+
+summary(m_site)
+
+as.data.frame(VarCorr(m_site))`} />
+
+`(1 | site)` geeft elke locatie zijn eigen basisniveau voor welzijn, zodat het model weet
+welke werknemers een locatie delen en zijn standaardfouten ermee rekening houden. De
+coëfficiënten van autonomie en werkdruk combineren nog steeds vergelijkingen binnen en tussen
+locaties; als je zuiver schattingen binnen locaties nodig hebt, voeg je locatie in plaats
+daarvan als vaste factor toe. De SD van locatie in de `VarCorr`-tabel is hoeveel de zes
+basisniveaus verschillen.
+
+<CodeBlock id="c-ranef" code={`ranef(m_site)$site`} />
+
+Die zes getallen zijn de geschatte afwijkingen van de locaties. Ze zijn naar nul toe
+gekrompen: een locatie met weinig werknemers wordt harder naar het gemiddelde getrokken dan
+een grote, omdat het model een kleine steekproef minder vertrouwt. Die krimp is een kenmerk,
+en een van de dingen die zes vaste dummycoëfficiënten je niet zouden geven.
+
+<Advanced>
+
+## Beide tegelijk
+
+Wanneer werknemers herhaaldelijk worden gemeten **en** in locaties zijn gegroepeerd, nesten
+de groeperingen: een meting zit binnen een werknemer, een werknemer binnen een locatie.
+
+<CodeBlock id="c-nested" code={`m_nested <- lmer(engagement ~ time + (1 | site/employee_id), data = long_d)
+
+as.data.frame(VarCorr(m_nested))
+coef(summary(m_nested))`} />
+
+Verwacht dat lmer hier `boundary (singular) fit` afdrukt. Het betekent dat de variantie van
+locatie als nul is geschat: deze zes locaties verschillen in basisbetrokkenheid niet meer dan
+toeval zou opleveren. Het model is nog bruikbaar, en het vaste effect is ongewijzigd.
+
+`(1 | site/employee_id)` is een afkorting voor `(1 | site) + (1 | site:employee_id)`: een
+random intercept voor elke locatie, en nog een voor elke werknemer binnen een locatie. Nu
+drie variantiecomponenten (locatie, werknemer en residu), en het vaste effect van tijd is
+nauwelijks veranderd, omdat de tijdsvergelijking binnen werknemers leeft en locaties er geen
+invloed op kunnen hebben.
+
+Een vuistregel om mee te nemen naar je eigen werk: je hebt een redelijk aantal groepen nodig
+om te schatten hoe groepen variëren. Zes locaties is aan de magere kant, en de variantie van
+locatie wordt onnauwkeurig geschat; bij twee of drie groepen maak je ze beter vaste effecten.
+
+<Quiz
+  id="q-nesting"
+  question="Wat past (1 | site/employee_id) aan dat (1 | employee_id) alleen niet doet?"
+  choices={[
+    { text: 'Een aparte helling voor elke locatie', response: 'Dat zou een random helling zijn, (1 + time | site). Beide zijn alleen-intercept.' },
+    { text: 'Een intercept voor elke locatie en voor elke werknemer, zodat gedeelde variatie op locatieniveau wordt gescheiden van individuele verschillen', correct: true, response: 'Juist, en de uitvoer toont het als een derde variantiecomponent.' },
+    { text: 'Een interactie tussen locatie en tijd', response: 'Er wordt geen interactie aangepast. Nesting gaat over welke waarnemingen een niveau delen, niet over effecten die over niveaus verschillen.' },
+    { text: 'Niets: employee_id is al uniek, dus locatie voegt geen informatie toe', response: 'Werknemers zijn uniek, maar werknemers op dezelfde locatie delen een basisniveau. Dat gedeelde deel is wat het locatie-intercept vangt.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-3"
+  question="Je geneste model geeft een vast effect van tijd b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001, met variantiecomponenten SD_locatie bijna 0, SD_werknemer = 6,84, SD_residu = 2,52, en de gepaarde t-toets op dezelfde data geeft t(479) = 10,62, p < ,001. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Betrokkenheid steeg in de tijd, t(479) = 10,62, p < ,001. Een gemengd model gaf hetzelfde resultaat, dus de nesting kan worden genegeerd.', response: 'Het gaf hetzelfde resultaat voor dit specifieke effect omdat de vergelijking binnen werknemers is. Dat is een bevinding over dit ontwerp, geen vrijbrief om nesting in het algemeen te negeren.' },
+    { text: 'Een lineair model met gemengde effecten met random intercepts voor locatie en voor werknemer binnen locatie liet zien dat betrokkenheid steeg van tijdstip 1 naar tijdstip 2, b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001 (SD_locatie bijna 0, SD_werknemer = 6,84, SD_residu = 2,52). Met twee meetmomenten en volledige data komt deze schatting overeen met een t-toets voor gepaarde steekproeven, t(479) = 10,62, p < ,001.', correct: true, response: 'Juist: de random structuur wordt beschreven, het vaste effect en alle drie de variantiecomponenten worden gerapporteerd, en de gelijkwaardigheid wordt gesteld als het speciale geval dat ze is.' },
+    { text: 'Het trainingsprogramma verhoogde betrokkenheid met 1,73 punt, b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001.', response: 'Dit model bevat geen interventie. Elke werknemer werd tweemaal gemeten; een stijging in de tijd, zonder vergelijkingsgroep in het model, kan niet aan een programma worden toegeschreven.' },
+    { text: 'Betrokkenheid steeg met 1,73 punt, en omdat SD_locatie het kleinst was, had locatie geen effect op betrokkenheid.', response: 'Een variantiecomponent is geen toets. Een locatie-SD bijna 0 zegt dat deze zes locaties nauwelijks verschillen in basisbetrokkenheid; het zegt niets over andere uitkomsten, en werknemers zijn nog steeds genest in locaties.' },
+  ]}
+/>
+
+</Advanced>
