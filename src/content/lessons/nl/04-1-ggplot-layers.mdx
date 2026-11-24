@@ -1,0 +1,106 @@
+Module 3 beschreef de kolom wellbeing met vier getallen. Deze module tekent
+haar, en je ziet dingen in het plaatje die geen enkele samenvatting meldde.
+
+ggplot2 bouwt een figuur uit drie delen, en elke plot in deze cursus is een
+combinatie ervan:
+
+1. de **data**: één data frame;
+2. de **mapping**: welke kolom op welk deel van het plaatje komt, geschreven
+   binnen `aes()`;
+3. een of meer **lagen**: wat er daadwerkelijk getekend wordt, geschreven als
+   `geom_` iets.
+
+<CodeBlock id="setup" code={`library(ggplot2)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## Data en mapping alleen tekenen niets
+
+<CodeBlock id="empty" code={`ggplot(employees, aes(x = wellbeing))`} />
+
+Assen, een bereik, een grijs paneel, en geen data. Dat is correct gedrag, geen
+bug. Je hebt gezegd waarmee je tekent; je hebt niet gezegd wat je tekent.
+
+<Predict
+  id="p-layer"
+  question="Wat moet er worden toegevoegd om iets in dat paneel te krijgen?"
+  choices={[
+    { text: 'De data, die nog niet is aangeleverd', response: 'De data was het eerste argument van ggplot(), en gaf de x-as zijn bereik.' },
+    { text: 'Een geomlaag, toegevoegd met een plusteken', correct: true, response: 'Ja. ggplot() bereidt het doek voor; een geom_-laag tekent erop. Eén plot kan meerdere lagen dragen, getekend in de volgorde waarin je ze toevoegt.' },
+    { text: 'Een aanroep van plot() of print()', response: 'Een ggplot-object toont zichzelf. Wat ontbreekt is een laag, geen print.' },
+  ]}
+/>
+
+## Een laag toevoegen
+
+<CodeBlock id="histogram" code={`ggplot(employees, aes(x = wellbeing)) +
+  geom_histogram(bins = 20)`} />
+
+Een **histogram** knipt het bereik in klassen (bins) en telt hoeveel werknemers
+in elk vallen. Merk op wat ggplot2 deed zonder dat het gevraagd werd: het
+berekende de aantallen en zette ze op de y-as. Je koppelde één kolom; de tweede
+as kwam van de geom.
+
+## Het aantal klassen is een beslissing
+
+<CodeBlock id="bins" code={`ggplot(employees, aes(x = wellbeing)) +
+  geom_histogram(bins = 5)`} />
+
+> **Probeer het.** Verander `bins = 5` in `bins = 80` en voer het opnieuw uit.
+> Probeer dan 20. De data is identiek in alle drie. Met vijf klassen is het
+> plaatje te grof om veel te laten zien: de lange staart van lage scores wordt
+> in een of twee balken samengeperst die makkelijk over het hoofd worden gezien;
+> met tachtig ziet het er rafelig uit en vol structuur die eigenlijk ruis is.
+
+Er is geen juist aantal klassen, en daarom moet je naar meer dan één kijken
+voordat je een vorm in woorden beschrijft.
+
+## Een andere kijk op dezelfde kolom
+
+<CodeBlock id="density" code={`ggplot(employees, aes(x = wellbeing)) +
+  geom_density()`} />
+
+Een **dichtheidscurve** (density) maakt het histogram glad. Ze is makkelijker te
+lezen en verbergt hoeveel waarnemingen er zijn, dus is ze een slechte keuze als
+n klein is, en ze maakt precies dezelfde soort willekeurige keuze als het aantal
+klassen, alleen waar je het niet kunt zien.
+
+## Een categorische kolom: staven, geen klassen
+
+Een histogram heeft getallen met gelijke stappen nodig, dus het past bij
+interval- en ratiovariabelen. Een nominale of ordinale variabele, zoals
+afdeling, heeft in plaats daarvan categorieën, en de weergave daarvoor is een
+**staafdiagram** (bar chart): één staaf per categorie, met als hoogte het aantal
+eenheden erin.
+
+<CodeBlock id="bar" code={`ggplot(employees, aes(x = department)) +
+  geom_bar()`} />
+
+`geom_bar()` telt de rijen per categorie, net zoals `table(employees$department)`
+doet. De staven staan los van elkaar omdat de categorieën geen waarden ertussen
+hebben, en bij een nominale variabele zegt hun volgorde niets. Een cirkeldiagram
+of een frequentietabel toont dezelfde aantallen; een staafdiagram maakt ze het
+makkelijkst te vergelijken.
+
+<Quiz
+  id="q-4-1-bar"
+  question="Welke weergave past bij de kolom remote, met de waarden Yes en No?"
+  choices={[
+    { text: 'Een histogram', response: 'Een histogram verdeelt een numeriek bereik in klassen. Yes en No zijn categorieën, met niets ertussen om in klassen te verdelen.' },
+    { text: 'Een staafdiagram of een frequentietabel', correct: true, response: 'Juist. Een nominale variabele toon je door haar categorieën te tellen: geom_bar() in ggplot2, of table() als getallen.' },
+    { text: 'Een dichtheidscurve', response: 'Een dichtheidscurve maakt een numerieke verdeling glad. Een categorische variabele heeft geen verdeling om glad te maken.' },
+  ]}
+/>
+
+<Exercise id="m4-1-a" />
+
+<Quiz
+  id="q-4-1"
+  question="Een figuur is gebouwd met ggplot(employees, aes(x = tenure_years)) + geom_histogram(bins = 30). Wat staat er op de y-as?"
+  choices={[
+    { text: 'tenure_years, hetzelfde als x', response: 'Er werd helemaal niets aan y gekoppeld. y komt uit de laag.' },
+    { text: 'Het aantal werknemers in elke klasse, berekend door het histogram', correct: true, response: 'Juist. Sommige geoms berekenen een eigen variabele - een histogram berekent aantallen - en dat vult de as die je nooit hebt gekoppeld.' },
+    { text: 'Niets, want alleen x is gekoppeld', response: 'De as bestaat en is gelabeld count. geom_histogram() leverde hem.' },
+    { text: 'wellbeing, want dat is de uitkomst van het onderzoek', response: 'ggplot2 tekent alleen wat het gezegd wordt te tekenen. Een kolom die niet in de mapping staat, staat niet in de figuur.' },
+  ]}
+/>

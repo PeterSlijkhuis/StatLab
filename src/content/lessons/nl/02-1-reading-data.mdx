@@ -1,0 +1,130 @@
+Voor het grootste deel van deze cursus werk je met één dataset: een fictief
+onderzoek op de werkvloer onder 480 werknemers van een bedrijf met zes
+vestigingen. Het is zo ontworpen dat elke vraag die deze cursus je leert
+stellen er een eerlijk antwoord in heeft.
+
+Hier is het codeboek. Kom er terug wanneer een kolomnaam je niets zegt.
+
+| Kolom | Wat erin staat |
+|---|---|
+| `employee_id` | een nummer dat de werknemer identificeert |
+| `department` | Sales, Engineering, Support of Marketing |
+| `site` | een van zes kantoorlocaties |
+| `remote` | No of Yes |
+| `tenure_years` | jaren bij het bedrijf |
+| `workload` | zelfgerapporteerde werkdruk, 1 tot 10 |
+| `autonomy` | zelfgerapporteerde autonomie, 1 tot 10 |
+| `training` | volgde het trainingsprogramma: No of Yes |
+| `mentoring` | had een mentor: No of Yes |
+| `wellbeing` | welzijnsscore, 0 tot 100 |
+| `engagement_t1` | betrokkenheid aan het begin van het jaar |
+| `engagement_t2` | betrokkenheid aan het eind van het jaar |
+| `performance` | beoordeling door de manager, 0 tot 100 |
+| `left_company` | 0 als nog in dienst, 1 als vertrokken |
+
+## Het bestand lezen
+
+`read.csv()` leest een door komma's gescheiden bestand in een **data frame**, het
+R-woord voor een tabel met benoemde kolommen.
+
+<CodeBlock id="read" code={`employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+nrow(employees)
+ncol(employees)
+names(employees)`} />
+
+`nrow()` telt werknemers, omdat elke rij één werknemer is. `ncol()` telt kolommen,
+wat een feit over het codeboek is en niet over het bedrijf.
+
+<CodeBlock id="head" code={`head(employees)`} />
+
+## Wat str() vertelt dat head() niet vertelt
+
+<CodeBlock id="structure" code={`str(employees)`} />
+
+Lees het type aan het begin van elke regel. `num` is een getal. `int` is een
+geheel getal. `Factor w/ 4 levels` is iets nieuws, en staat er door de
+`stringsAsFactors = TRUE` die je typte.
+
+<Predict
+  id="p-factor"
+  question="De kolom department bevat woorden. Waarom zou R die liever als factor opslaan dan als tekst?"
+  choices={[
+    { text: 'Omdat factoren minder geheugen gebruiken', response: 'Dat deden ze vroeger, maar het is niet de reden waarom de cursus erom geeft. Denk aan wat R moet weten om een model te passen of vier dozen te tekenen.' },
+    { text: 'Omdat een factor de volledige verzameling mogelijke waarden vastlegt, in een vaste volgorde', correct: true, response: 'Precies. De vier afdelingsnamen zijn de levels. R houdt ze zelfs bij een deelverzameling die geen enkele van een bepaalde afdeling bevat, en elke tabel, plot en elk model gebruikt dezelfde volgorde.' },
+    { text: 'Omdat tekst niet in een data frame kan', response: 'Het kan wel. Zonder stringsAsFactors = TRUE zouden deze kolommen gewone character zijn, en alles zou nog steeds lezen.' },
+  ]}
+/>
+
+## Levels
+
+<CodeBlock id="levels" code={`levels(employees$department)
+nlevels(employees$department)
+
+levels(employees$remote)`} />
+
+De `$` pakt één kolom uit een data frame, en wat terugkomt is één vector, zoals
+die uit Module 1. Hier is die vector een factor.
+
+Let op de volgorde van de levels van `remote`: **No** en dan **Yes**. Levels
+staan op alfabetische volgorde tenzij je anders zegt, en niet in de volgorde
+waarin de kolom toevallig in het bestand voorkomt. Die alfabetische volgorde
+telt weer in Module 12, waar het eerste level de referentiegroep wordt: de groep
+waarmee elke andere groep wordt vergeleken.
+
+## Soorten waarden
+
+Elke kolom van een data frame is een vector, en een vector bevat één soort
+waarde. `class()` vertelt welke. Dit zijn de soorten die je tegenkomt, met de
+variabelen waarvoor ze gebruikt worden.
+
+<CodeBlock id="classes" code={`class(TRUE)
+class(3L)
+class(3.5)
+class("Sales")
+class(employees$department)`} />
+
+- **logical**: TRUE of FALSE, voor ja/nee-variabelen.
+- **integer**: gehele getallen, vaak tellingen. De `L` in `3L` maakt er een met
+  de hand.
+- **numeric**: getallen in het algemeen, decimalen inbegrepen, voor interval- en
+  ratiovariabelen.
+- **character**: tekst. Prima voor namen en commentaar, maar een categorische
+  variabele hoort een factor te worden.
+- **factor**: een vaste verzameling categorieën, voor nominale variabelen. Een
+  **geordende factor**, die Les 2-4 maakt, is de versie voor ordinale variabelen.
+
+Omdat een vector maar één soort bevat, laat mixen R converteren: `c(1, 2,
+"three")` maakt alle drie tot tekst. Een getalkolom die als character
+binnenkomt betekent meestal dat één cel in het bestand iets bevat wat geen
+getal is.
+
+## Tellen en samenvatten
+
+<CodeBlock id="table" code={`table(employees$department)
+
+table(employees$department, employees$remote)`} />
+
+`table()` telt elk level; met twee factoren telt het elke combinatie. En
+`summary()` past zich aan aan wat het krijgt: tellingen voor een factor, en zes
+getallen voor een numerieke kolom (het minimum, de twee kwartielen, de mediaan,
+het gemiddelde en het maximum).
+
+<CodeBlock id="summary" code={`summary(employees$department)
+
+summary(employees$wellbeing)`} />
+
+<Exercise id="m2-1-a" />
+
+<Exercise id="m2-1-b" />
+
+<Quiz
+  id="q-2-1"
+  question="Je leest het bestand zonder stringsAsFactors = TRUE en voert dan nlevels(employees$department) uit. Wat komt terug?"
+  choices={[
+    { text: '4, want er zijn vier afdelingen in de kolom', response: 'R kijkt niet naar de waarden. Zonder de factorconversie is de kolom gewone tekst, en tekst heeft geen levels.' },
+    { text: '0, want een characterkolom heeft geen levels', correct: true, response: 'Juist, en het is een stille fout: geen foutmelding, alleen een nul, daarom is het argument elke keer de moeite van het typen waard.' },
+    { text: 'Een foutmelding, want nlevels() heeft een factor nodig', response: 'nlevels() accepteert alles en geeft 0 voor een niet-factor. Niets waarschuwt je.' },
+    { text: '480, één level per werknemer', response: 'Dat zou length() zijn, dat de elementen in de kolom telt in plaats van de waarden die hij kan aannemen.' },
+  ]}
+/>

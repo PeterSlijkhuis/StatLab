@@ -1,0 +1,152 @@
+StatLab draait R in je browser, dus je kunt beginnen zonder iets te
+installeren. Je eigen analyses zijn anders: die schrijf je op je eigen
+computer, in RStudio, en de gewoonten die je de eerste dag instelt bepalen of
+je analyse over een maand nog draait. Deze les is alleen lezen. Houd hem open
+naast RStudio en doe mee.
+
+## R en RStudio zijn twee programma's
+
+**R** is de taal en de motor die de berekeningen doet. **RStudio** is het
+programma waarin je typt: het geeft R een venster, een plek om scripts te
+schrijven en een overzicht van je bestanden en grafieken. Een autovergelijking
+is gangbaar en klopt: R is de motor, RStudio is het dashboard. Je hebt beide
+nodig, en je installeert ze in deze volgorde:
+
+1. **R** van CRAN, op cran.r-project.org. Kies de download voor Windows of
+   macOS en accepteer de standaardopties.
+2. **RStudio Desktop** van Posit, op posit.co. De gratis versie is alles wat je
+   nodig hebt.
+
+Daarna open je alleen nog RStudio. Dat vindt R zelf. Als je op een
+universiteitscomputer werkt, zijn beide meestal al geïnstalleerd.
+
+## De vier vensters
+
+Zodra er een script open is, is het RStudio-venster in vier vensters (panes)
+verdeeld (daarvoor vult de console de hele linkerkant). Je kunt ze
+herschikken, maar iedereen begint met deze indeling, en elke handleiding gaat
+ervan uit.
+
+<RStudioPanes />
+
+De **R Workspace**, onderaan de lijst met lessen, gebruikt dezelfde indeling,
+zodat je elk venster in je browser kunt proberen voordat je iets installeert.
+Als je geen programma's op je computer kunt installeren, bijvoorbeeld op een
+Chromebook van school, kun je daar een hele analyse doen: je uploadt je data,
+schrijft je script en downloadt je resultaten.
+
+De twee vensters links gebruik je het meest, en het verschil tussen die twee
+is belangrijk.
+
+- **De console** voert uit wat je typt zodra je op Enter drukt. Handig voor een
+  snelle blik, bijvoorbeeld om te kijken wat `mean(marks)` geeft. Wat je daar
+  typt wordt niet bewaard voor de volgende keer.
+- **Een script** is een tekstbestand dat op `.R` eindigt. Je schrijft je
+  analyse er regel voor regel in, voert de regels uit die je wilt en slaat het
+  op. Morgen open je het en voer je het opnieuw uit, en je krijgt hetzelfde
+  resultaat.
+
+Open een nieuw script met **File > New File > R Script**. Om de regel uit te
+voeren waar je cursor staat, druk je op **Ctrl + Enter** op Windows of **Cmd +
+Return** op een Mac. Selecteer eerst meerdere regels om ze allemaal uit te
+voeren. Het resultaat verschijnt in de console, net zoals onder elk codeblok in
+StatLab.
+
+> **De regel die scripties redt.** Alles wat een getal in je rapport oplevert,
+> staat in een script. Als je het alleen in de console hebt getypt, is het niet
+> gebeurd, want niemand kan het opnieuw uitvoeren, jijzelf ook niet.
+
+## Waarom een project
+
+Een analyse is meer dan één script. Er is het databestand, misschien een tweede
+script voor de figuren, en de figuren zelf. Een **RStudio Project** houdt dat
+alles in één map en zegt tegen R dat het elke keer in die map begint.
+
+Dat laatste is wat telt. R leest en schrijft bestanden relatief ten opzichte
+van zijn **werkmap** (working directory), de map waar het op dat moment in
+staat. Open je een project, dan is de werkmap automatisch de projectmap, op elke
+computer. Je code kan dan `"data/survey.csv"` zeggen en het bestand wordt
+gevonden op je laptop, op een universiteits-pc en op de Mac van een collega.
+
+Zonder project begint R in de map waar het toevallig start, en mensen lossen
+dat op door de volledige locatie van hun bestand in het script te typen. Dat
+werkt precies één keer, op precies één computer. De volgende les laat zien
+waarom.
+
+## Een project maken
+
+Doe dit eenmalig voor elke analyse die je begint.
+
+1. Kies in RStudio **File > New Project**.
+2. Kies **New Directory**, dan **New Project**.
+3. Geef de map een naam zonder spaties, zoals `survey-analysis`.
+4. Kies onder **Create project as subdirectory of** waar de map moet komen, bij
+   voorbeeld je map Documenten. Vermijd Downloads en het bureaublad.
+5. Klik op **Create Project**.
+
+RStudio herstart in de nieuwe map. Drie dingen laten zien dat het gelukt is:
+rechtsboven in het venster staat de projectnaam, het venster Files toont de
+nieuwe map, en de map bevat een bestand dat op `.Rproj` eindigt.
+
+Om later naar het project terug te keren, dubbelklik je op dat `.Rproj`-bestand
+of kies je het project via **File > Recent Projects**. Als je RStudio los
+opent, gaat het naar het project dat het laatst open was, en dat is misschien
+niet dit; een script openen wisselt niet van project. Als rechtsboven niet de
+naam van dit project staat, klopt de werkmap niet.
+
+## Een mappenindeling die werkt
+
+Maak in het project een paar mappen met de knop **New Folder** in het venster
+Files. Deze indeling is eenvoudig en houdt stand bij analyses van elke grootte:
+
+<FolderTree label="Een voorbeeld van een projectmap" tree={`
+survey-analysis/
+├── survey-analysis.Rproj  open this
+├── data/
+│   └── survey.csv         raw, never edited
+├── scripts/
+│   ├── 01-clean.R         one per step
+│   └── 02-models.R
+└── output/
+    └── figure-1.png       made by scripts
+`} />
+
+Er horen drie gewoonten bij.
+
+- **Pas de ruwe data nooit met de hand aan.** Moet een waarde gecorrigeerd
+  worden, doe dat dan in een script, zodat de wijziging is vastgelegd en
+  teruggedraaid kan worden.
+- **Namen zonder spaties of hoofdletters.** `survey_2025.csv` typ je makkelijk
+  in code; `Survey Data (final) 2.csv` niet.
+- **Alles in `output/` mag weg**, want een script kan het opnieuw maken. Als dat
+  niet klopt, ontbreekt er iets in een script.
+
+## Eén instelling die je nu moet wijzigen
+
+Standaard biedt RStudio aan alles wat je in een sessie hebt gemaakt in een
+bestand `.RData` op te slaan en de volgende keer weer te laden. Dat klinkt
+handig. Het betekent dat objecten van vorige week stilletjes een script kunnen
+laten werken dat bij een schone start zou falen.
+
+Open **Tools > Global Options > General**. Haal het vinkje weg bij **Restore
+.RData into workspace at startup** en zet **Save workspace to .RData on exit**
+op **Never**. Vanaf dan begint elke sessie leeg, en moeten je scripts alles
+bevatten. Dat is het punt.
+
+## En in StatLab
+
+Elke StatLab-les gedraagt zich als een klein project dat al open is. De werkmap
+is ingesteld, en een map `data` bevat de cursusdatasets, dus `"data/workplace.csv"`
+werkt hier precies zoals `"data/survey.csv"` in je eigen project zal werken. De
+volgende les bekijkt die map van binnenuit R.
+
+<Quiz
+  id="q-0-1"
+  question="Je analyse werkt op je laptop. Een collega opent hetzelfde script op zijn computer en R zegt dat het survey.csv niet kan vinden. Wat is de meest waarschijnlijke oorzaak?"
+  choices={[
+    { text: 'Het script noemt het bestand met de volledige locatie op je laptop, zoals C:/Users/you/Documents/...', correct: true, response: 'Juist. Die locatie bestaat alleen op jouw computer. In een project vindt "data/survey.csv" het bestand overal waar de projectmap staat.' },
+    { text: 'Hun versie van R is te oud', response: 'In principe mogelijk, maar R zou dan klagen over een functie, niet over een ontbrekend bestand. "Cannot find" gaat bijna altijd over het pad.' },
+    { text: 'Ze moeten de data installeren met install.packages()', response: 'install.packages() installeert packages, geen databestanden. De data reizen mee als bestand in de projectmap.' },
+    { text: 'CSV-bestanden openen alleen op de computer die ze gemaakt heeft', response: 'Een CSV-bestand is platte tekst en opent overal. Het probleem is waar R wordt gezegd ernaar te zoeken.' },
+  ]}
+/>

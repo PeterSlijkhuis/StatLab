@@ -1,0 +1,123 @@
+Een dataset van 480 werknemers en 14 kolommen bevat meer getallen dan iemand kan
+lezen. Beschrijven betekent ze allemaal vervangen door een handvol dat dezelfde
+boodschap draagt, en dan eerlijk zijn over wat er verloren ging.
+
+<CodeBlock id="setup" code={`library(dplyr)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## summarise()
+
+`summarise()` klapt een hele tabel samen tot één rij. Je noemt elk getal dat je
+wilt en zegt hoe het berekend wordt.
+
+<CodeBlock id="first" code={`employees %>%
+  summarise(mean_wellbeing = mean(wellbeing))`} />
+
+Meerdere tegelijk, zoals je het echt zou gebruiken:
+
+<CodeBlock id="several" code={`employees %>%
+  summarise(
+    mean_wellbeing = mean(wellbeing),
+    sd_wellbeing = sd(wellbeing),
+    n = n()
+  )`} />
+
+`n()` telt de rijen die in de samenvatting gingen. Het heeft geen argumenten,
+omdat het al weet over welke rijen het wordt gevraagd.
+
+Een gemiddelde zonder SD en zonder n is geen resultaat. De SD zegt hoeveel
+werknemers van elkaar verschillen; de n zegt hoeveel van het bedrijf je
+beschrijft. Elk resultaat dat je vanaf Module 7 rapporteert bevat alle drie.
+
+<Predict
+  id="p-summarise"
+  question="employees heeft 480 rijen. Hoeveel rijen heeft employees %>% mutate(mean_wellbeing = mean(wellbeing))?"
+  choices={[
+    { text: '1, want er is één gemiddelde', response: 'Dat is wat summarise() zou geven. mutate() doet iets anders.' },
+    { text: '480, elk met hetzelfde gemiddelde van het hele bedrijf ernaast', correct: true, response: 'Ja. mutate() voegt een kolom toe en houdt elke rij, dus het ene gemiddelde wordt 480 keer herhaald. Dat is handig als je elke persoon met het gemiddelde wilt vergelijken, en fout als je een samenvattende tabel wilde.' },
+    { text: '480, elk met het gemiddelde van die ene werknemer alleen', response: 'Eén werknemer heeft één welzijnsscore, dus een gemiddelde van alleen die persoon zou gewoon de score zelf zijn. mean(wellbeing) wordt berekend over alle rijen in beeld.' },
+  ]}
+/>
+
+<CodeBlock id="mutate-vs" code={`employees %>%
+  mutate(mean_wellbeing = mean(wellbeing)) %>%
+  select(employee_id, wellbeing, mean_wellbeing) %>%
+  head(4)`} />
+
+**summarise klapt samen, mutate houdt.** De verkeerde kiezen is de meest
+voorkomende dplyr-fout die er is, en het geeft nooit een foutmelding, alleen een
+tabel met de verkeerde vorm.
+
+<Exercise id="m3-1-a" />
+
+## Spreiding beschrijven
+
+Het gemiddelde zegt waar het midden is. Drie verschillende getallen zeggen hoe
+breed de verdeling is, en ze zijn het met opzet oneens.
+
+<CodeBlock id="spread" code={`employees %>%
+  summarise(
+    sd_wellbeing = sd(wellbeing),
+    iqr_wellbeing = IQR(wellbeing),
+    smallest = min(wellbeing),
+    largest = max(wellbeing)
+  )`} />
+
+- De **standaarddeviatie** is een typische afstand tot het gemiddelde. Ze gebruikt
+  elke score, dus één extreme persoon verschuift haar. De `sd()` van R deelt de
+  som van gekwadrateerde afwijkingen door n − 1, niet door n zoals in de
+  definitie uit het studieboek. De n − 1-versie is de gebruikelijke schatting
+  van de populatiewaarde uit een steekproef; met 480 mensen verschillen de twee
+  alleen in de tweede decimaal.
+- De **interkwartielafstand** is de breedte van de middelste helft van het
+  bedrijf: de afstand van het 25e tot het 75e percentiel. Ze negeert de staarten
+  volledig.
+- De **range**, grootste min kleinste, is opgebouwd uit precies twee mensen,
+  dus ze is de minst stabiele van de drie en het makkelijkst te noemen.
+
+Pas op voor de `range()` van R: die geeft de twee eindpunten terug, niet de
+afstand ertussen.
+
+<CodeBlock id="range-trap" code={`range(employees$wellbeing)
+
+max(employees$wellbeing) - min(employees$wellbeing)`} />
+
+<Exercise id="m3-1-b" />
+
+## Welk centrum past bij het meetniveau
+
+Het gemiddelde heeft getallen met gelijke stappen nodig, dus het past bij
+interval- en ratiovariabelen. Voor een ordinale variabele gebruik je de
+**mediaan**. Voor een nominale variabele, zoals afdeling, blijft alleen de
+**modus** over: de meest voorkomende categorie. Een frequentietabel toont die
+meteen. BMS-vakken maken er een met `tabyl()` uit het package janitor.
+
+<CodeBlock id="tabyl" code={`library(janitor)
+
+employees %>%
+  tabyl(department) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting(digits = 1)`} />
+
+Support is de modus. Als een variabele ontbrekende waarden heeft, voegt `tabyl()`
+een kolom `valid_percent` toe, de percentages onder de mensen met een
+antwoord. De Star Wars-data die bij dplyr zit heeft vier personages zonder
+vastgelegd geslacht.
+
+<CodeBlock id="valid" code={`starwars %>%
+  tabyl(sex) %>%
+  adorn_pct_formatting(digits = 1)`} />
+
+Rapporteer de geldige percentages, en zeg hoeveel waarden ontbraken.
+
+<Quiz
+  id="q-3-1"
+  question="Het welzijnscijfer 46 van één werknemer is verkeerd getypt als 460. Welke samenvatting van de 480 scores verandert het minst?"
+  choices={[
+    { text: 'Het gemiddelde', response: 'Het gemiddelde gebruikt elke score, dus het verschuift met bijna een heel punt.' },
+    { text: 'De standaarddeviatie', response: 'De SD is opgebouwd uit afstanden tot het gemiddelde, en één score die 414 punten verder ligt verdubbelt haar ruwweg, van 10,5 naar 21,6.' },
+    { text: 'De interkwartielafstand', correct: true, response: 'Juist. De IQR hangt alleen af van de twee kwartielen, en één extreme score verschuift die nauwelijks: ze verandert met een paar honderdsten.' },
+    { text: 'De range', response: 'De range is de gevoeligste van allemaal: ze springt van 64,9 naar 454,3.' },
+  ]}
+/>

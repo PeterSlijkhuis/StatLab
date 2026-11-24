@@ -1,0 +1,112 @@
+Je hebt nu alles wat je nodig hebt om een samenvattende tabel te maken. Deze les
+gaat over het moment waarop de tabel klopt en de conclusie die eruit wordt
+getrokken niet.
+
+<CodeBlock id="setup" code={`library(dplyr)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## Een tabel met gemiddelden
+
+<CodeBlock id="means" code={`employees %>%
+  group_by(department) %>%
+  summarise(mean_wellbeing = mean(wellbeing), n = n()) %>%
+  arrange(desc(mean_wellbeing))`} />
+
+<Predict
+  id="p-engineering"
+  question="Engineering staat in het midden van die tabel. Welke van deze zou je op grond daarvan willen opschrijven in een rapport?"
+  choices={[
+    { text: 'Werknemers van Engineering hebben een gemiddeld welzijn vergeleken met andere afdelingen', response: 'Het is de natuurlijke lezing, en het is degene die deze les gaat ondermijnen. Een gemiddelde is één enkele samenvatting van een hele verdeling.' },
+    { text: 'Nog niets: een gemiddelde kan om meer dan één reden midden in de tabel staan', correct: true, response: 'Juist. Een middelmatig gemiddelde kan komen van een middelmatige afdeling, of van een afdeling waar de meeste mensen het goed doen en een minderheid het erg slecht. Die vragen om totaal verschillende reacties.' },
+    { text: 'Engineering is de gezondste afdeling, omdat ingenieurs de meeste autonomie hebben', response: 'Die redenering slaat de data helemaal over. Wat autonomie ook doet, de tabel die voor je ligt zegt dit niet.' },
+  ]}
+/>
+
+## Voeg de mediaan toe
+
+De **mediaan** is de score in het midden als iedereen op een rij staat: de helft
+van de afdeling zit erboven, de helft eronder. In tegenstelling tot het
+gemiddelde geeft ze er niet om hoe ver de extremen weg liggen.
+
+<CodeBlock id="both" code={`employees %>%
+  group_by(department) %>%
+  summarise(
+    mean_wellbeing = mean(wellbeing),
+    median_wellbeing = median(wellbeing),
+    n = n()
+  ) %>%
+  arrange(desc(median_wellbeing))`} />
+
+Engineering heeft de **hoogste mediane welzijnsscore van de vier afdelingen**, en
+een gemiddelde dat in het midden van de tabel staat. Beide getallen kloppen. Ze
+beschrijven dezelfde 128 mensen. Ze ondersteunen tegengestelde koppen.
+
+## Waarom de twee verschillen
+
+Een gemiddelde zit onder een mediaan als een lange staart het omlaag trekt. Kijk
+dus waaruit de afdeling bestaat:
+
+<CodeBlock id="why" code={`employees %>%
+  group_by(department) %>%
+  summarise(
+    mean_workload = mean(workload),
+    mean_autonomy = mean(autonomy),
+    q10 = quantile(wellbeing, 0.10),
+    q90 = quantile(wellbeing, 0.90)
+  )`} />
+
+Engineering heeft de hoogste werkdruk **en** de hoogste autonomie van het
+bedrijf, en het beste tiende deel staat er het best voor van overal. Maar het
+laagste tiende deel zit ver onder dat van elke andere afdeling. Werkdruk en
+autonomie schuiven de hele afdeling omhoog of omlaag; ze verklaren niet
+waarom een minderheid van de ingenieurs een heel laag welzijn rapporteert. Wat
+dat ook veroorzaakt, het staat niet in de data (bijvoorbeeld een bereikbaarheidsdienst;
+Module 11 komt erop terug). De typische ingenieur doet het goed: dat is de
+mediaan. De gemiddelde ingenieur wordt omlaag getrokken door de staart: dat is
+het gemiddelde.
+
+<CodeBlock id="tail" code={`cutoff <- quantile(employees$wellbeing, 0.10)
+
+employees %>%
+  group_by(department) %>%
+  summarise(in_bottom_tenth = sum(wellbeing < cutoff), n = n())`} />
+
+Tel hoeveel van elke afdeling in het slechtst af zijnde tiende deel van het
+bedrijf vallen. Een afdeling kan meer dan zijn aandeel daarvan bevatten en toch de
+hoogste typische score hebben.
+
+<Exercise id="m3-3-a" />
+
+## Wat eraan te doen
+
+Drie regels, en je gebruikt ze alle drie de rest van de cursus.
+
+1. **Rapporteer beide** als ze verschillen, en zeg op welke je conclusie
+   rust.
+2. **Kijk naar de verdeling**, niet alleen naar samenvattingen ervan. Module 4
+   tekent deze afdeling in één boxplot, en de vorm is in een seconde duidelijk.
+3. **Zeg waarvan de samenvatting is.** "Typisch" en "gemiddeld" zijn
+   verschillende beweringen over verschillende mensen.
+
+<Interpret
+  id="i-3-3"
+  question="Je moet één zin over Engineering schrijven voor een managementrapport. Welke is verdedigbaar op grond van de samenvattingen die je hebt berekend?"
+  choices={[
+    { text: 'Engineering heeft een gemiddeld welzijn en heeft geen aandacht nodig.', response: 'Het rust alleen op het gemiddelde en voegt dan een aanbeveling toe die de data niet ondersteunen. De staart is precies de groep die aandacht nodig heeft.' },
+    { text: 'Engineering heeft de hoogste mediane welzijnsscore van de vier afdelingen, maar ook een langere onderste staart: het gemiddelde wordt onder dat van Marketing en Sales getrokken door een minderheid van werknemers met zeer lage scores.', correct: true, response: 'Juist. Het noemt beide samenvattingen, zegt welke mensen het verschil ertussen veroorzaken en doet een bewering die iemand aan de data kan toetsen.' },
+    { text: 'Engineering heeft het hoogste welzijn van het bedrijf.', response: 'Waar voor de mediaan en onwaar voor het gemiddelde, en de zin zegt niet welke bedoeld is. Een lezer neemt het gemiddelde aan.' },
+    { text: 'De data van Engineering zijn onbetrouwbaar, omdat het gemiddelde en de mediaan verschillen.', response: 'Het verschil is informatie over de vorm van de verdeling, geen bewijs van slechte data. Scheve verdelingen zijn normaal en eerlijk.' },
+  ]}
+/>
+
+<Quiz
+  id="q-3-3"
+  question="Voor welke van deze liggen het gemiddelde en de mediaan van een kolom het dichtst bij elkaar?"
+  choices={[
+    { text: 'Dienstjaren, waar de meeste werknemers nieuw zijn en een paar er 30 jaar werken', response: 'Dat is een lange rechterstaart, die het gemiddelde boven de mediaan trekt. Het is precies de vorm die tenure_years in deze dataset heeft.' },
+    { text: 'Een welzijnsscore met een ruwweg symmetrische verdeling en zonder extreme waarden', correct: true, response: 'Juist. Als de verdeling symmetrisch is, komen de twee samenvattingen bijna op dezelfde plek terecht, en maakt het niet veel uit welke je rapporteert.' },
+    { text: 'Jaarsalarissen in een bedrijf met drie zeer goed betaalde directeuren', response: 'Drie extreme waarden verschuiven het gemiddelde en laten de mediaan met rust: het schoolvoorbeeld van waarom mediaan inkomen wordt gerapporteerd in plaats van gemiddeld inkomen.' },
+    { text: 'Elke kolom met minstens 400 waarden', response: 'Steekproefgrootte maakt een verdeling niet symmetrisch. Een scheve kolom blijft scheef, hoeveel rijen je ook toevoegt.' },
+  ]}
+/>

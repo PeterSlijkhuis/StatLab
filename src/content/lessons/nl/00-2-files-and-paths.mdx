@@ -1,0 +1,120 @@
+De meeste eerste fouten in R gaan niet over statistiek. Ze luiden `cannot open
+file` of `No such file or directory`, en hebben allemaal dezelfde oorzaak: R
+kreeg de opdracht een bestand te zoeken op een plek waar het niet staat. Deze
+les gaat over hoe R bepaalt waar het kijkt.
+
+## Waar R staat
+
+R heeft altijd een **werkmap** (working directory): één map die het als "hier"
+behandelt. Vraag ernaar met `getwd()`, get working directory. Druk op
+**Run**.
+
+<CodeBlock id="wd" code={`getwd()`} />
+
+In StatLab is dat een map in je browser. In een RStudio Project is het de
+projectmap, zoals `C:/Users/you/Documents/survey-analysis`. In beide gevallen
+is dit de map waarvan elke bestandsnaam die je typt wordt gemeten.
+
+`list.files()` toont wat er in de werkmap staat, en met een mapnaam toont het
+wat er in die map staat.
+
+<CodeBlock id="list" code={`list.files()
+
+list.files("data")`} />
+
+De eerste regel toont een map met de naam `data`. De tweede kijkt erin en vindt
+de twee cursusdatasets. Je hoefde niet te zeggen waar `data` was: het staat in
+de werkmap, dus de naam is genoeg.
+
+## Paden
+
+Een **pad** is de route van de ene map naar een bestand, geschreven als
+mapnamen gescheiden door een schuine streep, `/`. Er zijn twee soorten.
+
+- Een **relatief pad** begint bij de werkmap: `"data/workplace.csv"` betekent
+  "ga van hier de map `data` in en neem `workplace.csv`".
+- Een **absoluut pad** begint bij de top van de computer:
+  `"C:/Users/sam/Documents/survey-analysis/data/survey.csv"`. Het noemt een
+  schijf en een gebruiker, dus het bestaat alleen op de laptop van Sam.
+
+Gebruik altijd relatieve paden. In een project werken ze op elke computer die
+het opent; een absoluut pad breekt zodra het project verhuist.
+
+<Predict
+  id="p-exists"
+  question={'file.exists() antwoordt TRUE of FALSE. Wat zegt file.exists("data/workplace.cvs")?'}
+  choices={[
+    { text: 'TRUE, want het bestand staat in de map data', response: 'Kijk goed naar het eind van de naam: cvs, niet csv. R raadt niet wat je bedoelde.' },
+    { text: 'FALSE, want de naam is verkeerd gespeld', correct: true, response: 'Juist. Voor R is workplace.cvs een ander bestand, en er is geen bestand met die naam.' },
+    { text: 'Een foutmelding', response: 'Vragen naar een bestand dat niet bestaat is een prima vraag. Het antwoord is gewoon FALSE.' },
+  ]}
+/>
+
+<CodeBlock id="exists" code={`file.exists("data/workplace.csv")
+
+file.exists("data/workplace.cvs")`} />
+
+R vraagt om het bestand precies zoals je het typte. StatLab en Linux
+onderscheiden hoofdletters, dus `"Data/Workplace.csv"` is ook niet hetzelfde
+bestand; Windows en macOS negeren hoofdletters meestal, en zo kan een script dat
+op een laptop werkt elders falen. Als R zegt dat het een bestand niet kan
+vinden, vergelijk dan je pad letter voor letter met wat `list.files()` toont.
+
+## Een pad bouwen
+
+`file.path()` plakt map- en bestandsnamen aan elkaar met de juiste streep, zodat
+je er nooit een hoeft te typen.
+
+<CodeBlock id="build" code={`file.path("data", "workplace.csv")
+
+file.path("output", "figures", "figure-1.png")`} />
+
+## Schrijven naar een map
+
+R kan op dezelfde manier mappen maken en bestanden schrijven. `dir.create()`
+maakt een map, en `write.csv()` slaat een data frame op als CSV-bestand op het
+pad dat je opgeeft.
+
+<CodeBlock id="write" code={`dir.create("output")
+
+marks <- data.frame(student = c("A", "B", "C"), mark = c(68, 74, 59))
+write.csv(marks, file.path("output", "marks.csv"), row.names = FALSE)
+
+list.files("output")`} />
+
+Voer het blok een tweede keer uit en R waarschuwt dat `output` al bestaat. Dat
+is een waarschuwing, geen fout: de map is er nog en het bestand is toch
+geschreven.
+
+## Drie dingen om te vermijden
+
+**Backslashes.** Windows toont paden als `C:\Users\sam`. In R begint een
+backslash tussen aanhalingstekens een speciaal teken, dus dat pad is een fout.
+Schrijf op elke computer schuine strepen vooruit, ook op Windows:
+`"C:/Users/sam"`.
+
+**`setwd()` bovenaan een script.** Je ziet online scripts die beginnen met een
+regel als `setwd("C:/Users/sam/Documents/survey-analysis")`. Dat verandert de
+werkmap naar een map op de computer van één persoon, wat weer het probleem van
+het absolute pad is. In een project is de werkmap al goed. Laat `setwd()`
+weg.
+
+**Paden gemeten vanaf het script.** Een script in `scripts/01-clean.R` draait
+nog steeds met de projectmap als werkmap. Het leest `"data/survey.csv"`, niet
+`"../data/survey.csv"`. In een pad betekent `..` "één map omhoog", en vanuit de
+projectmap staat daar niets wat je nodig hebt.
+
+<Exercise id="m0-2-a" />
+
+<Exercise id="m0-2-b" />
+
+<Quiz
+  id="q-0-2"
+  question="Je projectmap bevat data/survey.csv en scripts/01-clean.R. Welke regel in 01-clean.R vindt de data op elke computer die het project opent?"
+  choices={[
+    { text: 'file.exists("data/survey.csv")', correct: true, response: 'Juist. In een project werkt R vanuit de projectmap, waar het script zelf ook staat.' },
+    { text: 'file.exists("../data/survey.csv")', response: 'Dat gaat vanuit het project één map omhoog, naar de map die het bevat. Paden worden gemeten vanaf de werkmap, niet vanaf het script.' },
+    { text: 'file.exists("survey.csv")', response: 'Dat kijkt in de projectmap zelf, maar het bestand staat één niveau lager, in data.' },
+    { text: 'file.exists("C:/Users/you/survey-analysis/data/survey.csv")', response: 'Dat werkt op jouw computer en nergens anders. Het relatieve pad doet overal hetzelfde werk.' },
+  ]}
+/>

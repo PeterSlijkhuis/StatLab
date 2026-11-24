@@ -1,0 +1,212 @@
+Echte data moeten schoongemaakt worden voordat ze geanalyseerd kunnen worden. Een
+code als 99 staat voor "geen antwoord", een kolom heeft een onhandige naam, een
+getal moet een categorie worden, de informatie die je nodig hebt staat in een
+tweede bestand, of de data komen als Excel- of SPSS-bestand. Deze les behandelt
+de dplyr-hulpmiddelen voor elk daarvan, dezelfde die de BMS-handleiding *Intro R
+for BMS Bachelor programs* noemt in het hoofdstuk over het verwerken van
+databestanden.
+
+## Ontbrekende waarden gecodeerd als getallen
+
+R kent precies één manier om te zeggen dat een waarde ontbreekt: `NA`, not
+available. Vragenlijstsoftware en SPSS-bestanden gebruiken vaak een getal, zoals
+99. R kan niet weten dat 99 "geen antwoord" betekent, dus het zou het gewoon
+meemiddelen.
+
+<CodeBlock id="survey" code={`library(dplyr)
+
+survey <- data.frame(
+  id = 1:6,
+  Age = c(23, 31, 99, 45, 27, 38),
+  satisfaction = c(4, 2, 5, 99, 3, 4),
+  contract = c("full-time", "part-time", "full-time", "Don't know", "part-time", "full-time")
+)
+
+survey`} />
+
+`na_if()` maakt van één gekozen waarde `NA`. In dezelfde pipeline geeft
+`rename()` `Age` een naam met kleine letters. Let op de volgorde binnen
+`rename()`: de nieuwe naam komt eerst, dan de oude.
+
+<CodeBlock id="na-if" code={`survey <- survey %>%
+  rename(age = Age) %>%
+  mutate(
+    age = na_if(age, 99),
+    satisfaction = na_if(satisfaction, 99),
+    contract = na_if(contract, "Don't know")
+  )
+
+survey`} />
+
+## De gaten tellen
+
+`is.na()` geeft TRUE voor elke ontbrekende waarde, dus het vergelijk-en-tel-op-idioom
+uit Module 1 telt ze. `colSums()` doet het voor alle kolommen tegelijk.
+
+<CodeBlock id="count-na" code={`sum(is.na(survey$age))
+
+colSums(is.na(survey))`} />
+
+## Pairwise of listwise
+
+Er zijn twee manieren om met de ontbrekende waarden om te gaan, en ze geven
+verschillende antwoorden.
+
+- **Pairwise deletion** laat een persoon alleen weg uit de berekeningen die de
+  ontbrekende waarde nodig hebben. Dat doet `na.rm = TRUE`.
+- **Listwise deletion** laat elke persoon weg die iets mist, vóór elke
+  berekening. Dat doet `na.omit()` met een data frame.
+
+<CodeBlock id="pairwise-listwise" code={`# Pairwise: each mean uses everyone who answered that question.
+mean(survey$age, na.rm = TRUE)
+mean(survey$satisfaction, na.rm = TRUE)
+
+# Listwise: only people who answered everything.
+complete <- na.omit(survey)
+nrow(complete)
+mean(complete$age)
+mean(complete$satisfaction)`} />
+
+De gemiddelde leeftijd veranderde van 32,8 naar 29,75, hoewel niemands leeftijd
+veranderde. Persoon 4 werd weggelaten vanwege een ontbrekende tevredenheidsscore,
+en zijn leeftijd van 45 ging met hem mee. Listwise deletion kan veel echte data
+weggooien, dus controleer hoeveel rijen `na.omit()` overlaat voordat je erop
+vertrouwt. Om mensen alleen voor één variabele weg te laten, filter je erop:
+`filter(!is.na(age))`, waar `!` "niet" betekent.
+
+<Predict
+  id="p-listwise"
+  question="lm() laat elke rij met een ontbrekende waarde op een variabele in het model weg. Welke van de twee soorten deletion is dat?"
+  choices={[
+    { text: 'Listwise: een persoon die één predictor mist valt uit het hele model', correct: true, response: 'Ja. Een model is één berekening, dus een rij die iets mist wat het nodig heeft kan niet meedoen. Vergelijk nobs(model) met nrow(data) om te zien hoeveel mensen een model echt gebruikte.' },
+    { text: 'Pairwise: elke coëfficiënt gebruikt de mensen die die predictor hebben', response: 'Elke coëfficiënt wordt samen met de andere geschat, uit één verzameling rijen. Een rij die een variabele in de formule mist, valt uit alle.' },
+    { text: 'Geen van beide: lm() vult de ontbrekende waarden aan met het gemiddelde', response: 'lm() verzint nooit waarden. Een gemiddelde invullen is een beslissing die je zelf zou moeten nemen, en die maakt de standaardfouten meestal te klein.' },
+  ]}
+/>
+
+## Van getallen naar categorieën: case_when()
+
+`case_when()` hercodeert een bereik van waarden in een categorie. Elke regel is een
+voorwaarde, een tilde `~` en de waarde voor de rijen waar die voorwaarde geldt.
+Hier wordt dienstduur drie banden.
+
+<CodeBlock id="case-when" code={`employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+employees <- employees %>%
+  mutate(tenure_band = case_when(
+    tenure_years < 2 ~ "new",
+    tenure_years >= 2 & tenure_years < 10 ~ "established",
+    tenure_years >= 10 ~ "long-serving"
+  ))
+
+table(employees$tenure_band)`} />
+
+De aantallen kloppen, maar de volgorde is alfabetisch: "established" voor "new".
+De nieuwe kolom is gewone tekst, en tekst heeft geen eigen volgorde.
+
+## Geordende factoren
+
+Een **geordende factor** is een factor waarvan de levels een rangorde hebben, en
+zo slaat R een ordinale variabele op. `factor()` met `levels =` bepaalt de
+volgorde, en `ordered = TRUE` zegt dat die volgorde iets betekent.
+
+<CodeBlock id="ordered" code={`employees <- employees %>%
+  mutate(tenure_band = factor(tenure_band,
+    levels = c("new", "established", "long-serving"),
+    ordered = TRUE
+  ))
+
+table(employees$tenure_band)
+head(employees$tenure_band)`} />
+
+De levels worden nu getoond met `<` ertussen, en elke tabel en plot volgt die
+volgorde. Een gewone factor met `levels =` zou de volgorde ook vastleggen;
+`ordered = TRUE` voegt toe dat vergelijkingen zoals `tenure_band >= "established"`
+zinvol zijn.
+
+## Dummyvariabelen: ifelse()
+
+Een dummyvariabele is 1 voor één groep en 0 voor iedereen anders. `ifelse()`
+neemt een voorwaarde, de waarde voor TRUE en de waarde voor FALSE.
+
+<CodeBlock id="dummy" code={`employees <- employees %>%
+  mutate(remote_dummy = ifelse(remote == "Yes", 1, 0))
+
+table(employees$remote, employees$remote_dummy)`} />
+
+Elke "Yes" werd 1 en elke "No" werd 0. Je hoeft dit zelden te doen voordat je een
+model past, omdat `lm()` zelf dummy's bouwt uit een factor, zoals Module 12
+laat zien. Het is nuttig als een dummy een kolom moet zijn die je kunt zien,
+optellen of middelen.
+
+<Exercise id="m2-4-a" />
+
+## Een kolom uit een andere tabel toevoegen: left_join()
+
+Soms staat de informatie die je nodig hebt in een tweede bestand. Hier zegt een
+kleine tabel in welke provincie elke vestiging ligt. `left_join()` houdt elke rij
+van de eerste tabel en voegt de bijpassende kolommen van de tweede toe, gekoppeld
+op de kolom genoemd in `by`.
+
+<CodeBlock id="join" code={`sites <- data.frame(
+  site = c("Almelo", "Apeldoorn", "Deventer", "Enschede", "Hengelo", "Zwolle"),
+  province = c("Overijssel", "Gelderland", "Overijssel", "Overijssel", "Overijssel", "Overijssel")
+)
+
+employees <- employees %>%
+  left_join(sites, by = "site")
+
+employees %>% select(employee_id, site, province) %>% head(3)
+table(employees$province)`} />
+
+De sleutel moet in beide tabellen hetzelfde gespeld zijn. Een vestiging geschreven
+als "zwolle" in het ene bestand en "Zwolle" in het andere komt niet overeen, en
+die rijen krijgen `NA` voor province, zonder foutmelding. Controleer na een join
+op nieuwe ontbrekende waarden met `sum(is.na(employees$province))`.
+
+## Andere bestandstypen
+
+`read.csv()`, dat Les 2-1 gebruikte, zit in basis-R. Het tidyverse-alternatief
+`read_csv()`, uit readr, doet hetzelfde werk en geeft een tibble terug, een data
+frame dat compacter wordt getoond. Excel- en SPSS-bestanden hebben elk een
+package nodig. In RStudio, met het bestand in de map data van je project:
+
+```r
+library(readxl)
+survey <- read_excel("data/survey.xlsx")
+
+library(haven)
+survey <- read_sav("data/survey.sav")
+```
+
+Sommige cursusscripts gebruiken in plaats daarvan het oudere package foreign,
+dat bij R zit en gelabelde codes meteen in factoren verandert:
+
+```r
+library(foreign)
+survey <- read.spss("data/survey.sav", to.data.frame = TRUE)
+```
+
+Een SPSS-bestand slaat vaak zijn codeboek in de data op: een label voor elke
+variabele en voor elke waarde, zoals 1 = "woman". `haven` bewaart ze als
+attributen, die `attr()` toont:
+
+```r
+attr(survey$gender, "label")    # what the variable is
+attr(survey$gender, "labels")   # what each code means
+```
+
+`as_factor(survey$gender)`, uit haven, verandert de gecodeerde getallen in een
+factor met die labels als levels. En in RStudio opent `View(survey)`, met een
+hoofdletter V, elk data frame als spreadsheet.
+
+<Quiz
+  id="q-2-4"
+  question="Een vragenlijst codeert 'geen antwoord' als 99. Je voert mean(survey$age, na.rm = TRUE) uit zonder eerst iets te veranderen. Wat gebeurt er?"
+  choices={[
+    { text: 'R middelt de 99-en als echte leeftijden, dus het gemiddelde is te hoog', correct: true, response: 'Juist. Voor R is 99 een getal als elk ander. na.rm = TRUE verwijdert alleen NA, dus maak eerst van de code NA met na_if(age, 99).' },
+    { text: 'R herkent 99 als ontbrekend en slaat het over', response: 'R heeft geen idee wat 99 in jouw vragenlijst betekent. Alleen NA telt als ontbrekend.' },
+    { text: 'R stopt met een foutmelding over ontbrekende waarden', response: 'R heeft nergens over te klagen: elke waarde is een getal. Daarom is de fout makkelijk te missen.' },
+    { text: 'Het gemiddelde is NA', response: 'Het gemiddelde is alleen NA als een waarde NA is en na.rm niet is ingesteld. Hier is nog geen waarde NA.' },
+  ]}
+/>

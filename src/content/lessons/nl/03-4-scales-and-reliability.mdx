@@ -1,0 +1,140 @@
+Welzijn, betrokkenheid en stress zijn geen dingen die je met één vraag kunt
+meten. Een vragenlijst stelt er meerdere, elk beantwoord op een schaal zoals 1
+tot 5, en de score is het gemiddelde van de antwoorden. Voordat je ze middelt,
+moeten twee dingen gecontroleerd worden: dat elk item dezelfde kant op wijst, en
+dat de items genoeg met elkaar overeenstemmen om ze bij elkaar op te tellen.
+
+De cursusdatasets bevatten afgeronde schaalscores, niet de afzonderlijke
+antwoorden, dus deze les bouwt een kleine eigen enquête: vijf items, 200 mensen.
+
+<CodeBlock id="c-survey" code={`set.seed(34)
+n <- 200
+trait <- rnorm(n)
+likert <- function(x) pmin(5, pmax(1, round(3 + x)))
+survey <- data.frame(
+  q1 = likert(0.9 * trait + rnorm(n, 0, 0.6)),
+  q2 = likert(0.8 * trait + rnorm(n, 0, 0.7)),
+  q3 = likert(-0.8 * trait + rnorm(n, 0, 0.7)),
+  q4 = likert(0.7 * trait + rnorm(n, 0, 0.8)),
+  q5 = likert(0.1 * trait + rnorm(n, 0, 1))
+)
+
+head(survey)`} />
+
+Stel je voor dat de items zo luiden, beantwoord van 1, helemaal oneens, tot 5,
+helemaal eens:
+
+| Item | Formulering |
+| --- | --- |
+| q1 | Ik voel me energiek op mijn werk. |
+| q2 | Ik kijk uit naar mijn werkdag. |
+| q3 | Ik voel me uitgeput aan het eind van de dag. |
+| q4 | Mijn werk geeft me voldoening. |
+| q5 | Ik hou van de koffie op het werk. |
+
+## Items die de verkeerde kant op wijzen
+
+<CodeBlock id="c-cor" code={`round(cor(survey), 2)`} />
+
+q1, q2 en q4 correleren positief met elkaar. q3 correleert negatief met alle
+andere, omdat het eens zijn ermee *laag* welzijn betekent. Vragenlijsten mengen
+richtingen zo met opzet, zodat mensen die met alles instemmen opvallen. Voordat
+je middelt, moet een **omgekeerd geformuleerd** item worden omgedraaid.
+
+Op een schaal van 1 tot 5 moet 1 5 worden, 2 wordt 4, enzovoort: de omgekeerde
+waarde is (laagste + hoogste) min het antwoord, hier `6 - q3`.
+
+<CodeBlock id="c-reverse" code={`survey$q3_r <- 6 - survey$q3
+
+table(survey$q3, survey$q3_r)`} />
+
+<Predict
+  id="p-reverse"
+  question="Een item van 0 tot 10 moet worden omgedraaid. Waarvan trek je het af?"
+  choices={[
+    { text: '11', response: 'Dan wordt 0 een 11, buiten de schaal. De regel is laagste plus hoogste.' },
+    { text: '10', correct: true, response: 'Juist: 0 + 10 = 10, dus 0 wordt 10 en 10 wordt 0.' },
+    { text: '9', response: 'Dan zou 10 -1 worden. Tel de laagste en hoogste mogelijke antwoorden op.' },
+  ]}
+/>
+
+## De schaalscore
+
+Als elk item dezelfde kant op wijst, is de score het gemiddelde van de items per
+persoon. Het gemiddelde in plaats van de som houdt de score op de schaal waarop
+de items zijn beantwoord, dus 4 betekent nog steeds "eens".
+
+<CodeBlock id="c-score" code={`survey$score <- rowMeans(survey[, c("q1", "q2", "q3_r", "q4", "q5")])
+
+summary(survey$score)`} />
+
+<Exercise id="m3-4-a" />
+
+## Horen de items bij elkaar?
+
+Een schaalscore gaat ervan uit dat de items één ding meten. Als ze dat doen,
+scoren mensen die hoog scoren op het ene item meestal ook hoog op de andere, en
+de variatie van de items telt op: het totaal varieert veel meer dan de items
+zouden doen als ze niet verband hielden. **Cronbachs alfa** zet dat om in één
+getal, hoogstens 1 en meestal tussen 0 en 1.
+
+<CodeBlock id="c-alpha" code={`items <- survey[, c("q1", "q2", "q3_r", "q4", "q5")]
+k <- ncol(items)
+
+item_variances <- sum(apply(items, 2, var))
+total_variance <- var(rowSums(items))
+
+k / (k - 1) * (1 - item_variances / total_variance)`} />
+
+Alfa is ,74. Vuistregels noemen ,70 acceptabel en ,80 goed voor onderzoek. Alfa
+stijgt ook met het aantal items, dus een lange schaal kan ,80 halen met items
+die maar zwak overeenstemmen.
+
+<Exercise id="m3-4-b" />
+
+## Welk item is het zwakke?
+
+Bereken alfa opnieuw met telkens één item weggelaten. Een item waarvan het
+weglaten alfa verhoogt, stemt slecht overeen met de rest en is een kandidaat
+voor niet hetzelfde meten.
+
+<CodeBlock id="c-drop" code={`alpha_of <- function(items) {
+  k <- ncol(items)
+  k / (k - 1) * (1 - sum(apply(items, 2, var)) / var(rowSums(items)))
+}
+
+sapply(names(items), function(item) alpha_of(items[, names(items) != item]))`} />
+
+Het weglaten van een van q1 tot en met q4 verlaagt alfa. Het weglaten van q5
+verhoogt het tot ,82, en de correlaties met de andere items waren bijna nul. De
+koffievraag hoort niet in een welzijnsschaal. Bij een echte vragenlijst zou je
+naar de formulering kijken voordat je iets weglaat, en zou je rapporteren welke
+items je verwijderde en waarom.
+
+In RStudio doet `psych::alpha(items)` dit alles in één aanroep, en het
+waarschuwt je als een item eruitziet alsof het nog omgedraaid moet worden.
+
+BMS-vakken over psychometrie gaan verder met nog drie packages: CTT, waarvan
+`itemAnalysis()` alfa, alfa als een item wordt weggelaten en de item-restcorrelaties
+rapporteert; Lambda4, waarvan `guttman()` Guttmans lambda 2 geeft, een
+betrouwbaarheidscoëfficiënt die nooit onder alfa ligt; en mirt, voor item-responstheoriemodellen.
+
+<Quiz
+  id="q-alpha"
+  question="Je vergeet q3 om te draaien en berekent alfa op de oorspronkelijke vijf items. Wat gebeurt er?"
+  choices={[
+    { text: 'Niet veel, alfa kijkt alleen naar varianties', response: 'De totale variantie hangt af van hoe de items samen bewegen, en een niet omgedraaid item beweegt tegen de rest in.' },
+    { text: 'Alfa stort in richting nul, omdat q3 de andere items opheft', correct: true, response: 'Juist. Hier daalt het van ,74 naar ,02. Een verdacht lage alfa is vaak een item dat niemand heeft omgedraaid.' },
+    { text: 'Alfa gaat omhoog, omdat er meer variatie is', response: 'De items variëren evenveel als eerder, maar het totaal varieert minder, omdat q3 tegen de anderen in trekt. Alfa gaat omlaag.' },
+  ]}
+/>
+
+<Quiz
+  id="q-alpha-meaning"
+  question="Een schaal heeft alfa = ,90. Wat vertelt dat je?"
+  choices={[
+    { text: 'Dat de schaal meet wat hij beweert te meten', response: 'Dat is validiteit. Alfa zegt dat de items met elkaar overeenstemmen, wat vijf vragen over het verkeerde construct net zo goed kunnen.' },
+    { text: 'Dat de items consistent met elkaar zijn, dus middelen ervan redelijk is', correct: true, response: 'Precies. Betrouwbaarheid is nodig voor een bruikbare score, maar is niet hetzelfde als het juiste meten.' },
+    { text: 'Dat 90% van de antwoorden goed is', response: 'Alfa zegt niets over goede antwoorden. Het is opgebouwd uit de itemvarianties en de variantie van de totaalscore, en schat hoeveel van de scorevariantie geen meetfout is.' },
+  ]}
+/>
