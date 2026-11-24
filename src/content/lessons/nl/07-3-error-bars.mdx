@@ -1,0 +1,107 @@
+Open een willekeurig tijdschrift en je vindt figuren met kleine verticale balkjes
+boven de balken of punten. Open drie tijdschriften en je ziet dat die balkjes drie
+verschillende dingen betekenen. Deze les bouwt alle drie uit één tabel, zodat je
+ziet hoeveel de keuze het plaatje verandert, en waarom een onderschrift dat niet
+zegt welke het is, geen onderschrift is.
+
+<CodeBlock id="table" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+set.seed(73)
+study <- population[sample(nrow(population), 120), ]
+
+summary_table <- study %>%
+  group_by(programme) %>%
+  summarise(mean_exam = mean(exam_score), sd_exam = sd(exam_score), n = n()) %>%
+  mutate(se = sd_exam / sqrt(n), ci = qt(0.975, df = n - 1) * se)
+
+summary_table`} />
+
+Drie kolommen, drie lengtes, één dataset:
+
+- **`sd_exam`**: hoeveel studenten van elkaar verschillen. Ongeveer 10 tot 12 punten.
+- **`se`**: hoeveel het groepsgemiddelde van onderzoek tot onderzoek zou verschillen.
+  Ongeveer 1,2 tot 1,6 punten, want het is de SD gedeeld door de wortel uit de
+  groepsgrootte (ongeveer 60).
+- **`ci`**: de halve breedte van het interval van 95 procent: de standaardfout maal
+  `qt(0.975, df = n - 1)`, dus iets meer dan twee keer de SE.
+
+<Predict
+  id="p-bars"
+  question="Dezelfde twee gemiddelden worden driemaal getekend, met SD-balkjes, SE-balkjes en BI-balkjes. Welke figuur laat de twee opleidingen het meest op elkaar lijken?"
+  choices={[
+    { text: 'De SD-balkjes, want die zijn het langst', correct: true, response: 'Ja. SD-balkjes zijn hier ongeveer acht keer langer dan SE-balkjes, dus elk verschil tussen de gemiddelden verdwijnt erin.' },
+    { text: 'De SE-balkjes, want die zijn het kortst', response: 'Korte balkjes laten een verschil groot lijken, niet klein. SE-balkjes laten de twee groepen zo verschillend lijken als maar kan.' },
+    { text: 'Alle drie, want de gemiddelden zijn in elke figuur gelijk', response: 'De gemiddelden zijn identiek, maar een lezer beoordeelt een verschil door het met de balkjes te vergelijken. Verander de balkjes en je verandert de indruk.' },
+  ]}
+/>
+
+<CodeBlock id="bars" code={`library(ggplot2)
+
+bars <- bind_rows(
+  summary_table %>% mutate(kind = "SD", half = sd_exam),
+  summary_table %>% mutate(kind = "SE", half = se),
+  summary_table %>% mutate(kind = "95% CI", half = ci)
+)
+
+bars %>%
+  mutate(kind = factor(kind, levels = c("SD", "SE", "95% CI"))) %>%
+  ggplot(aes(x = programme, y = mean_exam)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_exam - half, ymax = mean_exam + half), width = 0.15) +
+  facet_wrap(~ kind) +
+  labs(x = NULL, y = "Mean exam score") +
+  theme_classic()`} />
+
+Drie eerlijke figuren. Identieke data, identieke gemiddelden, en een lezer trekt
+er drie verschillende conclusies uit. Niemand vervalste iets; iemand koos een
+balkje.
+
+## Welke gebruik je
+
+- **SD-balkjes** wanneer de figuur over de *data* gaat: hoe uitgespreid de
+  waarnemingen zijn. Gangbaar in beschrijvende figuren en in klinisch werk.
+- **SE-balkjes** wanneer de figuur over de *precisie van de gemiddelden* gaat. Veel
+  gebruikt en veel verkeerd gelezen, want een lezer die BI's verwacht leest een
+  68-procentsbalkje als een 95-procentsbalkje en ziet verschillen die er niet zijn.
+- **BI-balkjes** wanneer de figuur een gevolgtrekking moet ondersteunen. Dit is
+  waar de huidige rapportagerichtlijnen de voorkeur aan geven, en het is degene die
+  je kiest tenzij je een reden hebt om het niet te doen.
+
+Welke je ook kiest, **het onderschrift moet het zeggen**. "Foutbalken tonen
+95%-BI's" is een korte zin en het verschil tussen een figuur die een lezer kan
+gebruiken en een figuur waarvan ze moeten raden wat ze betekent.
+
+Nog één waarschuwing, want het is de volgende fout na het kiezen van de balkjes:
+overlappende betrouwbaarheidsintervallen betekenen **niet** "geen verschil": twee
+95%-intervallen kunnen overlappen terwijl het verschil tussen twee onafhankelijke
+gemiddelden significant is. Het omgekeerde is veiliger: als de 95%-intervallen van
+twee onafhankelijke groepen helemaal niet overlappen, is het verschil significant
+op het .05-niveau volgens de Welch-toets (bij sterk ongelijke SD-waarden en groepsgroottes
+kan de gepoolde t-toets daarvan afwijken). In beide gevallen is het interval voor
+een *verschil* een ander interval, en Module 8 berekent het.
+
+<Exercise id="m7-3-a" />
+
+<Quiz
+  id="q-bars"
+  question="Een figuur toont twee gemiddelden met foutbalkjes van ongeveer ±1,6 punt en geen onderschrift dat ze uitlegt. De groeps-SD's zijn rond 12 en elke groep heeft ongeveer 60 mensen. Wat tonen de balkjes vrijwel zeker?"
+  choices={[
+    { text: 'Standaarddeviaties', response: 'De SD-waarden zijn ongeveer 12, dus SD-balkjes zouden ruwweg acht keer langer zijn dan de getekende.' },
+    { text: 'Standaardfouten', correct: true, response: 'Juist: 12/√60 is ongeveer 1,6. Je kon het reconstrueren omdat n en de SD toevallig waren gerapporteerd, en dat is precies het raden dat een onderschrift een lezer bespaart.' },
+    { text: '95%-betrouwbaarheidsintervallen', response: 'Die zouden ongeveer 2,0 keer de standaardfout zijn, dus hier ruwweg ±3,2 punten.' },
+    { text: 'Het bereik van de data', response: 'Tentamenscores lopen van de twintig tot 100. Een bereikbalkje zou het grootste deel van de figuur beslaan.' },
+  ]}
+/>
+
+<Interpret
+  id="i-7-3"
+  question="Je figuur toont Psychologie met M = 76,0, 95%-BI [72,7; 79,3] en Bedrijfskunde met M = 73,6, 95%-BI [71,2; 76,0]. Welk onderschrift en welke lezing is juist?"
+  choices={[
+    { text: 'Gemiddelde tentamenscore per opleiding. Foutbalken tonen 95%-betrouwbaarheidsintervallen. Psychologie, M = 76,0, 95%-BI [72,7; 79,3]; Bedrijfskunde, M = 73,6, 95%-BI [71,2; 76,0].', correct: true, response: 'Juist. Het noemt wat de balkjes zijn en rapporteert beide gemiddelden met hun intervallen, wat APA vraagt en wat een lezer in staat stelt de figuur met de tekst te vergelijken.' },
+    { text: 'Gemiddelde tentamenscore per opleiding. De intervallen overlappen, dus de twee opleidingen verschillen niet.', response: 'Overlappende 95%-intervallen tonen de afwezigheid van een verschil niet aan. De vraag gaat over het interval voor het VERSCHIL, dat hier niet is getekend.' },
+    { text: 'Gemiddelde tentamenscore per opleiding. Foutbalken tonen het bereik waarbinnen 95% van de studenten in elke opleiding scoorde.', response: 'Dat zou uit de SD worden opgebouwd en ruwweg van 52 tot 100 lopen voor Psychologie en van 55 tot 92 voor Bedrijfskunde. Deze balkjes zijn opgebouwd uit de standaardfout en beschrijven de gemiddelden.' },
+    { text: 'Gemiddelde tentamenscore per opleiding, met standaardfoutbalken.', response: 'De getoonde balkjes zijn ongeveer twee keer de standaardfout, omdat het BI-balkjes zijn. Ze SE noemen zou een lezer ertoe brengen ze te verdubbelen voor een 95%-interval, waardoor de onzekerheid ongeveer twee keer te groot wordt voorgesteld.' },
+  ]}
+/>

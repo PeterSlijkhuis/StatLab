@@ -1,0 +1,125 @@
+Hier is een zin die in gepubliceerde artikelen staat, in studieboeken, en in
+ongeveer negen van de tien studentenrapporten:
+
+> *"We zijn 95% zeker dat het ware gemiddelde tussen 70,3 en 77,0 ligt, dus er is
+> 95% kans dat het in dat bereik zit."*
+
+De eerste helft is gangbaar taalgebruik. De tweede helft is fout, en deze les gaat
+over waarom, niet als pedanterie, maar omdat de juiste versie is wat het
+interval bruikbaar maakt.
+
+<Predict
+  id="p-meaning"
+  question="Je berekent één 95%-betrouwbaarheidsinterval uit één onderzoek. Hoe groot is de kans dat het populatiegemiddelde erin ligt?"
+  choices={[
+    { text: '95%', response: 'Dit is het intuïtieve antwoord en precies het antwoord dat deze les wil corrigeren. Lees verder, en kom daarna terug om te zien of je het nog gelooft.' },
+    { text: 'Nul of één, en je kunt niet zien welke', correct: true, response: 'Ja. Het populatiegemiddelde is een vast getal en je interval ligt vast zodra het berekend is, dus het bevat het wel of niet. De 95% is een eigenschap van de methode over veel onderzoeken heen.' },
+    { text: 'Het hangt af van de steekproefgrootte', response: 'De steekproefgrootte verandert de BREEDTE van het interval, niet of dit specifieke interval het gemiddelde toevallig bevat.' },
+  ]}
+/>
+
+## Honderd onderzoeken
+
+We hebben een luxe die geen onderzoeker heeft: we kunnen het onderzoek honderd
+keer uitvoeren en elk antwoord met de waarheid vergelijken.
+
+<CodeBlock id="many" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+mu <- mean(population$exam_score)
+
+set.seed(72)
+intervals <- replicate(100, {
+  s <- sample(population$exam_score, 40)
+  ci <- mean(s) + c(-1, 1) * qt(0.975, df = 39) * sd(s) / sqrt(40)
+  c(lower = ci[1], upper = ci[2])
+})
+
+intervals <- as.data.frame(t(intervals))
+intervals$study <- 1:100
+intervals$captured <- intervals$lower <= mu & intervals$upper >= mu
+
+sum(intervals$captured)`} />
+
+Met deze seed bevatten 91 van de honderd μ en 9 niet. Dat zijn meer missers dan de
+vijf die je zou verwachten, wat zelf steekproefvariatie is; over veel herhalingen
+stabiliseert het vangpercentage op 95 procent. Kijk er nu naar.
+
+<CodeBlock id="plot" code={`library(ggplot2)
+
+intervals %>%
+  ggplot(aes(x = study, y = (lower + upper) / 2, colour = captured)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0) +
+  geom_hline(yintercept = mu, linetype = "dashed") +
+  labs(x = "Study", y = "95% CI for mean exam score", colour = "Contains mu") +
+  theme_classic()`} />
+
+Elk van die intervallen is correct berekend, met dezelfde methode, uit een
+eerlijke aselecte steekproef. De breedtes verschillen omdat elk onderzoek zijn
+eigen standaardfout heeft: `sd(s) / sqrt(40)` wordt berekend uit de veertig mensen
+van dat onderzoek en komt elke keer een beetje anders uit. Maar de intervallen die
+missen zijn niet de brede (als iets zijn het eerder de smallere, uit onderzoeken
+waarvan de SD toevallig klein uitkwam), en het zijn geen fouten. Het zijn de
+missers die een 95-procentsprocedure onvermijdelijk oplevert. Breedte is ook geen
+betrouwbare aanwijzing: veel smalle intervallen raken wel, en niets aan een
+afzonderlijk interval vertelt je of het een treffer of een misser is. Een
+onderzoeker die zo een misser in handen heeft, kan het niet weten.
+
+Dat is het hele punt. **De 95 procent zit in de procedure, niet in het
+interval.** Laat de methode eindeloos draaien en 95 procent van de intervallen die
+ze oplevert bevat de parameter. Voer haar één keer uit en je krijgt één interval,
+dat de parameter wel of niet bevat.
+
+## Zie het draaien
+
+Trek honderd intervallen en kijk hoe de missers verschijnen. Trek er nog honderd
+en kijk hoe andere missen.
+
+<Simulation name="ci" />
+
+De 95 procent is exact voor een normale populatie. Kies Sterk scheef met een kleine
+n en je ziet gemiddeld minder dan 95 treffers: het t-interval steunt erop dat de
+steekproevenverdeling dicht bij normaal ligt.
+
+<Exercise id="m7-2-a" />
+
+## Wat je wel en niet mag zeggen
+
+Drie zinnen, gerangschikt:
+
+1. **"95%-BI [70,3; 77,0]."** Altijd veilig. Rapporteer het interval en laat het
+   voor zich spreken.
+2. **"We zijn 95% zeker dat het populatiegemiddelde in [70,3; 77,0] ligt."**
+   Gangbaar taalgebruik. "Zeker" is hier een vaktaalterm die betekent "voortgebracht
+   door een procedure met 95 procent dekking", en elke lezer in het vak begrijpt het
+   zo.
+3. **"Er is 95% kans dat het populatiegemiddelde in [70,3; 77,0] ligt."** Fout.
+   Het legt het toeval in de parameter, die niet varieert, in plaats van in het
+   interval, dat wel varieert.
+
+Een praktisch gevolg, en de reden dat dit niet alleen filosofie is: een *breed*
+interval is informatief. Het vertelt je dat het onderzoek het gemiddelde niet kon
+vastpinnen, en dat is een bevinding over de precisie van het onderzoek, een die
+je helemaal niet uit een p-waarde kunt aflezen.
+
+<Quiz
+  id="q-95"
+  question="Twee onderzoeken naar dezelfde vraag rapporteren 95%-BI-intervallen van [2, 8] en [4,8; 5,2]. Wat leer je?"
+  choices={[
+    { text: 'Het tweede onderzoek heeft waarschijnlijker gelijk', response: 'Beide procedures hebben dezelfde dekking van 95 procent. Geen van beide heeft waarschijnlijker de parameter gevangen.' },
+    { text: 'Beide zijn voortgebracht door een procedure met dezelfde dekking van 95%, maar het tweede schatte de parameter veel preciezer', correct: true, response: 'Juist. Dekking is een eigenschap van de methode en is gelijk; breedte is een eigenschap van het onderzoek, en het tweede is veel informatiever.' },
+    { text: 'Het eerste onderzoek heeft 95% kans de parameter te bevatten en het tweede een hogere kans', response: 'Aan geen van beide intervallen hangt nog een kans zodra ze berekend zijn. Breedte verandert de dekking niet.' },
+    { text: 'De onderzoeken spreken elkaar tegen, want de intervallen hebben verschillende breedtes', response: 'Ze komen vrij goed overeen: beide zijn consistent met een parameter rond 5. Het ene is gewoon preciezer.' },
+  ]}
+/>
+
+<Interpret
+  id="i-7-2"
+  question="Een collega vraagt je in je rapport uit te leggen wat het betrouwbaarheidsinterval betekent. Welke zin komt erin?"
+  choices={[
+    { text: 'De gemiddelde tentamenscore was 73,6, 95%-BI [70,3; 77,0]. Op deze manier geconstrueerde intervallen bevatten het populatiegemiddelde in 95% van de herhaalde steekproeven.', correct: true, response: 'Juist, en dit is de vorm waar een zorgvuldige lezer naar zoekt: de dekking wordt toegeschreven aan de constructie, over herhaalde steekproeven heen.' },
+    { text: 'Er is 95% kans dat het ware gemiddelde in dit interval ligt.', response: 'De klassieke verkeerde formulering. Het ware gemiddelde is vast; dit interval ligt vast zodra het berekend is. De 95% beschrijft de procedure over herhaalde steekproeven, niet dit ene resultaat.' },
+    { text: '95% van onze steekproef scoorde tussen 70,3 en 77,0.', response: 'Dat beschrijft studenten en vraagt de SD. Het interval beschrijft de precisie van het gemiddelde.' },
+    { text: 'We kunnen 95% zeker zijn dat een replicatie een gemiddelde binnen dit interval oplevert.', response: 'Een voorspellingsinterval voor het gemiddelde van een toekomstig onderzoek is een ander en breder interval. Een betrouwbaarheidsinterval gaat over de parameter, niet over de volgende steekproef.' },
+  ]}
+/>
