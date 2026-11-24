@@ -8,12 +8,18 @@ import { loadQuizzes, pickRound, type BankQuiz } from '../content/quizBank';
 import { getProgress } from '../state/progress';
 import { firstUnfinished } from '../state/stats';
 import { useAdvanced } from '../state/settings';
+import { useLanguage } from '../state/language';
+import { useT } from '../i18n/t';
 import { visibleModules } from '../content/parts';
 import './ModelChooser.css';
 
-const label = (lessonId: string) => `Lesson ${lessonId.replace(/^0/, '').toUpperCase()}`;
+const number = (lessonId: string) => lessonId.replace(/^0/, '').toUpperCase();
 
 export default function Review() {
+  const t = useT();
+  const language = useLanguage();
+  const label = (lessonId: string) => `${t('Lesson')} ${number(lessonId)}`;
+  const lessonTitle = (id: string) => t(findLesson(id)?.title ?? '');
   const [round, setRound] = useState<BankQuiz[] | null>(null);
   const [at, setAt] = useState(0);
   const [answered, setAnswered] = useState(false);
@@ -23,7 +29,7 @@ export default function Review() {
   useEffect(() => {
     let live = true;
     const progress = getProgress();
-    void loadQuizzes(Object.keys(progress.lessons)).then((quizzes) => {
+    void loadQuizzes(Object.keys(progress.lessons), language).then((quizzes) => {
       if (!live) return;
       setRound(pickRound(quizzes, progress));
       setAt(0);
@@ -33,7 +39,7 @@ export default function Review() {
     return () => {
       live = false;
     };
-  }, [roundNumber]);
+  }, [roundNumber, language]);
 
   const quiz = round?.[at];
   const advanced = useAdvanced();
@@ -42,27 +48,26 @@ export default function Review() {
   return (
     <div className="model-chooser review">
       <header className="mc-intro">
-        <h1>Review quiz</h1>
+        <h1>{t('Review quiz')}</h1>
         <p>
-          Ten questions, mixed, from the lessons you have opened. Pulling an answer from memory, with topics mixed
-          together, is one of the best-tested ways to make it stick. Questions you got wrong in a lesson come up first.
+          {t('Ten questions, mixed, from the lessons you have opened. Pulling an answer from memory, with topics mixed together, is one of the best-tested ways to make it stick. Questions you got wrong in a lesson come up first.')}
         </p>
       </header>
 
       {round && round.length === 0 && (
-        <AvatarTip tone="coach" title="Nothing to review yet">
+        <AvatarTip tone="coach" title={t('Nothing to review yet')}>
           <p>
-            Questions come from the lessons you have opened. Start with{' '}
-            <Link to={`/lesson/${start.id}`}>{label(start.id)}: {start.title}</Link>, then come back here.
+            {t('Questions come from the lessons you have opened. Start with')}{' '}
+            <Link to={`/lesson/${start.id}`}>{label(start.id)}: {t(start.title)}</Link>, {t('then come back here.')}
           </p>
         </AvatarTip>
       )}
 
       {quiz && (
         <section className="mc-panel" aria-live="polite">
-          <p className="mc-kicker">Question {at + 1} of {round.length}</p>
+          <p className="mc-kicker">{t('Question {at} of {total}', { at: at + 1, total: round.length })}</p>
           <p>
-            From <Link to={`/lesson/${quiz.lessonId}`}>{label(quiz.lessonId)}: {findLesson(quiz.lessonId)?.title}</Link>
+            {t('From')} <Link to={`/lesson/${quiz.lessonId}`}>{label(quiz.lessonId)}: {lessonTitle(quiz.lessonId)}</Link>
           </p>
           <LessonProvider value={{ lessonId: quiz.lessonId, webR: null, env: null, ready: false }}>
             <ChoiceBlock
@@ -86,7 +91,7 @@ export default function Review() {
                 setAnswered(false);
               }}
             >
-              {at + 1 < round.length ? 'Next question' : 'See your score'}
+              {t(at + 1 < round.length ? 'Next question' : 'See your score')}
             </button>
           )}
         </section>
@@ -94,26 +99,26 @@ export default function Review() {
 
       {round && round.length > 0 && at >= round.length && (
         <section className="mc-panel" aria-live="polite">
-          <p className="mc-kicker">Round done</p>
+          <p className="mc-kicker">{t('Round done')}</p>
           <h2>
-            You got {round.length - missed.length} of {round.length} right.
+            {t('You got {right} of {total} right.', { right: round.length - missed.length, total: round.length })}
           </h2>
           {missed.length === 0 ? (
-            <p>A clean sweep. Open a few more lessons to widen the pool.</p>
+            <p>{t('A clean sweep. Open a few more lessons to widen the pool.')}</p>
           ) : (
             <>
-              <p>Worth another look:</p>
+              <p>{t('Worth another look:')}</p>
               <ul>
                 {missed.map((item) => (
                   <li key={`${item.lessonId}/${item.id}`}>
-                    <Link to={`/lesson/${item.lessonId}`}>{label(item.lessonId)}: {findLesson(item.lessonId)?.title}</Link>
+                    <Link to={`/lesson/${item.lessonId}`}>{label(item.lessonId)}: {lessonTitle(item.lessonId)}</Link>
                   </li>
                 ))}
               </ul>
             </>
           )}
           <button type="button" className="button-primary" onClick={() => setRoundNumber(roundNumber + 1)}>
-            New round
+            {t('New round')}
           </button>
         </section>
       )}
