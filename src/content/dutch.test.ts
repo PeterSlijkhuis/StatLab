@@ -25,6 +25,11 @@ describe('Dutch lessons', () => {
     expect(dutch.correct).toBe(english.correct);
   });
 
+  it.each(files)('%s compiles as MDX', async (name) => {
+    const { compile } = await import('@mdx-js/mdx');
+    await expect(compile(read(`nl/${name}`))).resolves.toBeDefined();
+  });
+
   it('has no em dash', () => {
     for (const name of files) expect(read(`nl/${name}`), name).not.toContain('—');
   });
