@@ -6,6 +6,7 @@ import { currentLook } from '../state/avatar';
 import { getProgress, lastVisitedLesson } from '../state/progress';
 import Avatar from './Avatar';
 import { startTour } from './Tour';
+import { useT } from '../i18n/t';
 import './SiteGuide.css';
 
 const STARTERS = ['I am new to R', 'Which test do I need?', 'How many participants?', 'Make a plot'];
@@ -22,6 +23,7 @@ export default function SiteGuide() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const id = useId();
+  const t = useT();
 
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
@@ -46,10 +48,10 @@ export default function SiteGuide() {
           onKeyDown={(e) => { if (e.key === 'Escape') close(); }}
         >
           <div className="site-guide-head">
-            <p id={`${id}-title`} className="site-guide-title">Where do you want to go?</p>
-            <button type="button" className="site-guide-close" aria-label="Close" onClick={close}>×</button>
+            <p id={`${id}-title`} className="site-guide-title">{t('Where do you want to go?')}</p>
+            <button type="button" className="site-guide-close" aria-label={t('Close')} onClick={close}>×</button>
           </div>
-          <label className="visually-hidden" htmlFor={`${id}-input`}>Type a topic or a question</label>
+          <label className="visually-hidden" htmlFor={`${id}-input`}>{t('Type a topic or a question')}</label>
           <input
             id={`${id}-input`}
             ref={inputRef}
@@ -62,16 +64,16 @@ export default function SiteGuide() {
           {text.trim() === '' ? (
             <>
               <Link className="site-guide-hit" to={`/lesson/${last.id}`}>
-                <strong>{lastVisitedLesson() ? 'Carry on' : 'Start here'}: {lessonLabel(last)}</strong>
-                <span>{last.title}</span>
+                <strong>{t(lastVisitedLesson() ? 'Carry on' : 'Start here')}: {lessonLabel(last)}</strong>
+                <span>{t(last.title)}</span>
               </Link>
-              <p className="site-guide-note">Or try:</p>
+              <p className="site-guide-note">{t('Or try:')}</p>
               <div className="site-guide-starters">
                 {STARTERS.map((starter) => (
                   <button key={starter} type="button" onClick={() => { setText(starter); inputRef.current?.focus(); }}>{starter}</button>
                 ))}
               </div>
-              <button type="button" className="site-guide-tour" onClick={() => { setOpen(false); startTour(); }}>Show me around the site</button>
+              <button type="button" className="site-guide-tour" onClick={() => { setOpen(false); startTour(); }}>{t('Show me around the site')}</button>
             </>
           ) : hits.length > 0 ? (
             <ul className="site-guide-hits" aria-live="polite">
@@ -96,11 +98,11 @@ export default function SiteGuide() {
         type="button"
         className="site-guide-button"
         aria-expanded={open}
-        aria-label="Where to? Find a lesson or page"
+        aria-label={t('Where to? Find a lesson or page')}
         onClick={() => (open ? close() : setOpen(true))}
       >
         <Avatar look={currentLook(getProgress())} size={48} />
-        <span className="site-guide-label" aria-hidden="true">Where to?</span>
+        <span className="site-guide-label" aria-hidden="true">{t('Where to?')}</span>
       </button>
     </div>
   );

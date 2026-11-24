@@ -2,6 +2,7 @@ import { useEffect, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import type { LessonMeta } from '../content/manifest';
 import { prefersReducedMotion } from './celebrate';
+import { useT } from '../i18n/t';
 
 /** A thin bar across the top of the window that fills as the lesson is read. */
 export function ReadingProgress() {
@@ -143,29 +144,30 @@ type FinishProps = {
 
 /** The end of a lesson: what is left to do here, and a big way into the next one. */
 export function LessonFinish({ complete, passed, total, next, previous }: FinishProps) {
+  const t = useT();
   return (
     <section className={`lesson-finish${complete ? ' complete' : ''}`}>
       <div className="lesson-finish-status">
         <span className="lesson-finish-icon" aria-hidden="true">{complete ? '🎉' : '🧩'}</span>
         <div>
-          <p className="lesson-finish-title">{complete ? 'Lesson complete' : total ? 'Almost there' : 'End of the lesson'}</p>
+          <p className="lesson-finish-title">{t(complete ? 'Lesson complete' : total ? 'Almost there' : 'End of the lesson')}</p>
           <p className="lesson-finish-detail">
             {total === 0
-              ? 'No exercises here: reading it through counts.'
+              ? t('No exercises here: reading it through counts.')
               : complete
-                ? `All ${total} exercise${total === 1 ? '' : 's'} solved.`
-                : `${passed} of ${total} exercise${total === 1 ? '' : 's'} solved. Finish the rest to complete the lesson.`}
+                ? t(total === 1 ? 'All {total} exercise solved.' : 'All {total} exercises solved.', { total })
+                : t(total === 1 ? '{passed} of {total} exercise solved. Finish the rest to complete the lesson.' : '{passed} of {total} exercises solved. Finish the rest to complete the lesson.', { passed, total })}
           </p>
         </div>
       </div>
       <nav className="lesson-nav">
-        {previous && <Link to={`/lesson/${previous.id}`} className="lesson-prev"><small>Previous</small>← {previous.title}</Link>}
+        {previous && <Link to={`/lesson/${previous.id}`} className="lesson-prev"><small>{t('Previous')}</small>← {t(previous.title)}</Link>}
         {next && (
           <Link to={`/lesson/${next.id}`} className="lesson-next button-primary">
-            <small>Up next</small>{next.title} →
+            <small>{t('Up next')}</small>{t(next.title)} →
           </Link>
         )}
-        {!next && <Link to="/" className="lesson-next button-primary"><small>You reached the end</small>Back to the course →</Link>}
+        {!next && <Link to="/" className="lesson-next button-primary"><small>{t('You reached the end')}</small>{t('Back to the course')} →</Link>}
       </nav>
     </section>
   );

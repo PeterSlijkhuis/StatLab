@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useT } from '../i18n/t';
+import { setLanguage, useLanguage, type Language } from '../state/language';
 import './Tour.css';
 
 export const TOUR_KEY = 'statlab.tour.v1';
@@ -17,7 +19,7 @@ type Step = { target?: string; title: string; text: string };
  * is left out, so one list serves every page and screen size.
  */
 export const STEPS: Step[] = [
-  { title: 'Welcome to StatLab', text: 'A quick tour of where everything is. Skip it whenever you like; the helper in the corner can show it again.' },
+  { title: 'Welcome to StatLab', text: 'Choose your language, then take a quick tour of where everything is. Skip it whenever you like; the helper in the corner can show it again.' },
   { target: '.topbar-menu', title: 'The lessons', text: 'On a small screen the modules, your avatar and the tools live behind this button.' },
   { target: '.sidebar-part', title: 'The modules', text: 'The course, in order: open a module to see its lessons. A tick means you finished it.' },
   { target: '.sidebar-avatar', title: 'Your avatar', text: 'Design it, then spend your points in the shop. It also explains your mistakes in the exercises.' },
@@ -52,6 +54,8 @@ export default function Tour() {
   const card = useRef<HTMLDivElement>(null);
   const primary = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const t = useT();
+  const language = useLanguage();
 
   const open = useCallback(() => {
     // Measured at the start: steps whose target is not on this page drop out.
@@ -135,14 +139,23 @@ export default function Tour() {
         aria-describedby={`${id}-text`}
         style={{ ...place, width }}
       >
-        <p className="tour-count">{at + 1} of {steps.length}</p>
-        <h2 id={`${id}-title`}>{step.title}</h2>
-        <p id={`${id}-text`}>{step.text}</p>
+        <p className="tour-count">{t('{at} of {total}', { at: at + 1, total: steps.length })}</p>
+        <h2 id={`${id}-title`}>{t(step.title)}</h2>
+        <p id={`${id}-text`}>{t(step.text)}</p>
+        {at === 0 && (
+          <div className="tour-language" role="group" aria-label="Language / Taal">
+            {([['en', 'English'], ['nl', 'Nederlands']] as [Language, string][]).map(([code, name]) => (
+              <button key={code} type="button" lang={code} aria-pressed={language === code} className={language === code ? 'button-primary' : 'button-secondary'} onClick={() => setLanguage(code)}>
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="tour-actions">
-          {!last && <button type="button" className="tour-skip" onClick={finish}>Skip tour</button>}
-          {at > 0 && <button type="button" className="button-secondary" onClick={() => setAt(at - 1)}>Back</button>}
+          {!last && <button type="button" className="tour-skip" onClick={finish}>{t('Skip tour')}</button>}
+          {at > 0 && <button type="button" className="button-secondary" onClick={() => setAt(at - 1)}>{t('Back')}</button>}
           <button ref={primary} type="button" className="button-primary" onClick={() => (last ? finish() : setAt(at + 1))}>
-            {last ? 'Start learning' : at === 0 ? 'Show me around' : 'Next'}
+            {t(last ? 'Start learning' : at === 0 ? 'Show me around' : 'Next')}
           </button>
         </div>
       </div>

@@ -11,10 +11,14 @@ import { visibleModules } from '../content/parts';
 import { useAdvanced } from '../state/settings';
 import { APPENDIX_NAMES, bookAppendixHref, bookChapterHref, READING, type Reading } from '../content/reading';
 import { R_MATERIALS, REFERENCE_BOOK, RM_MATERIALS } from '../components/Credits';
+import { useT } from '../i18n/t';
+import { useLanguage } from '../state/language';
 
 const lessonModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>(
   '../content/lessons/*.mdx',
 );
+/** Dutch translations, one per lesson file, added module by module. A lesson without one shows in English. */
+const dutchModules = import.meta.glob<{ default: ComponentType<{ components?: unknown }> }>('../content/lessons/nl/*.mdx');
 
 export default function Lesson() {
   const { lessonId = '' } = useParams();
@@ -24,6 +28,9 @@ export default function Lesson() {
   const { webR, env } = useLessonSession(meta ?? null);
   const article = useRef<HTMLElement | null>(null);
   const advanced = useAdvanced();
+  const t = useT();
+  const language = useLanguage();
+  const dutch = language === 'nl' ? dutchModules[`../content/lessons/nl/${meta?.file}.mdx`] : undefined;
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick((tick) => tick + 1)), []);
   useReveal(article, Content);
@@ -34,7 +41,7 @@ export default function Lesson() {
     // file is missing, or "continue where you left off" silently skips it.
     touchLesson(meta.id);
     let live = true;
-    const loader = lessonModules[`../content/lessons/${meta.file}.mdx`];
+    const loader = dutch ?? lessonModules[`../content/lessons/${meta.file}.mdx`];
     if (loader) {
       void loader().then((module) => {
         if (live) setContent(() => module.default);
@@ -46,14 +53,14 @@ export default function Lesson() {
       // previous lesson's content must not stay on screen under a new title.
       setContent(null);
     };
-  }, [meta]);
+  }, [meta, dutch]);
 
   if (!meta) {
     return (
       <div>
-        <h1>Lesson not found</h1>
+        <h1>{t('Lesson not found')}</h1>
         <p>
-          <Link to="/">Back to the course overview</Link>
+          <Link to="/">{t('Back to the course overview')}</Link>
         </p>
       </div>
     );
@@ -80,21 +87,22 @@ export default function Lesson() {
           <header className="lesson-header">
             {module && (
               <p className="lesson-crumb">
-                <span className="lesson-crumb-module">{module.badge ? module.title : `Module ${module.number} · ${module.title}`}</span>
-                <span className="lesson-crumb-step">Lesson {position} of {module.lessons.length}</span>
+                <span className="lesson-crumb-module">{module.badge ? t(module.title) : `${t('Module {n}', { n: module.number })} · ${t(module.title)}`}</span>
+                <span className="lesson-crumb-step">{t('Lesson {at} of {total}', { at: position, total: module.lessons.length })}</span>
               </p>
             )}
-            <h1>{meta.title}</h1>
+            <h1>{t(meta.title)}</h1>
             {total > 0 && (
               <p className="lesson-chips">
                 <span className={`chip${passed === total ? ' chip-done' : ''}`}>
-                  {passed === total ? '✓ ' : ''}{passed}/{total} exercise{total === 1 ? '' : 's'} solved
+                  {passed === total ? '✓ ' : ''}{t(total === 1 ? '{passed}/{total} exercise solved' : '{passed}/{total} exercises solved', { passed, total })}
                 </span>
               </p>
             )}
+            {language === 'nl' && !dutch && <p className="lesson-untranslated" lang="nl">{t('This lesson is not translated yet, so it is shown in English.')}</p>}
             {READING[meta.id] && <ReadAlong reading={READING[meta.id]} />}
           </header>
-          {Content ? <Content components={mdxComponents} /> : <p>Loading lesson…</p>}
+          {Content ? <Content components={mdxComponents} /> : <p>{t('Loading lesson…')}</p>}
         </article>
         <SectionGuide article={article} contentKey={Content} />
       </div>
@@ -112,13 +120,14 @@ export default function Lesson() {
 
 /** The chapters of the book and the BMS guide that cover this lesson. */
 function ReadAlong({ reading }: { reading: Reading }) {
+  const t = useT();
   const links = [
-    ...(reading.book ?? []).map((chapter) => ({ href: bookChapterHref(chapter), text: `chapter ${chapter}` })),
+    ...(reading.book ?? []).map((chapter) => ({ href: bookChapterHref(chapter), text: t('chapter {n}', { n: chapter }) })),
     ...(reading.appendix ?? []).map((key) => ({ href: bookAppendixHref(key), text: APPENDIX_NAMES[key] })),
   ];
   return (
     <p className="lesson-reading">
-      <span aria-hidden="true">📖 </span>Read along:{' '}
+      <span aria-hidden="true">📖 </span>{t('Read along:')}{' '}
       {links.length > 0 && (
         <>
           <cite>{REFERENCE_BOOK.title}</cite>,{' '}

@@ -64,6 +64,32 @@ many observations there are, so it is a poor choice when n is small — and it
 makes exactly the same kind of arbitrary choice as the number of bins, only
 where you cannot see it.
 
+## A categorical column: bars, not bins
+
+A histogram needs numbers with equal steps, so it suits interval and ratio
+variables. A nominal or ordinal variable, such as department, has categories
+instead, and the display for it is a **bar chart**: one bar per category, its
+height the number of units in it.
+
+<CodeBlock id="bar" code={`ggplot(employees, aes(x = department)) +
+  geom_bar()`} />
+
+`geom_bar()` counts the rows per category, just as `table(employees$department)`
+does. The bars stand apart because the categories have no values in between,
+and for a nominal variable their order carries no meaning. A pie chart or a
+frequency table shows the same counts; a bar chart makes them easiest to
+compare.
+
+<Quiz
+  id="q-4-1-bar"
+  question="Which display suits the column remote, with the values Yes and No?"
+  choices={[
+    { text: 'A histogram', response: 'A histogram bins a numeric range. Yes and No are categories, with nothing in between to bin.' },
+    { text: 'A bar chart or a frequency table', correct: true, response: 'Right. A nominal variable is shown by counting its categories: geom_bar() in ggplot2, or table() as numbers.' },
+    { text: 'A density curve', response: 'A density curve smooths a numeric distribution. A categorical variable has no distribution to smooth.' },
+  ]}
+/>
+
 <Exercise id="m4-1-a" />
 
 <Quiz

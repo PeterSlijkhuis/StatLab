@@ -9,6 +9,8 @@ import { currentLook, pointsToSpend } from '../state/avatar';
 import Avatar from './Avatar';
 import Credits from './Credits';
 import Logo from './Logo';
+import { useT } from '../i18n/t';
+import { setLanguage, useLanguage } from '../state/language';
 
 /** Read by the script in index.html, which applies the theme before React loads. */
 const THEME_KEY = 'statlab.theme';
@@ -52,6 +54,8 @@ export default function Sidebar({ open = false }: Props) {
     return () => query.removeEventListener('change', onChange);
   }, []);
   const advanced = useAdvanced();
+  const t = useT();
+  const language = useLanguage();
   const stats = courseStats(progress, visibleModules(advanced).flatMap((module) => module.lessons));
 
   // One module open at a time by default: the one holding the current lesson.
@@ -85,23 +89,23 @@ export default function Sidebar({ open = false }: Props) {
   }, [pathname, open]);
 
   return (
-    <nav ref={nav} id="course-nav" className={open ? 'sidebar open' : 'sidebar'} aria-label="Course navigation">
+    <nav ref={nav} id="course-nav" className={open ? 'sidebar open' : 'sidebar'} aria-label={t('Course navigation')}>
       <NavLink to="/" className="sidebar-home"><Logo /> StatLab</NavLink>
 
       <NavLink to="/avatar" className="sidebar-avatar">
         <Avatar look={currentLook(progress)} size={40} />
-        <span>Your avatar<small>{pointsToSpend(progress)} points to spend</small></span>
+        <span>{t('Your avatar')}<small>{t('{n} points to spend', { n: pointsToSpend(progress) })}</small></span>
       </NavLink>
 
-      <div className="sidebar-stats" aria-label="Your progress">
-        <span title="Days in a row with some work done"><span aria-hidden="true">🔥</span> {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
-        <span title="Points from exercises, questions and finished lessons"><span aria-hidden="true">⭐</span> {stats.points} pts</span>
-        <span title="Lessons finished">{stats.lessonsComplete}/{stats.lessonsTotal}</span>
+      <div className="sidebar-stats" aria-label={t('Your progress')}>
+        <span title={t('Days in a row with some work done')}><span aria-hidden="true">🔥</span> {t(stats.streak === 1 ? '{n} day' : '{n} days', { n: stats.streak })}</span>
+        <span title={t('Points from exercises, questions and finished lessons')}><span aria-hidden="true">⭐</span> {t('{n} pts', { n: stats.points })}</span>
+        <span title={t('Lessons finished')}>{stats.lessonsComplete}/{stats.lessonsTotal}</span>
       </div>
 
       {visibleParts(advanced).map((part) => (
         <div key={part.title} className="sidebar-part">
-          <p className="sidebar-part-title">{part.title}</p>
+          <p className="sidebar-part-title">{t(part.title)}</p>
           {MODULES.filter((module) => (part.modules as readonly number[]).includes(module.number)).map((module) => {
             const isOpen = expanded.has(module.id);
             const { done, total } = moduleProgress(module, progress);
@@ -115,12 +119,12 @@ export default function Sidebar({ open = false }: Props) {
                 <h2>
                   <button type="button" className="sidebar-module-toggle" aria-expanded={isOpen} aria-controls={panelId} aria-describedby={`${panelId}-count`} onClick={() => toggle(module.id)}>
                     <span className="sidebar-module-number" aria-hidden="true">{done === total ? '✓' : module.badge ?? module.number}</span>
-                    <span className="sidebar-module-title"><span className="visually-hidden">{module.badge ?? module.number}. </span>{module.title}</span>
+                    <span className="sidebar-module-title"><span className="visually-hidden">{module.badge ?? module.number}. </span>{t(module.title)}</span>
                     <span className="sidebar-module-count" aria-hidden="true">{done}/{total}</span>
                     <svg className="sidebar-chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </button>
                 </h2>
-                <span id={`${panelId}-count`} className="visually-hidden">{done} of {total} lessons done</span>
+                <span id={`${panelId}-count`} className="visually-hidden">{t('{done} of {total} lessons done', { done, total })}</span>
                 <div id={panelId} className="sidebar-module-panel" {...inert}>
                   <ul>
                     {module.lessons.map((lesson) => {
@@ -132,7 +136,7 @@ export default function Sidebar({ open = false }: Props) {
                             className={({ isActive }) => ['sidebar-lesson', status === 'new' ? '' : status, isActive ? 'active' : ''].filter(Boolean).join(' ')}
                           >
                             <span className="sidebar-lesson-dot" aria-hidden="true" />
-                            {lesson.title}
+                            {t(lesson.title)}
                           </NavLink>
                         </li>
                       );
@@ -146,20 +150,21 @@ export default function Sidebar({ open = false }: Props) {
       ))}
 
       <div className="sidebar-part sidebar-reference">
-        <p className="sidebar-part-title">Reference</p>
+        <p className="sidebar-part-title">{t('Reference')}</p>
         <ul>
-          <li><NavLink to="/which-model" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🧭</span>Which model should I use?</NavLink></li>
-          <li><NavLink to="/sample-size" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🎯</span>How many participants?</NavLink></li>
-          <li><NavLink to="/review" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🔁</span>Review quiz</NavLink></li>
-          <li><NavLink to="/workspace" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">⌨️</span>R Workspace</NavLink></li>
+          <li><NavLink to="/which-model" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🧭</span>{t('Which model should I use?')}</NavLink></li>
+          <li><NavLink to="/sample-size" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🎯</span>{t('How many participants?')}</NavLink></li>
+          <li><NavLink to="/review" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">🔁</span>{t('Review quiz')}</NavLink></li>
+          <li><NavLink to="/workspace" className="sidebar-lesson"><span className="sidebar-lesson-icon" aria-hidden="true">⌨️</span>{t('R Workspace')}</NavLink></li>
         </ul>
       </div>
 
       <div className="sidebar-part sidebar-reference">
-        <p className="sidebar-part-title">Settings</p>
+        <p className="sidebar-part-title">{t('Settings')}</p>
         <ul>
-          <li><button type="button" className="sidebar-lesson" aria-pressed={dark} onClick={toggleTheme}><span className="sidebar-lesson-icon" aria-hidden="true">🌙</span>Dark mode</button></li>
-          <li><button type="button" className="sidebar-lesson" aria-pressed={advanced} onClick={() => setAdvanced(!advanced)} title="Show Modules 16 and 17, which go beyond the BMS course"><span className="sidebar-lesson-icon" aria-hidden="true">🎓</span>Advanced topics</button></li>
+          <li><button type="button" className="sidebar-lesson" aria-pressed={dark} onClick={toggleTheme}><span className="sidebar-lesson-icon" aria-hidden="true">🌙</span>{t('Dark mode')}</button></li>
+          <li><button type="button" className="sidebar-lesson" lang={language === 'nl' ? 'en' : 'nl'} onClick={() => setLanguage(language === 'nl' ? 'en' : 'nl')}><span className="sidebar-lesson-icon" aria-hidden="true">🌐</span>{language === 'nl' ? 'English' : 'Nederlands'}</button></li>
+          <li><button type="button" className="sidebar-lesson" aria-pressed={advanced} onClick={() => setAdvanced(!advanced)} title={t('Show Modules 16 and 17, which go beyond the BMS course')}><span className="sidebar-lesson-icon" aria-hidden="true">🎓</span>{t('Advanced topics')}</button></li>
         </ul>
       </div>
 

@@ -7,6 +7,8 @@ import { ALL_LESSONS, findLesson } from '../content/manifest';
 import { loadQuizzes, pickRound, type BankQuiz } from '../content/quizBank';
 import { getProgress } from '../state/progress';
 import { firstUnfinished } from '../state/stats';
+import { useAdvanced } from '../state/settings';
+import { visibleModules } from '../content/parts';
 import './ModelChooser.css';
 
 const label = (lessonId: string) => `Lesson ${lessonId.replace(/^0/, '').toUpperCase()}`;
@@ -34,7 +36,8 @@ export default function Review() {
   }, [roundNumber]);
 
   const quiz = round?.[at];
-  const start = firstUnfinished(getProgress()) ?? ALL_LESSONS[0];
+  const advanced = useAdvanced();
+  const start = firstUnfinished(getProgress(), visibleModules(advanced).flatMap((module) => module.lessons)) ?? ALL_LESSONS[0];
 
   return (
     <div className="model-chooser review">

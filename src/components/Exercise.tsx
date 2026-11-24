@@ -13,6 +13,7 @@ import FileUpload from './FileUpload';
 import OutputPane from './OutputPane';
 import REditor from './REditor';
 import './Exercise.css';
+import { t as tNow, useT } from '../i18n/t';
 
 export default function Exercise({ id }: { id: string }) {
   const { lessonId, webR, env, ready } = useLesson();
@@ -56,9 +57,9 @@ export default function Exercise({ id }: { id: string }) {
         if (!alreadyPassed) {
           confetti(checkButton.current);
           if (lesson && !wasComplete && lessonStatus(lesson, getProgress()) === 'complete') {
-            showToast('Lesson complete!', `+${POINTS.exercise + POINTS.lesson} points. On to the next one.`, 'milestone');
+            showToast(tNow('Lesson complete!'), tNow('+{n} points. On to the next one.', { n: POINTS.exercise + POINTS.lesson }), 'milestone');
           } else {
-            showToast('Exercise solved', `+${POINTS.exercise} points`);
+            showToast(tNow('Exercise solved'), tNow('+{n} points', { n: POINTS.exercise }));
           }
         }
       } else if (result.status === 'fail' || result.status === 'student-error') {
@@ -75,21 +76,22 @@ export default function Exercise({ id }: { id: string }) {
     }
   }
 
+  const t = useT();
   return (
     <section className={`exercise${outcome?.status === 'pass' ? ' exercise-passed' : ''}`}>
-      <p className="exercise-label"><span aria-hidden="true">🎯</span> Exercise</p>
+      <p className="exercise-label"><span aria-hidden="true">🎯</span> {t('Exercise')}</p>
       {/* The student's avatar leads the exercise: it sets the task, gives the
           hints, reacts to each check and walks through the solution. */}
-      <AvatarTip tone="coach" title="Your task" className="exercise-task">
+      <AvatarTip tone="coach" title={t('Your task')} className="exercise-task">
         <p className="exercise-prompt">{definition.prompt}</p>
-        {!attempted && <p className="exercise-advice">Write your code in the editor, then press "Check my answer" and I'll tell you what I see.</p>}
+        {!attempted && <p className="exercise-advice">{t('Write your code in the editor, then press "Check my answer" and I\'ll tell you what I see.')}</p>}
       </AvatarTip>
 
       <REditor value={source} onChange={edit} />
 
       <div className="exercise-actions">
         <button ref={checkButton} type="button" onClick={check} disabled={!ready || checking}>
-          {checking ? 'Checking…' : 'Check my answer'}
+          {t(checking ? 'Checking…' : 'Check my answer')}
         </button>
         <button
           type="button"
@@ -97,16 +99,16 @@ export default function Exercise({ id }: { id: string }) {
           onClick={() => setHintsShown((n) => Math.min(n + 1, definition.hints.length))}
           disabled={hintsShown >= definition.hints.length}
         >
-          Show a hint
+          {t('Show a hint')}
         </button>
         <button
           type="button"
           className="secondary"
           onClick={() => setShowSolution(true)}
           disabled={!attempted || showSolution}
-          title={attempted ? undefined : 'Try the exercise first'}
+          title={attempted ? undefined : t('Try the exercise first')}
         >
-          Show solution
+          {t('Show solution')}
         </button>
       </div>
 
@@ -115,7 +117,7 @@ export default function Exercise({ id }: { id: string }) {
       <FileUpload compact />
 
       {hintsShown > 0 && (
-        <AvatarTip tone="coach" title={`Hint ${hintsShown} of ${definition.hints.length}`}>
+        <AvatarTip tone="coach" title={t('Hint {at} of {total}', { at: hintsShown, total: definition.hints.length })}>
           <ul className="exercise-hints">
             {definition.hints.slice(0, hintsShown).map((hint) => (
               <li key={hint}>{hint}</li>
@@ -131,14 +133,14 @@ export default function Exercise({ id }: { id: string }) {
       )}
 
       {outcome?.status === 'pass' && (
-        <AvatarTip tone="right" title="Well done" className="exercise-outcome-pass">
+        <AvatarTip tone="right" title={t('Well done')} className="exercise-outcome-pass">
           <p>{outcome.message}</p>
         </AvatarTip>
       )}
       {outcome?.status === 'broken-check' && (
         <div className="exercise-outcome outcome-broken-check">
           <p>
-            There is a problem with this exercise itself, not with your answer. Please report it.
+            {t('There is a problem with this exercise itself, not with your answer. Please report it.')}
           </p>
         </div>
       )}
@@ -147,13 +149,13 @@ export default function Exercise({ id }: { id: string }) {
       {outcome?.status === 'fail' && (
         <AvatarTip tone="wrong">
           <p>{outcome.message}</p>
-          {hintsShown < definition.hints.length && <p>Stuck? Press "Show a hint" and I'll give you a nudge.</p>}
+          {hintsShown < definition.hints.length && <p>{t('Stuck? Press "Show a hint" and I\'ll give you a nudge.')}</p>}
         </AvatarTip>
       )}
       {outcome?.status === 'student-error' && (
         <AvatarTip tone="error">
-          <p><strong>Your code did not run.</strong> {explainRError(outcome.run.output.filter((o) => o.type === 'error').map((o) => o.data).join('\n'))}</p>
-          <p>R's own message is shown below.</p>
+          <p><strong>{t('Your code did not run.')}</strong> {explainRError(outcome.run.output.filter((o) => o.type === 'error').map((o) => o.data).join('\n'))}</p>
+          <p>{t('R\'s own message is shown below.')}</p>
         </AvatarTip>
       )}
 
@@ -163,10 +165,9 @@ export default function Exercise({ id }: { id: string }) {
       )}
 
       {showSolution && (
-        <AvatarTip tone="coach" title="Solution">
+        <AvatarTip tone="coach" title={t('Solution')}>
           <p>
-            Here is one way to write it. Compare it with yours line by line: a different route to the
-            same result is also correct.
+            {t('Here is one way to write it. Compare it with yours line by line: a different route to the same result is also correct.')}
           </p>
           <pre className="exercise-solution">
             <code>{definition.solution}</code>
