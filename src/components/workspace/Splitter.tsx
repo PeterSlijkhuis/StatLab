@@ -1,3 +1,4 @@
+import { useT } from '../../i18n/t';
 import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
 
 type Props = {
@@ -21,6 +22,7 @@ export const clampShare = (value: number) => Math.min(MAX_SHARE, Math.max(MIN_SH
  * or moved with the arrow keys once focused. Double-click puts it back.
  */
 export default function Splitter({ orientation, value, onChange, onReset, label }: Props) {
+  const t = useT();
   const dragging = useRef(false);
   const vertical = orientation === 'vertical';
 
@@ -66,12 +68,12 @@ export default function Splitter({ orientation, value, onChange, onReset, label 
     <div
       role="separator"
       tabIndex={0}
-      aria-label={label}
+      aria-label={t(label)}
       aria-orientation={orientation}
       aria-valuenow={Math.round(value)}
       aria-valuemin={MIN_SHARE}
       aria-valuemax={MAX_SHARE}
-      title="Drag to resize. Double-click to reset."
+      title={t('Drag to resize. Double-click to reset.')}
       className={`ide-splitter ide-splitter-${orientation}`}
       onPointerDown={start}
       onPointerMove={move}

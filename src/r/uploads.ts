@@ -1,3 +1,4 @@
+import { t } from '../i18n/t';
 import type { WebR } from 'webr';
 import { DATA_DIR, DATASET_FILES, ensurePackages } from './session';
 import { onRestart, setStatus } from './webrClient';
@@ -164,15 +165,15 @@ export async function uploadFile(webR: WebR, file: File): Promise<Upload> {
   const name = cleanFileName(file.name);
   const kind = uploadKind(name);
   if (!name || !kind) {
-    throw new UploadError(`"${file.name}" is not a file R can read here. Upload a CSV, TSV, TXT or Excel file.`);
+    throw new UploadError(t('"{name}" is not a file R can read here. Upload a CSV, TSV, TXT or Excel file.', { name: file.name }));
   }
   // Overwriting a course dataset would quietly change every lesson's numbers,
   // and every exercise check is written against those numbers.
   if (isCourseDataset(name)) {
-    throw new UploadError(`"${name}" is the name of a course dataset. Rename your file and upload it again.`);
+    throw new UploadError(t('"{name}" is the name of a course dataset. Rename your file and upload it again.', { name }));
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new UploadError(`"${file.name}" is larger than 25 MB, which is more than R in the browser can hold.`);
+    throw new UploadError(t('"{name}" is larger than 25 MB, which is more than R in the browser can hold.', { name: file.name }));
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -188,14 +189,14 @@ export async function uploadFile(webR: WebR, file: File): Promise<Upload> {
   try {
     await saveStoredFile(name, bytes);
   } catch {
-    problem = `"${name}" is ready in data/, but this browser would not keep a copy, so it will be gone after a reload.`;
+    problem = t('"{name}" is ready in data/, but this browser would not keep a copy, so it will be gone after a reload.', { name });
   }
 
   if (kind === 'excel') {
     try {
       await installExcelReader(webR);
     } catch {
-      problem = `"${name}" is in data/, but the package that reads Excel files could not be installed. Check your connection and upload it again, or save the sheet as CSV.`;
+      problem = t('"{name}" is in data/, but the package that reads Excel files could not be installed. Check your connection and upload it again, or save the sheet as CSV.', { name });
     }
   }
 

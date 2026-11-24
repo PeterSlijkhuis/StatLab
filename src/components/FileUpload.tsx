@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLesson } from '../content/LessonContext';
+import { useT } from '../i18n/t';
 import {
   listUploads,
   removeUpload,
@@ -17,6 +18,7 @@ import './FileUpload.css';
  * uploaded anywhere is in the same `data/` folder everywhere.
  */
 export default function FileUpload({ compact = false }: { compact?: boolean }) {
+  const t = useT();
   const { webR, ready } = useLesson();
   const input = useRef<HTMLInputElement | null>(null);
   const [uploads, setUploads] = useState(listUploads);
@@ -34,7 +36,7 @@ export default function FileUpload({ compact = false }: { compact?: boolean }) {
     try {
       await uploadFile(webR, file);
     } catch (err) {
-      setError(err instanceof UploadError ? err.message : `Could not upload "${file.name}". Try again.`);
+      setError(err instanceof UploadError ? t(err.message) : t('Could not upload "{name}". Try again.', { name: file.name }));
     } finally {
       setBusy(false);
       // Cleared so picking the same file again, after editing it, still fires a change.
@@ -56,7 +58,7 @@ export default function FileUpload({ compact = false }: { compact?: boolean }) {
     try {
       await removeUpload(webR, name);
     } catch {
-      setError(`Could not remove "${name}". Try again.`);
+      setError(t('Could not remove "{name}". Try again.', { name }));
     }
   }
 
@@ -67,7 +69,7 @@ export default function FileUpload({ compact = false }: { compact?: boolean }) {
           ref={input}
           type="file"
           accept={UPLOAD_ACCEPT}
-          aria-label="Choose a data file"
+          aria-label={t('Choose a data file')}
           hidden
           onChange={(event) => void pick(event.target.files)}
         />
@@ -77,35 +79,35 @@ export default function FileUpload({ compact = false }: { compact?: boolean }) {
           onClick={() => input.current?.click()}
           disabled={!ready || busy}
         >
-          {busy ? 'Uploading…' : 'Upload a file'}
+          {busy ? t('Uploading…') : t('Upload a file')}
         </button>
         <span className="file-upload-note">
           {compact
-            ? 'Use your own CSV, TSV, TXT or Excel file.'
-            : 'CSV, TSV, TXT or Excel, up to 25 MB. It goes into the data folder and stays in this browser, even after a reload, until you remove it. It is never sent anywhere.'}
+            ? t('Use your own CSV, TSV, TXT or Excel file.')
+            : t('CSV, TSV, TXT or Excel, up to 25 MB. It goes into the data folder and stays in this browser, even after a reload, until you remove it. It is never sent anywhere.')}
         </span>
       </div>
 
       {error && <p className="file-upload-error" role="alert">{error}</p>}
 
       {uploads.length > 0 && (
-        <ul className="file-upload-list" aria-label="Your uploaded files">
+        <ul className="file-upload-list" aria-label={t('Your uploaded files')}>
           {uploads.map((upload) => (
             <li key={upload.name}>
               <span className="file-upload-name">data/{upload.name}</span>
               <code className="file-upload-code">{upload.code}</code>
               <span className="file-upload-actions">
                 <button type="button" className="secondary" onClick={() => void copy(upload.code)}>
-                  {copied === upload.code ? 'Copied' : 'Copy code'}
+                  {copied === upload.code ? t('Copied') : t('Copy code')}
                 </button>
                 <button
                   type="button"
                   className="secondary"
                   onClick={() => void remove(upload.name)}
                   disabled={!webR}
-                  aria-label={`Remove ${upload.name}`}
+                  aria-label={t('Remove {name}', { name: upload.name })}
                 >
-                  Remove
+                  {t('Remove')}
                 </button>
               </span>
             </li>

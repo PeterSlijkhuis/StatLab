@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { ConsoleLine } from '../../r/workspace';
+import { useT } from '../../i18n/t';
 
 type Props = {
   lines: ConsoleLine[];
@@ -25,6 +26,7 @@ const PREFIX: Partial<Record<ConsoleLine['type'], string>> = {
  * walk back through earlier commands and Ctrl+L clears the screen.
  */
 export default function ConsolePane({ lines, history, ready, running, onRun, onClear, pending }: Props) {
+  const t = useT();
   const [input, setInput] = useState('');
   // Where the arrows are in `history`; history.length means "the line being typed".
   const [cursor, setCursor] = useState<number | null>(null);
@@ -97,7 +99,7 @@ export default function ConsolePane({ lines, history, ready, running, onRun, onC
 
   return (
     <div className="ide-console" ref={scroller} onClick={focusInput}>
-      <div role="log" aria-label="Console output" className="ide-console-log">
+      <div role="log" aria-label={t('Console output')} className="ide-console-log">
         {lines.map((line, index) => (
           <div key={index} className={`ide-console-line ide-console-${line.type}`}>
             {PREFIX[line.type] ?? ''}
@@ -109,13 +111,13 @@ export default function ConsolePane({ lines, history, ready, running, onRun, onC
         <span aria-hidden="true">&gt;</span>
         <textarea
           ref={field}
-          aria-label="Console input"
+          aria-label={t('Console input')}
           rows={Math.max(1, input.split('\n').length)}
           value={input}
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
-          placeholder={ready ? '' : 'R is starting…'}
+          placeholder={ready ? '' : t('R is starting…')}
           disabled={!ready}
           onChange={(event) => {
             setInput(event.target.value);

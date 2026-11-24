@@ -134,7 +134,7 @@ export default function Exercise({ id }: { id: string }) {
 
       {crashed && (
         <div className="exercise-outcome outcome-broken-check">
-          <p>{R_STOPPED_MESSAGE}</p>
+          <p>{t(R_STOPPED_MESSAGE)}</p>
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useT } from '../../i18n/t';
 
 export type HelpPage = { topic: string; text: string | null } | null;
 
@@ -15,6 +16,7 @@ const STARTERS = ['mean', 'sd', 'summary', 'read.csv', 'lm', 't.test', 'cor', 't
 
 /** RStudio's Help pane. `?mean` in the console or the script opens a page here too. */
 export default function HelpPane({ page, loading, ready, onLookUp, onHome }: Props) {
+  const t = useT();
   const [query, setQuery] = useState('');
 
   function submit(event: FormEvent) {
@@ -26,34 +28,33 @@ export default function HelpPane({ page, loading, ready, onLookUp, onHome }: Pro
   return (
     <>
       <form className="ide-toolbar" role="search" onSubmit={submit}>
-        <button type="button" onClick={onHome} aria-label="Help home" title="Help home">⌂</button>
+        <button type="button" onClick={onHome} aria-label={t('Help home')} title={t('Help home')}>⌂</button>
         <input
           type="search"
-          aria-label="Search help"
-          placeholder="Search help, e.g. mean"
+          aria-label={t('Search help')}
+          placeholder={t('Search help, e.g. mean')}
           value={query}
           spellCheck={false}
           autoCapitalize="off"
           onChange={(event) => setQuery(event.target.value)}
         />
-        <button type="submit" disabled={!ready || !query.trim()}>Find</button>
+        <button type="submit" disabled={!ready || !query.trim()}>{t('Find')}</button>
       </form>
       <div className="ide-scroll">
         {loading ? (
-          <p className="ide-empty">Looking it up…</p>
+          <p className="ide-empty">{t('Looking it up…')}</p>
         ) : page ? (
           page.text ? (
-            <pre className="ide-help-text" aria-label={`Help for ${page.topic}`}>{page.text}</pre>
+            <pre className="ide-help-text" aria-label={t('Help for {topic}', { topic: page.topic })}>{page.text}</pre>
           ) : (
-            <p className="ide-empty">No documentation for ‘{page.topic}’. Check the spelling, or load the package that has it first.</p>
+            <p className="ide-empty">{t('No documentation for ‘{topic}’. Check the spelling, or load the package that has it first.', { topic: page.topic })}</p>
           )
         ) : (
           <div className="ide-help-home">
             <p>
-              Type <code>?</code> and a function's name in the Console, like <code>?mean</code>, or search above. Every help page has
-              the same parts: Description, Usage, Arguments, and Examples at the bottom.
+              {t('Type')} <code>?</code> {t('and a function\'s name in the Console, like')} <code>?mean</code>{t(', or search above. Every help page has the same parts: Description, Usage, Arguments, and Examples at the bottom.')}
             </p>
-            <p>Good first pages:</p>
+            <p>{t('Good first pages:')}</p>
             <ul>
               {STARTERS.map((topic) => (
                 <li key={topic}>

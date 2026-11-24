@@ -42,7 +42,7 @@ export default function CodeBlock({ id, code }: Props) {
       // R-level errors arrive inside the result and never reach here. A rejection
       // means R itself stopped (worker crash, out of memory); without this the
       // button just resets and nothing explains why.
-      setResult({ output: [{ type: 'error', data: R_STOPPED_MESSAGE }], images: [], errored: true });
+      setResult({ output: [{ type: 'error', data: t(R_STOPPED_MESSAGE) }], images: [], errored: true });
     } finally {
       setRunning(false);
     }

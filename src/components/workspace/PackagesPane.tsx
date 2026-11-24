@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useT } from '../../i18n/t';
 import { NOT_IN_BROWSER, RECOMMENDED, RECOMMENDED_NAMES, type InstalledPackage } from '../../r/packages';
 
 type Props = {
@@ -30,13 +31,14 @@ export function installCode(typed: string): string | null {
  * and unticking it runs `detach()`.
  */
 export default function PackagesPane({ packages, ready, running, onRun }: Props) {
+  const t = useT();
   const [filter, setFilter] = useState('');
   const [installing, setInstalling] = useState(false);
   const [typed, setTyped] = useState('');
   const byName = new Map((packages ?? []).map((p) => [p.name, p]));
   const needle = filter.trim().toLowerCase();
   const shown = (row: Row) =>
-    !needle || row.name.toLowerCase().includes(needle) || row.what.toLowerCase().includes(needle);
+    !needle || row.name.toLowerCase().includes(needle) || row.what.toLowerCase().includes(needle) || t(row.what).toLowerCase().includes(needle);
   const disabled = !ready || running;
 
   const groups = RECOMMENDED.map((group) => ({
@@ -67,19 +69,19 @@ export default function PackagesPane({ packages, ready, running, onRun }: Props)
             checked={Boolean(installed?.attached)}
             // R cannot run without base, so it cannot be detached.
             disabled={disabled || name === 'base'}
-            aria-label={`Load ${name}`}
+            aria-label={t('Load {name}', { name })}
             title={installed?.attached ? `detach("package:${name}")` : `library(${name})`}
             onChange={() => onRun(installed?.attached ? `detach("package:${name}", unload = TRUE)` : `library(${name})`)}
           />
         </td>
         <td className="ide-package-name">{name}</td>
-        <td className="ide-package-what">{what}</td>
+        <td className="ide-package-what">{t(what)}</td>
         <td className="ide-package-version">
           {installed ? (
             installed.version
           ) : (
-            <button type="button" disabled={disabled} onClick={() => onRun(`install.packages("${name}")`)} aria-label={`Install ${name}`}>
-              Install
+            <button type="button" disabled={disabled} onClick={() => onRun(`install.packages("${name}")`)} aria-label={t('Install {name}', { name })}>
+              {t('Install')}
             </button>
           )}
         </td>
@@ -105,14 +107,14 @@ export default function PackagesPane({ packages, ready, running, onRun }: Props)
     <>
       <div className="ide-toolbar">
         <button type="button" onClick={() => setInstalling((open) => !open)} disabled={disabled} aria-expanded={installing}>
-          Install
+          {t('Install')}
         </button>
-        <input type="search" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Find a package" aria-label="Find a package" />
+        <input type="search" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={t('Find a package')} aria-label={t('Find a package')} />
       </div>
       {installing && (
         <form className="ide-install" onSubmit={submit}>
           <label>
-            <span>Packages (separate several with a space or comma)</span>
+            <span>{t('Packages (separate several with a space or comma)')}</span>
             <input
               type="text"
               value={typed}
@@ -125,35 +127,34 @@ export default function PackagesPane({ packages, ready, running, onRun }: Props)
             />
           </label>
           <div className="ide-install-actions">
-            <button type="submit" disabled={disabled || !installCode(typed)}>Install</button>
-            <button type="button" onClick={() => setInstalling(false)}>Cancel</button>
+            <button type="submit" disabled={disabled || !installCode(typed)}>{t('Install')}</button>
+            <button type="button" onClick={() => setInstalling(false)}>{t('Cancel')}</button>
           </div>
         </form>
       )}
       <div className="ide-scroll">
         <p className="ide-packages-note">
-          Nothing to install on your computer: packages come from webR's repository, which has most of CRAN built for the
-          browser. <code>install.packages()</code> and <code>library()</code> fetch them for you. They stay until you reload the page.
+          {t('Nothing to install on your computer: packages come from webR\'s repository, which has most of CRAN built for the browser.')} <code>install.packages()</code> {t('and')} <code>library()</code> {t('fetch them for you. They stay until you reload the page.')}
         </p>
         {packages === null ? (
-          <p className="ide-empty">{ready ? 'Listing packages…' : 'R is starting…'}</p>
+          <p className="ide-empty">{ready ? t('Listing packages…') : t('R is starting…')}</p>
         ) : nothing ? (
-          <p className="ide-empty">No package matches “{filter}”.</p>
+          <p className="ide-empty">{t('No package matches “{filter}”.', { filter })}</p>
         ) : (
-          <table className="ide-objects ide-packages" aria-label="Packages">
-            {groups.map((group) => section(`Recommended: ${group.title}`, group.rows))}
-            {section('Also installed', userLibrary)}
-            {section('System library', systemLibrary)}
+          <table className="ide-objects ide-packages" aria-label={t('Packages')}>
+            {groups.map((group) => section(t('Recommended: {group}', { group: t(group.title) }), group.rows))}
+            {section(t('Also installed'), userLibrary)}
+            {section(t('System library'), systemLibrary)}
           </table>
         )}
         <details className="ide-unavailable">
-          <summary>Packages that cannot run in the browser</summary>
-          <p>These need something a browser does not have. Use R and RStudio on your own computer for them.</p>
+          <summary>{t('Packages that cannot run in the browser')}</summary>
+          <p>{t('These need something a browser does not have. Use R and RStudio on your own computer for them.')}</p>
           <dl>
             {Object.entries(NOT_IN_BROWSER).map(([name, reason]) => (
               <div key={name}>
                 <dt>{name}</dt>
-                <dd>{reason.charAt(0).toUpperCase() + reason.slice(1)}</dd>
+                <dd>{(() => { const text = t(reason); return text.charAt(0).toUpperCase() + text.slice(1); })()}</dd>
               </div>
             ))}
           </dl>

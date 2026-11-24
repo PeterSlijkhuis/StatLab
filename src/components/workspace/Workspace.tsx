@@ -3,6 +3,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
 import type { RObject, WebR } from 'webr';
 import { getDraft } from '../../state/progress';
+import { t as tNow, useT } from '../../i18n/t';
 import {
   clearObjects,
   completions,
@@ -121,6 +122,7 @@ function saveToComputer(name: string, data: BlobPart, type = 'text/plain') {
 }
 
 export default function Workspace({ id, starter, webR, env }: Props) {
+  const t = useT();
   const ready = Boolean(webR && env);
   const [layout, setLayout] = useState<Layout>(() => load(LAYOUT_KEY, DEFAULT_LAYOUT, isLayout));
   const [focus, setFocus] = useState<Pane>('source');
@@ -176,7 +178,7 @@ export default function Workspace({ id, starter, webR, env }: Props) {
     void webR
       .evalRString('R.version.string')
       .then((version) => {
-        if (live) setLines((old) => (old.length ? old : [{ type: 'message', text: `${version}, running in your browser with webR.` }]));
+        if (live) setLines((old) => (old.length ? old : [{ type: 'message', text: tNow('{version}, running in your browser with webR.', { version }) }]));
       })
       .catch(() => {});
     shims.current = installPackageShims(webR, env).catch(() => {});
@@ -332,7 +334,7 @@ export default function Workspace({ id, starter, webR, env }: Props) {
       }
       result.requests.forEach(handle);
     } catch {
-      setLines((old) => [...old, { type: 'error' as const, text: R_STOPPED_MESSAGE }]);
+      setLines((old) => [...old, { type: 'error' as const, text: tNow(R_STOPPED_MESSAGE) }]);
     } finally {
       busy.current = false;
       setRunning(false);
@@ -440,7 +442,7 @@ export default function Workspace({ id, starter, webR, env }: Props) {
   }
 
   function closeScript(target: Script) {
-    if (target.text.trim() && !window.confirm(`Close ${target.name}? Its code is deleted from this browser, so download it first to keep a copy.`)) return;
+    if (target.text.trim() && !window.confirm(t('Close {name}? Its code is deleted from this browser, so download it first to keep a copy.', { name: target.name }))) return;
     setScripts((old) => {
       const left = old.scripts.filter((sc) => sc.id !== target.id);
       if (!left.length) return old;
@@ -450,7 +452,7 @@ export default function Workspace({ id, starter, webR, env }: Props) {
   }
 
   function renameScript() {
-    const typed = window.prompt('Name for this script', script.name)?.trim();
+    const typed = window.prompt(t('Name for this script'), script.name)?.trim();
     if (!typed) return;
     const name = /\.[A-Za-z]+$/.test(typed) ? typed : `${typed}.R`;
     setScripts((old) => ({
@@ -501,17 +503,17 @@ export default function Workspace({ id, starter, webR, env }: Props) {
 
   return (
     <div ref={root} className={`ide${running ? ' ide-running' : ''}`}>
-      <div className="ide-switcher" role="group" aria-label="Show pane">
+      <div className="ide-switcher" role="group" aria-label={t('Show pane')}>
         {PANES.map((p) => (
           <button key={p.id} type="button" aria-pressed={focus === p.id} onClick={() => setFocus(p.id)}>
-            {p.label}
+            {t(p.label)}
           </button>
         ))}
       </div>
 
       <div className="ide-columns">
         <div className="ide-column" style={{ flexBasis: `${layout.columns}%` }}>
-          <section className={pane('source')} style={{ flexBasis: `${layout.left}%` }} aria-label="Source">
+          <section className={pane('source')} style={{ flexBasis: `${layout.left}%` }} aria-label={t('Source')}>
             <PaneTabs
               pane="Source"
               active={sourceTab}
@@ -525,24 +527,24 @@ export default function Workspace({ id, starter, webR, env }: Props) {
             />
             <div role="tabpanel" id={panelId('Source', script.id)} aria-labelledby={tabId('Source', script.id)} hidden={viewOpen} className="ide-panel">
               <div className="ide-toolbar">
-                <button type="button" onClick={() => void runCurrent()} disabled={!ready || running} title="Run the current line or selection (Ctrl+Enter)">
-                  Run
+                <button type="button" onClick={() => void runCurrent()} disabled={!ready || running} title={t('Run the current line or selection (Ctrl+Enter)')}>
+                  {t('Run')}
                 </button>
-                <button type="button" onClick={() => void runAll()} disabled={!ready || running} title="Run the whole script (Ctrl+Shift+Enter)">
-                  Source
+                <button type="button" onClick={() => void runAll()} disabled={!ready || running} title={t('Run the whole script (Ctrl+Shift+Enter)')}>
+                  {t('Source')}
                 </button>
                 <span className="ide-toolbar-spacer" />
-                <input ref={scriptPicker} type="file" accept=".R,.r,.txt,text/plain" aria-label="Open a script file" hidden onChange={(event) => void open(event.target.files)} />
-                <button type="button" onClick={newScript} title="Start a new, empty script in its own tab">New</button>
-                <button type="button" onClick={() => scriptPicker.current?.click()} title="Open an R script from your computer in a new tab">Open</button>
-                <button type="button" onClick={renameScript} title="Give this script a new name">Rename</button>
-                <button type="button" onClick={download} title={`Save ${script.name} to your computer`}>Download</button>
+                <input ref={scriptPicker} type="file" accept=".R,.r,.txt,text/plain" aria-label={t('Open a script file')} hidden onChange={(event) => void open(event.target.files)} />
+                <button type="button" onClick={newScript} title={t('Start a new, empty script in its own tab')}>{t('New')}</button>
+                <button type="button" onClick={() => scriptPicker.current?.click()} title={t('Open an R script from your computer in a new tab')}>{t('Open')}</button>
+                <button type="button" onClick={renameScript} title={t('Give this script a new name')}>{t('Rename')}</button>
+                <button type="button" onClick={download} title={t('Save {name} to your computer', { name: script.name })}>{t('Download')}</button>
                 {script.id === 's1' && (
-                  <button type="button" onClick={() => edit(starter)} title="Put the starting script back">Reset</button>
+                  <button type="button" onClick={() => edit(starter)} title={t('Put the starting script back')}>{t('Reset')}</button>
                 )}
               </div>
               <div className="ide-editor">
-                <REditor key={script.id} value={source} onChange={edit} extensions={shortcuts} viewRef={editor} label="R script" />
+                <REditor key={script.id} value={source} onChange={edit} extensions={shortcuts} viewRef={editor} label={t('R script')} />
               </div>
             </div>
             {viewing && (
@@ -554,19 +556,19 @@ export default function Workspace({ id, starter, webR, env }: Props) {
 
           <Splitter
             orientation="horizontal"
-            label="Resize Source and Console"
+            label={t('Resize Source and Console')}
             value={layout.left}
             onChange={(left) => setLayout((l) => ({ ...l, left }))}
             onReset={() => setLayout((l) => ({ ...l, left: DEFAULT_LAYOUT.left }))}
           />
 
-          <section className={pane('console')} aria-label="Console" ref={consoleArea}>
+          <section className={pane('console')} aria-label={t('Console')} ref={consoleArea}>
             <div className="ide-tabs">
-              <span className="ide-tab-title">Console</span>
+              <span className="ide-tab-title">{t('Console')}</span>
               <span className="ide-tabs-aside">
-                {running && <span className="ide-busy">R is running…</span>}
-                <button type="button" className="ide-tab-action" onClick={() => setLines([])} title="Clear the console (Ctrl+L)">
-                  Clear console
+                {running && <span className="ide-busy">{t('R is running…')}</span>}
+                <button type="button" className="ide-tab-action" onClick={() => setLines([])} title={t('Clear the console (Ctrl+L)')}>
+                  {t('Clear console')}
                 </button>
               </span>
             </div>
@@ -584,14 +586,14 @@ export default function Workspace({ id, starter, webR, env }: Props) {
 
         <Splitter
           orientation="vertical"
-          label="Resize left and right panes"
+          label={t('Resize left and right panes')}
           value={layout.columns}
           onChange={(columns) => setLayout((l) => ({ ...l, columns }))}
           onReset={() => setLayout((l) => ({ ...l, columns: DEFAULT_LAYOUT.columns }))}
         />
 
         <div className="ide-column">
-          <section className={pane('environment')} style={{ flexBasis: `${layout.right}%` }} aria-label="Environment and History">
+          <section className={pane('environment')} style={{ flexBasis: `${layout.right}%` }} aria-label={t('Environment and History')}>
             <PaneTabs
               pane="Environment"
               active={topRight}
@@ -611,13 +613,13 @@ export default function Workspace({ id, starter, webR, env }: Props) {
 
           <Splitter
             orientation="horizontal"
-            label="Resize Environment and Files"
+            label={t('Resize Environment and Files')}
             value={layout.right}
             onChange={(right) => setLayout((l) => ({ ...l, right }))}
             onReset={() => setLayout((l) => ({ ...l, right: DEFAULT_LAYOUT.right }))}
           />
 
-          <section className={pane('files')} aria-label="Files, Plots, Packages and Help" ref={plotArea}>
+          <section className={pane('files')} aria-label={t('Files, Plots, Packages and Help')} ref={plotArea}>
             <PaneTabs
               pane="Files"
               active={bottomRight}

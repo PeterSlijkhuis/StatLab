@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { RunResult } from '../r/evaluate';
+import { useT } from '../i18n/t';
 import './OutputPane.css';
 
 type Props = {
@@ -21,6 +22,7 @@ const PREFIX: Record<RunResult['output'][number]['type'], string> = {
 };
 
 export default function OutputPane({ result, running }: Props) {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -46,14 +48,14 @@ export default function OutputPane({ result, running }: Props) {
 
   return (
     <div className="output-pane" aria-live="polite">
-      {running && <p className="output-status">Running R…</p>}
-      {!running && !result && <p className="output-status">Run the code to see the output.</p>}
+      {running && <p className="output-status">{t('Running R…')}</p>}
+      {!running && !result && <p className="output-status">{t('Run the code to see the output.')}</p>}
 
       {result && result.output.length > 0 && (
         <pre className="output-console">
           {result.output.map((line, index) => (
             <span key={index} className={`output-line output-${line.type}`}>
-              {PREFIX[line.type]}
+              {PREFIX[line.type] && t(PREFIX[line.type])}
               {line.data}
             </span>
           ))}
