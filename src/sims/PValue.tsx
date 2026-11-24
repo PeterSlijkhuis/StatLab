@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { histogram, makeRng, mean, normalPdf, sd } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './PValue.css';
 
 const REPLICATIONS = 4000;
 
-// A simulation cannot resolve p below 1 / REPLICATIONS, so never print p = 0.
-const formatP = (p: number, extreme: number) =>
-  extreme === 0 ? `< ${1 / REPLICATIONS} (none of ${REPLICATIONS})` : p.toFixed(3);
+const decimals = (value: number) => (String(value).split('.')[1] ?? '').length;
 const BINS = 45;
 const WIDTH = 640;
 const HEIGHT = 220;
@@ -31,6 +30,14 @@ function normalDraw(rng: () => number): number {
 }
 
 export default function PValue() {
+  const t = useT();
+  const f = useFmt();
+  // A simulation cannot resolve p below 1 / REPLICATIONS, so never print p = 0.
+  const formatP = (p: number, extreme: number) =>
+    extreme === 0
+      ? t('< {limit} (none of {total})', { limit: t(String(1 / REPLICATIONS)), total: REPLICATIONS })
+      : f(p, 3);
+  const alphaText = (value: number) => f(value, decimals(value));
   const [n, setN] = useState(30);
   const [observed, setObserved] = useState(1.2);
   const [alpha, setAlpha] = useState(0.05);
@@ -97,20 +104,20 @@ export default function PValue() {
     <div className="pvalue">
       <div className="pvalue-controls">
         <label className="pvalue-slider">
-          Group size
+          {t('Group size')}
           <input type="range" min={10} max={100} step={5} value={n} onChange={(e) => setN(Number(e.target.value))} />
           <span>{n}</span>
         </label>
         <label className="pvalue-slider">
-          Observed difference
+          {t('Observed difference')}
           <input type="range" min={0} max={5} step={0.1} value={observed} onChange={(e) => setObserved(Number(e.target.value))} />
-          <span>{observed.toFixed(1)}</span>
+          <span>{f(observed, 1)}</span>
         </label>
         <label>
           α
           <select value={alpha} onChange={(e) => setAlpha(Number(e.target.value))}>
             {ALPHAS.map((value) => (
-              <option key={value} value={value}>{value}</option>
+              <option key={value} value={value}>{alphaText(value)}</option>
             ))}
           </select>
         </label>
@@ -120,15 +127,13 @@ export default function PValue() {
             checked={tails === 'one'}
             onChange={(e) => setTails(e.target.checked ? 'one' : 'two')}
           />
-          One-tailed
+          {t('One-tailed')}
         </label>
-        <button type="button" onClick={() => setSeed((s) => s + 1)}>Simulate again</button>
+        <button type="button" onClick={() => setSeed((s) => s + 1)}>{t('Simulate again')}</button>
       </div>
 
       <p className="pvalue-caption">
-        Four thousand studies in which both groups of {n} were drawn from <em>one</em> population
-        of wellbeing scores, so the true difference is zero. This histogram is what chance alone
-        produces.
+        {t('Four thousand studies in which both groups of {n} were drawn from one population of wellbeing scores, so the true difference is zero. This histogram is what chance alone produces.', { n })}
       </p>
 
       <svg
@@ -136,9 +141,16 @@ export default function PValue() {
         role="img"
         className="pvalue-svg"
         aria-label={
-          `The null distribution of ${REPLICATIONS} differences in means, centred on zero. ` +
-          `${study.extremeCount} of them are at least as extreme as the observed difference of ${observed.toFixed(1)}, ` +
-          `giving a ${tails}-tailed p of ${formatP(study.p, study.extremeCount)}.`
+          t(
+            'The null distribution of {total} differences in means, centred on zero. {count} of them are at least as extreme as the observed difference of {observed}, giving a {tails} p of {p}.',
+            {
+              total: REPLICATIONS,
+              count: study.extremeCount,
+              observed: f(observed, 1),
+              tails: t(tails === 'two' ? 'two-tailed' : 'one-tailed'),
+              p: formatP(study.p, study.extremeCount),
+            },
+          )
         }
       >
         {view.counts.map((count, index) => {
@@ -159,16 +171,16 @@ export default function PValue() {
         <line x1={view.toX(observed)} y1={4} x2={view.toX(observed)} y2={BASELINE} stroke="#b91c1c" strokeWidth={2} />
         <line x1={view.toX(study.critical)} y1={4} x2={view.toX(study.critical)} y2={BASELINE} stroke="#0f172a" strokeDasharray="5 4" />
         <line x1={0} y1={BASELINE} x2={WIDTH} y2={BASELINE} stroke="#334155" />
-        <text x={2} y={HEIGHT - 8} className="pvalue-axis">{view.lo.toFixed(2)}</text>
-        <text x={WIDTH - 4} y={HEIGHT - 8} textAnchor="end" className="pvalue-axis">{view.hi.toFixed(2)}</text>
+        <text x={2} y={HEIGHT - 8} className="pvalue-axis">{f(view.lo, 2)}</text>
+        <text x={WIDTH - 4} y={HEIGHT - 8} textAnchor="end" className="pvalue-axis">{f(view.hi, 2)}</text>
       </svg>
 
       <table className="pvalue-readout">
         <tbody>
           <tr>
-            <th scope="row">Studies at least this extreme</th>
+            <th scope="row">{t('Studies at least this extreme')}</th>
             <td data-testid="extreme-count">{study.extremeCount}</td>
-            <th scope="row">out of</th>
+            <th scope="row">{t('out of')}</th>
             <td data-testid="replications">{REPLICATIONS}</td>
             <th scope="row">p</th>
             <td data-testid="p-value">{formatP(study.p, study.extremeCount)}</td>
@@ -178,12 +190,11 @@ export default function PValue() {
 
       <p className="pvalue-verdict" data-testid="verdict">
         {rejected
-          ? `p is below α = ${alpha}, so you would reject the null hypothesis.`
-          : `p is not below α = ${alpha}, so you would not reject the null hypothesis.`}
+          ? t('p is below α = {alpha}, so you would reject the null hypothesis.', { alpha: alphaText(alpha) })
+          : t('p is not below α = {alpha}, so you would not reject the null hypothesis.', { alpha: alphaText(alpha) })}
       </p>
       <p className="pvalue-caveat" data-testid="caveat">
-        p is how often chance alone produces a difference at least this big when nothing is going on. It is
-        not the probability that the null hypothesis is true, and it is not the size of the effect.
+        {t('p is how often chance alone produces a difference at least this big when nothing is going on. It is not the probability that the null hypothesis is true, and it is not the size of the effect.')}
       </p>
     </div>
   );

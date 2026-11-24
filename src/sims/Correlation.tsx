@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { correlate, fitLine, makeRng, type Point } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './Correlation.css';
 
 const N = 60;
@@ -24,6 +25,8 @@ function shuffled(seed: number): number[] {
 }
 
 export default function Correlation() {
+  const t = useT();
+  const f = useFmt();
   const [round, setRound] = useState(0);
   const [guess, setGuess] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -78,8 +81,8 @@ export default function Correlation() {
         className="correlation-svg"
         aria-label={
           revealed
-            ? `A scatterplot of ${N} points whose correlation is ${scene.fit.r.toFixed(2)}. You guessed ${guess.toFixed(2)}.`
-            : `A scatterplot of ${N} points. Its correlation is hidden until you guess.`
+            ? t('A scatterplot of {n} points whose correlation is {r}. You guessed {guess}.', { n: N, r: f(scene.fit.r, 2), guess: f(guess, 2) })
+            : t('A scatterplot of {n} points. Its correlation is hidden until you guess.', { n: N })
         }
       >
         <rect x={0} y={0} width={SIZE} height={SIZE} fill="#f8fafc" />
@@ -110,7 +113,7 @@ export default function Correlation() {
 
       <div className="correlation-controls">
         <label className="correlation-slider">
-          Your guess
+          {t('Your guess')}
           <input
             type="range"
             min={-1}
@@ -120,9 +123,9 @@ export default function Correlation() {
             onChange={(event) => setGuess(Number(event.target.value))}
             disabled={revealed}
           />
-          <span>{guess.toFixed(2)}</span>
+          <span>{f(guess, 2)}</span>
         </label>
-        <button type="button" onClick={reveal} disabled={revealed}>Reveal</button>
+        <button type="button" onClick={reveal} disabled={revealed}>{t('Reveal')}</button>
         <button
           type="button"
           onClick={() => {
@@ -131,7 +134,7 @@ export default function Correlation() {
             setGuess(0);
           }}
         >
-          Next scatterplot
+          {t('Next scatterplot')}
         </button>
       </div>
 
@@ -139,26 +142,25 @@ export default function Correlation() {
         <table className="correlation-readout">
           <tbody>
             <tr>
-              <th scope="row">Actual r</th>
-              <td data-testid="actual-r">{scene.fit.r.toFixed(2)}</td>
-              <th scope="row">Your guess</th>
-              <td>{guess.toFixed(2)}</td>
-              <th scope="row">Error</th>
-              <td data-testid="error">{error > 0 ? `+${error.toFixed(2)}` : error.toFixed(2)}</td>
+              <th scope="row">{t('Actual r')}</th>
+              <td data-testid="actual-r">{f(scene.fit.r, 2)}</td>
+              <th scope="row">{t('Your guess')}</th>
+              <td>{f(guess, 2)}</td>
+              <th scope="row">{t('Error')}</th>
+              <td data-testid="error">{error > 0 ? `+${f(error, 2)}` : f(error, 2)}</td>
             </tr>
           </tbody>
         </table>
       )}
 
       <p className="correlation-score">
-        Rounds completed: <span data-testid="rounds">{history.length}</span>
-        {history.length > 0 && <> · mean absolute error so far {meanAbsError.toFixed(2)}</>}
+        {t('Rounds completed:')} <span data-testid="rounds">{history.length}</span>
+        {history.length > 0 && <> · {t('mean absolute error so far')} {f(meanAbsError, 2)}</>}
       </p>
 
       {underestimating && (
         <p className="correlation-verdict" data-testid="verdict">
-          You have underestimated the last three moderate correlations. Most people do: a cloud
-          that looks only slightly tilted is often an r of .4 or .5.
+          {t('You have underestimated the last three moderate correlations. Most people do: a cloud that looks only slightly tilted is often an r of .4 or .5.')}
         </p>
       )}
     </div>

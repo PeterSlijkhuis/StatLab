@@ -19,3 +19,12 @@ export function useT() {
   const language = useLanguage();
   return (english: string, values?: Record<string, string | number>) => translate(language, english, values);
 }
+
+/** Fixed-decimal numbers with a decimal comma in Dutch. */
+export function useFmt() {
+  const language = useLanguage();
+  return (value: number, digits: number) => {
+    const text = value.toFixed(digits);
+    return language === 'nl' ? text.replace('.', ',') : text;
+  };
+}

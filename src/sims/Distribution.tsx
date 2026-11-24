@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { normalCdf, normalPdf } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './Distribution.css';
 
 const WIDTH = 640;
@@ -30,6 +31,8 @@ function curvePoints(mu: number, sigma: number): { x: number; value: number }[] 
 }
 
 export default function Distribution() {
+  const t = useT();
+  const f = useFmt();
   const [mu, setMu] = useState(70);
   const [sigma, setSigma] = useState(10);
   const [rawCut, setCut] = useState(70);
@@ -79,7 +82,7 @@ export default function Distribution() {
     <div className="distribution">
       <div className="distribution-controls">
         <label className="distribution-slider">
-          Mean
+          {t('Mean')}
           <input
             type="range"
             min={MEAN_MIN}
@@ -91,7 +94,7 @@ export default function Distribution() {
           <span>{mu}</span>
         </label>
         <label className="distribution-slider">
-          Standard deviation
+          {t('Standard deviation')}
           <input
             type="range"
             min={SD_MIN}
@@ -103,7 +106,7 @@ export default function Distribution() {
           <span>{sigma}</span>
         </label>
         <label className="distribution-slider">
-          Cut-off
+          {t('Cut-off')}
           <input
             type="range"
             min={mu - 4 * sigma}
@@ -112,7 +115,7 @@ export default function Distribution() {
             value={cut}
             onChange={(event) => setCut(Number(event.target.value))}
           />
-          <span>{cut.toFixed(1)}</span>
+          <span>{f(cut, 1)}</span>
         </label>
         <label>
           <input
@@ -120,7 +123,7 @@ export default function Distribution() {
             checked={axis === 'z'}
             onChange={(event) => setAxis(event.target.checked ? 'z' : 'raw')}
           />
-          Label the axis in z-scores
+          {t('Label the axis in z-scores')}
         </label>
       </div>
 
@@ -129,9 +132,10 @@ export default function Distribution() {
         role="img"
         className="distribution-svg"
         aria-label={
-          `Normal curve with mean ${mu} and standard deviation ${sigma}. ` +
-          `The shaded area to the left of ${cut.toFixed(1)} is ${view.left.toFixed(3)}, ` +
-          `leaving ${view.right.toFixed(3)} to the right. That cut-off is ${view.z.toFixed(2)} standard deviations from the mean.`
+          t(
+            'Normal curve with mean {mu} and standard deviation {sigma}. The shaded area to the left of {cut} is {left}, leaving {right} to the right. That cut-off is {z} standard deviations from the mean.',
+            { mu, sigma, cut: f(cut, 1), left: f(view.left, 3), right: f(view.right, 3), z: f(view.z, 2) },
+          )
         }
       >
         {view.shaded && <path d={view.shaded} fill="#2563eb" fillOpacity={0.35} />}
@@ -151,19 +155,18 @@ export default function Distribution() {
       <table className="distribution-readout">
         <tbody>
           <tr>
-            <th scope="row">Area to the left of the cut</th>
-            <td data-testid="tail-probability">{view.left.toFixed(3)}</td>
-            <th scope="row">Area to the right</th>
-            <td data-testid="right-probability">{view.right.toFixed(3)}</td>
-            <th scope="row">z-score of the cut</th>
-            <td data-testid="z-score">{view.z.toFixed(2)}</td>
+            <th scope="row">{t('Area to the left of the cut')}</th>
+            <td data-testid="tail-probability">{f(view.left, 3)}</td>
+            <th scope="row">{t('Area to the right')}</th>
+            <td data-testid="right-probability">{f(view.right, 3)}</td>
+            <th scope="row">{t('z-score of the cut')}</th>
+            <td data-testid="z-score">{f(view.z, 2)}</td>
           </tr>
         </tbody>
       </table>
 
       <p className="distribution-note">
-        The height of the curve is not a probability. Move the standard deviation and watch the curve
-        change shape while the area to the left of the mean stays at 0.500. Only area is probability.
+        {t('The height of the curve is not a probability. Move the standard deviation and watch the curve change shape while the area to the left of the mean stays at 0.500. Only area is probability.')}
       </p>
     </div>
   );
