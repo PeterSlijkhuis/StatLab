@@ -5,6 +5,7 @@ import { allAnswers, follow, GROUPS, packagesDownloaded, packagesMissingHere, pa
 import { CUES, matchQuestion, type CueId } from './questionMatcher';
 import { visibleModules } from '../content/parts';
 import { useAdvanced } from '../state/settings';
+import { useT } from '../i18n/t';
 import './ModelChooser.css';
 
 /** Lessons in the core course, the part shown without Advanced topics. */
@@ -16,9 +17,11 @@ export function inCore(answer: Answer): boolean {
 }
 
 function BeyondNote({ answer }: { answer: Answer }) {
+  const t = useT();
   return (
     <p className="advanced-note">
-      <span aria-hidden="true">🎓 </span>{answer.model} goes beyond the book and the BMS course. Switch on Advanced topics under Settings to see when to use it and how to run it.
+      <span aria-hidden="true">🎓 </span>
+      {t('{model} goes beyond the book and the BMS course. Switch on Advanced topics under Settings to see when to use it and how to run it.', { model: t(answer.model) })}
     </p>
   );
 }
@@ -33,35 +36,40 @@ export { TREE, type Answer, type Node } from './modelTree';
  * what ModelChooser.test.tsx watches for.
  */
 function LessonLink({ lessonId, lead }: { lessonId: string; lead: string }) {
+  const t = useT();
   const lesson = findLesson(lessonId);
-  return <Link to={`/lesson/${lessonId}`}>{lesson ? `${lead}: ${lesson.title}` : lead}</Link>;
+  return <Link to={`/lesson/${lessonId}`}>{lesson ? `${t(lead)}: ${t(lesson.title)}` : t(lead)}</Link>;
 }
 
 function Badges({ answer }: { answer: Answer }) {
+  const t = useT();
   const runsHere = packagesMissingHere(answer).length === 0;
   return (
     <p className="model-chooser-badges">
       <span className={`model-badge ${answer.lessonId ? 'taught' : 'beyond'}`}>
-        {answer.lessonId ? 'Taught in this course' : 'Beyond this course'}
+        {answer.lessonId ? t('Taught in this course') : t('Beyond this course')}
       </span>
-      <span className={`model-badge ${runsHere ? 'runs-here' : 'rstudio'}`}>{runsHere ? 'Runs in the R Workspace' : 'Needs RStudio'}</span>
+      <span className={`model-badge ${runsHere ? 'runs-here' : 'rstudio'}`}>{runsHere ? t('Runs in the R Workspace') : t('Needs RStudio')}</span>
     </p>
   );
 }
 
-function list(names: string[]): string {
-  return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+function list(names: string[], and: string): string {
+  return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} ${and} ${names[names.length - 1]}`;
 }
 
 /** Where the snippet runs, and what it takes to get there. */
 export function WhereItRuns({ answer }: { answer: Answer }) {
+  const t = useT();
+  const names = (items: string[]) => list(items, t('and'));
   const missing = packagesMissingHere(answer);
   if (missing.length === 0) {
     const installs = packagesDownloaded(answer);
     return (
       <p>
-        <strong>Where to run it:</strong> in the <Link to="/workspace">R Workspace</Link>, once d holds your data.
-        {installs.length > 0 && ` The first run downloads ${list(installs)}, which takes a moment.`}
+        <strong>{t('Where to run it:')}</strong> {t('in the')} <Link to="/workspace">R Workspace</Link>
+        {t(', once d holds your data.')}
+        {installs.length > 0 && ` ${t('The first run downloads {names}, which takes a moment.', { names: names(installs) })}`}
       </p>
     );
   }
@@ -69,12 +77,13 @@ export function WhereItRuns({ answer }: { answer: Answer }) {
   const toInstall = missing.filter((name) => !SHIPS_WITH_R.includes(name));
   return (
     <p>
-      <strong>Where to run it:</strong> in RStudio, because this site does not have {list(missing)}.
-      {bundled.length > 0 && ` ${list(bundled)} ${bundled.length > 1 ? 'come' : 'comes'} with R, so RStudio already has ${bundled.length > 1 ? 'them' : 'it'}.`}
+      <strong>{t('Where to run it:')}</strong> {t('in RStudio, because this site does not have {names}.', { names: names(missing) })}
+      {bundled.length > 0 &&
+        ` ${t(bundled.length > 1 ? '{names} come with R, so RStudio already has them.' : '{names} comes with R, so RStudio already has it.', { names: names(bundled) })}`}
       {toInstall.length > 0 && (
         <>
           {' '}
-          Install {toInstall.length > 1 ? 'them' : 'it'} once with{' '}
+          {t(toInstall.length > 1 ? 'Install them once with' : 'Install it once with')}{' '}
           <code>install.packages({toInstall.length > 1 ? `c(${toInstall.map((name) => `"${name}"`).join(', ')})` : `"${toInstall[0]}"`})</code>.
         </>
       )}
@@ -83,6 +92,7 @@ export function WhereItRuns({ answer }: { answer: Answer }) {
 }
 
 function AnswerCard({ answer }: { answer: Answer }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -100,26 +110,26 @@ function AnswerCard({ answer }: { answer: Answer }) {
     <>
       <Badges answer={answer} />
       <p>
-        <strong>When to use it:</strong> {answer.when}
+        <strong>{t('When to use it:')}</strong> {t(answer.when)}
       </p>
       <div className="model-chooser-code">
         <pre>
           <code>{answer.rCode}</code>
         </pre>
         <button type="button" className="button-secondary" onClick={() => void copy()}>
-          {copied ? 'Copied' : 'Copy code'}
+          {copied ? t('Copied') : t('Copy code')}
         </button>
       </div>
       <p>
-        <strong>Check first:</strong> {answer.check}
+        <strong>{t('Check first:')}</strong> {t(answer.check)}
       </p>
       {answer.traditional && (
         <p>
-          <strong>Traditional counterpart:</strong> {answer.traditional}
+          <strong>{t('Traditional counterpart:')}</strong> {t(answer.traditional)}
         </p>
       )}
       <p>
-        <strong>How to read it:</strong> {answer.note}
+        <strong>{t('How to read it:')}</strong> {t(answer.note)}
       </p>
       <WhereItRuns answer={answer} />
       {answer.lessonId ? (
@@ -130,7 +140,7 @@ function AnswerCard({ answer }: { answer: Answer }) {
         <>
           {answer.further && (
             <p>
-              <strong>Learn more:</strong> {answer.further}
+              <strong>{t('Learn more:')}</strong> {t(answer.further)}
             </p>
           )}
           {answer.buildsOn && (
@@ -160,6 +170,7 @@ const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,
  * so a student who already knows what they need can go straight to it.
  */
 function Index({ onPick }: { onPick: (id: string) => void }) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const advanced = useAdvanced();
@@ -170,7 +181,7 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
   const shown = entries.filter(({ answer }) => {
     if (filter === 'taught' && !answer.lessonId) return false;
     if (filter === 'beyond' && answer.lessonId) return false;
-    const haystack = fold(`${answer.model} ${answer.when} ${answer.traditional ?? ''} ${answer.check}`);
+    const haystack = fold(`${answer.model} ${answer.when} ${answer.traditional ?? ''} ${answer.check} ${t(answer.model)} ${t(answer.when)} ${t(answer.traditional ?? '')}`);
     return words.every((word) => haystack.includes(word));
   });
   const sections = GROUPS.map((group) => ({ ...group, answers: shown.filter((entry) => entry.group === group.name).map((entry) => entry.answer) })).filter(
@@ -180,47 +191,50 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
   return (
     <section className="model-index" aria-labelledby="model-index-title">
       <div className="model-index-head">
-        <h2 id="model-index-title">Browse all {entries.length} models</h2>
-        <p>Already know what you need? Search by name, or by the traditional test you know it as.{!advanced && ' This list holds the models the course teaches; switch on Advanced topics under Settings for the rest.'}</p>
+        <h2 id="model-index-title">{t('Browse all {count} models', { count: entries.length })}</h2>
+        <p>
+          {t('Already know what you need? Search by name, or by the traditional test you know it as.')}
+          {!advanced && ` ${t('This list holds the models the course teaches; switch on Advanced topics under Settings for the rest.')}`}
+        </p>
       </div>
       <div className="model-index-tools">
         <label className="model-index-search">
-          <span className="visually-hidden">Search the models</span>
+          <span className="visually-hidden">{t('Search the models')}</span>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18">
             <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
             <path d="M13 13l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search, for example mediation or a traditional test" />
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Search, for example mediation or a traditional test')} />
         </label>
-        {advanced && <div className="model-index-filters" role="group" aria-label="Show">
+        {advanced && <div className="model-index-filters" role="group" aria-label={t('Show')}>
           {FILTERS.map((option) => (
             <button key={option.id} type="button" aria-pressed={filter === option.id} onClick={() => setFilter(option.id)}>
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>}
       </div>
 
-      {sections.length === 0 && <p className="model-index-empty">No model matches. Try another word, or answer the questions above.</p>}
+      {sections.length === 0 && <p className="model-index-empty">{t('No model matches. Try another word, or answer the questions above.')}</p>}
 
       {sections.map((section) => (
         <div key={section.name} className="model-index-section">
           <h3>
-            {section.name} <span className="model-index-count">{section.answers.length}</span>
+            {t(section.name)} <span className="model-index-count">{section.answers.length}</span>
           </h3>
-          <p className="model-index-blurb">{section.blurb}</p>
+          <p className="model-index-blurb">{t(section.blurb)}</p>
           <ul className="model-cards">
             {section.answers.map((answer) => (
               <li key={answer.id} className={`model-card ${answer.lessonId ? 'taught' : 'beyond'}`}>
                 <button type="button" onClick={() => onPick(answer.id)}>
-                  {answer.model}
+                  {t(answer.model)}
                 </button>
-                <span className="model-card-when">{answer.when}</span>
+                <span className="model-card-when">{t(answer.when)}</span>
                 <span className="model-card-tags">
                   <span className={`model-badge ${answer.lessonId ? 'taught' : 'beyond'}`}>
-                    {answer.lessonId ? `Taught, lesson ${answer.lessonId}` : 'Beyond the course'}
+                    {answer.lessonId ? t('Taught, lesson {id}', { id: answer.lessonId }) : t('Beyond the course')}
                   </span>
-                  {packagesMissingHere(answer).length > 0 && <span className="model-badge rstudio">Needs RStudio</span>}
+                  {packagesMissingHere(answer).length > 0 && <span className="model-badge rstudio">{t('Needs RStudio')}</span>}
                 </span>
               </li>
             ))}
@@ -234,7 +248,7 @@ function Index({ onPick }: { onPick: (id: string) => void }) {
 const ANSWERS = new Map(allAnswers().map(({ answer }) => [answer.id, answer]));
 
 /** Research questions from the course data, one per common kind of analysis. */
-const EXAMPLES = [
+export const EXAMPLES = [
   'Do remote workers report higher wellbeing than office workers?',
   'Does workload predict whether employees leave?',
   'Did engagement rise from the first to the second measurement, and more for trained employees?',
@@ -246,25 +260,26 @@ const EXAMPLES = [
 type Overrides = Partial<Record<CueId, boolean>>;
 
 function Suggestion({ id, reasons, best, onCheck }: { id: string; reasons: string[]; best: boolean; onCheck: (id: string) => void }) {
+  const t = useT();
   const answer = ANSWERS.get(id)!;
   const [open, setOpen] = useState(false);
   const detailId = useId();
   return (
     <article className={`mc-suggestion${best ? ' best' : ''}`}>
-      <p className="mc-kicker">{best ? 'Best match' : 'Also possible'}</p>
-      <h3>{answer.model}</h3>
-      {best && <p className="mc-suggestion-when">{answer.when}</p>}
-      <ul className="mc-why" aria-label="Why it fits">
+      <p className="mc-kicker">{best ? t('Best match') : t('Also possible')}</p>
+      <h3>{t(answer.model)}</h3>
+      {best && <p className="mc-suggestion-when">{t(answer.when)}</p>}
+      <ul className="mc-why" aria-label={t('Why it fits')}>
         {reasons.map((reason) => (
-          <li key={reason}>{reason}</li>
+          <li key={reason}>{t(reason)}</li>
         ))}
       </ul>
       <div className="mc-suggestion-actions">
         <button type="button" className={best ? 'button-primary' : 'button-secondary'} onClick={() => onCheck(id)}>
-          Check it with the questions
+          {t('Check it with the questions')}
         </button>
         <button type="button" className="mc-link-button" aria-expanded={open} aria-controls={detailId} onClick={() => setOpen(!open)}>
-          {open ? 'Hide the details' : 'Show the details'}
+          {open ? t('Hide the details') : t('Show the details')}
         </button>
       </div>
       <div id={detailId} className="mc-suggestion-detail" hidden={!open}>
@@ -279,6 +294,7 @@ function Suggestion({ id, reasons, best, onCheck }: { id: string; reasons: strin
  * cues it read, and lets the student switch any of them off or add one.
  */
 function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
+  const t = useT();
   const [text, setText] = useState('');
   const [overrides, setOverrides] = useState<Overrides>({});
   const match = useMemo(() => matchQuestion(text, overrides), [text, overrides]);
@@ -297,23 +313,23 @@ function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
 
   return (
     <section className="mc-panel mc-matcher" aria-labelledby="mc-matcher-title">
-      <p className="mc-kicker">Quick start</p>
-      <h2 id="mc-matcher-title">Describe your research question</h2>
+      <p className="mc-kicker">{t('Quick start')}</p>
+      <h2 id="mc-matcher-title">{t('Describe your research question')}</h2>
       <label htmlFor="mc-question" className="visually-hidden">
-        Your research question
+        {t('Your research question')}
       </label>
       <textarea
         id="mc-question"
         rows={2}
         value={text}
         onChange={(event) => write(event.target.value)}
-        placeholder="For example: Do students who sleep more get higher exam scores?"
+        placeholder={t('For example: Do students who sleep more get higher exam scores?')}
       />
       <div className="mc-examples">
-        <span className="mc-examples-label">Or try one:</span>
+        <span className="mc-examples-label">{t('Or try one:')}</span>
         {EXAMPLES.map((example) => (
           <button key={example} type="button" aria-pressed={text === example} onClick={() => write(example)}>
-            {example}
+            {t(example)}
           </button>
         ))}
       </div>
@@ -322,36 +338,38 @@ function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
           <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
           <path d="M10 9v5M10 6.2v.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
-        The suggestion comes from keywords in your question, not from AI, so confirm it with the questions below.
+        {t('The suggestion comes from keywords in your question, not from AI, so confirm it with the questions below.')}
       </p>
 
       <p className="visually-hidden" aria-live="polite">
-        {shown.length > 0 ? `Best match: ${ANSWERS.get(shown[0].id)!.model}` : typed ? 'No clear match yet.' : ''}
+        {shown.length > 0 ? t('Best match: {model}', { model: t(ANSWERS.get(shown[0].id)!.model) }) : typed ? t('No clear match yet.') : ''}
       </p>
 
       {(chips.length > 0 || typed) && (
         <div className="mc-cues">
           <p className="mc-cues-title">
-            {chips.length > 0 ? 'What we read in your question. Tap one to switch it off if it is wrong.' : 'We found no cue in your question yet. You can add one yourself.'}
+            {chips.length > 0
+              ? t('What we read in your question. Tap one to switch it off if it is wrong.')
+              : t('We found no cue in your question yet. You can add one yourself.')}
           </p>
           {chips.length > 0 && (
             <ul>
               {chips.map((cue) => (
                 <li key={cue.id}>
                   <button type="button" className="mc-chip" aria-pressed={match.cues.includes(cue.id)} onClick={() => toggle(cue.id)}>
-                    {cue.label}
+                    {t(cue.label)}
                   </button>
                 </li>
               ))}
             </ul>
           )}
           <details className="mc-add">
-            <summary>Missed something? Add it</summary>
+            <summary>{t('Missed something? Add it')}</summary>
             <ul>
               {addable.map((cue) => (
                 <li key={cue.id}>
                   <button type="button" className="mc-chip" aria-pressed="false" onClick={() => toggle(cue.id)}>
-                    {cue.label}
+                    {t(cue.label)}
                   </button>
                 </li>
               ))}
@@ -369,8 +387,7 @@ function QuestionMatcher({ onCheck }: { onCheck: (id: string) => void }) {
       ) : (
         typed && (
           <p className="mc-empty">
-            No clear match yet. Try saying what you measured and what you compare or predict it with, as in the examples, or
-            answer the short questions below.
+            {t('No clear match yet. Try saying what you measured and what you compare or predict it with, as in the examples, or answer the short questions below.')}
           </p>
         )
       )}
@@ -393,6 +410,7 @@ function questionsOn(path: string[]): string[] {
 const startsWith = (path: string[], prefix: string[]) => prefix.every((label, i) => path[i] === label);
 
 export default function ModelChooser() {
+  const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   // The answers so far live in the URL, one history entry per question, so the browser's Back button goes back one question.
   const path = useMemo(() => {
@@ -440,41 +458,41 @@ export default function ModelChooser() {
   return (
     <div className="model-chooser">
       <header className="mc-intro">
-        <h1>Which model should I use?</h1>
+        <h1>{t('Which model should I use?')}</h1>
         <p>
-          Describe your research question for a quick suggestion, or answer a few short questions. Almost every analysis in
-          this course is one of three models, lm(), lmer() or glm(), and the chain is always the same: question, assumptions,
-          choice of model, computation, interpretation, report.
+          {t('Describe your research question for a quick suggestion, or answer a few short questions. Almost every analysis in this course is one of three models, lm(), lmer() or glm(), and the chain is always the same: question, assumptions, choice of model, computation, interpretation, report.')}
         </p>
       </header>
 
       <QuestionMatcher onCheck={check} />
 
       <section ref={treeRef} className="mc-panel mc-tree" aria-labelledby="mc-tree-title">
-        <p className="mc-kicker">Step by step</p>
-        <h2 id="mc-tree-title">Answer a few short questions</h2>
+        <p className="mc-kicker">{t('Step by step')}</p>
+        <h2 id="mc-tree-title">{t('Answer a few short questions')}</h2>
 
         {path.length > 0 && (
-          <nav className="model-chooser-trail" aria-label="Your answers so far">
+          <nav className="model-chooser-trail" aria-label={t('Your answers so far')}>
             {planned.suggested && node.kind === 'answer' && (
-              <p className="mc-trail-hint">These answers lead to the suggestion. Tap any step to check it or change it.</p>
+              <p className="mc-trail-hint">{t('These answers lead to the suggestion. Tap any step to check it or change it.')}</p>
             )}
             <ol>
               {path.map((label, i) => (
                 <li key={label}>
-                  <button type="button" title={asked[i]} onClick={() => go(path.slice(0, i))}>
-                    <span className="visually-hidden">Change your answer to {asked[i]} You chose: </span>
-                    {label}
+                  <button type="button" title={t(asked[i])} onClick={() => go(path.slice(0, i))}>
+                    <span className="visually-hidden">
+                      {t('Change your answer to')} {t(asked[i])} {t('You chose:')}{' '}
+                    </span>
+                    {t(label)}
                   </button>
                 </li>
               ))}
             </ol>
             <div className="model-chooser-trail-actions">
               <button type="button" onClick={() => go(path.slice(0, -1))}>
-                Back
+                {t('Back')}
               </button>
               <button type="button" onClick={() => go([], { path: [], suggested: false })}>
-                Start over
+                {t('Start over')}
               </button>
             </div>
           </nav>
@@ -482,11 +500,11 @@ export default function ModelChooser() {
 
         {node.kind === 'question' ? (
           <div className="mc-step" key={path.join('/')}>
-            <p className="model-chooser-step">Question {path.length + 1}</p>
+            <p className="model-chooser-step">{t('Question {n}', { n: path.length + 1 })}</p>
             <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">
-              {node.text}
+              {t(node.text)}
             </h3>
-            {node.help && <p className="model-chooser-help">{node.help}</p>}
+            {node.help && <p className="model-chooser-help">{t(node.help)}</p>}
             <ul className="model-chooser-options">
               {node.options.map((option, i) => {
                 const id = `${baseId}-${i}`;
@@ -495,12 +513,12 @@ export default function ModelChooser() {
                   <li key={option.label}>
                     <button type="button" className={flagged ? 'flagged' : undefined} aria-describedby={`${id}-more`} onClick={() => go([...path, option.label])}>
                       <span className="mc-option-label" id={`${id}-label`}>
-                        {option.label}
+                        {t(option.label)}
                       </span>
                       <span id={`${id}-more`} className="mc-option-more" aria-hidden="true">
-                        {flagged && <span className="mc-flag">{planned.suggested ? 'Suggested' : 'Your earlier choice'}</span>}
-                        <span className="mc-option-example">{option.example}</span>
-                        <span className="mc-option-tech">{option.tech}</span>
+                        {flagged && <span className="mc-flag">{planned.suggested ? t('Suggested') : t('Your earlier choice')}</span>}
+                        <span className="mc-option-example">{t(option.example)}</span>
+                        <span className="mc-option-tech">{t(option.tech)}</span>
                       </span>
                     </button>
                   </li>
@@ -510,19 +528,17 @@ export default function ModelChooser() {
           </div>
         ) : (
           <div className="model-chooser-answer" key={node.id}>
-            <p className="mc-kicker">Your model</p>
+            <p className="mc-kicker">{t('Your model')}</p>
             <h3 ref={headingRef} tabIndex={-1} className="model-chooser-current">
-              {node.model}
+              {t(node.model)}
             </h3>
             <AnswerCard answer={node} />
           </div>
         )}
 
         <p className="model-chooser-legend">
-          Most snippets run as they are in the <Link to="/workspace">R Workspace</Link>, and the ones that need RStudio say so.
-          Each reads workplace.csv or wellbeing-population.csv, the course data the workspace already has, or a dataset that
-          comes with R or with the package the snippet uses, when the course data has nothing that fits. For your own data, change the file name in read.csv() and the
-          column names.
+          {t('Most snippets run as they are in the')} <Link to="/workspace">R Workspace</Link>
+          {t(', and the ones that need RStudio say so. Each reads workplace.csv or wellbeing-population.csv, the course data the workspace already has, or a dataset that comes with R or with the package the snippet uses, when the course data has nothing that fits. For your own data, change the file name in read.csv() and the column names.')}
         </p>
       </section>
 
