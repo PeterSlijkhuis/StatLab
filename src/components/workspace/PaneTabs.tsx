@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react';
+import { useT } from '../../i18n/t';
 
 export type Tab<T extends string> = { id: T; label: string; onClose?: () => void };
 
@@ -17,6 +18,7 @@ export const panelId = (pane: string, id: string) => `ide-${pane}-panel-${id}`;
 
 /** The strip of tabs along the top of an RStudio pane. */
 export default function PaneTabs<T extends string>({ pane, tabs, active, onSelect, aside }: Props<T>) {
+  const t = useT();
   function key(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     const index = tabs.findIndex((tab) => tab.id === active);
@@ -28,7 +30,7 @@ export default function PaneTabs<T extends string>({ pane, tabs, active, onSelec
 
   return (
     <div className="ide-tabs">
-      <div role="tablist" aria-label={pane} className="ide-tablist" onKeyDown={key}>
+      <div role="tablist" aria-label={t(pane)} className="ide-tablist" onKeyDown={key}>
         {tabs.map((tab) => (
           <span key={tab.id} className={`ide-tab${tab.id === active ? ' active' : ''}`}>
             <button
@@ -40,10 +42,10 @@ export default function PaneTabs<T extends string>({ pane, tabs, active, onSelec
               tabIndex={tab.id === active ? 0 : -1}
               onClick={() => onSelect(tab.id)}
             >
-              {tab.label}
+              {t(tab.label)}
             </button>
             {tab.onClose && (
-              <button type="button" className="ide-tab-close" aria-label={`Close ${tab.label}`} onClick={tab.onClose}>
+              <button type="button" className="ide-tab-close" aria-label={t('Close {name}', { name: t(tab.label) })} onClick={tab.onClose}>
                 ×
               </button>
             )}

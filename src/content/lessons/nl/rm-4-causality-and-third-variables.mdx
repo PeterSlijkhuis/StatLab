@@ -1,0 +1,150 @@
+Een verklarende hypothese beweert dat X Y beïnvloedt. Data kunnen die bewering
+alleen ondersteunen als aan drie voorwaarden is voldaan:
+
+1. **Tijdsvolgorde**: X komt voor Y. Dat wordt meestal bepaald door theorie en
+   design, niet door de data.
+2. **Samenhang**: X en Y gaan samen in de data.
+3. **Geen derde variabele** verklaart de samenhang weg. Een relatie die een
+   derde variabele creëert is **schijnverband**, zoals het klassieke verband
+   tussen het aantal ooievaars en het aantal baby's per regio, die beide
+   afhangen van hoe landelijk een regio is.
+
+Deze les toetst een hypothese met een kruistabel en controleert haar dan met
+een derde variabele, zoals de cursusreader van Van der Kolk dat doet.
+
+## De data
+
+Steunen regio's in de EU die veel geld van de EU krijgen de EU meer? Van 360
+regio's weten we het ontvangen geld (laag of hoog), het publieke draagvlak voor
+de EU (laag of hoog) en de economische ontwikkeling (laag of hoog). De data
+komen als **gereduceerde datamatrix**: één rij per combinatie, met het aantal
+regio's dat die combinatie heeft. `uncount()` uit tidyr maakt daar weer één rij
+per regio van.
+
+<CodeBlock id="c-data" code={`library(dplyr)
+library(tidyr)
+library(janitor)
+
+reduced <- data.frame(
+  money       = c("high", "high", "high", "high", "low", "low", "low", "low"),
+  support     = c("high", "high", "low", "low", "high", "high", "low", "low"),
+  development = c("low", "high", "low", "high", "low", "high", "low", "high"),
+  n           = c(10, 60, 60, 80, 2, 13, 95, 40)
+)
+regions <- reduced %>% uncount(n)
+nrow(regions)`} />
+
+## De bivariate tabel
+
+De afspraak in de cursus voor een kruistabel: de **onafhankelijke variabele in
+de kolommen**, de afhankelijke variabele in de rijen, en percentages die
+binnen elke kolom optellen tot 100. Dan vergelijk je langs de rijen. `tabyl()`
+neemt eerst de rijvariabele en dan de kolomvariabele.
+
+<CodeBlock id="c-xy" code={`regions %>%
+  tabyl(support, money) %>%
+  adorn_totals("row") %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0) %>%
+  adorn_ns()`} />
+
+Van de regio's die weinig geld ontvangen laat 10% veel draagvlak zien; van
+degenen die veel ontvangen 33%. Het **procentueel verschil**, geschreven als E
+(epsilon), is 33 − 10 = 23 procentpunten, in de verwachte richting.
+
+Is 23 punten een betekenisvol verschil? De cursus gebruikt een vuistregel die
+afhangt van het aantal gevallen N: het verschil moet minstens
+
+- 5 punten zijn als N 1100 of meer is,
+- 10 punten als N tussen 200 en 1100 ligt,
+- 15 punten als N tussen 100 en 200 ligt,
+- 20 punten als N tussen 50 en 100 ligt.
+
+Bij N = 360 is de lat 10 punten, dus 23 punten telt. Module 9 vervangt deze
+vuistregel door een echte toets.
+
+<Predict
+  id="p-spurious"
+  question="Laat deze tabel zien dat EU-geld het draagvlak voor de EU verhoogt?"
+  choices={[
+    { text: 'Ja, het verschil is groot en in de verwachte richting', response: 'Dat regelt alleen voorwaarde 2. Een derde variabele kan de samenhang nog steeds veroorzaken.' },
+    { text: 'Nog niet: tijdsvolgorde en derde variabelen moeten nog gecontroleerd worden', correct: true, response: 'Juist. Een samenhang is nodig voor een causale bewering, maar nooit voldoende.' },
+  ]}
+/>
+
+## Een testvariabele toevoegen
+
+Economische ontwikkeling kan samenhangen met zowel het geld dat een regio
+ontvangt als haar draagvlak voor de EU. Om dat te controleren splits je de
+tabel naar ontwikkeling: één **partiële tabel** per waarde van de
+testvariabele. Een derde argument voor `tabyl()` doet precies dat en geeft een
+lijst met tabellen terug, die de `adorn_`-functies één voor één afhandelen.
+
+<CodeBlock id="c-partial" code={`regions %>%
+  tabyl(support, money, development) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0)`} />
+
+Onder regio's met een lage ontwikkeling (N = 167) is het verschil 14 − 2 = 12
+punten. Onder regio's met een hoge ontwikkeling (N = 193) is het 43 − 25 = 18
+punten. Beide partiële tabellen hebben N tussen 100 en 200, dus elk heeft 15
+punten nodig.
+
+De relatie is in beide tabellen zwakker geworden dan de oorspronkelijke 23
+punten. Strikt toegepast zegt de vuistregel dat ze verdwijnt onder regio's met
+een lage ontwikkeling en blijft bestaan onder regio's met een hoge ontwikkeling.
+Getallen zo dicht bij de lat zijn kwetsbaar, wat een reden is dat Module 9 een
+toets invoert.
+
+De andere verwachtingen gaan over de testvariabele zelf. Hangt ontwikkeling
+samen met het geld dat een regio ontvangt, en met draagvlak?
+
+<CodeBlock id="c-tx" code={`regions %>%
+  tabyl(money, development) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 0)`} />
+
+Regio's met een hoge ontwikkeling ontvangen vaker veel geld (73%) dan regio's
+met een lage ontwikkeling (42%). Nu hetzelfde voor draagvlak, wat de opdracht
+is.
+
+<Exercise id="mrm-4-a" />
+
+## Elaboratiemodellen
+
+Wat een testvariabele met de oorspronkelijke relatie doet, bepaalt hoe je die
+leest. De cursus onderscheidt deze **elaboratiemodellen**:
+
+- **Replicatie**: de relatie blijft in elke partiële tabel gelijk.
+- **Additie**: de relatie blijft gelijk, en de testvariabele beïnvloedt Y ook
+  zelfstandig.
+- **Volledige verklaring**: de relatie verdwijnt, en de testvariabele komt
+  *voor* X en beïnvloedt beide. De oorspronkelijke relatie was een
+  schijnverband. De testvariabele is een **confounder**.
+- **Gedeeltelijke verklaring**: zoals volledige verklaring, maar de relatie
+  wordt alleen zwakker.
+- **Volledige interpretatie**: de relatie verdwijnt, en de testvariabele komt
+  *tussen* X en Y: X beïnvloedt haar, en zij beïnvloedt Y. De testvariabele is
+  een tussenliggende variabele, of **mediator**.
+- **Gedeeltelijke interpretatie**: zoals volledige interpretatie, maar de
+  relatie wordt alleen zwakker.
+- **Specificatie**: de relatie verschilt tussen de partiële tabellen, bijvoorbeeld
+  sterk voor de ene waarde van de testvariabele en afwezig voor de andere. De
+  testvariabele is een **moderator**, en dit is een **interactie**.
+
+Verklaring en interpretatie geven *dezelfde* tabellen. Alleen de tijdsvolgorde,
+die uit theorie komt, onderscheidt ze: komt ontwikkeling voor EU-geld, of
+verhoogt EU-geld de ontwikkeling? Module 11 doet hetzelfde met regressie
+("constant houden"), Module 13 met interacties, en de les over mediatie in de
+Verdieping met mediators.
+
+<Quiz
+  id="q-elaboration"
+  question="Een bedrijf ziet dat werknemers die een cursus volgen meer verdienen. Gesplitst naar opleiding verdwijnt het verschil in beide partiële tabellen, en hoger opgeleide werknemers volgen de cursus vaker én verdienen meer. De opleiding was voor het dienstverband afgerond. Welk model past?"
+  choices={[
+    { text: 'Volledige interpretatie', response: 'Daarvoor moet de testvariabele tussen X en Y komen, veroorzaakt door de cursus. De opleiding kwam voor de cursus.' },
+    { text: 'Volledige verklaring', correct: true, response: 'Juist. De relatie verdwijnt, en de testvariabele komt voor beide: opleiding is een confounder, en het effect van de cursus was schijn.' },
+    { text: 'Specificatie', response: 'Specificatie vereist dat de relatie verschilt tussen de partiële tabellen. Hier verdwijnt ze in beide.' },
+    { text: 'Replicatie', response: 'Replicatie betekent dat de relatie ongewijzigd blijft. Hier verdwijnt ze.' },
+  ]}
+/>

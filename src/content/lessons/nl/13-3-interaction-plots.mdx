@@ -1,0 +1,129 @@
+Niemand leest een factoriële tabel en ziet het patroon. Ze zien het in een plot met twee
+lijnen, en of die lijnen parallel zijn is de hele vraag.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(ggplot2)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+d2 <- d %>% mutate(change = engagement_t2 - engagement_t1)
+
+cells <- d2 %>%
+  group_by(training, mentoring) %>%
+  summarise(
+    mean_change = mean(change),
+    sd_change = sd(change),
+    n = n(),
+    se = sd(change) / sqrt(n()),
+    .groups = "drop"
+  )
+
+cells`} />
+
+## De interactieplot
+
+Eén factor op de x-as, de andere als kleur van de lijnen, de celgemiddelden als punten.
+
+<CodeBlock id="c-plot" code={`cells %>%
+  ggplot(aes(x = training, y = mean_change, colour = mentoring, group = mentoring)) +
+  geom_point(size = 3) +
+  geom_line() +
+  labs(
+    x = "Training programme",
+    y = "Mean change in engagement",
+    colour = "Mentoring",
+    title = "Training and mentoring together"
+  ) +
+  theme_classic()`} />
+
+**Parallelle lijnen betekenen geen interactie.** Het verschil tussen de twee lijnen is het
+effect van mentoring; als dat verschil aan beide uiteinden gelijk is, is mentoring evenveel
+waard of je nu getraind bent of niet, en volstaat een additief model. Lijnen die naar elkaar
+toe lopen, uiteenlopen of kruisen zeggen het tegenovergestelde.
+
+<Predict
+  id="p-lines"
+  question="In de plot hierboven stijgt de lijn voor werknemers met een mentor steiler van No training naar Yes training dan de lijn voor werknemers zonder mentor. Wat zegt dat?"
+  choices={[
+    { text: 'Mentoring werkt beter dan training', response: 'De plot vergelijkt hellingen, niet de totale grootte van twee effecten. Steiler betekent dat de twee combineren, niet dat de een de ander verslaat.' },
+    { text: 'Training is meer waard voor werknemers die ook een mentor hebben', correct: true, response: 'Precies wat een niet-parallel paar lijnen betekent, en precies wat de interactiecoëfficiënt mat.' },
+    { text: 'De twee interventies heffen elkaar op', response: 'Opheffen zou verschijnen als kruisende lijnen, waarbij het verschil van teken wisselt van het ene uiteinde naar het andere.' },
+    { text: 'Er is geen interactie, want beide lijnen stijgen', response: 'Beide stijgen is verenigbaar met een interactie. Het gaat erom of ze parallel stijgen.' },
+  ]}
+/>
+
+## Foutbalken, zodat de plot eerlijk is
+
+Een plot van vier gemiddelden zonder aanduiding van precisie nodigt de lezer uit patronen in
+ruis te zien.
+
+<CodeBlock id="c-errorbars" code={`cells %>%
+  ggplot(aes(x = training, y = mean_change, colour = mentoring, group = mentoring)) +
+  geom_errorbar(aes(ymin = mean_change - se, ymax = mean_change + se), width = 0.08) +
+  geom_point(size = 3) +
+  geom_line() +
+  labs(
+    x = "Training programme",
+    y = "Mean change in engagement (+/- 1 SE)",
+    colour = "Mentoring",
+    title = "Training and mentoring together"
+  ) +
+  theme_classic()`} />
+
+> **Wissel de assen.** Pas het blok aan om `mentoring` op de x-as te zetten en `training` voor
+> de kleur te gebruiken. Dezelfde vier gemiddelden, dezelfde interactie, een ander verhaal
+> voor het oog. Welke opstelling je toont is een vraag over wat je de lezer wilt laten zien,
+> niet over de statistiek.
+
+## Enkelvoudige effecten rapporteren
+
+Wanneer de interactie echt is, is het eerlijke rapport één effect per niveau van de andere
+factor.
+
+<Exercise id="m13-3-a" />
+
+Voor de significantietoetsen van die enkelvoudige effecten neemt `emmeans`, dat je in Module
+12 leerde kennen, een verticale streep:
+`emmeans(model, pairwise ~ training | mentoring, adjust = "tukey")` geeft de
+trainingsvergelijking binnen elk niveau van mentoring. Met slechts twee trainingsniveaus is er
+één vergelijking per niveau van mentoring, dus de correctie verandert hier niets; ze doet
+ertoe wanneer de factor drie of meer niveaus heeft. Die aanroep heeft het pakket `emmeans`
+nodig, dat deze les opzettelijk niet laadt; ga terug naar Les 12-3 en voer het daar uit na
+het opnieuw aanpassen van het model: `d$change <- d$engagement_t2 - d$engagement_t1` en
+`model <- lm(change ~ training * mentoring, data = d)`.
+
+## Een APA-klare figuur
+
+<CodeBlock id="c-apa" code={`cells %>%
+  ggplot(aes(x = training, y = mean_change, shape = mentoring, group = mentoring)) +
+  geom_errorbar(aes(ymin = mean_change - se, ymax = mean_change + se), width = 0.08) +
+  geom_point(size = 3) +
+  geom_line() +
+  expand_limits(y = 0) +
+  labs(x = "Training programme", y = "Mean change in engagement", shape = "Mentoring") +
+  theme_classic()`} />
+
+Vorm in plaats van kleur, omdat rapporten in grijstinten worden afgedrukt en er lezers met
+kleurenblindheid bestaan. Een onderschrift zegt wat de foutbalken zijn; dit zou zeggen
+"Foutbalken tonen +/- 1 standaardfout van het gemiddelde."
+
+<Quiz
+  id="q-parallel"
+  question="Een interactieplot toont twee precies parallelle lijnen. Wat volgt eruit?"
+  choices={[
+    { text: 'Geen van beide factoren heeft een effect', response: 'Beide lijnen kunnen steil zijn en ver uit elkaar liggen. Parallel zegt niets over de grootte van een van beide effecten.' },
+    { text: 'Geen interactie in deze steekproef: het effect van elke factor lijkt hetzelfde op beide niveaus van de andere', correct: true, response: 'Juist, en de steekproefkanttekening telt: parallel ogende lijnen zijn nog steeds schattingen met foutbalken.' },
+    { text: 'De interactie is significant', response: 'Het tegenovergestelde. De interactietoets vraagt of de lijnen meer van parallel afwijken dan steekproeffout zou opleveren; precies parallelle lijnen geven een interactieschatting van nul.' },
+    { text: 'Het ontwerp is ongebalanceerd', response: 'Balans gaat over celgroottes en is onzichtbaar in een plot van gemiddelden.' },
+  ]}
+/>
+
+<Interpret
+  id="i-13-3"
+  question="Je celgemiddelden voor de verandering in betrokkenheid zijn: geen van beide 0,09 (SD = 3,30), alleen training 1,40 (SD = 2,94), alleen mentoring 1,00 (SD = 3,13), beide 4,36 (SD = 3,45), met de interactie F(1, 476) = 12,22, p < ,001. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Training verhoogde betrokkenheid met 1,31 punt en mentoring met 0,91 punt, en beide samen met 4,27 punten.', response: 'De drie getallen kloppen en de framing verbergt de bevinding: de gecombineerde winst is veel meer dan de twee afzonderlijke winsten bij elkaar opgeteld, en dat is het hele resultaat.' },
+    { text: 'Het effect van training op de verandering in betrokkenheid hing af van mentoring, F(1, 476) = 12,22, p < ,001. Training ging samen met een winst van 1,31 punt onder werknemers zonder mentor (M = 1,40, SD = 2,94, tegenover M = 0,09, SD = 3,30) en 3,36 punten onder werknemers met een mentor (M = 4,36, SD = 3,45, tegenover M = 1,00, SD = 3,13).', correct: true, response: 'Juist: de interactie wordt eerst genoemd, dan één enkelvoudig effect per niveau van mentoring, elk met de celgemiddelden en SD\'s erachter.' },
+    { text: 'Werknemers die beide interventies kregen hadden de hoogste verandering in betrokkenheid (M = 4,36, SD = 3,45), dus de combinatie wordt aanbevolen.', response: 'Een aanbeveling uit één celgemiddelde, zonder toets en zonder vergelijking. De interactie is wat de bewering rechtvaardigt, en die ontbreekt.' },
+    { text: 'Er was een significante interactie, F(1, 476) = 12,22, p < ,001, wat betekent dat training alleen werkt met mentoring.', response: 'Training gaat ook zonder mentoring samen met een winst van 1,31 punt. De interactie zegt dat het voordeel groter is met mentoring, niet dat het zonder verdwijnt.' },
+  ]}
+/>

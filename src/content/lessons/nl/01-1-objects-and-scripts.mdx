@@ -1,0 +1,133 @@
+R is een rekenmachine die dingen onthoudt. Alles in deze cursus, elke figuur en
+elk model, is opgebouwd uit de twee ideeën in deze les: je berekent iets en je
+geeft het resultaat een naam.
+
+Begin met de rekenmachinehelft. Druk op **Run**.
+
+<CodeBlock id="calculator" code={`3 + 4
+12 / 5
+sqrt(81)`} />
+
+Elke regel is uitgerekend en het antwoord is getoond. Niets is bewaard. Vraag R
+nogmaals om `3 + 4` en het doet de som opnieuw, vanaf nul.
+
+## Een resultaat een naam geven
+
+De pijl `<-` slaat een resultaat op onder een naam. Wat je hebt opgeslagen heet
+een **object**, en R bewaart het de rest van je sessie.
+
+<CodeBlock id="assign" code={`hours <- 38
+rate <- 24.5
+
+hours * rate`} />
+
+Twee dingen zijn het opmerken waard. De eerste twee regels toonden niets:
+een waarde opslaan is een stille handeling. En de derde regel gebruikte beide
+objecten bij naam, zonder een van de getallen te herhalen.
+
+> **Probeer het.** Verander `hours` in 40 en voer het blok opnieuw uit. Niets
+> anders in het blok noemt 38, dus de hele berekening volgt vanzelf. Dat is de
+> hele reden om dingen een naam te geven.
+
+Namen zijn hoofdlettergevoelig: `hours` en `Hours` zijn twee verschillende
+objecten, en om het ene vragen terwijl je het andere opsloeg is de eerste fout
+die bijna iedereen tegenkomt. Een naam mag niet met een cijfer beginnen en
+mag geen spatie bevatten, daarom staat R-code vol met `mean_score` en
+`engagement_t1`. BMS-vakken gebruiken, net als de tidyverse stijlgids, alleen
+kleine letters, cijfers en underscores in namen, zoals `freq_table_1`.
+
+Elk object dat je maakt wordt bewaard in de **global environment**: de
+verzameling van alles wat je sessie tot nu toe heeft opgeslagen. In RStudio
+staat die in het venster Environment, rechtsboven. Als R zegt "object not
+found", is die lijst de eerste plek om te kijken.
+
+De R-scripts in BMS-vakken beginnen vaak met het leegmaken ervan, zodat
+objecten van een eerdere sessie niet stiekem een schone run binnensluipen:
+
+```r
+rm(list = ls())
+```
+
+`ls()` toont elk object, en `rm()` verwijdert ze. Doe het bovenaan een script,
+nooit halverwege, en bedenk dat het geen packages loskoppelt. R herstarten
+doet beide.
+
+## Commentaar
+
+Alles na een `#` op een regel wordt door R genegeerd. Het is geschreven voor de
+mens die het script leest, meestal jijzelf, drie weken later, je afvragend wat
+je aan het doen was.
+
+<CodeBlock id="comment" code={`# Weekly pay, before tax.
+weekly_pay <- hours * rate
+weekly_pay`} />
+
+Een leesbaar script begint met een commentaar dat zegt waarvoor het dient en
+verdeelt het werk in delen met een kopcommentaar dat op vier streepjes eindigt,
+zoals `# Read the data ----`. RStudio laat je die delen in- en uitklappen en
+ertussen springen. Zet een spatie na elke komma en rond `<-`, `==` en `+`,
+zoals je ook een spatie na een komma zet in gewone tekst.
+
+<Predict
+  id="p-vector"
+  question="Je hebt vijf tentamencijfers om op te slaan. Hoeveel objecten heb je nodig?"
+  choices={[
+    { text: 'Vijf, één per cijfer', response: 'Dat kan, en dan moet elke berekening alle vijf met de hand noemen. R heeft iets veel beters.' },
+    { text: 'Eén, met alle vijf de cijfers erin', correct: true, response: 'Ja. Een vector is één object met veel waarden van dezelfde soort, en het is het werkpaard van de taal.' },
+    { text: 'Geen, want R slaat maar één getal tegelijk op', response: 'Het tegenovergestelde is waar. Zelfs één enkel getal is in R eigenlijk een vector met toevallig één element.' },
+  ]}
+/>
+
+## Vectoren
+
+`c()` combineert waarden tot een **vector**, c van combine.
+
+<CodeBlock id="vector" code={`marks <- c(68, 74, 59, 81, 77)
+
+marks
+length(marks)`} />
+
+Functies die samenvatten nemen de hele vector in één keer. Je vraagt nooit om de
+waarden één voor één.
+
+<CodeBlock id="summaries" code={`mean(marks)
+min(marks)
+max(marks)
+sum(marks)`} />
+
+## Rekenwerk gebeurt met elk element
+
+Hier komt het deel dat mensen verrast die andere talen hebben geschreven. Een
+bewerking op een vector wordt toegepast op elke waarde erin, zonder ergens een
+lus.
+
+<CodeBlock id="vectorised" code={`marks + 2
+
+marks / 90 * 100`} />
+
+De eerste regel gaf alle vijf studenten twee punten coulance. De tweede maakte
+van cijfers uit 90 percentages. Vergelijkingen gedragen zich hetzelfde, behalve
+dat ze TRUE en FALSE opleveren in plaats van getallen.
+
+<CodeBlock id="logical" code={`marks > 70
+
+sum(marks > 70)`} />
+
+`sum()` van TRUE en FALSE telt de TRUE's, omdat R TRUE opslaat als 1 en FALSE
+als 0. Vergelijk en tel dan op: met dat idioom tel je alles in R, en je gebruikt
+het in elke module vanaf hier tot het eind van de cursus.
+
+<Exercise id="m1-1-a" />
+
+<Exercise id="m1-1-b" />
+
+<Quiz
+  id="q-1-1"
+  question="Je voert scores <- c(4, 8, 15) uit en daarna scores * 2. Wat bevat scores daarna?"
+  choices={[
+    { text: 'c(8, 16, 30)', response: 'Alleen als je het resultaat had opgeslagen. scores * 2 berekende een nieuwe vector, toonde die en liet hem los.' },
+    { text: 'c(4, 8, 15)', correct: true, response: 'Juist. Een object verandert alleen als je eraan toewijst. Een berekening tonen verandert de invoer niet.' },
+    { text: 'Een foutmelding, want een vector kan niet worden vermenigvuldigd', response: 'Een vector met een getal vermenigvuldigen is precies waarvoor R is gebouwd: het vermenigvuldigt elk element.' },
+    { text: 'c(4, 8, 15, 8, 16, 30)', response: 'R voegt een resultaat nooit toe aan het object waar het vandaan kwam. Het origineel blijft ongewijzigd.' },
+  ]}
+/>

@@ -1,0 +1,123 @@
+De vorige les controleerde op derde variabelen nadat de data binnen waren. Een
+goed design sluit er veel uit voordat er data verzameld worden. Designs worden
+in een korte notatie geschreven:
+
+- **X** is de interventie, of behandeling.
+- **O** is een observatie, een meting.
+- **R** betekent dat de groepen door aselecte toewijzing zijn gevormd; **N**
+  betekent dat dat niet zo was (een niet-equivalente groep, zoals een bestaande
+  klas).
+
+De tijd loopt van links naar rechts, en elke regel is één groep.
+
+## Designs van zwak naar sterk
+
+Een **correlationeel design**, één enkele `O`, meet X en Y één keer, op
+hetzelfde moment, in één groep, zoals de meeste enquêtes doen. Het kan
+samenhang laten zien, maar geen tijdsvolgorde, en elke derde variabele blijft
+open.
+
+Een **one-shot case study**, `X O`, meet één keer na de interventie. Zonder
+iets om mee te vergelijken laat het bijna niets zien.
+
+Een **één-groeps pretest-posttest design**, `O X O`, meet ervoor en erna.
+Elke verandering kan ook komen door iets anders dat ertussen gebeurde.
+
+Een **interrupted time series**, `O O O X O O O`, meet meerdere keren ervoor en
+erna. Een trend die er voor X al was, is dan zichtbaar, en een sprong direct na
+X is overtuigender.
+
+Een **design met niet-equivalente controlegroep** voegt een vergelijkingsgroep
+toe die niet aselect is gevormd:
+
+```
+N  O  X  O
+N  O     O
+```
+
+Een **pretest-posttest design met controlegroep** wijst mensen aselect aan de
+groepen toe. Dit is het klassieke **experiment**:
+
+```
+R  O  X  O
+R  O     O
+```
+
+Aselecte toewijzing maakt de groepen gemiddeld gelijk in alles, gemeten of
+niet, zodat een verschil achteraf kan worden toegeschreven aan X of aan toeval,
+en toeval is wat een statistische toets meet. Een **posttest-only design met
+controlegroep**, `R X O` tegenover `R O`, laat de pretest weg en vermijdt de
+bijwerkingen ervan.
+
+De drie algemene typen design verschillen in welke van de drie voorwaarden voor
+een causale bewering (Les RM-4) ze kunnen toetsen:
+
+| Design | Samenhang | Tijdsvolgorde | Geen derde variabele |
+| --- | --- | --- | --- |
+| Correlationeel, `O` | Ja | Nee | Nee |
+| Interrupted time series, `O O O X O O O` | Ja | Ja | Nee |
+| Gerandomiseerd experiment, `R O X O` / `R O O` | Ja | Ja | Ja |
+
+## Aselecte toewijzing in R
+
+`sample()` schudt een vector. Schud een lijst van 240 labels "treatment" en 240
+labels "control", en elk van de 480 werknemers krijgt er één bij toeval.
+
+<CodeBlock id="c-assign" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+set.seed(4)
+d$group <- sample(rep(c("treatment", "control"), each = nrow(d) / 2))
+table(d$group)
+aggregate(tenure_years ~ group, data = d, FUN = mean)`} />
+
+De twee groepen verschillen een beetje in dienstjaren, maar alleen door toeval.
+Vergelijk dat met de kolom `training` in dezelfde data: werknemers *kozen* of
+ze de training volgden, dus alles wat die keuze stuurde, zoals motivatie, reist
+ermee mee. Dat is **zelfselectie**, en het is wat aselecte toewijzing
+wegneemt.
+
+<Exercise id="mrm-5-a" />
+
+## Validiteit en bedreigingen
+
+Een onderzoek heeft **interne validiteit** als zijn conclusie over oorzaak en
+gevolg klopt voor de onderzochte mensen. Het heeft **externe validiteit** als
+de conclusie generaliseert naar andere mensen, settings en tijden. Aselecte
+toewijzing beschermt de interne validiteit; aselecte *steekproeftrekking*
+(Les RM-3) beschermt de externe validiteit. Het zijn verschillende stappen, en
+een experiment onder eerstejaars psychologiestudenten kan intern valide zijn en
+toch weinig zeggen over werknemers.
+
+De gebruikelijke **bedreigingen van de interne validiteit**, elk een
+concurrerende verklaring voor een verandering van O naar O:
+
+- **Geschiedenis**: er gebeurde iets anders tussen de metingen, zoals een
+  nieuwsfeit.
+- **Rijping**: deelnemers veranderden vanzelf, doordat ze ouder, moeier of
+  ervarener werden.
+- **Testeffect**: de eerste meting beïnvloedt de tweede, bijvoorbeeld omdat
+  mensen de vragen onthouden.
+- **Instrumentatie**: het meetinstrument of de waarnemer veranderde.
+- **Regressie naar het gemiddelde**: een groep die geselecteerd is op extreme
+  scores scoort de volgende keer minder extreem, ook zonder interventie.
+- **Selectie**: de groepen verschilden al voor X, omdat ze niet aselect zijn
+  gevormd.
+- **Uitval**: deelnemers haken af, en wie afhaakt verschilt van wie blijft.
+- **Sociale interactie**: groepen leren van elkaar, concurreren, of de
+  controlegroep voelt zich benadeeld.
+
+Experimenten beschermen zich ook tegen verwachtingen. Een **placebo** geeft de
+controlegroep iets wat op de behandeling lijkt maar het werkzame deel mist.
+Bij een **dubbelblind** onderzoek weten noch de deelnemers noch de onderzoekers
+die hen meten wie wat kreeg.
+
+<Quiz
+  id="q-regression"
+  question="Een school geeft extra bijles aan de 30 leerlingen met de laagste toetsscores. Op de volgende toets scoren ze hoger. Welke bedreiging kan dat verklaren zonder enig effect van de bijles?"
+  choices={[
+    { text: 'Regressie naar het gemiddelde', correct: true, response: 'Juist. Leerlingen die om extreem lage scores gekozen zijn, bevatten er veel die een slechte dag hadden; gemiddeld scoren ze de volgende keer sowieso dichter bij het gemiddelde. Een aselecte controlegroep van lage scorers zou laten zien hoeveel.' },
+    { text: 'Uitval', response: 'Niets zegt dat leerlingen tussen de twee toetsen zijn afgehaakt.' },
+    { text: 'Instrumentatie', response: 'Daarvoor zou de toets of de beoordeling moeten veranderen. De verbetering hier is ook te verwachten bij een identieke toets.' },
+    { text: 'Sociale interactie', response: 'Er is hier geen controlegroep om mee te interacteren.' },
+  ]}
+/>

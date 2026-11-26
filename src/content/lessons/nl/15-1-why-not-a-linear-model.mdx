@@ -1,0 +1,107 @@
+Vijf modules lineaire modellen, en één soort uitkomst die ze niet aankunnen. Verliet de
+werknemer het bedrijf, ja of nee? Herstelde de patiënt? Slaagde de student? De uitkomst is
+geen hoeveelheid; het is een van twee dingen.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(ggplot2)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(n = n(), leavers = sum(left_company), rate = mean(left_company))`} />
+
+`left_company` is opgeslagen als 0 en 1, dus het gemiddelde is het aandeel dat vertrok. Die
+kleine truc, het gemiddelde van een 0/1-kolom is een proportie, is het onthouden waard, want
+zo wordt elke beschrijvende maat in deze module berekend.
+
+<CodeBlock id="c-rates" code={`d %>%
+  mutate(third = ntile(wellbeing, 3)) %>%
+  group_by(third) %>%
+  summarise(rate = mean(left_company), n = n())`} />
+
+Lees de richting voordat je iets aanpast: het percentage vertrekkers daalt naarmate welzijn
+stijgt. Wat het model hierna ook zegt, moet met deze drie getallen overeenkomen.
+
+<Predict
+  id="p-lm"
+  question="Wat gebeurt er als je lm(left_company ~ wellbeing) aanpast, een rechte lijn door nullen en enen?"
+  choices={[
+    { text: 'R weigert, omdat de uitkomst niet continu is', response: 'R voert het zonder klagen uit. De uitvoer ziet eruit als elke andere regressietabel.' },
+    { text: 'Het draait, en de voorspelde waarden zijn kansen die onder 0 of boven 1 kunnen uitkomen', correct: true, response: 'Precies, en het volgende blok telt hoeveel het er zijn.' },
+    { text: 'Het draait en geeft hetzelfde antwoord als logistische regressie', response: 'De twee zijn het eens over de richting en oneens over bijna al het andere, het duidelijkst aan de uiteinden.' },
+    { text: 'Alle voorspelde waarden komen uit op 0 of 1', response: 'Een rechte lijn neemt elke waarde ertussen aan. Dat is het probleem.' },
+  ]}
+/>
+
+## Wat er misgaat
+
+<CodeBlock id="c-lpm" code={`lpm <- lm(left_company ~ wellbeing, data = d)
+
+fitted_values <- fitted(lpm)
+
+c(
+  smallest = min(fitted_values),
+  largest = max(fitted_values),
+  impossible = sum(fitted_values < 0 | fitted_values > 1)
+)`} />
+
+<CodeBlock id="c-lpm-plot" code={`d %>%
+  ggplot(aes(x = wellbeing, y = left_company)) +
+  geom_point(alpha = 0.15) +
+  geom_smooth(method = lm, se = FALSE) +
+  geom_hline(yintercept = c(0, 1), linetype = "dashed") +
+  labs(x = "Wellbeing", y = "Left the company (0/1)", title = "A straight line through a yes/no outcome") +
+  theme_classic()`} />
+
+Aan de hoge kant van welzijn verlaat de lijn de strook tussen de stippellijnen, waar ze voor 3
+werknemers negatieve kansen voorspelt. Elke voorspelling buiten de strook is een kans die niet
+kan bestaan. Hier komt de lijn nooit boven 1, maar met een steilere helling of een vaker
+voorkomende uitkomst zou ze ook de bovenste lijn kruisen.
+
+Er is een tweede probleem, minder zichtbaar en even fataal. Een lineair model neemt aan dat de
+residuen overal dezelfde spreiding hebben. Bij een 0/1-uitkomst kan het residu bij elke
+voorspelling maar twee waarden aannemen, en hun spreiding hangt volledig af van de voorspelde
+kans: rond ,5 is er veel ruimte om ernaast te zitten, rond 0 of 1 bijna geen. De
+standaardfouten zijn fout nog voordat je begint.
+
+<Exercise id="m15-1-a" />
+
+## De vorm die we willen
+
+Een model voor een kans moet een curve opleveren die 0 en 1 nadert zonder ze ooit te raken, en
+die in het midden het steilst is, waar de uitkomst echt onzeker is. Die curve is de
+**logistische** functie, en de volgende les past haar aan.
+
+<CodeBlock id="c-curve" code={`d %>%
+  ggplot(aes(x = wellbeing, y = left_company)) +
+  geom_point(alpha = 0.15) +
+  geom_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+  geom_hline(yintercept = c(0, 1), linetype = "dashed") +
+  labs(x = "Wellbeing", y = "Left the company (0/1)", title = "A logistic curve through the same data") +
+  theme_classic()`} />
+
+> **Zet beide op één plot.** Voeg een tweede laag `geom_smooth(method = lm, se = FALSE,
+> linetype = "dashed")` toe aan het blok hierboven en voer het opnieuw uit. De twee komen in
+> het midden overeen en gaan aan de uiteinden uiteen, wat het hele verhaal van deze les in één
+> figuur is.
+
+<Quiz
+  id="q-lpm"
+  question="Wat is de sterkste reden om geen lineair model aan een 0/1-uitkomst aan te passen?"
+  choices={[
+    { text: 'De coëfficiënten zijn moeilijk te interpreteren', response: 'Ze zijn ongewoon makkelijk te interpreteren: een verandering in kans per eenheid. Dat is het probleem niet.' },
+    { text: 'Het kan kansen onder 0 of boven 1 voorspellen, en de spreiding van de residuen verandert noodzakelijkerwijs met de voorspelling, dus de standaardfouten kloppen niet', correct: true, response: 'Juist op beide punten, en de tweede reden is degene die mensen vergeten.' },
+    { text: 'R kan het niet aanpassen', response: 'R past het gewoon aan. Niets in de uitvoer waarschuwt je.' },
+    { text: 'De uitkomst is een factor', response: 'Hier is ze opgeslagen als 0/1-getallen. Toch heeft het model de verkeerde vorm.' },
+  ]}
+/>
+
+<Interpret
+  id="i-15-1"
+  question="Een collega past lm(left_company ~ wellbeing) aan en rapporteert b = -0,011, SE = 0,002, t(478) = -6,07, p < ,001, en concludeert dat elk extra punt welzijn de kans op vertrek met 1,1 procentpunt verlaagt. Wat zeg je?"
+  choices={[
+    { text: 'De conclusie is prima; een lineair kansmodel is een standaardaanpak.', response: 'Het wordt in sommige vakgebieden gebruikt, maar niet zonder voorbehouden, en hier staat er geen.' },
+    { text: 'De richting klopt en het model heeft de verkeerde vorm: het voorspelt kansen onder 0 aan de hoge kant van welzijn, en zijn standaardfouten nemen een constante residuspreiding aan die een 0/1-uitkomst niet kan hebben. Pas opnieuw aan met glm(..., family = binomial).', correct: true, response: 'Juist: de bevinding overleeft het, het model en zijn inferentie niet.' },
+    { text: 'Het effect is te klein om te rapporteren.', response: 'Ruim een procentpunt per punt welzijn, op een schaal van tientallen punten breed, is een aanzienlijk effect. De grootte is het probleem niet.' },
+    { text: 'Ze moeten in plaats daarvan de odds ratio rapporteren, exp(-0,011) = 0,989.', response: 'Het exponentiëren van een helling uit een lineair model geeft een getal zonder interpretatie. De odds ratio moet uit een logistisch model komen.' },
+  ]}
+/>

@@ -1,0 +1,99 @@
+Een onderzoeksvraag noemt eenheden en variabelen. Data zetten ze in een
+rooster: de **datamatrix**, met één rij per eenheid en één kolom per variabele.
+Elke dataset in deze cursus is zo'n matrix, en zo is ook elk spreadsheet dat
+je uit een enquêtetool krijgt.
+
+## Analyse-eenheden en waarneemeenheden
+
+De **analyse-eenheid** is waar je conclusies over gaan: studenten,
+werknemers, scholen, landen. De **waarneemeenheid** is wat je daadwerkelijk
+meet. Ze vallen vaak samen, maar niet altijd. Je kunt individuele werknemers
+bevragen (waarneming) om afdelingen te vergelijken (analyse) door binnen elke
+afdeling te middelen.
+
+Het wisselen tussen niveaus heeft een valkuil. Als landen met meer
+internetgebruikers ook een hoger gemiddeld inkomen hebben, laat dat niet zien
+dat de individuen die internet gebruiken de rijkere zijn. Iets over individuen
+concluderen uit data over groepen heet de **ecologische misvatting**.
+
+## Een datamatrix in R
+
+Het package dplyr bevat een kleine datamatrix over Star Wars-personages. Elke
+rij is een personage, elke kolom iets wat over hen is vastgelegd.
+
+<CodeBlock id="c-starwars" code={`library(dplyr)
+
+glimpse(starwars)
+colnames(starwars)`} />
+
+`glimpse()` toont elke variabele met zijn type en eerste waarden, en
+`colnames()` geeft alleen de namen. In RStudio opent `View(starwars)` dezelfde
+matrix als een spreadsheet waar je doorheen kunt scrollen.
+
+## Meetniveaus
+
+Hoe je een variabele mag samenvatten hangt af van zijn **meetniveau**. De
+cursus gebruikt het ezelsbruggetje **D-NOIR**:
+
+- **Dichotoom**: twee categorieën, zoals geslaagd of gezakt.
+- **Nominaal**: categorieën zonder volgorde, zoals oogkleur of opleiding.
+- **Ordinaal**: geordende categorieën zonder gelijke stappen, zoals "nooit,
+  soms, vaak" of een rangorde.
+- **Interval**: gelijke stappen maar geen echte nul, zoals temperatuur in
+  graden Celsius of een kalenderjaar.
+- **Ratio**: gelijke stappen en een echte nul, zoals lengte, inkomen of het
+  aantal gemaakte tentamens.
+
+Categorieën moeten ook **volledig** zijn, zodat elke eenheid in een
+categorie past, en **uitsluitend**, zodat geen eenheid in twee past.
+Leeftijdsgroepen "18 tot 25, 25 tot 35" falen bij de tweede eis: iemand van 25
+past in beide.
+
+<Predict
+  id="p-level"
+  question="Studenten beoordelen een college van 1 (heel slecht) tot 5 (heel goed). Welk niveau is dat, strikt genomen?"
+  choices={[
+    { text: 'Nominaal', response: 'De categorieën hebben een volgorde: 5 is beter dan 4. Nominale categorieën hebben die niet.' },
+    { text: 'Ordinaal', correct: true, response: 'Juist. De volgorde is duidelijk, maar niets garandeert dat de stap van 1 naar 2 even groot is als van 4 naar 5. In de praktijk worden zulke scores vaak als interval behandeld, zeker als meerdere items gemiddeld worden.' },
+    { text: 'Ratio', response: 'Een beoordeling van 0 bestaat niet en betekent niet "helemaal geen kwaliteit", dus er is geen echte nul.' },
+  ]}
+/>
+
+R slaat het niveau op in het type van de kolom. Getallen zijn `numeric` of
+`integer`, categorieën zijn `character` of `factor`. R weet niet of je getallen
+ordinaal of ratio zijn, dus wat je berekent blijft jouw beslissing.
+
+<CodeBlock id="c-classes" code={`class(starwars$height)
+class(starwars$eye_color)
+table(starwars$sex)`} />
+
+Een telling per categorie, zoals `table()` geeft, werkt op elk niveau. Een
+gemiddelde is pas zinvol vanaf intervalniveau.
+
+<Exercise id="mrm-2-a" />
+
+## Van concept naar getal
+
+Een onderzoeksvraag gebruikt concepten, zoals "stress" of "sociale steun". Om
+er een te meten maak je het eerst precies (**conceptualisering**: wat bedoelen
+we precies, en welke dimensies heeft het?) en bepaal je dan hoe je het
+waarneemt (**operationalisering**: welke vragen, schaal of waarneming, met
+welke antwoordcategorieën?). Het resultaat van meten is een score per eenheid,
+die in de datamatrix komt.
+
+De gebruikelijke **methoden van dataverzameling** zijn vragenlijsten,
+interviews, observatie, experimenten en bestaande documenten of registraties.
+Data die je zelf voor je vraag verzamelt zijn **primaire data**. Data die
+iemand anders verzameld heeft, zoals een nationaal bureau voor de statistiek
+of een eerder onderzoek, zijn **secundaire data**: goedkoper en vaak groter,
+maar gemeten voor het doel van een ander.
+
+<Quiz
+  id="q-ecological"
+  question="Van de twaalf Nederlandse provincies hebben die met meer sportverenigingen per inwoner een lagere gemiddelde BMI. Welke conclusie volgt?"
+  choices={[
+    { text: 'Leden van sportverenigingen hebben een lagere BMI dan niet-leden.', response: 'Dat is de ecologische misvatting. De data gaan over provincies, dus ze zeggen niets over welke individuen in een provincie de lagere BMI hebben.' },
+    { text: 'Op provincieniveau gaan meer sportverenigingen samen met een lagere gemiddelde BMI.', correct: true, response: 'Juist. De analyse-eenheid is de provincie, en de conclusie blijft op dat niveau.' },
+    { text: 'Meer sportverenigingen bouwen verlaagt de BMI.', response: 'Twee stappen te ver: het schakelt over op een causale bewering, en niets sluit hier een derde variabele uit, zoals het gemiddelde inkomen.' },
+  ]}
+/>

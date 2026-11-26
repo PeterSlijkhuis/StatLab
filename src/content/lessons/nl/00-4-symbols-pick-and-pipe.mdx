@@ -1,0 +1,145 @@
+De symbolen van de vorige les sloegen waarden op en stelden er vragen over.
+Deze nemen dingen uit elkaar en zetten stappen aan elkaar: haakjes die kiezen,
+een dollarteken dat een kolom vindt, en de pipes waardoor tidyverse-code leest
+als een recept. Een spiekbriefje met elk symbool uit Module 0 sluit de les af.
+
+## Ronde haakjes roepen een functie aan
+
+Een naam gevolgd door `( )` is een functieaanroep: voer deze functie uit op
+wat erin staat. `c()` typ je het vaakst. Het **combineert** waarden tot een
+vector. `:` telt in stappen van één van de ene waarde tot de andere, dus `1:5`
+zijn de gehele getallen 1 tot 5.
+
+<CodeBlock id="calls" code={`marks <- c(68, 74, 59, 81, 77)
+marks
+
+1:5`} />
+
+Haakjes die niets volgen, zoals in `(2 + 3) * 4`, groeperen alleen rekenwerk.
+
+## Vierkante haakjes kiezen
+
+`[ ]` achter een object kiest er elementen uit. Geef posities, geteld vanaf 1,
+of een TRUE/FALSE-vraag, en je krijgt alleen de elementen terug waar je om
+vroeg.
+
+<CodeBlock id="pick" code={`marks[2]
+marks[c(1, 3)]
+
+marks[marks > 70]`} />
+
+De laatste regel verdient langzaam lezen. `marks > 70` geeft vijf keer TRUE of
+FALSE, en `marks[...]` houdt de elementen waar het antwoord TRUE was. "De cijfers
+waar de cijfers boven 70 zijn."
+
+## Het dollarteken vindt een kolom
+
+Een data frame is een tabel: elke kolom is een vector, en alle kolommen zijn
+even lang. `$` haalt één kolom eruit op naam.
+
+<CodeBlock id="frame" code={`team <- data.frame(
+  name = c("Ada", "Bram", "Chen", "Dana", "Eva", "Finn"),
+  hours = c(32, 41, 38, 40, 35, 44)
+)
+
+team$hours
+team$name[2]`} />
+
+`team$hours` is een gewone vector, dus alles uit de vorige sectie werkt erop.
+Vierkante haakjes werken ook op de hele tabel, met twee posities: `[rij,
+kolom]`. Laat er één leeg om "allemaal" te bedoelen.
+
+<CodeBlock id="rows-columns" code={`team[2, ]
+team[, "name"]
+
+team[["hours"]]`} />
+
+`team[2, ]` is de tweede rij met alle kolommen. `team[, "name"]` is elke rij van
+de kolom name. Dubbele haakjes, `[[ ]]`, halen precies één element eruit, en
+bij een data frame is dat één kolom: `team[["hours"]]` is hetzelfde als
+`team$hours`.
+
+<Exercise id="m0-4-a" />
+
+## Accolades groeperen regels
+
+`{ }` houdt meerdere regels samen als één blok. Je ziet ze vooral rond de
+inhoud van een functie die je zelf schrijft.
+
+<CodeBlock id="braces" code={`double_it <- function(x) {
+  x * 2
+}
+
+double_it(21)`} />
+
+## Twee dubbele punten noemen het package
+
+`::` gebruikt een functie uit een package zonder het package eerst te
+koppelen. `stats::median()` betekent "de median() die in het package stats
+zit". Je ziet online `dplyr::filter()` in code om dezelfde reden: het zegt waar
+de functie vandaan komt.
+
+<CodeBlock id="package" code={`stats::median(marks)`} />
+
+## De pipe: en dan
+
+Geneste aanroepen lees je van binnen naar buiten, het tegenovergestelde van
+hoe je over de stappen denkt. `|>` draait ze om. `x |> f()` betekent `f(x)`: de
+linkerkant gaat erin als eerste argument van de rechterkant. Lees het als **en
+dan**.
+
+<CodeBlock id="pipe" code={`round(mean(marks), 1)
+
+marks |> mean() |> round(1)`} />
+
+Beide regels geven hetzelfde getal. De tweede leest in de volgorde waarin je
+het zou zeggen: neem de cijfers, en dan het gemiddelde, en dan afronden op één
+decimaal. Extra argumenten blijven tussen hun haakjes, daarom staat de `1` in
+`round(1)`.
+
+`|>` zit in R zelf. Vanaf Module 1 gebruikt deze cursus `%>%`, dat uit het
+package magrittr komt en door dplyr wordt doorgegeven. Het doet hetzelfde en is
+waarmee de meeste tidyverse-code die je online vindt is geschreven. Het werkt
+zodra dplyr is gekoppeld.
+
+<CodeBlock id="dplyr-pipe" code={`library(dplyr)
+
+team %>% filter(hours > 35)`} />
+
+"Neem team, en dan: houd de rijen waar hours boven 35 is." Binnen `filter()`
+heeft `hours` geen `team$` ervoor nodig: dplyr weet dat het de kolom bedoelt.
+
+<Exercise id="m0-4-b" />
+
+## De tilde: wordt gemodelleerd door
+
+`~` bouwt een **formule**. Het berekent zelf niets; het beschrijft een
+relatie die een functie moet passen, met de uitkomst links en de predictoren
+rechts.
+
+<CodeBlock id="formula" code={`f <- wellbeing ~ workload
+f
+class(f)`} />
+
+Noch `wellbeing` noch `workload` hoeft te bestaan om dit te laten werken, want
+een formule legt alleen de namen vast. Lees het als "wellbeing wordt
+gemodelleerd door workload". In Module 10 komt het in `lm()`, de functie die
+het model past, en vanaf daar staat het in bijna elke les.
+
+## Spiekbriefje
+
+Elk symbool uit Module 0 op één plek. Kom hier terug wanneer een regel code
+niet meer te volgen is.
+
+<SymbolTable />
+
+<Quiz
+  id="q-0-4"
+  question="Hoe lees je team %>% filter(hours > 40) %>% nrow() hardop?"
+  choices={[
+    { text: 'Neem team, en dan: houd de rijen met meer dan 40 uur, en dan: tel de rijen', correct: true, response: 'Precies. Elke %>% geeft het resultaat door aan de volgende stap, van links naar rechts.' },
+    { text: 'Tel de rijen van team, en dan: houd de rijen boven 40 uur', response: 'Een pipe loopt van links naar rechts, dus het tellen komt als laatste, na de filter.' },
+    { text: 'Deel team door filter, en dan door nrow', response: '%>% is een pipe, geen rekenkunde. Het geeft elk resultaat door als eerste argument van de volgende functie.' },
+    { text: 'Controleer of team groter is dan 40', response: 'De vergelijking hours > 40 gebeurt binnen filter(), rij voor rij. De pipes zetten de stappen op volgorde.' },
+  ]}
+/>

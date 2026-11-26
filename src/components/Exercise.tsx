@@ -14,10 +14,14 @@ import OutputPane from './OutputPane';
 import REditor from './REditor';
 import './Exercise.css';
 import { t as tNow, useT } from '../i18n/t';
+import { NL_EXERCISES } from '../content/exercises/nl';
+import { useLanguage } from '../state/language';
+import { translateFeedback } from '../i18n/feedback';
 
 export default function Exercise({ id }: { id: string }) {
   const { lessonId, webR, env, ready } = useLesson();
   const definition = getExercise(id);
+  const language = useLanguage();
   const [source, setSource] = useState(() => getDraft(lessonId, id) ?? definition?.starterCode ?? '');
   const [outcome, setOutcome] = useState<CheckOutcome | null>(null);
   const [checking, setChecking] = useState(false);
@@ -77,13 +81,16 @@ export default function Exercise({ id }: { id: string }) {
   }
 
   const t = useT();
+  const translated = language === 'nl' ? NL_EXERCISES[id] : undefined;
+  const prompt = translated?.prompt ?? definition.prompt;
+  const hints = translated?.hints ?? definition.hints;
   return (
     <section className={`exercise${outcome?.status === 'pass' ? ' exercise-passed' : ''}`}>
       <p className="exercise-label"><span aria-hidden="true">🎯</span> {t('Exercise')}</p>
       {/* The student's avatar leads the exercise: it sets the task, gives the
           hints, reacts to each check and walks through the solution. */}
       <AvatarTip tone="coach" title={t('Your task')} className="exercise-task">
-        <p className="exercise-prompt">{definition.prompt}</p>
+        <p className="exercise-prompt">{prompt}</p>
         {!attempted && <p className="exercise-advice">{t('Write your code in the editor, then press "Check my answer" and I\'ll tell you what I see.')}</p>}
       </AvatarTip>
 
@@ -96,8 +103,8 @@ export default function Exercise({ id }: { id: string }) {
         <button
           type="button"
           className="secondary"
-          onClick={() => setHintsShown((n) => Math.min(n + 1, definition.hints.length))}
-          disabled={hintsShown >= definition.hints.length}
+          onClick={() => setHintsShown((n) => Math.min(n + 1, hints.length))}
+          disabled={hintsShown >= hints.length}
         >
           {t('Show a hint')}
         </button>
@@ -117,9 +124,9 @@ export default function Exercise({ id }: { id: string }) {
       <FileUpload compact />
 
       {hintsShown > 0 && (
-        <AvatarTip tone="coach" title={t('Hint {at} of {total}', { at: hintsShown, total: definition.hints.length })}>
+        <AvatarTip tone="coach" title={t('Hint {at} of {total}', { at: hintsShown, total: hints.length })}>
           <ul className="exercise-hints">
-            {definition.hints.slice(0, hintsShown).map((hint) => (
+            {hints.slice(0, hintsShown).map((hint) => (
               <li key={hint}>{hint}</li>
             ))}
           </ul>
@@ -128,13 +135,13 @@ export default function Exercise({ id }: { id: string }) {
 
       {crashed && (
         <div className="exercise-outcome outcome-broken-check">
-          <p>{R_STOPPED_MESSAGE}</p>
+          <p>{t(R_STOPPED_MESSAGE)}</p>
         </div>
       )}
 
       {outcome?.status === 'pass' && (
         <AvatarTip tone="right" title={t('Well done')} className="exercise-outcome-pass">
-          <p>{outcome.message}</p>
+          <p>{translateFeedback(outcome.message)}</p>
         </AvatarTip>
       )}
       {outcome?.status === 'broken-check' && (
@@ -148,8 +155,8 @@ export default function Exercise({ id }: { id: string }) {
       {/* Mistakes are explained by the student's own avatar. */}
       {outcome?.status === 'fail' && (
         <AvatarTip tone="wrong">
-          <p>{outcome.message}</p>
-          {hintsShown < definition.hints.length && <p>{t('Stuck? Press "Show a hint" and I\'ll give you a nudge.')}</p>}
+          <p>{translateFeedback(outcome.message)}</p>
+          {hintsShown < hints.length && <p>{t('Stuck? Press "Show a hint" and I\'ll give you a nudge.')}</p>}
         </AvatarTip>
       )}
       {outcome?.status === 'student-error' && (

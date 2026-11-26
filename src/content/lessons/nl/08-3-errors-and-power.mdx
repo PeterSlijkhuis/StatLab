@@ -1,0 +1,139 @@
+Een hypothesetoets neemt een beslissing, en een beslissing kan in twee richtingen
+fout zijn. Beide hebben een naam, en slechts een van de twee wordt besproken.
+
+- De nulhypothese is **waar** en je **verwerpt** haar: een **type I-fout**. Je
+  kondigt een effect aan dat er niet is. Als de aannames van de toets gelden, is
+  haar percentage op lange termijn α, want dat is wat α was gedefinieerd te zijn.
+- De nulhypothese is **onwaar** en je **verwerpt haar niet**: een **type II-fout**.
+  Je mist een echt effect. Het percentage heet β.
+- De nulhypothese is **onwaar** en je **verwerpt haar wel**: een treffer. Het
+  percentage, `1 − β`, is de **power** van het onderzoek.
+- De nulhypothese is **waar** en je verwerpt haar niet: de vierde cel, die geen naam
+  nodig heeft omdat er niets gebeurde.
+
+De eerste is de fout waar het hele apparaat op gebouwd is om haar te beheersen. De
+tweede is die welke stilletjes literatuur ruïneert, omdat niemand haar publiceert
+en niemand haar telt.
+
+## Type I: de nulhypothese is echt waar
+
+In deze populatie is `programme` praktisch niet gerelateerd aan `exam_score`:
+Psychologie en Bedrijfskunde verschillen gemiddeld ongeveer een tiende punt. Voer
+dus duizend onderzoeken uit die ze vergelijken en tel hoe vaak de toets loos alarm
+geeft.
+
+<CodeBlock id="typeone" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+set.seed(801)
+false_alarms <- replicate(1000, {
+  s <- population[sample(nrow(population), 120), ]
+  t.test(exam_score ~ programme, data = s, var.equal = TRUE)$p.value < 0.05
+})
+
+mean(false_alarms)`} />
+
+Ongeveer ,05, en niet door geluk: α *is* het type I-foutpercentage. Het op ,05
+zetten betekent dat van de onderzoeken waarin de nulhypothese waar is, ongeveer
+een op de twintig toch significant is, en niets aan één significant resultaat
+vertelt je welk soort je in handen hebt.
+
+<Predict
+  id="p-power"
+  question="Nu is de nulhypothese onwaar: de gemiddelde tentamenscore is werkelijk 73,9, en we toetsen haar tegen 70. Van 1000 onderzoeken van elk 100 studenten bij alfa = ,05, hoeveel verwacht je dat significant uitkomen?"
+  choices={[
+    { text: 'Alle 1000, want het effect is echt', response: 'Een echt effect garandeert geen detectie. Met zoveel ruis en 100 studenten missen sommige onderzoeken het toch.' },
+    { text: 'Ongeveer 900', correct: true, response: 'Bijna goed. Het ontwerp heeft hier ongeveer 90% power, wat betekent dat ruwweg een op de tien onderzoeken een effect niet vindt dat er werkelijk is.' },
+    { text: 'Ongeveer 50, gelijk aan alfa', response: 'Dat is het percentage wanneer de nulhypothese WAAR is. Als ze onwaar is, is het verwerpingspercentage de power, en die is bij een detecteerbaar effect veel hoger dan alfa.' },
+  ]}
+/>
+
+<CodeBlock id="power" code={`set.seed(83)
+p_values <- replicate(1000, {
+  s <- sample(population$exam_score, 100)
+  t.test(s, mu = 70)$p.value
+})
+
+mean(p_values < 0.05)`} />
+
+Grofweg negen op de tien. Dat betekent dat grofweg een op de tien van deze
+onderzoeken, correct uitgevoerd, correct geanalyseerd en met een echt effect
+aanwezig, niets rapporteert. Als een ervan jouw eigen analyse was geweest, had je
+geconcludeerd dat er geen effect was, en had je ongelijk gehad.
+
+## Power is een eigenschap van het ontwerp
+
+Drie dingen bepalen haar. Twee ervan stel je zelf in, steekproefgrootte en α, maar α
+ligt conventioneel vast op ,05, dus de steekproefgrootte is degene die je meestal
+aanpast.
+
+<CodeBlock id="curve" code={`library(ggplot2)
+
+set.seed(84)
+power_at <- function(n) {
+  mean(replicate(400, t.test(sample(population$exam_score, n), mu = 70)$p.value < 0.05))
+}
+
+sizes <- c(20, 40, 60, 100, 150, 200)
+curve_data <- tibble(n = sizes, power = vapply(sizes, power_at, numeric(1)))
+
+curve_data
+
+curve_data %>%
+  ggplot(aes(x = n, y = power)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = 0.8, linetype = "dashed") +
+  labs(x = "Students per study", y = "Power") +
+  theme_classic()`} />
+
+- **Steekproefgrootte.** Degene die je beheerst. Power klimt steil en vlakt dan af;
+  de conventionele doelstelling van ,80 vraagt hier ongeveer 80 studenten.
+- **Effectgrootte.** Bepaald door de wereld. Een groter verschil is makkelijker te
+  zien, en dit is bescheiden.
+- **α.** Het verlagen naar ,01 om veiliger te zijn over valse positieven verlaagt
+  tegelijk de power. De twee fouten wegen tegen elkaar af; je kunt beide niet
+  verlagen zonder meer data of minder ruis (betere meting, een within-persoonontwerp).
+
+Verander α in de simulatie en kijk hoe de gestippelde kritieke lijn beweegt: een
+kleinere α duwt haar verder de staart in, dus een echt effect heeft een groter
+waargenomen verschil nodig om erover te komen. De simulatie toont alleen de
+nulverdeling, dus ze toont de type I-kant van de afweging; de powercurve hierboven
+toont de andere kant.
+
+<Simulation name="pvalue" />
+
+<Exercise id="m8-3-a" />
+
+## Wat je met een niet-significant resultaat doet
+
+Zeg wat het is. "We vonden geen effect" is eerlijk; "er is geen effect" is dat niet.
+Zelfs een onderzoek met voldoende power kan alleen effecten uitsluiten die groter
+zijn dan die het kon detecteren, en zijn betrouwbaarheidsinterval laat zien welke
+dat zijn. Een niet-significant resultaat van een onderzoek met te weinig power is
+niet-informatief, en een betrouwbaarheidsinterval zegt dat veel beter dan een
+p-waarde: een breed interval dat nul bevat vertelt de lezer duidelijk dat het
+onderzoek "niets" niet kon onderscheiden van "heel veel".
+
+<Quiz
+  id="q-power"
+  question="Een onderzoek met 20 mensen per groep rapporteert p = ,21 voor een effect dat latere meta-analyses op d = 0,5 stellen. Wat ging er mis?"
+  choices={[
+    { text: 'Er ging niets mis; het onderzoek had gewoon ongeveer 34% power, en dit was een van de grofweg twee op de drie onderzoeken die missen', correct: true, response: 'Juist. Met n = 20 per groep en d = 0,5 missen de meeste correct uitgevoerde onderzoeken het effect. Het resultaat is niet-informatief, niet foutief.' },
+    { text: 'De analyse moet fout zijn uitgevoerd', response: 'Er is geen fout nodig. Onderzoeken met te weinig power missen echte effecten de meeste keren, per ontwerp.' },
+    { text: 'Het effect bestaat niet, en de meta-analyse klopt niet', response: 'Eén klein niet-significant onderzoek is zeer zwak bewijs tegen een gepoolde schatting uit veel onderzoeken.' },
+    { text: 'Het alfaniveau had op ,20 gezet moeten worden zodat het resultaat significant was', response: 'Alfa kiezen nadat je p hebt gezien geeft de foutbeheersing op die alfa moet bieden.' },
+  ]}
+/>
+
+<Interpret
+  id="i-8-3"
+  question="Je onderzoek met 20 studenten per groep vond een verschil van 5,7 punten, t(38) = 1,31, p = ,198, 95%-BI [−3,1; 14,5], en een poweranalyse vóór het onderzoek gaf het ontwerp ongeveer 34% power voor een middelgroot effect (d = 0,5). Wat komt er in het rapport?"
+  choices={[
+    { text: 'Het verschil was niet statistisch significant, t(38) = 1,31, p = ,198, 95%-BI [−3,1; 14,5]. Met ongeveer 34% power voor een middelgroot effect (d = 0,5) kan het onderzoek een nuleffect niet onderscheiden van een aanzienlijk effect, en moet het resultaat als niet-conclusief worden beschouwd.', correct: true, response: 'Juist. De zin rapporteert de toets in APA-vorm, geeft het interval en leest het niet-significante resultaat tegen de power die het ontwerp werkelijk had.' },
+    { text: 'Er was geen effect van slaap op tentamenscores, p = ,198.', response: 'Een p boven ,05 bewijst niet dat er geen effect is. Het betrouwbaarheidsinterval loopt hier tot 14,5 punten, dus de data zijn volkomen verenigbaar met een groot effect.' },
+    { text: 'Er is 19,8% kans dat de nulhypothese waar is, p = ,198.', response: 'De p-waarde wordt berekend onder de aanname dat de nulhypothese waar is. Ze is nooit de kans dat de nulhypothese waar is, of ze nu groot of klein is.' },
+    { text: 'Het verschil naderde significantie, t(38) = 1,31, p = ,198, en zou die waarschijnlijk bereiken met een grotere steekproef.', response: '"Naderde significantie" bij p = ,198 is wishful thinking. En hoewel een grotere steekproef inderdaad meer power zou hebben, veronderstelt de belofte dat ze significantie zou bereiken het effect dat je nog niet hebt aangetoond.' },
+  ]}
+/>

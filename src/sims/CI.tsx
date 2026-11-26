@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { drawSample, makeRng, mean, POPULATIONS, sd, tQuantile, type PopulationName } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './CI.css';
 
 const REPLICATIONS = 100;
@@ -9,6 +10,8 @@ const ROW = HEIGHT / REPLICATIONS;
 const LEVELS = [50, 80, 90, 95, 99];
 
 export default function CI() {
+  const t = useT();
+  const f = useFmt();
   const [populationName, setPopulationName] = useState<PopulationName>('normal');
   const [n, setN] = useState(25);
   const [level, setLevel] = useState(95);
@@ -50,28 +53,28 @@ export default function CI() {
     <div className="ci">
       <div className="ci-controls">
         <label>
-          Population
+          {t('Population')}
           <select value={populationName} onChange={(e) => setPopulationName(e.target.value as PopulationName)}>
             {Object.entries(POPULATIONS).map(([key, value]) => (
-              <option key={key} value={key}>{value.label}</option>
+              <option key={key} value={key}>{t(value.label)}</option>
             ))}
           </select>
         </label>
         <label className="ci-slider">
-          Sample size
+          {t('Sample size')}
           <input type="range" min={5} max={100} step={5} value={n} onChange={(e) => setN(Number(e.target.value))} />
           <span>{n}</span>
         </label>
         <label>
-          Confidence
+          {t('Confidence')}
           <select value={level} onChange={(e) => setLevel(Number(e.target.value))}>
             {LEVELS.map((value) => (
-              <option key={value} value={value}>{value} %</option>
+              <option key={value} value={value}>{value}%</option>
             ))}
           </select>
         </label>
         <button type="button" onClick={() => { setSeed((s) => s + 1); setHighlight(null); }}>
-          Draw again
+          {t('Draw again')}
         </button>
       </div>
 
@@ -80,9 +83,10 @@ export default function CI() {
         role="img"
         className="ci-svg"
         aria-label={
-          `One hundred ${level} per cent confidence intervals from samples of ${n}. ` +
-          `${draw.captured} of them contain the population mean of ${draw.population.mean.toFixed(1)}; ` +
-          `${REPLICATIONS - draw.captured} miss it.`
+          t(
+            'One hundred {level} per cent confidence intervals from samples of {n}. {captured} of them contain the population mean of {mean}; {missed} miss it.',
+            { level, n, captured: draw.captured, mean: f(draw.population.mean, 1), missed: REPLICATIONS - draw.captured },
+          )
         }
       >
         {draw.intervals.map((interval, index) => {
@@ -110,24 +114,22 @@ export default function CI() {
       <table className="ci-readout">
         <tbody>
           <tr>
-            <th scope="row">Intervals containing the true mean</th>
+            <th scope="row">{t('Intervals containing the true mean')}</th>
             <td data-testid="captured">{draw.captured}</td>
-            <th scope="row">out of</th>
+            <th scope="row">{t('out of')}</th>
             <td>{REPLICATIONS}</td>
-            <th scope="row">Mean width</th>
-            <td data-testid="mean-width">{draw.meanWidth.toFixed(2)}</td>
+            <th scope="row">{t('Mean width')}</th>
+            <td data-testid="mean-width">{f(draw.meanWidth, 2)}</td>
           </tr>
         </tbody>
       </table>
 
       {highlight !== null && (
         <p className="ci-single" data-testid="single-interval">
-          This interval either contains the population mean or it does not. {level} per cent is how
-          often the <strong>procedure</strong> works across many samples, not a probability about
-          this line.
+          {t('This interval either contains the population mean or it does not. {level} per cent is how often the procedure works across many samples, not a probability about this line.', { level })}
         </p>
       )}
-      <p className="ci-note">Click any interval to see what it does, and does not, say.</p>
+      <p className="ci-note">{t('Click any interval to see what it does, and does not, say.')}</p>
     </div>
   );
 }

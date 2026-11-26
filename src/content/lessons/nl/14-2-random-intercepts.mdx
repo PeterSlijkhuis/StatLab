@@ -1,0 +1,114 @@
+De spaghettiplot toonde twee soorten variatie tegelijk: werknemers die op verschillende
+hoogtes zitten, en elke werknemer die een beetje beweegt tussen metingen. Een model met
+gemengde effecten schat beide, en houdt ze uit elkaar. Je ziet het ook wel een **lineair
+gemengd model** genoemd, of een multilevelmodel: hetzelfde.
+
+> **Deze les installeert `lmerTest` en `lme4`.** Ze zijn de grootste download van de
+> cursus; de statusbalk toont de voortgang en de browser slaat ze op in de cache.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+library(lmerTest)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+long_d <- d %>%
+  pivot_longer(cols = c(engagement_t1, engagement_t2), names_to = "time", values_to = "engagement") %>%
+  mutate(time = factor(time,
+                       levels = c("engagement_t1", "engagement_t2"),
+                       labels = c("t1", "t2")))
+
+long_d %>%
+  group_by(time) %>%
+  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())`} />
+
+## Vast en random
+
+- Een **vast effect** is iets waar je een schatting van wilt, met voor iedereen dezelfde
+  betekenis: hier het effect van tijd. Het krijgt een coëfficiënt, een SE, een *t* en een
+  *p*.
+- Een **random effect** is een verzameling afwijkingen waarvan je aanneemt dat ze uit een
+  verdeling zijn getrokken: het eigen beginniveau van elke werknemer. Je schat niet 480
+  afzonderlijke parameters en rapporteert ze niet; je schat de standaarddeviatie van die
+  verdeling.
+
+De vraag "is deze factor vast of random?" is eigenlijk "wil ik deze specifieke niveaus
+vergelijken, of rekening houden met het feit dat er niveaus bestaan?"
+
+<CodeBlock id="c-fit" code={`m_time <- lmer(engagement ~ time + (1 | employee_id), data = long_d)
+
+summary(m_time)`} />
+
+Lees de formule als twee helften. `engagement ~ time` is het vaste deel, precies de `lm` uit
+Module 12. `(1 | employee_id)` is het random deel: een `1` betekent een intercept, en de
+verticale streep leest als "gegroepeerd naar". Elke werknemer krijgt zijn eigen
+beginhoogte; het model schat hoe uitgespreid die hoogtes zijn.
+
+<Exercise id="m14-2-a" />
+
+## Twee bronnen van variatie
+
+<CodeBlock id="c-varcorr" code={`vc <- as.data.frame(VarCorr(m_time))
+vc
+
+c(
+  icc = vc$sdcor[vc$grp == "employee_id"]^2 /
+        (vc$sdcor[vc$grp == "employee_id"]^2 + vc$sdcor[vc$grp == "Residual"]^2)
+)`} />
+
+De rij `employee_id` is hoeveel werknemers van elkaar verschillen; de rij `Residual` is wat
+overblijft binnen een werknemer zodra zijn eigen niveau en het tijdeffect zijn verklaard. De
+variantie van werknemers gedeeld door de som van de twee is de **intraklassecorrelatie**: het
+aandeel van de totale variantie dat stabiele verschillen tussen mensen zijn.
+
+Een hoge ICC laat zien hoeveel er op het spel staat. Ze zegt dat het grootste deel van de ruwe
+variatie niets met je vraag te maken heeft, en dat een gewone `lm` een klein effect zou hebben
+proberen te vinden binnen die variatie.
+
+<Predict
+  id="p-icc"
+  question="De ICC komt uit op ongeveer ,88. Wat betekent dat voor een gewone lm op dezelfde 960 rijen?"
+  choices={[
+    { text: 'De lm zou hetzelfde antwoord hebben gegeven', response: 'Dezelfde schatting van de verandering, ja. Niet dezelfde standaardfout, en dus niet dezelfde t of p.' },
+    { text: 'De lm zou die 88% in zijn residuele variantie stoppen, de standaardfout van tijd opblazen en het grootste deel van de power verliezen', correct: true, response: 'Precies. Het gemengde model haalt die variantie uit de vergelijking, en daarom is zijn t zoveel groter.' },
+    { text: 'De ICC heeft geen invloed op de lm', response: 'Het is precies de grootheid die de lm niet kan zien en het gemengde model verwijdert.' },
+    { text: 'De lm zou anticonservatief zijn geweest en een te kleine p-waarde hebben gegeven', response: 'Voor een effect binnen personen gaat het andersom: de naïeve lm is te conservatief. Clustering negeren is anticonservatief voor een voorspeller TUSSEN clusters, en dat verschil is het weten waard.' },
+  ]}
+/>
+
+<Exercise id="m14-2-b" />
+
+## Waar de p-waarden vandaan komen
+
+`lme4` rapporteert bewust geen *p*-waarden voor vaste effecten, omdat de noemer-
+vrijheidsgraden voor een gemengd model geen uitgemaakte zaak zijn. `lmerTest`, wat
+`library(lmerTest)` erbovenop laadt, voegt ze toe met de benadering van Satterthwaite, en
+daarom heeft de `summary()` hierboven een kolom `Pr(>|t|)` en laadt deze cursus `lmerTest` in
+plaats van `lme4`.
+
+<CodeBlock id="c-coefs" code={`coef(summary(m_time))`} />
+
+Vrijheidsgraden die geen hele getallen zijn, zijn hier normaal en worden zo gerapporteerd:
+*t*(479,0) voor tijd hier, of *t*(539,8) voor het intercept, afgerond op één decimaal.
+
+<Quiz
+  id="q-random"
+  question="Wat voegt (1 | employee_id) aan het model toe?"
+  choices={[
+    { text: 'Een aparte coëfficiënt voor elke werknemer, gerapporteerd in de uitvoer', response: 'De afwijkingen worden geschat maar niet als vaste coëfficiënten gerapporteerd. Wat wordt gerapporteerd is hun standaarddeviatie.' },
+    { text: 'Eén extra parameter: de standaarddeviatie van de eigen beginniveaus van werknemers, die het model laat weten welke rijen bij dezelfde persoon horen', correct: true, response: 'Juist: een parameter voor 480 werknemers, en daarom is de aanpak praktisch.' },
+    { text: 'Een interactie tussen werknemer en tijd', response: 'Dat zou een random helling zijn, geschreven (1 + time | employee_id), en met slechts twee metingen per werknemer kan ze niet worden geschat. Dit is alleen een intercept.' },
+    { text: 'Een correctie die na het aanpassen op de p-waarde wordt toegepast', response: 'Achteraf wordt niets gecorrigeerd. De afhankelijkheid is vanaf het begin onderdeel van het model.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-2"
+  question="Je model geeft een vast effect van tijd b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001, met werknemers-SD = 6,84 en residuele SD = 2,52. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Een lineair model met gemengde effecten en een random intercept voor elke werknemer liet zien dat betrokkenheid steeg van tijdstip 1 naar tijdstip 2, b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001. Werknemers verschilden aanzienlijk in hun algemene niveau van betrokkenheid (SD = 6,84) ten opzichte van de residuele variatie binnen werknemers (SD = 2,52).', correct: true, response: 'Juist: de random structuur wordt beschreven, het vaste effect wordt volledig gerapporteerd, en beide variantiecomponenten worden gegeven.' },
+    { text: 'Betrokkenheid steeg significant in de tijd, p < ,001, in een gemengd model.', response: 'Geen schatting, geen SE, geen vrijheidsgraden en niets over de random structuur: een lezer kan dit niet reproduceren of beoordelen.' },
+    { text: 'De interventie verhoogde betrokkenheid met 1,73 punt, t(479,0) = 10,62, p < ,001.', response: 'Het model bevat geen interventie. Het vaste effect is een verandering in de tijd, die zonder vergelijkingsgroep in dit model niet aan een bepaalde oorzaak kan worden toegeschreven.' },
+    { text: 'Een gemengd model liet zien dat betrokkenheid steeg, b = 1,73, SE = 0,16, t(479,0) = 10,62, p < ,001; het random effect was niet significant, dus het kon worden weggelaten.', response: 'Het random intercept is een kenmerk van het ontwerp, geen hypothese. Het blijft, of een toets ervan nu ,05 haalt of niet.' },
+  ]}
+/>

@@ -1,0 +1,96 @@
+Eén enkel gemiddelde voor 480 werknemers beantwoordt bijna geen vraag die
+iemand stelt. De vragen die mensen echt stellen zijn vergelijkingen: rapporteren
+thuiswerkers hoger welzijn dan kantoorwerkers, en is Engineering echt slechter
+af dan Sales?
+
+Elk daarvan is dezelfde samenvatting, eenmaal per groep berekend.
+
+<CodeBlock id="setup" code={`library(dplyr)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## group_by() en dan summarise()
+
+`group_by()` verandert zelf niets. Het hangt een notitie aan de tabel die zegt
+"werk vanaf hier binnen elke afdeling afzonderlijk", en het volgende werkwoord
+gehoorzaamt.
+
+<CodeBlock id="group" code={`employees %>%
+  group_by(department) %>%
+  summarise(mean_wellbeing = mean(wellbeing))`} />
+
+Vier rijen in plaats van één, en de groeperingskolom kwam mee zodat je kunt
+zien welke welke is.
+
+<Predict
+  id="p-groups"
+  question="Je groepeert in plaats daarvan op site, en het bedrijf heeft zes vestigingen. Hoeveel rijen geeft summarise() terug?"
+  choices={[
+    { text: '480, één per werknemer', response: 'Dat is wat de gegroepeerde tabel intern nog bevat, maar summarise() klapt elke groep samen tot één rij.' },
+    { text: '6, één per vestiging', correct: true, response: 'Ja. Eén rij per groep, altijd, wat betekent dat het aantal rijen je vertelt hoeveel groepen je vroeg.' },
+    { text: '1, want summarise() geeft altijd één rij', response: 'Ongegroepeerd wel. Gegroepeerd geeft het één rij per groep, en dat is de hele truc.' },
+  ]}
+/>
+
+## Een samenvatting die het lezen waard is
+
+Voeg de SD en de groepsgrootte toe, en sorteer dan.
+
+<CodeBlock id="full" code={`employees %>%
+  group_by(department) %>%
+  summarise(
+    mean_wellbeing = mean(wellbeing),
+    sd_wellbeing = sd(wellbeing),
+    n = n()
+  ) %>%
+  arrange(desc(mean_wellbeing))`} />
+
+Lees de SD-kolom naast de gemiddelden. De afdelingen verschillen gemiddeld een
+paar punten, en individuen binnen elke afdeling verschillen veel meer dan dat.
+Beide getallen in beeld houden is wat voorkomt dat een klein verschil tussen
+groepen klinkt als een groot verschil.
+
+## n() kent de groepering; nrow() niet
+
+<CodeBlock id="n-trap" code={`employees %>%
+  group_by(department) %>%
+  summarise(with_n = n(), with_nrow = nrow(employees))`} />
+
+`n()` telt de rijen van de groep waarin het wordt aangeroepen. `nrow(employees)`
+reikt naar buiten en telt het hele bedrijf, vier keer. Niets geeft een
+foutmelding; de kolom is gewoon fout, en een lezer die erop vertrouwt concludeert
+dat elke afdeling 480 mensen heeft.
+
+<Exercise id="m3-2-a" />
+
+## Twee groepen
+
+Dezelfde machinerie beantwoordt een vraag over twee groepen, en het verschil
+tussen de twee gemiddelden is de grootheid waar de tweegroepentoetsen in Module
+8 over gaan.
+
+<CodeBlock id="remote" code={`employees %>%
+  group_by(remote) %>%
+  summarise(
+    mean_wellbeing = mean(wellbeing),
+    sd_wellbeing = sd(wellbeing),
+    n = n()
+  )`} />
+
+Voordat je iets in het verschil leest: het is een beschrijving van deze 480
+mensen. Of het iets zegt over werknemers in het algemeen is een andere vraag, en
+Module 7 en 8 bestaan om die te beantwoorden. Module 12 past precies deze
+vergelijking als model en krijgt dezelfde twee gemiddelden terug.
+
+<Exercise id="m3-2-b" />
+
+<Quiz
+  id="q-3-2"
+  question="Een pipeline luidt group_by(department, remote) %>% summarise(m = mean(wellbeing)). Hoeveel rijen komen terug, bij vier afdelingen en twee niveaus van remote?"
+  choices={[
+    { text: '4, want department is de eerste groeperingsvariabele', response: 'Elke groeperingsvariabele telt mee. De tweede splitst elke afdeling in tweeën.' },
+    { text: '6, vier afdelingen plus twee niveaus van remote', response: 'Groepen vermenigvuldigen zich in plaats van op te tellen: elke afdeling wordt gesplitst op remote, niet ernaast gezet.' },
+    { text: '8, één per combinatie die in de data voorkomt', correct: true, response: 'Juist: vier afdelingen keer twee niveaus. Een combinatie die geen enkele werknemer heeft ontbreekt gewoon, dus controleer je altijd het aantal rijen met wat je verwachtte.' },
+    { text: '480, want twee groeperingsvariabelen heffen elkaar op', response: 'Groeperen geeft nooit de oorspronkelijke rijen terug. summarise() klapt elke groep altijd samen tot één rij.' },
+  ]}
+/>

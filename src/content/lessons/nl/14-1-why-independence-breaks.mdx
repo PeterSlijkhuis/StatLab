@@ -1,0 +1,114 @@
+Elk model in Modules 10 tot 13 nam aan dat de rijen van je data onafhankelijk zijn: dat
+de score van de ene werknemer je niets vertelt over de volgende. Twee veelvoorkomende
+ontwerpen breken die aanname, en beide zitten in deze dataset.
+
+1. **Dezelfde mensen, meer dan eens gemeten.** Betrokkenheid werd op twee tijdstippen
+   vastgelegd. Een werknemer die in maart betrokken was, is waarschijnlijk ook in
+   september betrokken; die twee rijen zijn geen twee onafhankelijke waarnemingen.
+2. **Mensen gegroepeerd binnen iets.** De 480 werknemers werken op zes locaties. Mensen op
+   dezelfde locatie delen een manager, een gebouw en een kantine, dus hun scores lijken meer
+   op elkaar dan scores van verschillende locaties.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(tidyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% select(employee_id, site, engagement_t1, engagement_t2) %>% head(6)
+
+d %>% summarise(r_within_employee = cor(engagement_t1, engagement_t2))`} />
+
+Die correlatie is de afhankelijkheid, gemeten. De twee scores van een werknemer hangen sterk
+samen, wat betekent dat de tweede meting veel minder nieuwe informatie draagt dan een tweede
+werknemer zou doen.
+
+<Predict
+  id="p-ignore"
+  question="Stel dat je de twee metingen tot 960 rijen opstapelde en een gewone lm(engagement ~ time) draaide. Wat gaat er mis?"
+  choices={[
+    { text: 'Niets: 960 rijen is meer data, dus de schatting verbetert', response: 'De schatting van de verandering is prima. Het is de onzekerheid eromheen die het model fout heeft.' },
+    { text: 'Het model behandelt 480 mensen als 960, dus de verschillen tussen mensen belanden in het residu en de standaardfout voor tijd klopt niet', correct: true, response: 'Precies. Stabiele verschillen tussen personen overspoelen de verandering binnen personen, en de toets verliest het grootste deel van zijn power.' },
+    { text: 'R weigert het uit te voeren', response: 'Het draait volkomen vrolijk en print een plausibele tabel. Niets in de uitvoer zegt dat de rijen niet onafhankelijk zijn.' },
+    { text: 'De veranderingsscore komt met het verkeerde teken uit', response: 'De schatting is zuiver. Alleen de standaardfout, en dus de t en p, zijn fout.' },
+  ]}
+/>
+
+## Breed en lang
+
+Het bestand slaat de twee metingen naast elkaar op, één rij per werknemer. Dat is **breed**
+formaat. Een model heeft één rij per waarneming nodig, één rij per werknemer per meting, en
+dat is **lang** formaat.
+
+<CodeBlock id="c-pivot" code={`long_d <- d %>%
+  pivot_longer(
+    cols = c(engagement_t1, engagement_t2),
+    names_to = "time",
+    values_to = "engagement"
+  ) %>%
+  mutate(time = factor(time,
+                       levels = c("engagement_t1", "engagement_t2"),
+                       labels = c("t1", "t2")))
+
+long_d %>% select(employee_id, site, time, engagement) %>% head(6)
+nrow(long_d)`} />
+
+Drie dingen waar mensen over struikelen:
+
+- **`names_to` neemt de oude kolomnamen**, `values_to` neemt de getallen. Schrijf ze
+  verkeerd om en je krijgt een data frame dat er goed uitziet en tekst bevat waar de scores
+  hoorden te staan.
+- **`employee_id` reist mee**, en komt tweemaal voor. Dat herhaalde id is wat het model in
+  de volgende les gebruikt om te weten welke rijen bij elkaar horen, dus het moet de
+  hervorming overleven.
+- **Stel de volgorde van de niveaus bewust in.** Met de standaard alfabetische volgorde komt
+  t1 hier eerst, wat is wat je wilt, maar bij een dataset met niveaus `post` en `pre` zou de
+  alfabetische volgorde je effect ongemerkt omkeren.
+
+<CodeBlock id="c-time-means" code={`long_d %>%
+  group_by(time) %>%
+  summarise(mean_engagement = mean(engagement), sd_engagement = sd(engagement), n = n())`} />
+
+Twee gemiddelden, en de richting van de verandering. Wat het model hierna ook zegt, moet
+hiermee overeenkomen.
+
+<Exercise id="m14-1-a" />
+
+## De afhankelijkheid zien
+
+<CodeBlock id="c-spaghetti" code={`library(ggplot2)
+
+long_d %>%
+  filter(employee_id <= 30) %>%
+  ggplot(aes(x = time, y = engagement, group = employee_id)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Measurement", y = "Engagement", title = "Thirty employees, twice each") +
+  theme_classic()`} />
+
+Merk op wat het plaatje domineert: de lijnen zitten op heel verschillende hoogtes, en de
+meeste hellen zachtjes omhoog. De hoogteverschillen zijn variatie tussen werknemers, en dat
+is niet waar de vraag over gaat. De hellingen zijn de verandering in de tijd. Een model dat
+die twee niet uit elkaar kan houden zoekt een kleine helling door een dikke wolk hoogtes, en
+dat is precies wat de volgende les oplost.
+
+<Quiz
+  id="q-long"
+  question="Waarom moet de data in lang formaat staan voordat je een model met herhaalde metingen aanpast?"
+  choices={[
+    { text: 'Omdat lange data frames kleiner zijn', response: 'Ze hebben meer rijen, niet minder. Formaat gaat over structuur, niet over grootte.' },
+    { text: 'Omdat het model één rij per waarneming nodig heeft, met een kolom die zegt welke meting het is en een kolom die zegt van wie ze is', correct: true, response: 'Juist. Breed formaat verbergt de meetgelegenheid in de kolomnaam, waar een formule niet bij kan.' },
+    { text: 'Omdat pivot_longer de afhankelijkheid tussen metingen verwijdert', response: 'Het verandert de vorm, niet de data. De afhankelijkheid is er nog steeds; het model is wat er rekening mee houdt.' },
+    { text: 'Omdat lm() geen twee kolommen aankan', response: 'lm() kan veel kolommen aan. Het punt is dat engagement_t1 en engagement_t2 één variabele zijn die tweemaal is gemeten, niet twee variabelen.' },
+  ]}
+/>
+
+<Interpret
+  id="i-14-1"
+  question="Een collega stapelde de twee metingen tot 960 rijen, draaide lm(engagement ~ time), en rapporteert b = 1,73, SE = 0,47, t(958) = 3,68, p < ,001. Wat moet je hun vertellen?"
+  choices={[
+    { text: 'De analyse is prima; 960 waarnemingen is een goede steekproef.', response: 'Er zijn 480 onafhankelijke eenheden, geen 960. Elke persoon tweemaal tellen overschat de beschikbare informatie.' },
+    { text: 'De schatting van de verandering is zuiver, maar het model behandelt elke werknemer als twee niet-gerelateerde mensen, dus de standaardfout en de vrijheidsgraden kloppen niet. Een gemengd model met een random intercept per werknemer, of een gepaarde t-toets, is de juiste analyse.', correct: true, response: 'Juist op beide punten: de puntschatting overleeft het, de inferentie niet.' },
+    { text: 'Ze moeten het als t(479) rapporteren, aangezien er 480 werknemers zijn.', response: 'De vrijheidsgraden met de hand veranderen herstelt de standaardfout niet, die is berekend uit de verkeerde residuele variantie.' },
+    { text: 'De p-waarde is te klein en moet voor de zekerheid worden verdubbeld.', response: 'Inferentie wordt niet hersteld door een correctie te verzinnen. Pas het model aan dat bij het ontwerp past.' },
+  ]}
+/>

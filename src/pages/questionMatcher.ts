@@ -6,6 +6,9 @@
  * cue off or add one it missed, so a misreading is easy to see and correct.
  */
 
+import { getLanguage } from '../state/language';
+import { dutchToCues } from './questionMatcherNl';
+
 export type CueId =
   | 'number'
   | 'binary'
@@ -282,7 +285,7 @@ export function normalise(text: string): string {
 
 /** The cues found in the text, before the student corrects any. */
 export function detectCues(text: string): CueId[] {
-  const t = normalise(text);
+  const t = normalise(getLanguage() === 'nl' ? dutchToCues(text) : text);
   if (!t) return [];
   const found = new Set(CUES.filter((cue) => cue.pattern?.test(t)).map((cue) => cue.id));
   if (found.has('twoGroups') || found.has('manyGroups')) found.add('groups');

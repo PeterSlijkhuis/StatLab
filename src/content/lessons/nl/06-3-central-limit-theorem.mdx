@@ -1,0 +1,89 @@
+Kijk nog eens naar de stressscores. Die populatie is duidelijk scheef: de meeste
+studenten rapporteren weinig stress, en een lange staart rapporteert veel. Niets
+eraan is klokvormig.
+
+<CodeBlock id="skew" code={`library(dplyr)
+library(ggplot2)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+population %>%
+  ggplot(aes(x = stress)) +
+  geom_histogram(bins = 40) +
+  labs(title = "Stress in the population", x = "Stress score", y = "Frequency") +
+  theme_classic()`} />
+
+<Predict
+  id="p-clt"
+  question="Als de populatie zo scheef is, welke vorm heeft dan de steekproevenverdeling van het gemiddelde bij n = 40?"
+  choices={[
+    { text: 'Scheef, zoals de populatie', response: 'Dit is de intuïtie die bijna iedereen heeft, en ze klopt niet. Voer het volgende blok uit en kijk.' },
+    { text: 'Bij benadering normaal', correct: true, response: 'Ja, en dit is het nuttigste feit van de hele inleidende statistiek. Het volgende blok laat het zien.' },
+    { text: 'Onmogelijk te zeggen zonder de vorm van de populatie te kennen', response: 'Opmerkelijk genoeg kun je het wel zeggen. De centrale limietstelling zegt dat de steekproevenverdeling van het gemiddelde normaal wordt naarmate n groeit, welke vorm de populatie ook heeft; bij een dergelijke scheefheid is n = 40 in de praktijk meestal genoeg.' },
+  ]}
+/>
+
+<CodeBlock id="clt" code={`set.seed(7)
+means_40 <- replicate(2000, mean(sample(population$stress, 40)))
+
+tibble(mean_stress = means_40) %>%
+  ggplot(aes(x = mean_stress)) +
+  geom_histogram(bins = 40) +
+  labs(title = "Means of 40 students", x = "Sample mean stress", y = "Frequency") +
+  theme_classic()`} />
+
+## De centrale limietstelling
+
+> Naarmate de steekproefgrootte groeit, nadert de steekproevenverdeling van het
+> gemiddelde een normale verdeling, **welke vorm de populatie ook heeft** (mits
+> haar variantie eindig is, wat geldt voor elke begrensde score zoals een
+> vragenlijst of tentamen).
+
+Drie dingen zijn de moeite van het precies stellen waard, omdat studenten ze
+steevast door elkaar halen:
+
+1. Het is de **steekproevenverdeling** die normaal wordt, niet de populatie en
+   niet je steekproef. Je data mogen zo scheef blijven als ze willen.
+2. Ze is gecentreerd op **μ**, het populatiegemiddelde.
+3. Haar spreiding is **σ/√n**, de standaardfout.
+
+Voor ruwweg symmetrische populaties is n rond 15 ruim voldoende. Voor sterk
+scheve populaties als deze is n van ongeveer 40 een gangbare vuistregel.
+
+Gebruik de simulatie om de stelling zelf te testen: kies **Twee toppen**, zet n op
+2 en verhoog hem dan. De populatie wordt nooit normaal. De steekproevenverdeling
+wel.
+
+<Simulation name="clt" />
+
+<Exercise id="m6-3-a" />
+
+## Waarom dit ertoe doet
+
+Alles vanaf hier hangt ervan af. Een *t*-toets, een betrouwbaarheidsinterval, de
+*p*-waarde van een regressiecoëfficiënt: elk gaat ervan uit dat je weet hoe een
+steekproefschatting zich over herhaalde steekproeven gedraagt. De centrale
+limietstelling maakt het mogelijk dat uit één enkele steekproef te beweren, zonder
+het onderzoek ooit te herhalen.
+
+<Interpret
+  id="i-6-3"
+  question="Een collega schrijft: 'Onze reactietijddata zijn sterk scheef, dus we kunnen geen t-toets gebruiken.' Met n = 120 per groep, hoe reageer je?"
+  choices={[
+    { text: 'Ze hebben gelijk: scheve data sluiten een t-toets uit.', response: 'Waar de p-waarde op steunt is een bij benadering normale steekproevenverdeling van het gemiddelde, niet normale ruwe data. Dat zijn verschillende beweringen.' },
+    { text: 'De t-toets (of het gelijkwaardige lineaire model) veronderstelt formeel normale residuen, maar waar de p-waarde op steunt is een bij benadering normale steekproevenverdeling van het gemiddelde. Met n = 120 per groep maakt de centrale limietstelling dat redelijk ondanks de scheefheid.', correct: true, response: 'Precies, en nauwkeurig gesteld. Scheefheid in de ruwe data telt vooral bij kleine n; bij 120 per groep is ze zelden doorslaggevend.' },
+    { text: 'Ze moeten de data eerst transformeren, want normaliteit van de ruwe scores is vereist.', response: 'Een transformatie is soms nuttig om andere redenen, maar normaliteit van de ruwe scores is niet wat de toets vereist.' },
+    { text: 'Het maakt niet uit, want t-toetsen veronderstellen niets.', response: 'Ze veronderstellen zeker iets: over de steekproevenverdeling, over onafhankelijkheid en over varianties. Het gaat erom welke veronderstelling hier geldt.' },
+  ]}
+/>
+
+<Quiz
+  id="q-6-3"
+  question="Welke bewering over de centrale limietstelling klopt?"
+  choices={[
+    { text: 'Ze zegt dat grote steekproeven normaal verdeeld zijn.', response: 'Ze zegt niets over jouw steekproef. Een grote steekproef uit een scheve populatie is nog steeds scheef.' },
+    { text: 'Ze zegt dat de steekproevenverdeling van het gemiddelde bij benadering normaal wordt naarmate n groeit.', correct: true, response: 'Juist: de bewering gaat over de verdeling van het gemiddelde over herhaalde steekproeven.' },
+    { text: 'Ze zegt dat de populatie normaal wordt met genoeg data.', response: 'Data verzamelen verandert de populatie niet. De populatie is wat ze is.' },
+    { text: 'Ze geldt alleen als de populatie al normaal is.', response: 'Het tegenovergestelde: haar kracht is juist dat ze geldt voor (bijna) elke vorm van de populatie, zolang de populatie een eindige variantie heeft.' },
+  ]}
+/>

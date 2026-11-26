@@ -1,0 +1,136 @@
+Log odds zijn de juiste schaal om aan te passen en de verkeerde om op te schrijven. Niemand
+heeft gevoel voor −0,058 log odds. Exponentieer, en je krijgt een getal waar mensen over
+kunnen discussiëren.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>%
+  group_by(left_company) %>%
+  summarise(n = n(), mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing))
+
+m_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
+m_left %>% tidy()`} />
+
+## De odds ratio
+
+<CodeBlock id="c-or" code={`exp(coef(m_left))`} />
+
+Een odds ratio **vermenigvuldigt**. Een OR van 0,94 voor welzijn betekent dat elk extra punt
+welzijn de odds om te vertrekken met 0,94 vermenigvuldigt: een afname van 6% in de odds,
+opnieuw toegepast voor elk volgend punt. Tien punten vermenigvuldigen de odds met 0,94 tot de
+macht tien.
+
+De nulwaarde is **1**, niet 0. Het exponentiëren heeft haar samen met al het andere
+verschoven, en daarom wordt een betrouwbaarheidsinterval voor een odds ratio tegen 1 gelezen.
+
+<CodeBlock id="c-table" code={`or_table <- exp(cbind(OR = coef(m_left), confint(m_left)))
+
+round(or_table, 3)`} />
+
+`confint()` bouwt het interval op de log-oddsschaal en `exp()` transformeert het geheel,
+schatting en grenzen samen. Andersom werken, een interval rond de geëxponentieerde schatting,
+geeft een symmetrisch interval op een schaal waar de grootheid niet symmetrisch is, en is
+fout.
+
+De melding `Waiting for profiling to be done...` is R die profile-likelihoodgrenzen berekent
+in plaats van de snellere Wald-benadering. Het is een melding, geen waarschuwing, en de
+intervallen zijn de betere.
+
+<Predict
+  id="p-or"
+  question="De odds ratio voor diensttijd is 0,86, met een 95%-interval van 0,81 tot 0,92. Is het effect van diensttijd significant op het ,05-niveau?"
+  choices={[
+    { text: 'Ja, omdat het interval 1 niet bevat', correct: true, response: 'Juist. Op de odds-ratioschaal betekent 1 geen effect: de waarde 0 is wegtransformeerd.' },
+    { text: 'Nee, omdat het interval waarden onder 1 bevat', response: 'Elke waarde in het interval ligt onder 1, en zo ziet een beschermend effect eruit.' },
+    { text: 'Ja, omdat het interval 0 niet bevat', response: 'Waar maar irrelevant: een odds ratio kan nooit 0 zijn, dus die toets zou alles significant noemen.' },
+    { text: 'Onmogelijk te zeggen zonder de p-waarde', response: 'Een 95%-interval en een tweezijdige toets op ,05 dragen dezelfde informatie wanneer beide uit dezelfde methode komen; een profielinterval en de Wald-z kunnen in grensgevallen verschillen. Hier ligt het interval ver van 1, dus beide zijn het eens, en het vertelt je ook welke groottes aannemelijk zijn.' },
+  ]}
+/>
+
+<Exercise id="m15-3-a" />
+
+## Odds ratio's zijn geen risicoratio's
+
+Dit is de verkeerde lezing die het vaakst in druk verschijnt. Een odds ratio van 2 betekent
+**niet** dat de gebeurtenis twee keer zo waarschijnlijk is.
+
+<CodeBlock id="c-or-vs-rr" code={`p1 <- 0.10
+p2 <- 0.20
+
+c(
+  risk_ratio = p2 / p1,
+  odds_ratio = (p2 / (1 - p2)) / (p1 / (1 - p1))
+)
+
+q1 <- 0.40
+q2 <- 0.60
+
+c(
+  risk_ratio = q2 / q1,
+  odds_ratio = (q2 / (1 - q2)) / (q1 / (1 - q1))
+)`} />
+
+Wanneer de uitkomst zeldzaam is, liggen de twee dicht bij elkaar. Wanneer ze vaak voorkomt,
+lopen ze sterk uiteen, en de odds ratio ziet er altijd uit als het grotere effect. Zeg "de
+odds om te vertrekken", niet "de kans om te vertrekken", en de zin blijft waar.
+
+## Terug naar kansen
+
+Voor lezers die een kans willen, geef je er een bij een vermelde waarde van de voorspellers.
+
+<CodeBlock id="c-predict" code={`profiles <- data.frame(
+  wellbeing = c(50, 60, 70),
+  tenure_years = rep(mean(d$tenure_years), 3)
+)
+
+profiles %>%
+  mutate(predicted_probability = predict(m_left, newdata = profiles, type = "response"))`} />
+
+`type = "response"` geeft kansen; zonder krijg je log odds. Merk op dat de twee verschillen
+niet gelijk zijn, ook al liggen de welzijnswaarden op gelijke afstand: de curve is in het
+midden het steilst, dus dezelfde verandering in de voorspeller levert een andere verandering
+in kans op, afhankelijk van waar je begint. Dat is precies de niet-lineariteit waarvoor het
+model werd gekozen, en de reden dat één enkel "effect op de kans" niet bestaat.
+
+## Verslaglegging
+
+> Een logistische regressie die voorspelde of een werknemer het bedrijf verliet uit welzijn en
+> diensttijd was een significante verbetering ten opzichte van het nulmodel, χ²(2) = 62,83,
+> *p* < ,001. Lager welzijn ging samen met hogere odds om te vertrekken, *OR* = 0,94, 95%-BI
+> [0,92; 0,96], *z* = −5,02, *p* < ,001, evenals een kortere diensttijd, *OR* = 0,86, 95%-BI
+> [0,81; 0,92], *z* = −4,54, *p* < ,001.
+
+<CodeBlock id="c-lrt" code={`anova(glm(left_company ~ 1, data = d, family = binomial), m_left, test = "LRT") %>% tidy()
+
+m_left %>% glance() %>% select(null.deviance, df.null, deviance, df.residual, AIC)`} />
+
+Wat dat verslag bevat, en waarom elk deel er staat: de modeltoets tegen het nulmodel, zodat de
+lezer weet dat de voorspellers iets doen; de odds ratio, zodat ze richting en grootte kennen;
+het betrouwbaarheidsinterval, zodat ze de precisie kennen; *z* en *p*, omdat lezers ernaar
+zullen vragen. Rapporteer *OR* en zijn interval samen: een odds ratio zonder interval is een
+schatting zonder foutbalk.
+
+<Quiz
+  id="q-or-rr"
+  question="Een studie naar een veelvoorkomende uitkomst (ongeveer 40% van de mensen) rapporteert OR = 2,0. Een krant schrijft 'twee keer zo waarschijnlijk'. Wat is er mis?"
+  choices={[
+    { text: 'Niets; een odds ratio van 2 betekent twee keer zo waarschijnlijk', response: 'Dat geldt alleen wanneer de uitkomst zeldzaam is. Bij 40% lopen de twee sterk uiteen.' },
+    { text: 'Een odds ratio vergelijkt odds, geen kansen. Bij een basiskans van 40% komt een OR van 2,0 overeen met een kans die stijgt tot ongeveer 57%, een risicoratio van bijna 1,4', correct: true, response: 'Juist, en dat gat tussen 2,0 en 1,4 is de hele reden dat het onderscheid ertoe doet.' },
+    { text: 'De odds ratio had als percentage moeten worden gerapporteerd', response: 'Een OR is een ratio en wordt als zodanig gerapporteerd. Het probleem is de vertaling, niet het formaat.' },
+    { text: 'Odds ratio\'s kunnen niet boven 1 uitkomen', response: 'Ze lopen van 0 tot oneindig. Boven 1 betekent dat de gebeurtenis waarschijnlijker wordt.' },
+  ]}
+/>
+
+<Interpret
+  id="i-15-3"
+  question="Je eindmodel geeft voor welzijn OR = 0,94, 95%-BI [0,92; 0,96], z = -5,02, p < ,001, met een likelihood-ratiotoets van het model tegen het nulmodel van chikwadraat(2) = 62,83, p < ,001, op 480 werknemers van wie er 109 vertrokken. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Een logistische regressie die voorspelde of een werknemer het bedrijf verliet (109 van 480) uit welzijn en diensttijd was een significante verbetering ten opzichte van het nulmodel, chikwadraat(2) = 62,83, p < ,001. Elk extra punt welzijn ging samen met lagere odds om te vertrekken, OR = 0,94, 95%-BI [0,92; 0,96], z = -5,02, p < ,001.', correct: true, response: 'Juist: de basisfrequentie, de modeltoets, de odds ratio met zijn interval, en "odds" in plaats van "kans".' },
+    { text: 'Werknemers met hoger welzijn hadden 6% minder kans om te vertrekken, OR = 0,94, 95%-BI [0,92; 0,96], p < ,001.', response: 'Dit leest de odds ratio als een risicoratio. Bij 23% vertrekkers is een afname van 6% in de odds geen afname van 6% in de kans.' },
+    { text: 'Welzijn beschermde werknemers tegen vertrek, OR = 0,94, p < ,001.', response: 'Twee problemen: "beschermde" is causaal in een observationele studie, en het betrouwbaarheidsinterval ontbreekt.' },
+    { text: 'Welzijn voorspelde vertrek significant, OR = 0,94, 95%-BI [0,92; 0,96], z = -5,02, p < ,001; omdat het interval 0 uitsluit, is het effect betrouwbaar.', response: 'Alles klopt behalve de laatste bijzin. Een odds ratio wordt tegen 1 getoetst, en een interval dat 0 uitsluit zou voor elke ooit berekende odds ratio gelden.' },
+  ]}
+/>

@@ -1,0 +1,147 @@
+Elk interval en elke p-waarde in deze cursus beantwoordde tot nu toe één soort vraag: *als de
+ware waarde dit was, hoe vaak zouden data zoals de mijne dan voorkomen?* Bayesiaanse statistiek
+draait dat om. Ze vraagt: *gegeven de data die ik heb, hoe aannemelijk is elke mogelijke ware
+waarde?*
+
+Daarvoor is één extra ingrediënt nodig, waarvoor Les 8-2 je waarschuwde: een **prior**, een
+uitspraak over hoe aannemelijk elke waarde was voordat je keek. De data werken de prior dan bij
+tot een **posterior**. Deze hele module gaat over die ene stap, op drie manieren uitgevoerd.
+
+## Eén onbekende: het vertrekpercentage
+
+De HR-afdeling wil weten welk aandeel van de werknemers het bedrijf verlaat. Begin met alleen
+de eerste 20 records.
+
+<CodeBlock id="c-first20" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+first20 <- d[1:20, ]
+left20 <- sum(first20$left_company)
+left20`} />
+
+Drie van de twintig vertrokken. Het ware vertrekpercentage is een getal tussen 0 en 1, en de
+data maken sommige waarden veel geloofwaardiger dan andere. Bayesiaanse schatting maakt dat
+precies in vier stappen.
+
+## Stap 1: som de kandidaten op
+
+Neem een raster van kandidaatwaarden voor het percentage, van 0 tot 1 in kleine stappen. Elke
+berekening hierna wordt één keer per kandidaat uitgevoerd.
+
+<CodeBlock id="c-grid" code={`p_grid <- seq(0, 1, length.out = 1001)
+head(p_grid)`} />
+
+## Stap 2: de prior
+
+Zeg, voordat je data ziet, hoe aannemelijk elke kandidaat is. De nederigste prior noemt ze
+allemaal even aannemelijk: een vlakke lijn.
+
+<CodeBlock id="c-prior" code={`prior <- rep(1, length(p_grid))`} />
+
+## Stap 3: de likelihood
+
+Hoe waarschijnlijk zijn de data, 3 vertrekkers op 20, voor elk kandidaatpercentage? Dat is een
+binomiale kans, en `dbinom()` berekent haar voor het hele raster tegelijk.
+
+<Predict
+  id="p-likelihood-peak"
+  question="Welk kandidaatpercentage maakt 3 vertrekkers op 20 het meest waarschijnlijk?"
+  choices={[
+    { text: '0,03', response: 'Bij 3% verwacht je minder dan één vertrekker op twintig, dus drie is ongewoon veel.' },
+    { text: '0,15', correct: true, response: 'Ja: 3 op 20 is 0,15, en het percentage dat het best bij de data past is de waargenomen proportie zelf.' },
+    { text: '0,50', response: 'Bij 50% verwacht je ongeveer tien vertrekkers. Drie is mogelijk, maar onwaarschijnlijk.' },
+  ]}
+/>
+
+<CodeBlock id="c-likelihood" code={`likelihood <- dbinom(left20, size = 20, prob = p_grid)
+p_grid[which.max(likelihood)]`} />
+
+De likelihood is **geen** kansverdeling voor het percentage. Ze zegt hoe goed elk percentage de
+data voorspelde, en ze hoeft niet op 1 uit te komen.
+
+## Stap 4: de posterior
+
+Vermenigvuldig prior met likelihood, kandidaat voor kandidaat, en deel dan door het totaal zodat
+het resultaat optelt tot 1. Dat is de regel van Bayes, en het resultaat is de **posterior**:
+hoe aannemelijk elk percentage nu is, nu je de data hebt gezien.
+
+<CodeBlock id="c-posterior" code={`posterior <- prior * likelihood
+posterior <- posterior / sum(posterior)
+
+plot(p_grid, posterior, type = "l",
+     xlab = "Leaving rate", ylab = "Posterior probability")
+
+# The single most plausible rate, and the average over the posterior.
+p_grid[which.max(posterior)]
+sum(p_grid * posterior)`} />
+
+De piek ligt bij 0,15, de waargenomen proportie. Het posterior gemiddelde is iets hoger,
+ongeveer 0,18, omdat de curve een lange rechterstaart heeft: met slechts twintig mensen bevatten
+percentages van 30% of meer nog bijna 9% van de posterior.
+
+## Meer data, smallere posterior
+
+Gebruik nu alle 480 werknemers.
+
+<CodeBlock id="c-all" code={`left_all <- sum(d$left_company)
+n_all <- nrow(d)
+c(left = left_all, employees = n_all)
+
+posterior_all <- prior * dbinom(left_all, size = n_all, prob = p_grid)
+posterior_all <- posterior_all / sum(posterior_all)
+
+plot(p_grid, posterior_all, type = "l", col = "steelblue",
+     xlab = "Leaving rate", ylab = "Posterior probability")
+lines(p_grid, posterior, col = "grey50")
+
+sum(p_grid * posterior_all)`} />
+
+De blauwe curve is hoog en smal, rond 0,23. Met 480 mensen zijn de meeste percentages
+onaannemelijk geworden. Die versmalling is wat een Bayesiaan bedoelt met leren van data, en ze
+speelt de rol die een krimpende standaardfout in Module 7 speelde.
+
+## Een prior die iets weet
+
+Een vlakke prior is ook een keuze, en zelden de eerlijkste. Stel dat HR uit sectorrapporten weet
+dat vertrekpercentages meestal rond 15% liggen. Een **bètaverdeling** kan dat zeggen:
+`dbeta(p, 3, 17)` piekt bij 0,11, heeft haar gemiddelde bij 3 / (3 + 17) = 0,15, en bevat
+ongeveer evenveel informatie als twintig werknemers.
+
+<CodeBlock id="c-informed" code={`informed <- dbeta(p_grid, 3, 17)
+
+post_small <- informed * dbinom(left20, size = 20, prob = p_grid)
+post_small <- post_small / sum(post_small)
+
+post_large <- informed * dbinom(left_all, size = n_all, prob = p_grid)
+post_large <- post_large / sum(post_large)
+
+c(first_20 = sum(p_grid * post_small), all_480 = sum(p_grid * post_large))`} />
+
+Met twintig werknemers zijn de prior en de data ongeveer evenveel waard, en het posterior
+gemiddelde komt uit op 0,15. Met 480 wegen de data vele malen zwaarder dan de prior, en het
+posterior gemiddelde van 0,224 ligt dicht bij het antwoord met de vlakke prior. **Hoe meer data
+je hebt, hoe minder de prior ertoe doet.** Met weinig data doet de prior er veel toe, en dat is
+precies wanneer je moet zeggen welke je gebruikte en waarom.
+
+<Exercise id="m16-1-a" />
+
+<Quiz
+  id="q-prior"
+  question="Een collega werpt tegen: 'Met een prior kun je elk gewenst antwoord in de analyse stoppen.' Wat is het beste antwoord?"
+  choices={[
+    { text: 'Dat klopt, en daarom zijn Bayesiaanse resultaten niet te vertrouwen', response: 'Een prior is een openlijk vermelde aanname, zoals de aannames van een t-toets. Verborgen aannames zijn de aannames om je zorgen over te maken.' },
+    { text: 'De prior wordt vermeld en kan worden gecontroleerd. Haar invloed krimpt naarmate de data groeien, en je kunt laten zien hoeveel het antwoord verandert onder andere redelijke priors', correct: true, response: 'Juist. Rapporteer de prior, en laat bij een kleine steekproef zien dat de conclusie een paar verstandige alternatieven overleeft.' },
+    { text: 'Priors doen er alleen toe als ze vlak zijn', response: 'Het is andersom: een vlakke prior laat de data voor zichzelf spreken, en een sterke prior is degene die het antwoord trekt.' },
+    { text: 'De prior wordt gekozen nadat je de data hebt gezien, dus ze past altijd', response: 'Dat zou valsspelen zijn. Een prior beschrijft wat vóór de data werd geloofd, en ze ligt vast voordat ze worden geanalyseerd.' },
+  ]}
+/>
+
+<Interpret
+  id="i-16-1"
+  question="Met een vlakke prior en alle 480 werknemers piekt de posterior voor het vertrekpercentage bij 0,227 en ligt haar gemiddelde bij 0,228. Welke zin beschrijft haar correct?"
+  choices={[
+    { text: 'Gegeven deze data en een vlakke prior zijn vertrekpercentages dicht bij 23% het aannemelijkst, en zijn percentages ver onder 19% of boven 27% zeer onwaarschijnlijk geworden.', correct: true, response: 'Juist: een Bayesiaans resultaat is een uitspraak over hoe aannemelijk elke waarde van het percentage is, en benoemt de prior waarop het rust.' },
+    { text: 'Als het ware percentage 23% was, zouden data zoals deze in 95% van de gevallen voorkomen.', response: 'Dat is de frequentistische lezing van een steekproevenverdeling. De posterior gaat over het percentage, niet over herhaalde steekproeven.' },
+    { text: 'Precies 22,8% van de werknemers zal volgend jaar vertrekken.', response: 'De posterior is een hele verdeling van aannemelijke percentages, niet één getal, en ze beschrijft deze werknemers, geen voorspelling voor volgend jaar.' },
+    { text: 'De prior was vlak, dus dit resultaat bevat geen aannames.', response: 'Een vlakke prior is ook een aanname: dat elk percentage van 0 tot 1 vooraf even aannemelijk was. Het is een milde, geen afwezige aanname.' },
+  ]}
+/>

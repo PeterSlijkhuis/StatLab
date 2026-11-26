@@ -1,0 +1,113 @@
+Iedereen die om "een tweeweg-ANOVA" vraagt, vraagt om een *F*-toets van elke factor en van
+de interactie. Je hebt het model al; wat ontbreekt is de tabel, en één argument zonder
+welke de tabel stilletjes fout is.
+
+> **Deze les installeert `car`.** De statusbalk toont de download; daarna staat het in de
+> cache.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+library(car)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+d$change <- d$engagement_t2 - d$engagement_t1
+
+model <- lm(change ~ training * mentoring, data = d)
+model %>% tidy()`} />
+
+## Kwadratensommen hebben typen
+
+In een perfect gebalanceerd ontwerp zonder ontbrekende data komen type I, type II en type III
+(met som-nulcontrasten) allemaal overeen. Echte ontwerpen zijn zelden perfect gebalanceerd, en
+dan doet de volgorde waarin je de termen credit geeft ertoe.
+
+- **Type I** (`anova()`) is sequentieel: elke term krijgt de variantie die overblijft na
+  de termen die eerder zijn geschreven. Herschik de formule en het antwoord verandert.
+- **Type II** toetst elk hoofdeffect met negeren van de interactie. Verdedigbaar als de
+  interactie verwaarloosbaar is, lastig als ze dat niet is.
+- **Type III** toetst elke term met alle andere termen, interactie inbegrepen, al in het
+  model. Dit is wat psychologietijdschriften bedoelen met een factoriële ANOVA-tabel, en het
+  is wat `car::Anova(model, type = "III")` geeft.
+
+## Het argument dat je niet mag vergeten
+
+Type III-toetsen van hoofdeffecten hangen af van hoe de factoren zijn gecodeerd. De standaard
+van R is **treatmentcodering**, waarbij elke factor wordt gemeten vanaf zijn eigen eerste
+niveau, en onder die codering toetst de type III-rij met het label `training` training **op
+het referentieniveau van mentoring**, niet gemiddeld. Het is een enkelvoudig effect dat de
+naam van een hoofdeffect draagt.
+
+Som-nulcodering centreert elke factor op het gemiddelde van zijn niveaus, en pas dan betekent
+de rij wat zijn label zegt.
+
+<CodeBlock id="c-wrong-right" code={`wrong <- lm(change ~ training * mentoring, data = d)
+
+right <- lm(change ~ training * mentoring, data = d,
+            contrasts = list(training = contr.sum, mentoring = contr.sum))
+
+Anova(wrong, type = "III")
+Anova(right, type = "III")`} />
+
+Vergelijk de twee tabellen rij voor rij. De rijen `training` en `mentoring` verschillen. De
+rij `training:mentoring` is identiek: de type III-toets van de interactie hangt niet van de
+codering af, en juist daarom is het vergeten van de contrasten zo makkelijk te missen: de term
+die je het meest interesseerde ziet er goed uit.
+
+<Predict
+  id="p-contrasts"
+  question="Welke rijen van een type III-tabel veranderen wanneer je van treatment- naar som-nulcontrasten overstapt?"
+  choices={[
+    { text: 'Allemaal, de interactie inbegrepen', response: 'De interactierij is invariant. Voer de twee tabellen hierboven uit en vergelijk.' },
+    { text: 'De hoofdeffectrijen, maar niet de interactie', correct: true, response: 'Juist, en dat is de valkuil: de rij waar je het meest om geeft ziet er hetzelfde uit, dus niets wijst op de fout.' },
+    { text: 'Geen: contrasten hernoemen alleen coëfficiënten', response: 'Ze hernoemen coëfficiënten in een model zonder interactie. Met een interactie erin veranderen ze wat een type III-toets van een hoofdeffect vraagt.' },
+    { text: 'Alleen het intercept', response: 'Het intercept verandert wel, maar beide hoofdeffectrijen ook.' },
+  ]}
+/>
+
+Merk ook op dat de pasvorm van het model onaangeroerd blijft: de voorspelde waarden, residuen
+en *R*² zijn onder beide coderingen identiek, en dat geldt ook voor de *t* en *p* van de
+interactie. De interactiecoëfficiënt zelf wordt geherschaald (met som-nulcodering van twee
+niveaus is ze een kwart van de met treatment gecodeerde waarde), omdat ze nu een ander
+contrast beschrijft. Contrasten veranderen de vragen, niet de pasvorm.
+
+<CodeBlock id="c-same-fit" code={`c(
+  r2_wrong = summary(wrong)$r.squared,
+  r2_right = summary(right)$r.squared,
+  max_difference_in_fitted = max(abs(fitted(wrong) - fitted(right)))
+)`} />
+
+## Eerst celgemiddelden
+
+<Exercise id="m13-2-a" />
+
+## De tabel
+
+<Exercise id="m13-2-b" />
+
+Een APA-rapport van een factoriële ANOVA rapporteert elk effect als *F*(df_effect, df_fout)
+met zijn *p* en een effectgrootte (partiële eta-kwadraat, of een verschil in celgemiddelden
+met zijn BI), naast de celgemiddelden en SD's, en interpreteert dan eerst de interactie, want
+als de interactie echt is, zijn de hoofdeffecten gemiddelden over condities die zich
+verschillend gedragen.
+
+<Quiz
+  id="q-type3"
+  question="Je collega voert Anova(model, type = 'III') uit op een model aangepast met de standaardcontrasten van R en rapporteert het hoofdeffect van training. Wat hebben ze gerapporteerd?"
+  choices={[
+    { text: 'Het hoofdeffect van training, correct', response: 'Alleen als de interactie niet in het model zat. Met haar aanwezig en treatmentcodering van kracht is die rij iets anders.' },
+    { text: 'Het effect van training onder werknemers op het referentieniveau van mentoring: een enkelvoudig effect, geen gemiddelde', correct: true, response: 'Juist, en de oplossing is één argument: contrasts = list(training = contr.sum, mentoring = contr.sum).' },
+    { text: 'Een type I-kwadratensom', response: 'Type I is wat anova() met een kleine a oplevert. Dit is werkelijk type III, van een grootheid die niemand wilde.' },
+    { text: 'Helemaal niets: de functie zou een foutmelding hebben gegeven', response: 'Ze draait volkomen vrolijk en print een plausibele tabel. Dat is het probleem.' },
+  ]}
+/>
+
+<Interpret
+  id="i-13-2"
+  question="Je type III-tabel met som-nulcontrasten geeft training F(1, 476) = 63,36, p < ,001; mentoring F(1, 476) = 43,50, p < ,001; training x mentoring F(1, 476) = 12,22, p < ,001. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'Een 2 x 2 factoriële analyse van de verandering in betrokkenheid vond een significante interactie tussen training en mentoring, F(1, 476) = 12,22, p < ,001, die significante hoofdeffecten van training, F(1, 476) = 63,36, p < ,001, en mentoring, F(1, 476) = 43,50, p < ,001, kwalificeert. Enkelvoudige effecten worden hieronder gerapporteerd.', correct: true, response: 'Juist: de interactie leidt, de hoofdeffecten worden uitdrukkelijk beschreven als erdoor gekwalificeerd, en de lezer hoort waar de enkelvoudige effecten te vinden zijn.' },
+    { text: 'Er waren significante hoofdeffecten van training, F(1, 476) = 63,36, p < ,001, en mentoring, F(1, 476) = 43,50, p < ,001. De interactie was ook significant.', response: 'Hoofdeffecten eerst rapporteren en de interactie als bijzaak nodigt precies de lezing uit die de interactie uitsluit, en het geeft geen statistieken voor de interactie.' },
+    { text: 'Training verbeterde betrokkenheid meer dan mentoring, F(1, 476) = 63,36, p < ,001.', response: 'Twee F-waarden kunnen niet worden vergeleken om effecten te rangschikken, en met een interactie aanwezig beschrijft geen van beide hoofdeffecten een werkelijke groep.' },
+    { text: 'De interactie was significant, F(1, 476) = 12,22, p < ,001, dus de hoofdeffecten zijn betekenisloos en worden niet gerapporteerd.', response: 'Ze zijn gekwalificeerd, niet betekenisloos, en een factoriële tabel rapporteert elke rij. Ze onderdrukken maakt de analyse niet reproduceerbaar.' },
+  ]}
+/>

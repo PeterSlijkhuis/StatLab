@@ -10,6 +10,7 @@ import {
   skewness,
   type PopulationName,
 } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './CLT.css';
 
 const REPLICATIONS = 2000;
@@ -18,6 +19,8 @@ const WIDTH = 640;
 const HEIGHT = 180;
 
 function Histogram({ values, colour, label }: { values: number[]; colour: string; label: string }) {
+  const t = useT();
+  const f = useFmt();
   const { edges, counts } = useMemo(() => histogram(values, BINS), [values]);
   const skew = useMemo(() => skewness(values), [values]);
   const peak = Math.max(...counts, 1);
@@ -29,7 +32,7 @@ function Histogram({ values, colour, label }: { values: number[]; colour: string
   return (
     <figure className="clt-figure">
       <figcaption>{label}</figcaption>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`${label}. ${describeShape(skew)} (skewness ${skew.toFixed(2)}).`} className="clt-svg">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={t('{label}. {shape} (skewness {skew}).', { label, shape: t(describeShape(skew)), skew: f(skew, 2) })} className="clt-svg">
         {counts.map((count, index) => {
           const height = (count / peak) * (HEIGHT - 24);
           return (
@@ -44,10 +47,10 @@ function Histogram({ values, colour, label }: { values: number[]; colour: string
           );
         })}
         <line x1={0} y1={HEIGHT - 20} x2={WIDTH} y2={HEIGHT - 20} stroke="#334155" />
-        <text x={2} y={HEIGHT - 6} className="clt-axis">{lo.toFixed(1)}</text>
-        <text x={WIDTH - 4} y={HEIGHT - 6} textAnchor="end" className="clt-axis">{hi.toFixed(1)}</text>
+        <text x={2} y={HEIGHT - 6} className="clt-axis">{f(lo, 1)}</text>
+        <text x={WIDTH - 4} y={HEIGHT - 6} textAnchor="end" className="clt-axis">{f(hi, 1)}</text>
         <text x={WIDTH / 2} y={HEIGHT - 6} textAnchor="middle" className="clt-axis">
-          {(lo + span / 2).toFixed(1)}
+          {f(lo + span / 2, 1)}
         </text>
       </svg>
     </figure>
@@ -55,6 +58,8 @@ function Histogram({ values, colour, label }: { values: number[]; colour: string
 }
 
 export default function CLT() {
+  const t = useT();
+  const f = useFmt();
   const [populationName, setPopulationName] = useState<PopulationName>('skewed');
   const [n, setN] = useState(2);
   const [seed, setSeed] = useState(1);
@@ -82,31 +87,31 @@ export default function CLT() {
     <div className="clt">
       <div className="clt-controls">
         <label>
-          Population
+          {t('Population')}
           <select value={populationName} onChange={(event) => setPopulationName(event.target.value as PopulationName)}>
             {(Object.keys(POPULATIONS) as PopulationName[]).map((key) => (
-              <option key={key} value={key}>{POPULATIONS[key].label}</option>
+              <option key={key} value={key}>{t(POPULATIONS[key].label)}</option>
             ))}
           </select>
         </label>
 
         <label className="clt-slider">
-          Sample size (n) = <strong>{n}</strong>
+          {t('Sample size (n)')} = <strong>{n}</strong>
           <input type="range" min={1} max={100} value={n} onChange={(event) => setN(Number(event.target.value))} />
         </label>
 
-        <button type="button" onClick={() => setSeed((value) => value + 1)}>Draw again</button>
+        <button type="button" onClick={() => setSeed((value) => value + 1)}>{t('Draw again')}</button>
       </div>
 
-      <p className="clt-description">{deferredPopulation.description}</p>
-      <Histogram values={populationDraws} colour="#94a3b8" label="The population (individual people)" />
-      <Histogram values={means} colour="#1d4ed8" label={`Sampling distribution: ${REPLICATIONS} sample means, each from n = ${deferredN}`} />
+      <p className="clt-description">{t(deferredPopulation.description)}</p>
+      <Histogram values={populationDraws} colour="#94a3b8" label={t('The population (individual people)')} />
+      <Histogram values={means} colour="#1d4ed8" label={t('Sampling distribution: {count} sample means, each from n = {n}', { count: REPLICATIONS, n: deferredN })} />
 
       <table className="clt-readout">
         <tbody>
-          <tr><th scope="row">Population mean (μ)</th><td>{deferredPopulation.mean.toFixed(2)}</td><th scope="row">Mean of the sample means</th><td>{mean(means).toFixed(2)}</td></tr>
-          <tr><th scope="row">Population SD (σ)</th><td>{deferredPopulation.sd.toFixed(2)}</td><th scope="row">SD of the sample means</th><td>{observedSe.toFixed(2)}</td></tr>
-          <tr><th scope="row">σ / √n predicts</th><td>{predictedSe.toFixed(2)}</td><th scope="row">Observed matches prediction</th><td>{Math.abs(observedSe - predictedSe) < predictedSe * 0.1 ? 'yes' : 'not within 10%'}</td></tr>
+          <tr><th scope="row">{t('Population mean (μ)')}</th><td>{f(deferredPopulation.mean, 2)}</td><th scope="row">{t('Mean of the sample means')}</th><td>{f(mean(means), 2)}</td></tr>
+          <tr><th scope="row">{t('Population SD (σ)')}</th><td>{f(deferredPopulation.sd, 2)}</td><th scope="row">{t('SD of the sample means')}</th><td>{f(observedSe, 2)}</td></tr>
+          <tr><th scope="row">{t('σ / √n predicts')}</th><td>{f(predictedSe, 2)}</td><th scope="row">{t('Observed matches prediction')}</th><td>{Math.abs(observedSe - predictedSe) < predictedSe * 0.1 ? t('yes') : t('not within 10%')}</td></tr>
         </tbody>
       </table>
     </div>

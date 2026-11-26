@@ -1,0 +1,105 @@
+Tot nu toe beschreef elke figuur één kolom, of één kolom binnen groepen. De
+laatste zet twee getallen bij elkaar, wat de vorm is van elke vraag in Deel 3
+van deze cursus: gaat welzijn samen met autonomie, en hoeveel?
+
+<CodeBlock id="setup" code={`library(ggplot2)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## Het spreidingsdiagram
+
+Twee numerieke kolommen, één op elke as, één punt per werknemer.
+
+<CodeBlock id="scatter" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
+  geom_point()`} />
+
+Volgens afspraak komt de **uitkomst**, de variabele die je wilt verklaren of
+voorspellen, op y, en de predictor op x. Module 10 schrijft dezelfde keuze als
+`lm(wellbeing ~ autonomy)`, in dezelfde volgorde. Een variabele op x zetten
+beweert niet dat zij iets veroorzaakt.
+
+Met 480 punten vallen er veel op elkaar. Ze gedeeltelijk doorzichtig maken laat
+zien waar de menigte zit.
+
+<CodeBlock id="alpha" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
+  geom_point(alpha = 0.4)`} />
+
+`alpha` is hier op een vaste waarde gezet, buiten `aes()`. Binnen `aes()` zou het
+betekenen "varieer de doorzichtigheid volgens een kolom", en dat is niet wat je
+wilt. Dat onderscheid, constanten buiten `aes()` en koppelingen erbinnen, pakt
+iedereen eenmaal.
+
+<Predict
+  id="p-smooth"
+  question="Je voegt geom_smooth() zonder argumenten toe aan deze plot. Welke lijn krijg je?"
+  choices={[
+    { text: 'Een rechte lijn, de regressielijn', response: 'Dat verwachten de meeste mensen en het is niet de standaard. geom_smooth() kiest een methode op basis van de steekproefgrootte.' },
+    { text: 'Een curve die de lokale trend volgt, met een gearceerde band eromheen', correct: true, response: 'Ja: met minder dan duizend rijen past het een loess-curve. Uitstekend om naar een relatie te kijken en nutteloos om er een te rapporteren, omdat er geen helling is om te noemen.' },
+    { text: 'Niets, want het argument method is verplicht', response: 'Het draait gewoon, vertelt je in een melding welke formule het gebruikte, en tekent een curve.' },
+  ]}
+/>
+
+<CodeBlock id="loess" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth()`} />
+
+## Vraag om het model dat je bedoelt
+
+<CodeBlock id="lm" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = lm)`} />
+
+Die rechte lijn is het gepaste lineaire model: dezelfde lijn die `lm()` in Module
+10 produceert, getekend voordat je geleerd hebt het te passen. De grijze band is
+een betrouwbaarheidsinterval voor de lijn, dat Module 7 uitlegt.
+
+## Hem klaarmaken voor APA
+
+De figuur is nu correct en nog niet publiceerbaar. Twee wijzigingen lossen dat
+op.
+
+<CodeBlock id="apa" code={`ggplot(employees, aes(x = autonomy, y = wellbeing)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = lm) +
+  labs(
+    x = "Autonomy (self-reported, 1 to 10)",
+    y = "Wellbeing (0 to 100)"
+  ) +
+  theme_classic()`} />
+
+- `labs()` vervangt de kolomnamen. Een lezer heeft je data frame nooit gezien, en
+  `autonomy` vertelt hem niet de schaal of wat er gevraagd werd.
+- `theme_classic()` haalt het grijze paneel en de rasterlijnen weg, en laat twee
+  aslijnen op wit over. APA-figuren dragen geen versiering die geen informatie
+  draagt.
+
+Twee regels meer die buiten de code leven. In APA 7 staan het figuurnummer (vet)
+en een korte titel (cursief) boven de figuur, en een noot eronder legt uit wat
+een lezer nodig heeft, zoals wat de lijn en de band zijn. Geen van beide zegt wat
+je eruit concludeerde. En niets wat ertoe doet mag van alleen kleur afhangen,
+omdat een rapport in grijstinten geprint kan worden en sommige lezers rood niet
+van groen kunnen onderscheiden.
+
+<Exercise id="m4-3-a" />
+
+<Interpret
+  id="i-4-3"
+  question="Welke formulering hoort bij de figuur die je net hebt gebouwd, als titel en noot?"
+  choices={[
+    { text: 'Autonomie veroorzaakt hoger welzijn onder werknemers.', response: 'De figuur toont een samenhang in observationele data. Niets hier sluit uit dat tevreden werknemers meer autonomie rapporteren, of dat een derde variabele beide stuurt.' },
+    { text: 'Titel: Welzijn en zelfgerapporteerde autonomie bij 480 werknemers. Noot. De lijn is een gepaste lineaire regressie met zijn 95%-betrouwbaarheidsband.', correct: true, response: 'Juist. De titel zegt wat er geplot is en voor hoeveel mensen, en de noot zegt wat de lijn en de band zijn: alles wat een lezer nodig heeft om de figuur te interpreteren zonder de omringende tekst.' },
+    { text: 'Spreidingsdiagram.', response: 'Waar en nutteloos. De titel en noot moeten werken als de figuur los wordt gelezen, en zo worden figuren meestal gelezen.' },
+    { text: 'De relatie tussen autonomie en welzijn was significant.', response: 'Een titel of noot beschrijft de figuur; significantie hoort in de tekst, en niets in deze figuur rapporteert een toets.' },
+  ]}
+/>
+
+<Quiz
+  id="q-4-3"
+  question="Waarom staat alpha in geom_point(alpha = 0.4) buiten de haakjes van aes()?"
+  choices={[
+    { text: 'Omdat alpha geen echte esthetiek is', response: 'Het is een echte esthetiek: je zou er een kolom aan kunnen koppelen. De vraag is of je dat wilt.' },
+    { text: 'Omdat het een vaste instelling is voor elk punt, geen koppeling aan een kolom', correct: true, response: 'Juist. Binnen aes() betekent een waarde "haal dit uit de data"; erbuiten betekent het "gebruik deze constante". aes(alpha = 0.4) zou een kolom met 0,4 verzinnen en er een legenda voor toevoegen.' },
+    { text: 'Omdat aes() alleen x en y accepteert', response: 'aes() accepteert kleur, vulling, vorm, grootte, alpha en meer, als koppelingen aan kolommen.' },
+    { text: 'Omdat doorzichtigheid door het thema wordt ingesteld', response: 'Thema\'s bepalen de niet-datadelen van de figuur: panelen, rasters, lettertypen. De inkt die data voorstelt wordt door de laag ingesteld.' },
+  ]}
+/>

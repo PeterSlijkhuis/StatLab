@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { correlate, fitLine, makeRng, residualSumOfSquares, type Point } from './rng';
+import { useFmt, useT } from '../i18n/t';
 import './LeastSquares.css';
 
 const N = 12;
@@ -22,6 +23,8 @@ const fromY = (py: number) => (SIZE - PAD - py) / SCALE + LO;
 const clamp = (v: number) => Math.min(HI, Math.max(LO, v));
 
 export default function LeastSquares() {
+  const t = useT();
+  const f = useFmt();
   const [points, setPoints] = useState<Point[]>(() =>
     correlate(0.65, N, makeRng(4409)).map((p) => ({ x: clamp(p.x), y: clamp(p.y) })),
   );
@@ -69,11 +72,11 @@ export default function LeastSquares() {
         role="group"
         className="leastsquares-svg"
         aria-label={
-          `Twelve points and a line you control. The squared vertical distances from the points to ` +
-          `your line add up to ${yourRss.toFixed(2)}. ` +
+          t('Twelve points and a line you control. The squared vertical distances from the points to your line add up to {rss}.', { rss: f(yourRss, 2) }) +
+          ' ' +
           (degenerate
-            ? 'Every point now sits at the same x, so no line can be fitted.'
-            : `The best possible line gets that total down to ${bestRss.toFixed(2)}.`)
+            ? t('Every point now sits at the same x, so no line can be fitted.')
+            : t('The best possible line gets that total down to {rss}.', { rss: f(bestRss, 2) }))
         }
         onPointerMove={(event) => {
           if (dragging !== null) moveTo(dragging, event.clientX, event.clientY);
@@ -134,7 +137,7 @@ export default function LeastSquares() {
             data-testid="point"
             tabIndex={0}
             role="button"
-            aria-label={`Point ${index + 1} at x ${point.x.toFixed(2)}, y ${point.y.toFixed(2)}. Use the arrow keys to move it.`}
+            aria-label={t('Point {number} at x {x}, y {y}. Use the arrow keys to move it.', { number: index + 1, x: f(point.x, 2), y: f(point.y, 2) })}
             cx={toX(point.x)}
             cy={toY(point.y)}
             r={5}
@@ -162,34 +165,39 @@ export default function LeastSquares() {
 
       <div className="leastsquares-controls">
         <label className="leastsquares-slider">
-          Intercept
+          {t('Intercept')}
           <input type="range" min={-3} max={3} step={0.05} value={intercept} onChange={(e) => setIntercept(Number(e.target.value))} />
-          <span>{intercept.toFixed(2)}</span>
+          <span>{f(intercept, 2)}</span>
         </label>
         <label className="leastsquares-slider">
-          Slope
+          {t('Slope')}
           <input type="range" min={-2} max={2} step={0.05} value={slope} onChange={(e) => setSlope(Number(e.target.value))} />
-          <span>{slope.toFixed(2)}</span>
+          <span>{f(slope, 2)}</span>
         </label>
       </div>
 
       <table className="leastsquares-readout">
         <tbody>
           <tr>
-            <th scope="row">Your line, sum of squared residuals</th>
-            <td data-testid="your-rss">{yourRss.toFixed(3)}</td>
-            <th scope="row">Best possible</th>
-            <td data-testid="best-rss">{degenerate ? '—' : bestRss.toFixed(3)}</td>
-            <th scope="row">You are away by</th>
-            <td data-testid="rss-gap">{degenerate ? '—' : (yourRss - bestRss).toFixed(3)}</td>
+            <th scope="row">{t('Your line, sum of squared residuals')}</th>
+            <td data-testid="your-rss">{f(yourRss, 3)}</td>
+            <th scope="row">{t('Best possible')}</th>
+            <td data-testid="best-rss">{degenerate ? '—' : f(bestRss, 3)}</td>
+            <th scope="row">{t('You are away by')}</th>
+            <td data-testid="rss-gap">{degenerate ? '—' : f(yourRss - bestRss, 3)}</td>
           </tr>
         </tbody>
       </table>
 
       <p className="leastsquares-equation">
         {degenerate
-          ? 'Every point sits at the same x, so there is no line to fit: the slope would be a division by zero.'
-          : `The best line is ŷ = ${best.intercept.toFixed(2)} ${best.slope < 0 ? '−' : '+'} ${Math.abs(best.slope).toFixed(2)}x, with r = ${best.r.toFixed(2)}.`}
+          ? t('Every point sits at the same x, so there is no line to fit: the slope would be a division by zero.')
+          : t('The best line is ŷ = {intercept} {sign} {slope}x, with r = {r}.', {
+              intercept: f(best.intercept, 2),
+              sign: best.slope < 0 ? '−' : '+',
+              slope: f(Math.abs(best.slope), 2),
+              r: f(best.r, 2),
+            })}
       </p>
 
       <div className="leastsquares-actions">
@@ -202,10 +210,10 @@ export default function LeastSquares() {
             setShowBest(true);
           }}
         >
-          Show the best line
+          {t('Show the best line')}
         </button>
         <button type="button" onClick={() => setPoints((current) => current.map((p) => ({ ...p, x: 0 })))}>
-          Stack the points
+          {t('Stack the points')}
         </button>
         <button
           type="button"
@@ -216,13 +224,12 @@ export default function LeastSquares() {
             setShowBest(false);
           }}
         >
-          Start over
+          {t('Start over')}
         </button>
       </div>
 
       <p className="leastsquares-note">
-        The orange squares are the thing being minimised: each one is the vertical distance from a
-        point to your line, squared. Not the perpendicular distance, and not the horizontal one.
+        {t('The orange squares are the thing being minimised: each one is the vertical distance from a point to your line, squared. Not the perpendicular distance, and not the horizontal one.')}
       </p>
     </div>
   );

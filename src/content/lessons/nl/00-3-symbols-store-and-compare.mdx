@@ -1,0 +1,149 @@
+R-code lijkt leestekensoep totdat je weet dat elk symbool één taak heeft. Er
+zijn er niet veel. Deze les behandelt de symbolen die dingen opslaan en
+vragen stellen; de volgende behandelt degene die dingen uitkiezen en stappen
+aan elkaar koppelen. Aan het eind van de twee zou je elke regel in deze
+cursus hardop moeten kunnen lezen.
+
+## De pijl slaat op
+
+`<-` lees je als "wordt". Het neemt de waarde rechts en slaat die op onder de
+naam links. Wat je hebt opgeslagen is een **object**.
+
+<CodeBlock id="arrow" code={`hours <- 38
+hours
+
+hours * 2`} />
+
+De eerste regel toonde niets, want opslaan is stil. De naam los typen toont wat
+erin zit. In RStudio typt **Alt + -** (Option + - op een Mac) de pijl voor je,
+spaties inbegrepen.
+
+## Het is-gelijk-teken benoemt argumenten
+
+Binnen een functieaanroep geeft `=` een argument zijn waarde. De naam links is
+de naam van het argument, bepaald door wie de functie schreef; de waarde
+rechts is de jouwe.
+
+<CodeBlock id="equals" code={`round(3.14159, digits = 2)`} />
+
+`=` kan ook een waarde opslaan, zoals `<-`, en sommige mensen schrijven het zo.
+Deze cursus houdt de twee taken gescheiden: `<-` slaat op, `=` benoemt een
+argument. Als je `na.rm = TRUE` leest, is het altijd een argument.
+
+## Aanhalingstekens betekenen tekst
+
+Zonder aanhalingstekens is een woord de naam van een object. Met aanhalingstekens
+is het gewoon tekst.
+
+<CodeBlock id="quotes" code={`dept <- "Sales"
+
+dept
+"dept"`} />
+
+`dept` zonder aanhalingstekens wordt opgezocht en geeft wat erin zit. `"dept"`
+met aanhalingstekens zijn de vier letters d, e, p, t. Als je de
+aanhalingstekens rond een waarde als `"Sales"` vergeet, krijg je de fout
+`object 'Sales' not found`, omdat R op zoek ging naar een object met die naam.
+
+`#` begint een **commentaar**. R negeert alles erna op de regel, dus het is
+waar je notities voor mensen schrijft.
+
+## Rekenen
+
+`+`, `-`, `*` en `/` werken als op een rekenmachine, en `^` verheft tot een
+macht. Haakjes bepalen de volgorde, zoals in de wiskunde.
+
+<CodeBlock id="arithmetic" code={`2 + 3 * 4
+(2 + 3) * 4
+2^3`} />
+
+## Vragen stellen
+
+Een dubbel is-gelijk-teken, `==`, slaat niets op. Het vraagt "is dit gelijk
+aan dat?" en antwoordt TRUE of FALSE.
+
+<Predict
+  id="p-double-equals"
+  question="hours bevat vier getallen. Wat doet hours == 40?"
+  choices={[
+    { text: 'Verandert elke waarde in hours in 40', response: 'Dat zou opslaan zijn, en dat doet de pijl. == vraagt alleen; hours blijft daarna ongewijzigd.' },
+    { text: 'Geeft vier keer TRUE of FALSE, één per waarde', correct: true, response: 'Ja. Een vergelijking met een vector stelt de vraag aan elk element tegelijk.' },
+    { text: 'Geeft één TRUE of FALSE voor de hele vector', response: 'R antwoordt element voor element. Je krijgt zoveel antwoorden als er waarden zijn.' },
+  ]}
+/>
+
+<CodeBlock id="compare" code={`hours <- c(32, 41, 38, 40)
+
+hours == 40
+hours != 40
+hours > 38
+hours >= 40`} />
+
+`!=` is "niet gelijk aan". `<` en `>` zijn kleiner en groter dan; `<=` en `>=`
+nemen de grens zelf mee, daarom laat `hours > 38` de 38 weg en houdt `hours >=
+40` de 40.
+
+## Vragen combineren
+
+`&` is **en**: alleen TRUE waar beide kanten TRUE zijn. `|` is **of**: TRUE waar
+minstens één kant dat is. `!` is **niet**: het draait TRUE en FALSE om.
+
+<CodeBlock id="logic" code={`ages <- c(19, 24, 31, 22)
+
+ages >= 20 & ages <= 29
+ages < 20 | ages > 29
+!(ages >= 20)`} />
+
+Elke kant van `&` moet een volledige vergelijking zijn. `ages >= 20 & <= 29`
+leest prima in het Nederlands en is een fout in R, omdat `<= 29` niets links
+van zich heeft.
+
+Om de TRUE's te tellen, zet je de vraag in `sum()`. R telt TRUE als 1 en FALSE
+als 0, dus het totaal is het aantal treffers.
+
+<Exercise id="m0-3-a" />
+
+## Is het er één van?
+
+`%in%` vraagt van elk element links: komt het ergens rechts voor?
+
+<CodeBlock id="in" code={`depts <- c("Sales", "Support", "Engineering", "Sales")
+
+depts %in% c("Sales", "Support")`} />
+
+Zonder `%in%` zou je `depts == "Sales" | depts == "Support"` nodig hebben, wat
+met één vergelijking groeit voor elke waarde die je toevoegt. Symbolen tussen
+procenttekens, zoals `%in%`, zijn operatoren die iemand als functie schreef; je
+ontmoet er in de volgende les nog één, `%>%`.
+
+<Exercise id="m0-3-b" />
+
+## NA: een ontbrekende waarde
+
+`NA` betekent "not available": een waarde die er zou moeten zijn en er niet is,
+zoals een vraag die iemand oversloeg. R weigert te raden wat het geweest zou
+kunnen zijn, dus bijna alles wat uit een `NA` wordt berekend is ook `NA`,
+inclusief een vergelijking ermee.
+
+<CodeBlock id="missing" code={`scores <- c(62, NA, 71)
+
+scores == NA
+is.na(scores)
+
+mean(scores)
+mean(scores, na.rm = TRUE)`} />
+
+`scores == NA` kan je niet vertellen waar het gat zit, want "is dit gelijk aan
+een onbekende waarde?" heeft geen antwoord. `is.na()` stelt de juiste vraag.
+`na.rm = TRUE`, "NA remove", zegt een samenvatting de gaten weg te laten.
+
+<Quiz
+  id="q-0-3"
+  question="Welke regel vraagt of dept de tekst Sales bevat?"
+  choices={[
+    { text: 'dept == "Sales"', correct: true, response: 'Juist: == vraagt, en de aanhalingstekens maken van Sales tekst in plaats van de naam van een object.' },
+    { text: 'dept <- "Sales"', response: 'Dat slaat "Sales" op in dept en vervangt wat er stond. Het vraagt niets.' },
+    { text: 'dept = "Sales"', response: 'Een enkel = buiten een functieaanroep slaat op, net als de pijl. Je hebt er twee nodig.' },
+    { text: 'dept == Sales', response: 'Zonder aanhalingstekens zoekt R een object met de naam Sales, en stopt met "object not found".' },
+  ]}
+/>

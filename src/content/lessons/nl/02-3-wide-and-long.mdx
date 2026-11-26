@@ -1,0 +1,91 @@
+Betrokkenheid is twee keer gemeten, en het bestand slaat de twee metingen op als
+twee kolommen: `engagement_t1` en `engagement_t2`. Dat is **breed** (wide)
+formaat: één rij per werknemer, één kolom per meting.
+
+<CodeBlock id="wide" code={`library(dplyr)
+library(tidyr)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+wide <- employees %>%
+  select(employee_id, department, engagement_t1, engagement_t2)
+
+head(wide, 4)`} />
+
+Breed is hoe data uit een vragenlijsttool komen, en het leest prettig. Het is
+ook de verkeerde vorm voor het meeste van wat je gaat doen, want wat je als
+variabele wilt behandelen, *wanneer* de meting werd gedaan, is helemaal geen
+variabele. Het zit verstopt in twee kolomnamen.
+
+<Predict
+  id="p-rows"
+  question="De brede tabel heeft 480 rijen. Als je de twee betrokkenheidskolommen tot één opstapelt, hoeveel rijen heeft het resultaat dan?"
+  choices={[
+    { text: '480, want er zijn nog steeds 480 werknemers', response: 'Er zijn nog steeds 480 werknemers, maar elk draagt nu twee rijen bij: één per meting.' },
+    { text: '960, want elke werknemer draagt één rij per meetmoment bij', correct: true, response: 'Ja. In lang formaat is een rij één waarneming, niet één persoon, en elke persoon is twee keer waargenomen.' },
+    { text: '240, want twee kolommen worden één', response: 'Hervormen gooit nooit waarnemingen weg. Elk getal in de twee kolommen moet ergens terechtkomen.' },
+  ]}
+/>
+
+## pivot_longer()
+
+<CodeBlock id="longer" code={`long <- wide %>%
+  pivot_longer(
+    cols = c(engagement_t1, engagement_t2),
+    names_to = "time",
+    values_to = "engagement"
+  )
+
+head(long, 6)
+nrow(long)`} />
+
+Drie argumenten, en elk beantwoordt een vraag:
+
+- `cols`: welke kolommen waarden bevatten die in één kolom thuishoren.
+- `names_to`: de naam van de nieuwe kolom die de oude kolom*namen* ontvangt.
+- `values_to`: de naam van de nieuwe kolom die de oude *waarden* ontvangt.
+
+De laatste twee verwisselen is de fout die iedereen één keer maakt. Het symptoom
+is een kolom met getallen genaamd `time` en een kolom met tekst genaamd
+`engagement`.
+
+<CodeBlock id="count" code={`long %>% count(time)
+
+long %>% count(employee_id) %>% head(3)`} />
+
+Elk meetmoment heeft 480 rijen, en elke werknemer heeft er 2. Kolommen die niet
+over de tijd veranderen, zoals `employee_id` en `department`, werden gewoon
+herhaald voor elk van de rijen van een werknemer. Het is `employee_id` dat een
+model in Module 14 vertelt dat die twee rijen bij dezelfde persoon horen.
+
+## Nette data (tidy data)
+
+De lange tabel is **tidy**: elke variabele is een kolom, elke waarneming is een
+rij. Drie delen van deze cursus staan erop.
+
+1. ggplot2 koppelt kolommen aan assen en kleuren. Om tijd op de x-as te zetten,
+   moet tijd een kolom zijn.
+2. `group_by()`, dat Module 3 leert, kan alleen groeperen op een kolom, dus tijd
+   moet er een zijn.
+3. `lmer(engagement ~ time + (1 | employee_id))` in Module 14 heeft één rij per
+   waarneming nodig, met de persoon geïdentificeerd.
+
+De omgekeerde bewerking bestaat, en is nuttig als een lezer een tabel wil in
+plaats van een model:
+
+<CodeBlock id="wider" code={`long %>%
+  pivot_wider(names_from = time, values_from = engagement) %>%
+  head(4)`} />
+
+<Exercise id="m2-3-a" />
+
+<Quiz
+  id="q-2-3"
+  question="Na pivot_longer() bevat de kolom time de waarden engagement_t1 en engagement_t2. Waar kwamen die vandaan?"
+  choices={[
+    { text: 'Het zijn de namen van de kolommen die zijn opgestapeld', correct: true, response: 'Juist. names_to maakt een kolom en vult die met de oude kolomnamen, één label per rij, waardoor de informatie in die namen data wordt die je kunt gebruiken.' },
+    { text: 'pivot_longer() nummert de rijen in elke groep', response: 'Het verzint geen labels. Elke waarde in de nieuwe naamkolom is de naam van een kolom die eerder bestond.' },
+    { text: 'Ze worden gelezen uit de kolom employee_id', response: 'employee_id zegt wie; de nieuwe kolom zegt wanneer, en die komt uit de namen van de opgestapelde kolommen.' },
+    { text: 'Ze waren al een kolom in het bestand', response: 'Dat waren ze niet, en dat is precies het punt. Het bestand slaat wanneer op als twee kolomnamen, en pivot_longer() maakt daar een kolom van.' },
+  ]}
+/>

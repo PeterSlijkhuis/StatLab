@@ -1,0 +1,123 @@
+Je hebt vrijwel zeker de *t*-toets voor onafhankelijke steekproeven geleerd als een
+eigen procedure, met een eigen formule en een eigen plek in een beslisschema. Deze les
+laat zien dat het een lineair model is met één voorspeller met twee niveaus, en dat R je
+op beide manieren dezelfde *t* en dezelfde *p* geeft.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>%
+  group_by(remote) %>%
+  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())`} />
+
+Eerst de beschrijvende statistiek, zoals altijd. Twee groepen, twee gemiddelden, twee
+SD's en twee groepsgroottes: alles wat volgt is een antwoord op "is dat verschil groter dan
+steekproeffout zou opleveren".
+
+<Predict
+  id="p-coef"
+  question="Je gaat lm(wellbeing ~ remote) aanpassen. Het model heeft een intercept en één coëfficiënt. Wat wordt het intercept?"
+  choices={[
+    { text: 'Het gemiddelde van alle 480 werknemers', response: 'Niet met de standaardcodering van R. Zelfs met de som-nul-codering van Module 13 zou het intercept het gemiddelde van de twee groepsgemiddelden zijn, wat niet het gemiddelde van alle 480 werknemers is omdat de groepen in grootte verschillen.' },
+    { text: 'Het gemiddelde van de werknemers op kantoor, want No is het eerste niveau', correct: true, response: 'Precies. Het intercept is het gemiddelde van de referentiegroep, en de coëfficiënt is hoe ver de andere groep ervan af zit.' },
+    { text: 'Nul, want remote is geen getal', response: 'R maakt van de factor een 0/1-kolom voor je. Het intercept is de voorspelling wanneer die kolom 0 is.' },
+    { text: 'Het verschil tussen de twee gemiddelden', response: 'Dat is de coëfficiënt, niet het intercept.' },
+  ]}
+/>
+
+## Het model
+
+<CodeBlock id="c-fit" code={`model_remote <- lm(wellbeing ~ remote, data = d)
+
+model_remote %>% tidy()`} />
+
+Achter de schermen bouwde R een kolom die 0 is voor `No` en 1 voor `Yes`, een
+**dummyvariabele**, en paste dezelfde rechte lijn aan als Module 10. Met x die alleen 0 of 1
+is, heeft de lijn maar twee hoogtes:
+
+- intercept = voorspeld welzijn wanneer de dummy 0 is = het gemiddelde van de werknemers
+  op kantoor;
+- intercept + `remoteYes` = voorspeld welzijn wanneer de dummy 1 is = het gemiddelde van
+  de thuiswerkers.
+
+<CodeBlock id="c-means-match" code={`coef(model_remote)
+
+d %>%
+  group_by(remote) %>%
+  summarise(mean_wellbeing = mean(wellbeing)) %>%
+  mutate(from_model = c(coef(model_remote)[[1]], sum(coef(model_remote))))`} />
+
+## Dezelfde toets onder zijn oude naam
+
+<CodeBlock id="c-ttest" code={`t.test(wellbeing ~ remote, data = d, var.equal = TRUE)
+
+model_remote %>% tidy() %>% filter(term == "remoteYes")`} />
+
+Vergelijk ze getal voor getal: dezelfde *t* in grootte, dezelfde vrijheidsgraden, dezelfde
+*p*. Twee details doen ertoe en beide bijten studenten:
+
+1. **`var.equal = TRUE` is vereist.** Zonder voert `t.test()` de Welch-toets uit, die de
+   twee varianties apart schat en niet met het model overeenkomt. De getallen komen dicht
+   bij elkaar, en dichtbij is niet hetzelfde.
+2. **Het teken draait om.** `t.test(y ~ g)` berekent het eerste niveau min het tweede; `lm`
+   codeert het tweede ten opzichte van het eerste. Dezelfde vergelijking, tegengestelde
+   aftrekking. Lees de groepsgemiddelden en je rapporteert het nooit achterstevoren.
+
+<Exercise id="m12-1-a" />
+
+<Exercise id="m12-1-b" />
+
+## Aannames, en wanneer je je zorgen moet maken
+
+Het model neemt vergelijkbare spreiding in de twee groepen aan en ruwweg normale
+residuen. Kijk naar de SD's die je bovenaan hebt geprint: als er een meer dan ongeveer
+twee keer zo groot is als de andere, en de groepen ook ongelijk in grootte zijn, is de
+gepoolde toets het verkeerde gereedschap en is de versie van Welch de eerlijke.
+Normaliteit doet er vooral toe bij kleine *n*; met 480 werknemers dekt de centrale
+limietstelling uit Module 6 matige scheefheid.
+
+BMS-vakken toetsen de aanname van gelijke spreiding ook rechtstreeks, met de **toets van
+Levene** uit het pakket car. Haar nulhypothese is dat de groepen in de populatie dezelfde
+variantie hebben.
+
+<CodeBlock id="c-levene" code={`library(car)
+
+leveneTest(wellbeing ~ remote, data = d)
+
+t.test(wellbeing ~ remote, data = d, var.equal = FALSE)`} />
+
+De toets van Levene is verre van significant, F(1, 478) = 0,05, p = ,82, dus de gepoolde
+toets hierboven is hier prima. De toets van Welch, de tweede regel, laat de aanname van
+gelijke varianties vallen en geeft t(364,31) = -2,64, p = ,009: dezelfde conclusie. Het
+teken is negatief omdat `t.test()` in de volgorde van de niveaus aftrekt, No min Yes,
+waar het model Yes min No rapporteerde. Als de toets van Levene significant is, of de
+SD's en groepsgroottes allebei duidelijk ongelijk zijn, rapporteer dan de versie van
+Welch.
+
+Voor een kleine steekproef met duidelijke scheefheid of extreme uitbijters is het
+rangalternatief de Mann-Whitney-toets, `wilcox.test(wellbeing ~ remote, data = d)`: een
+regel in de keuzehulp, en niet wat deze cursus als standaard leert.
+
+<Quiz
+  id="q-equivalence"
+  question="Waarom leert deze cursus lm() in plaats van t.test() voor een vergelijking van twee groepen?"
+  choices={[
+    { text: 'Omdat t.test() verouderd is en niet meer wordt aanbevolen', response: 'Het is geen van beide. Het is een prima functie die één specifieke vraag beantwoordt.' },
+    { text: 'Omdat hetzelfde kader dan uitbreidt naar meer groepen, meerdere voorspellers, covariaten en interacties zonder dat je elke keer een nieuwe procedure leert', correct: true, response: 'Juist. De t-toets is het einde van zijn eigen weg; lm() is het begin van Modules 11 tot 15.' },
+    { text: 'Omdat lm() minder aannames doet', response: 'Het doet dezelfde aannames als de gepoolde t-toets, omdat het hetzelfde model is. De Welch-toets die t.test() standaard uitvoert neemt eigenlijk minder aan: ze laat gelijke varianties vallen.' },
+    { text: 'Omdat lm() een kleinere p-waarde geeft', response: 'Het geeft precies dezelfde p-waarde, wat het punt van deze les is.' },
+  ]}
+/>
+
+<Interpret
+  id="i-12-1"
+  question="Je uitvoer geeft werknemers op kantoor M = 44,30 (SD = 10,14, n = 298) en thuiswerkers M = 46,91 (SD = 10,79, n = 182), met b = 2,61, SE = 0,98, t(478) = 2,68, p = ,008. Welke zin rapporteert het correct in APA 7?"
+  choices={[
+    { text: 'Werknemers die thuiswerkten rapporteerden hoger welzijn (M = 46,91, SD = 10,79) dan werknemers op kantoor (M = 44,30, SD = 10,14), b = 2,61, SE = 0,98, t(478) = 2,68, p = ,008.', correct: true, response: 'Juist. De gemiddelden en SD\'s staan voorop, de richting is expliciet, en de coëfficiënt is het verschil tussen die gemiddelden.' },
+    { text: 'Er was een significant verschil tussen thuiswerkers en werknemers op kantoor, t(478) = 2,68, p = ,008.', response: 'Geen gemiddelden, geen SD\'s, geen richting. Een lezer kan niet zien welke groep hoger was of met hoeveel.' },
+    { text: 'Thuiswerken verhoogde het welzijn met 2,61 punten, t(478) = 2,68, p = ,008.', response: 'Niemand werd toegewezen aan thuiswerken, dus "verhoogde" claimt meer dan het ontwerp ondersteunt.' },
+    { text: 'Werknemers die thuiswerkten rapporteerden hoger welzijn, t(478) = 2,68, p = ,008, een groot effect.', response: 'Een verschil van 2,61 punten tegen SD\'s rond 10,4 is ongeveer 0,25 SD: klein. p meet de effectgrootte niet.' },
+  ]}
+/>

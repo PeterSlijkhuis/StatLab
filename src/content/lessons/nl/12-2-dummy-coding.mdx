@@ -1,0 +1,110 @@
+Twee groepen hadden één dummyvariabele nodig. Vier groepen hebben er drie nodig, en
+begrijpen welke drie is het verschil tussen je eigen uitvoer lezen en eraan raden.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+levels(d$department)
+
+d %>%
+  group_by(department) %>%
+  summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())`} />
+
+R ordent factorniveaus alfabetisch tenzij je het anders zegt, dus de referentie is hier
+**Engineering**. Niets aan Engineering maakt het de natuurlijke basis; het staat gewoon
+vooraan in de sortering. Als een andere afdeling de verstandige vergelijking is voor je
+vraag, zeg dat dan met `d$department <- relevel(d$department, ref = "Sales")` en
+rapporteer welke je koos.
+
+<Predict
+  id="p-count"
+  question="Hoeveel coëfficiënten levert lm(wellbeing ~ department) op voor vier afdelingen?"
+  choices={[
+    { text: 'Vier, een voor elke afdeling (en een intercept erbovenop)', response: 'Dat zouden vijf parameters zijn voor vier groepsgemiddelden. Met een intercept moet een afdeling de referentie worden.' },
+    { text: 'Drie, plus een intercept', correct: true, response: 'Juist: k niveaus kosten k - 1 coëfficiënten. De ontbrekende is de referentie, en het intercept draagt haar.' },
+    { text: 'Een, want afdeling is één variabele', response: 'Eén variabele, maar drie dummykolommen. Een factor is geen enkele helling.' },
+    { text: 'Zes, een voor elk paar afdelingen', response: 'Paarsgewijze vergelijkingen worden achteraf uit het model berekend, in Les 12-3. Het model zelf heeft naast het intercept maar k − 1 = 3 coëfficiënten nodig.' },
+  ]}
+/>
+
+## Het model
+
+<CodeBlock id="c-fit" code={`model_dept <- lm(wellbeing ~ department, data = d)
+
+model_dept %>% tidy()`} />
+
+Lees die tabel zorgvuldig, want elke rij betekent iets anders dan een beginner verwacht:
+
+- **`(Intercept)`** is het gemiddelde van Engineering. Niet het algemeen gemiddelde, niet
+  een basis in een diepere zin: het gemiddelde van één groep.
+- **`departmentMarketing`** is het gemiddelde van Marketing **min dat van Engineering**.
+  De *t* en *p* ernaast toetsen die ene vergelijking, niet Marketing tegen iedereen.
+- Er is geen rij `departmentEngineering`. Zijn vergelijking met zichzelf zou nul zijn.
+
+<CodeBlock id="c-rebuild" code={`b <- coef(model_dept)
+
+data.frame(
+  department = levels(d$department),
+  from_model = c(b[[1]], b[[1]] + b[[2]], b[[1]] + b[[3]], b[[1]] + b[[4]]),
+  observed = as.vector(tapply(d$wellbeing, d$department, mean))
+)`} />
+
+Vier coëfficiënten, vier groepsgemiddelden, niets verloren. Een lineair model met één factor
+zijn de groepsgemiddelden in een ander coördinatensysteem.
+
+<Exercise id="m12-2-a" />
+
+## De algemene toets
+
+De drie *t*'s toetsen drie specifieke vergelijkingen met Engineering. Om te vragen of
+afdeling **ook maar iets** uitmaakt heb je één toets van alle drie de coëfficiënten tegelijk
+nodig, en dat is de *F* van het model uit Module 11, en dat is wat een eenweg-ANOVA
+rapporteert.
+
+<CodeBlock id="c-f" code={`model_dept %>% glance() %>% select(r.squared, statistic, df, df.residual, p.value)
+
+summary(aov(wellbeing ~ department, data = d))`} />
+
+Dezelfde *F*, dezelfde vrijheidsgraden, dezelfde *p*. "Eenweg-ANOVA" is de traditionele
+naam voor de *F*-toets van een lineair model met één factor, en als iemand erom vraagt,
+is dit het.
+
+Kijk terug naar de SD's die je printte: de spreiding van Engineering is meer dan twee keer
+die van Marketing, wat het waarschuwingsteken uit Les 12-1 is. De groepsgroottes liggen
+dicht bij elkaar, wat het probleem verzacht, en `oneway.test(wellbeing ~ department, data =
+d)`, de Welch-versie die de varianties niet poolt, geeft *F*(3; 258,7) = 8,60, *p* < ,001.
+De conclusie blijft staan, en het is de moeite waard het elke keer te controleren.
+
+## Wanneer het gemiddelde de verkeerde samenvatting is
+
+<Exercise id="m12-2-b" />
+
+Het model dat je zojuist aanpaste vergelijkt **gemiddelden**, omdat kleinste kwadraten dat
+doen. Wanneer de verdeling van een groep scheef is of aan beide uiteinden uit elkaar
+getrokken, gaan haar gemiddelde en haar typische lid uit elkaar, en het model rapporteert
+trouw een verschil in gemiddelden dat geen enkele werknemer zou herkennen. Rapporteer de
+mediaan naast het gemiddelde wanneer ze verschillen, en zeg op welke je conclusie rust.
+
+<Quiz
+  id="q-reference"
+  question="Je past het model opnieuw aan na relevel(d$department, ref = 'Support'). Wat verandert er?"
+  choices={[
+    { text: 'De algemene F en R-kwadraat veranderen', response: 'Geen van beide beweegt. Een factor hercoderen schrijft dezelfde voorspelde waarden in andere coördinaten.' },
+    { text: 'De coëfficiënten en hun p-waarden veranderen, omdat ze nu elke afdeling met Support vergelijken', correct: true, response: 'Juist, en de modelpasvorm, de voorspelde waarden en de residuen zijn allemaal identiek.' },
+    { text: 'Er verandert helemaal niets', response: 'De coëfficiëntentabel verandert volledig. Alleen de pasvorm is invariant.' },
+    { text: 'Het model wordt ongeldig omdat Support niet alfabetisch eerst komt', response: 'Elk niveau kan de referentie zijn. Alfabetisch is een standaard, geen regel.' },
+  ]}
+/>
+
+<Interpret
+  id="i-12-2"
+  question="Voor het model met vier afdelingen heb je F(3, 476) = 4,86, p = ,002, R-kwadraat = ,030; de Marketingcoëfficiënt is b = 2,30, SE = 1,38, t = 1,67, p = ,096. Welke lezing is correct?"
+  choices={[
+    { text: 'Welzijn verschilde tussen afdelingen, F(3, 476) = 4,86, p = ,002, R-kwadraat = ,030. Marketing verschilde niet significant van de referentieafdeling, Engineering, b = 2,30, SE = 1,38, t(476) = 1,67, p = ,096.', correct: true, response: 'Juist. De algemene toets en de enkele vergelijking worden apart gerapporteerd, en de vergelijking noemt haar referentiegroep.' },
+    { text: 'Werknemers van Marketing hebben hetzelfde welzijn als werknemers van Engineering, p = ,096.', response: 'Een niet-significante vergelijking is geen bewijs van gelijkheid. Het betrouwbaarheidsinterval beslaat hier ruwweg -0,4 tot +5,0, wat niet "hetzelfde" is.' },
+    { text: 'Afdeling verklaart 3,0% van het welzijn, en Marketing is de beste afdeling, b = 2,30.', response: 'R-kwadraat is een aandeel variantie, niet van welzijn, en één niet-significante coëfficiënt ten opzichte van één referentiegroep rangschikt de vier afdelingen niet.' },
+    { text: 'Welzijn verschilde tussen afdelingen, F(3, 476) = 4,86, p = ,002, dus elke afdeling verschilt van elke andere.', response: 'De algemene F zegt dat er ergens minstens één verschil bestaat. Welke het zijn is de vraag die Les 12-3 beantwoordt.' },
+  ]}
+/>

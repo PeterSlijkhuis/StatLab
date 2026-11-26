@@ -1,0 +1,99 @@
+Data-analyse is een reeks kleine veranderingen aan een tabel: houd deze rijen,
+laat die kolommen weg, voeg deze variabele toe, sorteer op die. dplyr geeft elk
+daarvan een werkwoord, en de pipe rijgt de werkwoorden aan elkaar in de
+volgorde waarin je ze hardop zou zeggen.
+
+<CodeBlock id="setup" code={`library(dplyr)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+dim(employees)`} />
+
+## De pipe
+
+`%>%` neemt wat links staat en geeft het als eerste argument door aan de
+functie rechts. Deze twee regels doen hetzelfde werk:
+
+<CodeBlock id="pipe" code={`head(employees, 3)
+
+employees %>% head(3)`} />
+
+Bij één functie lijkt de tweede vorm op opscheppen. Bij vier is het het verschil
+tussen code die je kunt lezen en code die je niet kunt lezen.
+
+In RStudio typt **Ctrl + Shift + M** (Cmd + Shift + M op een Mac) de pipe voor
+je. Als een pipeline over meerdere regels loopt, eindig je elke regel met `%>%`
+en spring je de volgende regel twee spaties in, zoals elk voorbeeld hier.
+
+<Predict
+  id="p-pipe"
+  question="Waarom is de pipe het leren waard, gezien beide vormen hierboven hetzelfde doen?"
+  choices={[
+    { text: 'Hij draait sneller', response: 'Niet waar. De pipe is er voor de persoon die de code leest, niet voor de machine die hem draait.' },
+    { text: 'Hij houdt stappen in de volgorde waarin ze gebeuren, in plaats van ze van binnen naar buiten te nesten', correct: true, response: 'Ja. arrange(select(filter(d, ...), ...), ...) moet vanuit het midden naar buiten gelezen worden; de gepijpte versie leest van boven naar beneden, als een recept.' },
+    { text: 'Hij voorkomt dat je dplyr moet koppelen', response: 'Het tegenovergestelde: %>% komt met dplyr mee, dus dplyr moet gekoppeld zijn voordat je het kunt gebruiken. De ingebouwde |> van R heeft geen package nodig, maar de werkwoorden eromheen wel.' },
+  ]}
+/>
+
+## filter() houdt rijen
+
+<CodeBlock id="filter" code={`employees %>% filter(department == "Engineering") %>% nrow()
+
+employees %>% filter(remote == "Yes", tenure_years > 10) %>% nrow()`} />
+
+Twee dingen om op te letten. Binnen een werkwoord schrijf je `department`, niet
+`employees$department`: het werkwoord weet al in welke tabel het zit. En `==`
+betekent "is gelijk aan", waar `=` "stel dit argument in" zou betekenen.
+
+Een komma tussen voorwaarden betekent **en**. Voor **of** gebruik je `|`:
+
+<CodeBlock id="or" code={`employees %>% filter(department == "Sales" | department == "Marketing") %>% nrow()
+
+employees %>% filter(department %in% c("Sales", "Marketing")) %>% nrow()`} />
+
+## select() houdt kolommen
+
+<CodeBlock id="select" code={`employees %>%
+  select(employee_id, department, wellbeing) %>%
+  head(4)`} />
+
+Een minteken laat weg in plaats van te houden: `select(-site)` geeft alles
+behalve `site`.
+
+## mutate() voegt een kolom toe
+
+<CodeBlock id="mutate" code={`employees %>%
+  mutate(engagement_change = engagement_t2 - engagement_t1) %>%
+  select(employee_id, engagement_t1, engagement_t2, engagement_change) %>%
+  head(4)`} />
+
+`mutate()` werkt op hele kolommen tegelijk, dus elke rij krijgt zijn eigen
+resultaat en de nieuwe kolom is even lang als de tabel. Er is nog niets
+opgeslagen: elke pipeline op deze pagina toonde een nieuwe tabel en gooide
+die weg. Opslaan vraagt om de pijl.
+
+<Exercise id="m2-2-a" />
+
+## arrange() sorteert
+
+<CodeBlock id="arrange" code={`employees %>%
+  arrange(desc(wellbeing)) %>%
+  select(employee_id, department, workload, autonomy, wellbeing) %>%
+  head(5)`} />
+
+Kijk naar de vijf gelukkigste werknemers. Autonomie is bij de meesten hoog en
+werkdruk niet. Dat is een hypothese, geen bevinding: vijf rijen van 480, gekozen
+omdat ze extreem zijn, zien er altijd overtuigend uit. Module 10 toetst het
+goed.
+
+<Exercise id="m2-2-b" />
+
+<Quiz
+  id="q-2-2"
+  question="Een klasgenoot schrijft employees %>% mutate(load_ratio = workload / autonomy) en is verbaasd dat employees nog steeds 14 kolommen heeft. Waarom?"
+  choices={[
+    { text: 'mutate() werkt alleen op numerieke kolommen', response: 'Beide kolommen zijn numeriek, en de berekening draaide. De vraag is waar het resultaat bleef.' },
+    { text: 'De pipeline gaf een nieuwe tabel terug, die werd getoond en weggegooid', correct: true, response: 'Juist. dplyr-werkwoorden passen hun invoer nooit aan. Om het resultaat te bewaren, wijs je het toe: employees <- employees %>% mutate(...).' },
+    { text: 'load_ratio is geen echte kolomnaam', response: 'Je mag een nieuwe kolom noemen wat je wilt, zolang het een geldige R-naam is.' },
+    { text: 'mutate() heeft een toewijzing met de pijl binnen de haakjes nodig', response: 'Binnen mutate() maak je de nieuwe kolom met =, niet met de pijl. De toewijzing die ontbreekt is die om de hele pipeline heen.' },
+  ]}
+/>

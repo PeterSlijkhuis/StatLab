@@ -1,0 +1,100 @@
+Twee modellen, twee vragen. Doet de verzameling voorspellers samen het beter dan niets? En
+levert elke voorspeller zijn bijdrage? De eerste is de *F*-toets van het model; de tweede
+is de coëfficiëntentabel.
+
+<CodeBlock id="c-fit" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+model3 <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+
+model3 %>% glance() %>% select(r.squared, adj.r.squared, sigma, statistic, df, df.residual, p.value)`} />
+
+- **`statistic`** is *F*, en **`df`** en **`df.residual`** zijn zijn twee
+  vrijheidsgraden: het aantal hellingscoëfficiënten (een factor met *k* niveaus telt als
+  *k* − 1), en *n* min het aantal geschatte coëfficiënten. APA schrijft ze samen:
+  *F*(3, 476).
+- De nulhypothese is dat **elke** helling tegelijk nul is. Haar verwerpen zegt dat
+  minstens een voorspeller iets doet, en niets over welke.
+- **`sigma`** is de residuele SD: de typische misser, in punten welzijn. Vergelijk haar
+  met de SD van welzijn zelf om te zien hoeveel het model opleverde.
+
+<CodeBlock id="c-sigma" code={`c(
+  sd_wellbeing = sd(d$wellbeing),
+  residual_sd = glance(model3)$sigma
+)`} />
+
+<Predict
+  id="p-f"
+  question="Stel dat de F van een model zeer significant is, maar een van de drie coëfficiënten p = ,38 heeft. Wat volgt eruit?"
+  choices={[
+    { text: 'Het model is ongeldig en de niet-significante voorspeller moet eruit', response: 'Geen van beide. De F-toets en de afzonderlijke t-toetsen beantwoorden verschillende vragen, en voorspellers weglaten op hun p-waarden is een goede manier om een niet-repliceerbaar model te krijgen.' },
+    { text: 'De voorspellers samen verklaren variantie, en die ene voorspeller voegt weinig toe zodra de andere in het model zitten', correct: true, response: 'Juist, en de tweede helft is de zorgvuldige formulering: een coëfficiënt is altijd voorwaardelijk op de rest van het model.' },
+    { text: 'Die voorspeller heeft geen verband met welzijn', response: 'Een niet-significante coëfficiënt is geen bewijs van geen verband. Hij kan op zichzelf prima met de uitkomst correleren en die variantie delen met een andere voorspeller.' },
+  ]}
+/>
+
+<Exercise id="m11-3-a" />
+
+## Twee modellen rechtstreeks vergelijken
+
+Wanneer de voorspellers van het ene model een deelverzameling van die van een ander zijn,
+toetst `anova()` of de extra voorspellers hun vrijheidsgraden waard zijn.
+
+<CodeBlock id="c-nested" code={`small <- lm(wellbeing ~ autonomy, data = d)
+large <- lm(wellbeing ~ autonomy + workload + tenure_years, data = d)
+
+anova(small, large) %>% tidy()
+
+bind_rows(
+  small %>% glance() %>% mutate(model = "autonomy"),
+  large %>% glance() %>% mutate(model = "autonomy + workload + tenure")
+) %>% select(model, r.squared, adj.r.squared, sigma)`} />
+
+De *F* in die tabel toetst de toename in *R*² tegen wat je zou verwachten van het
+toevoegen van twee willekeurige voorspellers. Dit is dezelfde machinerie die Module 13
+gebruikt om een interactie te toetsen: pas aan met, pas aan zonder, vergelijk.
+
+## Het APA-rapport
+
+Een meervoudige regressie wordt in twee stappen gerapporteerd. Eerst het model:
+
+> Een meervoudige lineaire regressie met autonomie, werkdruk en dienstjaren als
+> voorspellers verklaarde een significant deel van de variantie in welzijn, *F*(3, 476) =
+> 63,89, *p* < ,001, *R*² = ,287, gecorrigeerd *R*² = ,283.
+
+Dan elke coëfficiënt, met zijn *SE*, *t* en *p*, en een zin die zegt wat hij betekent in de
+eenheden van het onderzoek. Conventies die je de eerste keer goed moet hebben:
+
+- Laat de voorloopnul weg bij statistieken die niet boven 1 kunnen komen: *p* = ,032,
+  *R*² = ,287. Houd haar waar een waarde dat wel kan: *b* = 0,35.
+- Twee decimalen voor *b*, *SE*, *t* en *F*; drie voor *p*, tot *p* < ,001.
+- Nooit *p* = ,000.
+- Rapporteer *b* en zijn *SE* of zijn 95%-BI, niet een *p*-waarde alleen.
+- Zeg "ging samen met", niet "veroorzaakte" of "leidde tot", tenzij er iets is
+  gerandomiseerd.
+
+<CodeBlock id="c-ci" code={`model3 %>% tidy(conf.int = TRUE) %>% select(term, estimate, std.error, statistic, p.value, conf.low, conf.high)`} />
+
+<Quiz
+  id="q-apa"
+  question="Welke hiervan is correct geschreven voor een APA 7-resultatensectie?"
+  choices={[
+    { text: 'F(3, 476) = 63,89, p = ,000, R2 = 0,287', response: 'Drie fouten: p is nooit ,000, R-kwadraat laat haar voorloopnul weg, en de superscript doet ertoe.' },
+    { text: 'F(3, 476) = 63,89, p < ,001, R-kwadraat = ,287', correct: true, response: 'Juist: beide vrijheidsgraden, p op zijn ondergrens, en geen voorloopnul bij een statistiek die door 1 begrensd is.' },
+    { text: 'F(476) = 63,89, p < ,001, R-kwadraat = ,287', response: 'Een F-toets heeft twee vrijheidsgraden en beide worden gerapporteerd.' },
+    { text: 'De regressie was significant (p < ,05).', response: 'Geen statistieken, geen vrijheidsgraden, geen effectgrootte. Een lezer kan hier niets mee.' },
+  ]}
+/>
+
+<Interpret
+  id="i-11-3"
+  question="Je model geeft F(3, 476) = 63,89, p < ,001, R-kwadraat = ,287; autonomie b = 1,34, SE = 0,19, t = 7,23, p < ,001; werkdruk b = -3,63, SE = 0,30, t = -11,96, p < ,001; dienstjaren b = 0,27, SE = 0,07, t = 4,17, p < ,001. Welke verslaglegging is correct?"
+  choices={[
+    { text: 'De drie voorspellers verklaarden een significant deel van de variantie in welzijn, F(3, 476) = 63,89, p < ,001, R-kwadraat = ,287. Met de andere twee constant gehouden gingen hogere autonomie (b = 1,34, SE = 0,19, t(476) = 7,23, p < ,001) en meer dienstjaren (b = 0,27, SE = 0,07, t(476) = 4,17, p < ,001) samen met hoger welzijn, en hogere werkdruk met lager welzijn (b = -3,63, SE = 0,30, t(476) = -11,96, p < ,001).', correct: true, response: 'Juist. Elke coëfficiënt wordt met zijn richting gerapporteerd, en "met de andere twee constant gehouden" houdt elke bewering voorwaardelijk op het model.' },
+    { text: '... Dienstjaren deed het minst ertoe, omdat zijn coëfficiënt (0,27) de kleinste is.', response: 'Dienstjaren worden in jaren gemeten en de andere twee op schalen van 1-10. Coëfficiënten in verschillende eenheden kunnen niet op grootte worden gerangschikt.' },
+    { text: '... Het model verklaart 28,7% van de werknemers, F(3, 476) = 63,89, p < ,001.', response: 'R-kwadraat is een aandeel variantie, geen aandeel mensen.' },
+    { text: 'Werkdruk was de belangrijkste voorspeller van welzijn omdat ze de grootste t-waarde had, t(476) = -11,96.', response: 'Een t-waarde vergelijkt een schatting met zijn eigen precisie. Ze meet hoe duidelijk een coëfficiënt van nul verschilt, niet hoe belangrijk de voorspeller is.' },
+  ]}
+/>

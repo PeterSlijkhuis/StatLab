@@ -1,0 +1,122 @@
+Eén proportie beantwoordt "hoe vaak". De interessantere vraag is meestal "hoe vaak,
+voor wie": verliezen sommige afdelingen meer mensen dan andere? Daarvoor heb je twee
+categorische variabelen tegelijk nodig, en het gereedschap is een tabel met
+aantallen.
+
+<CodeBlock id="c-load" code={`d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+counts <- table(d$left_company, d$department)
+counts`} />
+
+Elke cel telt de mensen met die combinatie: Engineering en gebleven, Engineering en
+vertrokken, enzovoort. De eerste variabele die je aan `table()` geeft komt langs de
+zijkant, de tweede bovenaan. Dit is een **kruistabel**, in het Engels contingency
+table of crosstab.
+
+BMS-vakken zetten een kruistabel op één manier uit: de **onafhankelijke variabele
+in de kolommen** en de afhankelijke variabele in de rijen. Afdeling kan vertrek
+beïnvloeden, dus afdeling komt bovenaan en `left_company` langs de zijkant.
+
+## Totalen
+
+<CodeBlock id="c-margins" code={`addmargins(counts)`} />
+
+De kolomtotalen zijn de afdelingsgroottes en de rijtotalen zijn hoeveel er in totaal
+bleven en vertrokken. Alle marges tellen op tot 480.
+
+<Predict
+  id="p-compare"
+  question="Engineering verloor 33 mensen en Marketing 18. Heeft Engineering het grotere vertrekprobleem?"
+  choices={[
+    { text: 'Ja, 33 is bijna twee keer 18', response: 'Alleen als de twee afdelingen even groot waren. Engineering heeft 128 mensen en Marketing 100, dus de aantallen zijn nog niet vergelijkbaar.' },
+    { text: 'Nog niet bekend: de aantallen moeten eerst in percentages worden omgezet', correct: true, response: 'Juist. Aantallen vergelijken afdelingen van verschillende grootte, en percentages halen de grootte eruit.' },
+    { text: 'Nee, want het verschil is niet significant', response: 'Er is nog niets getoetst. De eerste stap is simpelweg de afdelingen op gelijke voet brengen.' },
+  ]}
+/>
+
+## Proporties, en in welke richting je deelt
+
+`prop.table()` zet aantallen om in proporties, en haar argument `margin` bepaalt wat
+tot 1 optelt. Die keuze is de hele analyse.
+
+<CodeBlock id="c-columns" code={`# margin = 2: each COLUMN adds up to 1. Of each department, what share left?
+round(prop.table(counts, margin = 2), 3)`} />
+
+<CodeBlock id="c-rows" code={`# margin = 1: each ROW adds up to 1. Of the leavers, which department were they in?
+round(prop.table(counts, margin = 1), 3)`} />
+
+De twee tabellen beantwoorden verschillende vragen. Kolommen geven het
+vertrekpercentage van elke afdeling: Support verliest ongeveer 31% van zijn mensen,
+Sales ongeveer 16%. Rijen beschrijven de vertrekkers: een derde van iedereen die
+vertrok kwam van Support. Met de onafhankelijke variabele in de kolommen is de
+regel: **percenteer binnen de kolommen, vergelijk langs de rijen**. Het verschil
+tussen de percentages van twee afdelingen, in procentpunten, is het
+**procentuele verschil** (epsilon) uit de lessen onderzoeksmethoden.
+
+<Exercise id="m9-2-a" />
+
+## Dezelfde tabellen met tabyl()
+
+BMS-vakken maken frequentietabellen en kruistabellen met `tabyl()` uit het pakket
+janitor. Het werkt in een pipe, en de `adorn_`-functies voegen totalen, percentages
+en aantallen toe aan de tabel die het teruggeeft.
+
+<CodeBlock id="c-tabyl" code={`library(dplyr)
+library(janitor)
+
+# A frequency table: counts and proportions for one variable.
+d %>% tabyl(department)
+
+# A crosstab: the dependent variable first (rows), the independent second
+# (columns), with column percentages, a total row and the counts in brackets.
+d %>%
+  tabyl(left_company, department) %>%
+  adorn_totals("row") %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns() %>%
+  adorn_title("combined")`} />
+
+De kruistabel toont dezelfde vertrekpercentages als
+`prop.table(counts, margin = 2)`, met de aantallen ernaast. Houd de stappen in deze
+volgorde: totalen vóór percentages, zodat de totaalrij zijn eigen percentage krijgt,
+dan de opmaak, dan `adorn_ns()` om de aantallen weer naast de percentages te zetten.
+`adorn_title("combined")` noemt beide variabelen in de hoek.
+
+## Een plaatje ervan
+
+Een gestapelde balk waarvan elke balk tot 100% reikt, toont de kolomproporties.
+Koppel de uitkomst aan `fill` en vraag `geom_bar()` om `position = "fill"`.
+
+<CodeBlock id="c-plot" code={`library(ggplot2)
+
+d$left <- factor(d$left_company, levels = c(0, 1), labels = c("Stayed", "Left"))
+
+ggplot(d, aes(x = department, fill = left)) +
+  geom_bar(position = "fill") +
+  labs(x = "Department", y = "Proportion of employees", fill = NULL) +
+  theme_classic()`} />
+
+Het segment "Left" is zichtbaar hoger bij Engineering en Support. Of een verschil van
+die grootte uit steekproeven alleen kan komen, is de vraag van de volgende les.
+
+<Quiz
+  id="q-margin"
+  question="Een rapport zegt: 'Van alle werknemers die vertrokken werkte 34% bij Support, dus Support heeft een vertrekpercentage van 34%.' Wat ging er mis?"
+  choices={[
+    { text: 'Niets, 34% is correct', response: '34% is een aandeel van de vertrekkers, hier het rijpercentage. Het vertrekpercentage is een aandeel van Support, het kolompercentage.' },
+    { text: 'Het deelde door de verkeerde marge: 34% is het aandeel vertrekkers dat van Support kwam, terwijl het vertrekpercentage het aandeel van Support is dat vertrok', correct: true, response: 'Precies. Dezelfde cel gedeeld door een ander totaal beantwoordt een andere vraag.' },
+    { text: 'Het had aantallen in plaats van percentages moeten gebruiken', response: 'Percentages zijn het juiste idee. Het probleem is van welk totaal ze een percentage zijn.' },
+  ]}
+/>
+
+<Interpret
+  id="i-9-2"
+  question="Je kolompercentages tonen vertrekpercentages van 25,8% bij Engineering, 18,0% bij Marketing, 15,9% bij Sales en 30,8% bij Support. Wat kun je schrijven vóór er een toets is?"
+  choices={[
+    { text: 'Vertrekpercentages liepen uiteen van 15,9% bij Sales tot 30,8% bij Support (Tabel 1). Of deze variatie groter is dan steekproeven alleen zouden opleveren, wordt hieronder getoetst.', correct: true, response: 'Juist. De zin beschrijft de percentages nauwkeurig en laat de gevolgtrekking aan de toets.' },
+    { text: 'Support-medewerkers vertrekken twee keer zo vaak als Sales-medewerkers vanwege hun werkomstandigheden.', response: 'De tabel beschrijft; ze verklaart niet. Niets hier zegt waarom.' },
+    { text: 'Afdeling heeft een significant effect op vertrek.', response: 'Er is geen toets uitgevoerd, en "effect" claimt een oorzaak die de data niet kunnen tonen.' },
+    { text: 'De meeste mensen die vertrokken kwamen van Support.', response: 'Een derde wel, en dat is niet de meeste. Bovendien is dat een aandeel van de vertrekkers, niet wat deze vertrekpercentages zeggen.' },
+  ]}
+/>

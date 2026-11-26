@@ -1,0 +1,128 @@
+Les 3-3 liet een puzzel achter: Engineering heeft de hoogste mediane
+welzijnsscore en een middelmatig gemiddelde, en alleen met de getallen was dat
+moeilijk voor te stellen. Eén figuur lost het op.
+
+<CodeBlock id="setup" code={`library(dplyr)
+library(ggplot2)
+
+employees <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)`} />
+
+## De boxplot
+
+Koppel de groeperingsvariabele aan x en het getal aan y.
+
+<CodeBlock id="box" code={`ggplot(employees, aes(x = department, y = wellbeing)) +
+  geom_boxplot()`} />
+
+Elke doos is één afdeling, en is opgebouwd uit de samenvattingen die je al
+berekende:
+
+- de dikke lijn is de **mediaan**;
+- de doos beslaat de **kwartielen**, de middelste helft van de afdeling, dus de
+  hoogte is de IQR;
+- de snorharen (whiskers) reiken tot de verste waarneming binnen 1,5 IQR van de
+  doos (ggplot2 meet vanaf de kwartielen, net als het uitgewerkte loonvoorbeeld
+  in het studieboek; de lopende tekst van het studieboek meet vanaf de mediaan,
+  wat kortere snorharen geeft en meer punten markeert: hier zou Sales zeven
+  punten onder zijn snorhaar tonen in plaats van geen);
+- alles daarbuiten wordt als punt getekend, en is het bekijken waard in plaats
+  van weggooien.
+
+Kijk naar Engineering. Zijn medianlijn is de hoogste van de vier, zijn doos is
+hoog, en hij heeft een rij lage punten onder het snorhaar. Dat ene plaatje is
+heel Les 3-3, en het kostte één regel code.
+
+<Predict
+  id="p-box"
+  question="Twee afdelingen hebben dozen die op hetzelfde niveau gecentreerd zijn, maar de ene doos is twee keer zo hoog als de andere. Wat betekent dat?"
+  choices={[
+    { text: 'De hogere doos heeft meer werknemers erin', response: 'De hoogte van de doos zegt niets over de groepsgrootte: een boxplot van vijf mensen en een van vijfhonderd zien er hetzelfde uit. Dat is zijn grootste zwakte.' },
+    { text: 'De hogere doos heeft een meer variabel welzijn: zijn middelste helft is over het dubbele bereik verspreid', correct: true, response: 'Juist. De hoogte van de doos is de interkwartielafstand, dus het gaat om spreiding, niet om aantallen mensen.' },
+    { text: 'De hogere doos heeft meer uitbijters', response: 'Uitbijters zijn de punten buiten de snorharen, en ze veranderen de hoogte van de doos zelf niet.' },
+  ]}
+/>
+
+## Snorharen met de hand
+
+De cursus berekent een boxplot met de hand volgens **de methode van Tukey**.
+Sorteer de waarden en vind de mediaan. Het eerste kwartiel Q1 is de mediaan van
+de onderste helft en Q3 die van de bovenste helft; bij een oneven aantal waarden
+telt de mediaan zelf in beide helften mee. Dan is IQR = Q3 − Q1, en elke waarde
+onder Q1 − 1,5 × IQR of boven Q3 + 1,5 × IQR is een uitbijter. De snorharen
+stoppen bij de meest extreme waarden binnen die grenzen.
+
+`fivenum()` van R geeft de vijf getallen van Tukey: minimum, Q1, mediaan, Q3,
+maximum.
+
+<CodeBlock id="tukey" code={`x <- c(2, 4, 7, 8, 10, 11, 20)
+five <- fivenum(x)
+five
+
+iqr <- five[4] - five[2]
+c(lower = five[2] - 1.5 * iqr, upper = five[4] + 1.5 * iqr)`} />
+
+Q1 is 5,5 en Q3 is 10,5, dus IQR = 5 en de bovengrens is 18: de waarde 20 is een
+uitbijter, en het bovenste snorhaar stopt bij 11.
+
+`quantile()` en `IQR()`, die ggplot2 ook gebruikt, volgen standaard een andere
+regel. In grote steekproeven is het verschil verwaarloosbaar; in kleine kan een
+kwartiel een beetje verschuiven.
+
+<CodeBlock id="quartile-rules" code={`y <- c(5, 7, 8, 12, 15, 18, 21, 22, 24, 25, 28, 30)
+fivenum(y)[c(2, 4)]
+quantile(y, c(0.25, 0.75))`} />
+
+Tukey geeft 10 en 24,5, `quantile()` 11 en 24,25. Gebruik bij een tentamen dat je
+met de hand maakt de methode van Tukey.
+
+Een boxplot verbergt de groepsgroottes, dus rapporteer ze ernaast:
+
+<CodeBlock id="counts" code={`employees %>%
+  group_by(department) %>%
+  summarise(median_wellbeing = median(wellbeing), n = n())`} />
+
+<Exercise id="m4-2-a" />
+
+## Facetten: dezelfde plot, eenmaal per groep
+
+Een boxplot perst elke groep samen tot vijf getallen. Soms wil je de hele
+verdeling per groep, en `facet_wrap()` geeft je één paneel per level van een
+variabele, met gedeelde assen zodat de panelen vergeleken kunnen worden.
+
+<CodeBlock id="facets" code={`ggplot(employees, aes(x = wellbeing)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~ department)`} />
+
+De tilde lees je als "per": één paneel **per** afdeling. Het alternatief, de
+afdeling aan `fill` koppelen en één histogram tekenen, zet vier overlappende
+verdelingen in één paneel en is veel moeilijker te lezen.
+
+<CodeBlock id="fill" code={`ggplot(employees, aes(x = wellbeing, fill = department)) +
+  geom_histogram(bins = 20)`} />
+
+## Filteren voor het plotten
+
+Facetten worden getekend voor de waarden die in de data aanwezig zijn, dus het
+beperken van de figuur is een klus voor dplyr, niet voor ggplot2.
+
+<CodeBlock id="filter-plot" code={`employees %>%
+  filter(remote == "Yes") %>%
+  ggplot(aes(x = department, y = wellbeing)) +
+  geom_boxplot()`} />
+
+Let op de wisseling van leestekens halverwege: de pipe draagt de data naar
+`ggplot()`, en vanaf daar worden lagen toegevoegd met `+`. Die door elkaar halen
+is de meest voorkomende ggplot2-foutmelding die er is.
+
+<Exercise id="m4-2-b" />
+
+<Quiz
+  id="q-4-2"
+  question="Een figuur is gefacetteerd naar site, en een van de zes sites ontbreekt er helemaal in. Wat is de meest waarschijnlijke reden?"
+  choices={[
+    { text: 'facet_wrap() toont hooguit vijf panelen', response: 'Het heeft zo\'n limiet niet; het wikkelt zoveel panelen als er waarden zijn.' },
+    { text: 'Geen enkele rij met die site overleefde het filteren dat voor de plot kwam', correct: true, response: 'Juist. Facetten worden getekend uit de data die de plot ontvangt, dus een weggefilterde waarde heeft geen paneel. Controleer de aantallen rijen voordat je de figuur de schuld geeft.' },
+    { text: 'Die site heeft te weinig werknemers om te plotten', response: 'Zelfs één werknemer zou een paneel krijgen met één staaf erin.' },
+    { text: 'site is een factor, en factoren kunnen niet gefacetteerd worden', response: 'Een factor is precies wat facet_wrap() wil. Zijn levels worden de panelen.' },
+  ]}
+/>

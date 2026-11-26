@@ -1,0 +1,128 @@
+`glm` staat voor gegeneraliseerd lineair model, en de generalisatie is één idee: zet het
+lineaire deel op een schaal waar een rechte lijn zin heeft, en transformeer dan terug.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>%
+  group_by(left_company) %>%
+  summarise(n = n(), mean_wellbeing = mean(wellbeing), mean_tenure = mean(tenure_years))`} />
+
+Beschrijvende maten voor een binaire uitkomst betekenen de twee groepen vergelijken op de
+voorspellers. Vertrekkers zouden lager welzijn en een kortere diensttijd moeten hebben dan
+blijvers; als het model later iets anders zegt, klopt een van de twee niet.
+
+## Kans, odds, log odds
+
+Drie manieren om hetzelfde te zeggen, elk een oplossing voor een probleem van de vorige.
+
+- Een **kans** *p* loopt van 0 tot 1. Een rechte lijn blijft er niet binnen.
+- De **odds** zijn *p* / (1 − *p*): hoeveel keer waarschijnlijker de gebeurtenis is dan haar
+  afwezigheid. Ze lopen van 0 tot oneindig, aan de bovenkant beter, maar nog steeds met een
+  bodem bij nul.
+- De **log odds**, log(*p* / (1 − *p*)), lopen van min oneindig tot plus oneindig. Een rechte
+  lijn kan daar veilig wonen.
+
+<CodeBlock id="c-scales" code={`probabilities <- c(0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99)
+
+data.frame(
+  probability = probabilities,
+  odds = probabilities / (1 - probabilities),
+  log_odds = log(probabilities / (1 - probabilities))
+)`} />
+
+Kijk naar de symmetrie in de laatste kolom: *p* = ,25 en *p* = ,75 geven log odds van gelijke
+grootte en tegengesteld teken, en *p* = ,5 geeft precies 0. Nul log odds betekent gelijke
+kansen, en daarom is nul de nulwaarde op deze schaal.
+
+<Predict
+  id="p-logodds"
+  question="Een model geeft een log-oddscoëfficiënt van -0,06 voor welzijn. Wat betekent het minteken?"
+  choices={[
+    { text: 'Welzijn is negatief scheef', response: 'De coëfficiënt zegt niets over de verdeling van de voorspeller.' },
+    { text: 'Hoger welzijn gaat samen met lagere odds om te vertrekken', correct: true, response: 'Juist. Op de log-oddsschaal betekent negatief omlaag, precies zoals een negatieve helling in een lineair model.' },
+    { text: 'De kans op vertrek is negatief', response: 'Kansen kunnen niet negatief zijn. De log odds wel, en dat is het punt van de schaal.' },
+    { text: 'Het model is niet geconvergeerd', response: 'Een negatieve coëfficiënt is volkomen gewoon. Convergentieproblemen kondigen zich aan als waarschuwingen.' },
+  ]}
+/>
+
+## Aanpassen
+
+<CodeBlock id="c-fit" code={`m_left <- glm(left_company ~ wellbeing + tenure_years, data = d, family = binomial)
+
+m_left %>% tidy()`} />
+
+De formule is dezelfde als altijd. `family = binomial` is het hele verschil. Het vertelt
+`glm()` dat de uitkomst een ja/nee-variabele (Bernoulli) is en dat het lineaire deel haar log
+odds voorspelt, ook wel de logit genoemd; het boek noemt dit een gegeneraliseerd lineair model
+met een logit-linkfunctie. Het weglaten ervan is de meest voorkomende fout in deze module:
+`glm()` zonder family past een gewoon lineair model aan, drukt een volkomen aannemelijke tabel
+af, en beantwoordt een andere vraag.
+
+<CodeBlock id="c-no-family" code={`no_family <- glm(left_company ~ wellbeing + tenure_years, data = d)
+
+family(no_family)$family
+family(m_left)$family
+
+c(with_binomial = coef(m_left)[["wellbeing"]], without = coef(no_family)[["wellbeing"]])`} />
+
+Twee coëfficiënten, twee schalen, geen waarschuwing. Controleer `family()` wanneer een
+logistische coëfficiënt verdacht klein lijkt.
+
+<Exercise id="m15-2-a" />
+
+## De tabel lezen
+
+`tidy()` op een `glm` geeft dezelfde vier kolommen als op een `lm`, met twee veranderingen in
+naam en betekenis:
+
+- **`estimate`** is de verandering in **log odds** per eenheid van de voorspeller.
+- **`statistic`** is een *z*-waarde, geen *t*: in grote steekproeven wordt ze vergeleken met
+  een normale verdeling in plaats van een *t*-verdeling, dus er zijn geen residuele
+  vrijheidsgraden om te rapporteren.
+
+<CodeBlock id="c-glance" code={`m_left %>% glance()`} />
+
+Er is geen *R*². `glance()` geeft in plaats daarvan de nul- en residuele deviantie en de AIC.
+Deviantie is het logistische equivalent van een residuele kwadratensom: lager is beter, en de
+daling van nul naar residueel is wat het model heeft opgeleverd.
+
+<CodeBlock id="c-lrtest" code={`m_null <- glm(left_company ~ 1, data = d, family = binomial)
+
+anova(m_null, m_left, test = "LRT") %>% tidy()`} />
+
+Die likelihood-ratiotoets vergelijkt het model met een nulmodel dat alleen een intercept heeft.
+Het is het dichtst bij de model-*F* van Module 11: ze vraagt of de voorspellers samen meer
+verklaren dan toeval. De toetsingsgrootheid is de daling in deviantie, 514,30 - 451,47 =
+62,83, op 2 vrijheidsgraden. `anova(m_left, test = "LRT")` op het model alleen beantwoordt een
+andere vraag: ze toetst elke voorspeller om beurten, in de volgorde van de formule.
+
+Les 15-3 leest ze volledig, maar de volgende stap is één functie: `exp()` van een
+log-oddscoëfficiënt is een **odds ratio**, de factor waarmee de odds worden vermenigvuldigd
+voor elke extra eenheid van de voorspeller. Onder 1 krimpen de odds; boven 1 groeien ze.
+
+<Exercise id="m15-2-b" />
+
+<Quiz
+  id="q-family"
+  question="Wat verandert family = binomial eigenlijk?"
+  choices={[
+    { text: 'Het vertelt R dat de voorspellers categorisch zijn', response: 'De family beschrijft de uitkomst, niet de voorspellers. Voorspellers mogen van alles zijn.' },
+    { text: 'Het zegt dat de uitkomst een ja/nee-gebeurtenis is en modelleert haar log odds als een lineaire functie van de voorspellers', correct: true, response: 'Juist: een verdeling voor de uitkomst en een linkfunctie voor de schaal, en dat is wat "gegeneraliseerd" betekent.' },
+    { text: 'Het maakt de p-waarden conservatiever', response: 'Het verandert het model helemaal, niet de strengheid van een toets.' },
+    { text: 'Het standaardiseert de coëfficiënten', response: 'Er wordt niets gestandaardiseerd. De coëfficiënten staan in log odds per oorspronkelijke eenheid van elke voorspeller.' },
+  ]}
+/>
+
+<Interpret
+  id="i-15-2"
+  question="Je model geeft voor welzijn b = -0,058, SE = 0,012, z = -5,02, p < ,001, en voor diensttijd b = -0,146, SE = 0,032, z = -4,54, p < ,001. Welke lezing is correct?"
+  choices={[
+    { text: 'Elk extra punt welzijn verlaagt de kans op vertrek met 0,058.', response: 'De coëfficiënt staat in log odds, niet in kans. Hoeveel de kans verschuift hangt af van waar op de curve je begint.' },
+    { text: 'Bij gelijke diensttijd ging elk extra punt welzijn samen met een afname van 0,058 in de log odds om te vertrekken, b = -0,058, SE = 0,012, z = -5,02, p < ,001.', correct: true, response: 'Juist: de schaal wordt genoemd, de correctie wordt genoemd, en de statistieken worden volledig gerapporteerd.' },
+    { text: 'Welzijn en diensttijd hadden allebei grote effecten, want beide p-waarden liggen onder ,001.', response: 'p meet verrassing onder de nulhypothese, niet grootte. Met 480 werknemers haalt een bescheiden effect makkelijk p < ,001.' },
+    { text: 'Werknemers met hoger welzijn hebben 5,8% minder kans om te vertrekken.', response: 'Dat zet een log odds om in een percentage alsof het dezelfde schaal is. Exponentieer eerst, en zelfs dan is een odds ratio geen procentuele verandering in risico.' },
+  ]}
+/>

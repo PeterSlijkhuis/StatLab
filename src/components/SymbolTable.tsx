@@ -1,3 +1,4 @@
+import { useT } from '../i18n/t';
 import './Primer.css';
 
 export type SymbolRow = {
@@ -38,14 +39,15 @@ export const SYMBOLS: SymbolRow[] = [
 
 /** Every symbol in Module 0 in one place, for students to come back to. */
 export default function SymbolTable() {
+  const t = useT();
   return (
     <table className="symbol-table">
       <thead>
         <tr>
-          <th scope="col">Symbol</th>
-          <th scope="col">Say it as</th>
-          <th scope="col">What it does</th>
-          <th scope="col">Example</th>
+          <th scope="col">{t('Symbol')}</th>
+          <th scope="col">{t('Say it as')}</th>
+          <th scope="col">{t('What it does')}</th>
+          <th scope="col">{t('Example')}</th>
         </tr>
       </thead>
       <tbody>
@@ -56,8 +58,8 @@ export default function SymbolTable() {
                 <span key={symbol}>{index > 0 && ' '}<code>{symbol}</code></span>
               ))}
             </td>
-            <td>{row.read}</td>
-            <td>{row.meaning}</td>
+            <td>{t(row.read)}</td>
+            <td>{t(row.meaning)}</td>
             <td><code>{row.example}</code></td>
           </tr>
         ))}

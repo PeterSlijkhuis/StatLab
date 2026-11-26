@@ -1,0 +1,107 @@
+Je hebt al een half dozijn functies gebruikt: `c()`, `mean()`, `sqrt()`,
+`length()`, `sum()`. Een functie neemt invoer, doet er iets mee en geeft een
+resultaat terug. De invoer heet **argumenten**, en die staan tussen de haakjes.
+
+Bijna elke moeilijkheid die een beginner met R heeft, is eigenlijk een
+moeilijkheid met argumenten: welke er zijn, in welke volgorde ze komen en wat
+er gebeurt met degene die je weglaat.
+
+<CodeBlock id="basics" code={`round(3.14159, 2)
+
+rep("Sales", 3)
+
+seq(from = 1, to = 9, by = 2)`} />
+
+## Argumenten hebben namen, en de meeste hebben standaardwaarden
+
+`args()` toont de argumenten van een functie en de waarden die ze gebruikt als
+je ze niet opgeeft.
+
+<CodeBlock id="args" code={`args(round)
+args(seq.default)
+args(mean.default)`} />
+
+`seq()` en `mean()` geven hun werk door aan een versie voor elk soort invoer,
+dus `args(seq)` toont alleen `...`. De `.default`-versie bevat de argumenten die
+je echt gebruikt.
+
+`function (x, digits = 0, ...)` vertelt twee dingen tegelijk: het tweede
+argument heet `digits`, en als je het weglaat rondt R af op een geheel getal.
+Dus de eerste aanroep rondt af op een geheel getal, en de laatste twee zijn
+gelijk. De derde is die je in een script schrijft dat je opnieuw gaat lezen:
+
+<CodeBlock id="named" code={`round(3.14159)
+round(3.14159, 2)
+round(3.14159, digits = 2)`} />
+
+Een argument benoemen maakt je ook los van zijn positie. `seq(to = 9, from = 1,
+by = 2)` werkt, en `seq(9, 1, 2)` faalt: R matcht op positie, dus 9 wordt
+`from` en 1 wordt `to`, en het stopt met "wrong sign in 'by' argument".
+
+> **In RStudio** opent `?round` de volledige helppagina in het venster Help,
+> rechtsonder: elk argument, de teruggegeven waarde en uitgewerkte voorbeelden
+> onderaan. `??round` zoekt in de help van elk geïnstalleerd package, voor
+> als je niet weet welke functie je nodig hebt. Hier geeft `args()` je de
+> argumentenlijst, en dat is wat je negen van de tien keer nodig hebt.
+
+## Ontbrekende waarden
+
+Echte data hebben gaten. Iemand sloeg een vraag over; een sensor viel uit. R
+schrijft een gat als `NA`, en dat is bewust besmettelijk.
+
+<CodeBlock id="na" code={`scores <- c(62, 58, NA, 71, 66)
+
+scores
+mean(scores)`} />
+
+<Predict
+  id="p-na"
+  question="mean(scores) gaf NA. Waarom zou R weigeren de vier getallen die het wel heeft te middelen?"
+  choices={[
+    { text: 'Omdat NA telt als nul en het gemiddelde omlaag trekt', response: 'NA is niet nul. Nul is een score die iemand gaf; NA is een score die niemand gaf, en R bewaart het verschil.' },
+    { text: 'Omdat het ware gemiddelde afhangt van de ontbrekende waarde, en R die niet gaat raden', correct: true, response: 'Precies. Het eerlijke antwoord op "wat is het gemiddelde van deze vijf" is "onbekend", en R zegt dat in plaats van stilletjes vier te middelen.' },
+    { text: 'Omdat er een typfout in de vector zit', response: 'Er is geen typfout. NA is een geldige waarde die "not available" betekent.' },
+  ]}
+/>
+
+Als je hebt besloten dat het middelen van de mensen die antwoordden is wat je
+wilt, zeg je dat:
+
+<CodeBlock id="narm" code={`mean(scores, na.rm = TRUE)
+
+sum(is.na(scores))`} />
+
+`na.rm = TRUE` is een argument dat je de rest van je werkende leven typt.
+`is.na()` vertelt je waar de gaten zijn, en `sum(is.na(x))` telt ze: weer het
+vergelijk-en-tel-op-idioom.
+
+<Exercise id="m1-2-a" />
+
+## Functies binnen functies
+
+Het resultaat van de ene functie kan het argument van de volgende zijn. R werkt
+van binnen naar buiten.
+
+<CodeBlock id="nested" code={`round(mean(scores, na.rm = TRUE), 1)
+
+length(seq(from = 0, to = 100, by = 10))`} />
+
+Lees de eerste regel van binnen naar buiten: middel de scores, met weglating van
+de ontbrekende, rond dan af op één decimaal. R toont 64,2, niet de 64,3 die je
+misschien geleerd hebt: als een getal precies halverwege zit, rondt R af naar
+het even cijfer. Het is compact, en zodra er vier of vijf functies op elkaar
+gestapeld zijn wordt het onleesbaar. De pipe die je in Module 0 tegenkwam is
+het antwoord van R op precies dat probleem.
+
+<Exercise id="m1-2-b" />
+
+<Quiz
+  id="q-1-2"
+  question="args(round) meldt function (x, digits = 0, ...). Wat zegt dat over round(2.567)?"
+  choices={[
+    { text: 'Het faalt, omdat digits ontbreekt', response: 'Een argument met een standaardwaarde is optioneel. Alleen x heeft geen standaardwaarde, dus alleen x is verplicht.' },
+    { text: 'Het rondt af op een geheel getal en geeft 3', correct: true, response: 'Juist. digits = 0 in de argumentenlijst is de waarde die R gebruikt als je er geen opgeeft.' },
+    { text: 'Het behoudt alle decimalen en geeft 2,567', response: 'De standaardwaarde is 0 cijfers, niet "laat het met rust". Afronden op nul cijfers geeft 3.' },
+    { text: 'Het rondt af op twee cijfers, omdat de invoer twee decimalen heeft', response: 'R kijkt niet naar de invoer om dat te bepalen. Het gebruikt de standaardwaarde uit de argumentenlijst.' },
+  ]}
+/>

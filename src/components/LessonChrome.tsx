@@ -46,6 +46,7 @@ function slug(text: string): string {
  * is most of what makes it feel short.
  */
 export function SectionGuide({ article, contentKey }: { article: RefObject<HTMLElement | null>; contentKey: unknown }) {
+  const t = useT();
   const [sections, setSections] = useState<Section[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
 
@@ -83,8 +84,8 @@ export function SectionGuide({ article, contentKey }: { article: RefObject<HTMLE
   const index = Math.max(0, sections.findIndex((section) => section.id === current));
 
   return (
-    <aside className="section-guide" aria-label="In this lesson">
-      <p className="section-guide-title">In this lesson <span>{index + 1} of {sections.length}</span></p>
+    <aside className="section-guide" aria-label={t('In this lesson')}>
+      <p className="section-guide-title">{t('In this lesson')} <span>{t('{n} of {total}', { n: index + 1, total: sections.length })}</span></p>
       <ol>
         {sections.map((section, i) => (
           <li key={section.id} className={i < index ? 'passed' : i === index ? 'current' : undefined}>

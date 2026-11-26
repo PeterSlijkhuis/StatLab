@@ -8,6 +8,7 @@ export type BankQuiz = { lessonId: string; id: string; question: string; choices
 
 type Content = (props: { components?: unknown }) => ReactNode;
 const loaders = import.meta.glob<{ default: Content }>('./lessons/*.mdx');
+const dutchLoaders = import.meta.glob<{ default: Content }>('./lessons/nl/*.mdx');
 
 function Marker() {
   return null;
@@ -32,11 +33,11 @@ export function quizzesIn(content: Content, lessonId: string): BankQuiz[] {
   return found;
 }
 
-export async function loadQuizzes(lessonIds: string[]): Promise<BankQuiz[]> {
+export async function loadQuizzes(lessonIds: string[], language: 'en' | 'nl' = 'en'): Promise<BankQuiz[]> {
   const lessons = ALL_LESSONS.filter((lesson) => lessonIds.includes(lesson.id));
   const lists = await Promise.all(
     lessons.map(async (lesson) => {
-      const loader = loaders[`./lessons/${lesson.file}.mdx`];
+      const loader = (language === 'nl' ? dutchLoaders[`./lessons/nl/${lesson.file}.mdx`] : undefined) ?? loaders[`./lessons/${lesson.file}.mdx`];
       return loader ? quizzesIn((await loader()).default, lesson.id) : [];
     }),
   );

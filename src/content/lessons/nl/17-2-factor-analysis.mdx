@@ -1,0 +1,140 @@
+Les 3-4 vroeg of een reeks items **één** ding meet. Vaak is een vragenlijst bedoeld om
+meerdere dingen tegelijk te meten, en is de vraag welke items bij elkaar horen.
+**Exploratieve factoranalyse** vindt de paar onderliggende factoren die verklaren hoe een reeks
+items correleert.
+
+Net als in Les 3-4 heeft de cursusdata schaalscores in plaats van items, dus deze les bouwt zes
+eigen items, beantwoord van 1 tot 7 door 300 mensen.
+
+<CodeBlock id="c-items" code={`set.seed(172)
+n <- 300
+pressure <- rnorm(n)
+support <- 0.3 * pressure + rnorm(n, 0, 0.95)
+item <- function(f, load) round(pmin(7, pmax(1, 4 + 1.3 * (load * f + rnorm(n, 0, sqrt(1 - load^2))))))
+items <- data.frame(
+  deadlines = item(pressure, 0.80), overtime = item(pressure, 0.75), too_much = item(pressure, 0.70),
+  help = item(support, 0.80), listened = item(support, 0.75), feedback = item(support, 0.65)
+)
+
+round(cor(items), 2)`} />
+
+De eerste drie items gaan over deadlines, overwerk en te veel te doen hebben. De laatste drie
+vragen of een manager helpt, luistert en feedback geeft. In de correlatietabel vormen ze twee
+blokken: matige correlaties (ongeveer ,4 tot ,5) binnen elke reeks van drie, zwakke ertussen.
+
+## Hoeveel factoren?
+
+De **eigenwaarden** van de correlatiematrix zeggen hoeveel van de variantie van de items elke
+opeenvolgende dimensie vangt. Een **screeplot** tekent ze, en de gebruikelijke lezing is de
+factoren houden vóór de lijn afvlakt.
+
+<CodeBlock id="c-scree" code={`eigenvalues <- eigen(cor(items))$values
+round(eigenvalues, 2)
+
+plot(eigenvalues, type = "b", xlab = "Factor", ylab = "Eigenvalue")
+abline(h = 1, lty = 2)`} />
+
+Twee eigenwaarden springen eruit, 2,34 en 1,65, en daarna is de lijn vlak. De oudere regel om
+elke eigenwaarde boven 1 te houden, is het hier eens, al houdt ze vaak te veel. In RStudio
+draait `psych::fa.parallel(items)` een parallelanalyse, die de eigenwaarden vergelijkt met die
+van willekeurige data en de betere gids is.
+
+Voor de analyse controleren BMS-cursussen ook of de items geschikt zijn. In RStudio, met het
+pakket psych geladen:
+
+```r
+KMO(items)                                       # Kaiser-Meyer-Olkin measure
+cortest.bartlett(cor(items), n = nrow(items))    # Bartlett's test of sphericity
+```
+
+De KMO-maat zegt hoeveel van de correlatie de items delen, van 0 tot 1; onder ongeveer ,5
+hebben de items te weinig gemeen voor een factoranalyse. De toets van Bartlett vraagt of de
+correlatiematrix verschilt van een matrix zonder enige correlatie, en zou significant moeten
+zijn.
+
+<Predict
+  id="p-rotation"
+  question="Werkdruk en steun van de manager hangen waarschijnlijk samen: mensen onder meer druk krijgen misschien ook meer hulp van hun manager. Mogen de twee factoren met elkaar correleren?"
+  choices={[
+    { text: 'Nee, factoren moeten altijd onafhankelijk zijn', response: 'Dat is een keuze, orthogonale rotatie (varimax) genoemd. Voor psychologische constructen is ze zelden realistisch.' },
+    { text: 'Ja, dus gebruik een oblieke rotatie zoals promax', correct: true, response: 'Juist. Als de factoren ongecorreleerd blijken, geeft promax toch bijna hetzelfde antwoord als varimax.' },
+    { text: 'Het maakt geen verschil voor het resultaat', response: 'Het verandert de ladingen zodra de factoren echt gecorreleerd zijn, en hier zijn ze dat.' },
+  ]}
+/>
+
+## Het model aanpassen
+
+`factanal()` zit in basis-R. Geef haar de items en het aantal factoren.
+
+<CodeBlock id="c-efa" code={`efa <- factanal(items, factors = 2, rotation = "promax")
+
+print(efa$loadings, cutoff = 0.3)
+efa$PVAL`} />
+
+- Elke **lading** is hoe sterk een item een factor weerspiegelt. `cutoff = 0.3` verbergt de
+  kleine, en wat overblijft is de structuur: de drukitems op de ene factor, de steunitems op de
+  andere.
+- De factoren komen zonder naam. Ze een naam geven is jouw taak, op basis van de items die op
+  elk laden.
+- De chikwadraattoets vraagt of twee factoren de correlaties reproduceren. Een grote p-waarde,
+  hier ,70 (χ²(4) = 2,22), betekent dat de toets geen bewijs vond dat twee factoren tekortschieten,
+  dus twee factoren zijn een adequate beschrijving. Bij een grote steekproef verwerpt deze toets
+  zelfs wanneer de factoren de data goed beschrijven, dus BMS-cursussen vragen je de beslissing
+  te baseren op de screeplot en de ladingen, niet op deze p-waarde.
+
+<Exercise id="m17-2-a" />
+
+## Factoren of componenten?
+
+Principale componentenanalyse, `prcomp()`, ziet er gelijk uit en wordt vaak met factoranalyse
+verward.
+
+<CodeBlock id="c-pca" code={`pca <- prcomp(items, scale. = TRUE)
+round(summary(pca)$importance["Proportion of Variance", ], 2)`} />
+
+Het verschil is wat ze modelleren. Componenten vatten **alle** variantie van de items samen,
+meetfout inbegrepen, in een paar scores. Factoren modelleren alleen de variantie die items
+**delen**, als effect van eigenschappen die je niet rechtstreeks kunt waarnemen. Gebruik
+componenten om veel variabelen tot een paar scores terug te brengen. Gebruik factoren om uit te
+zoeken welke eigenschappen een vragenlijst meet.
+
+## Van verkennen naar bevestigen
+
+Een exploratieve analyse vindt een structuur in één dataset. Om die structuur te toetsen,
+specificeer je haar vooraf en pas je een **confirmatieve factoranalyse** aan op nieuwe data. In
+RStudio, met het pakket `lavaan` (hier staat `new_items` voor een verse steekproef met dezelfde
+zes items):
+
+```r
+library(lavaan)
+model <- "
+  pressure =~ deadlines + overtime + too_much
+  support  =~ help + listened + feedback
+"
+fit <- cfa(model, data = new_items)
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+Gangbare richtlijnen voor goede fit zijn een CFI van ,95 of hoger, een RMSEA van ,06 of lager
+en een SRMR van ,08 of lager.
+
+<Quiz
+  id="q-loadings"
+  question="Een item laadt 0,45 op beide factoren. Wat suggereert dat?"
+  choices={[
+    { text: 'Het is het beste item, omdat het beide meet', response: 'Een item dat bij twee factoren hoort, helpt ze niet uit elkaar te houden. Het is meestal een probleem.' },
+    { text: 'Het is dubbelzinnig: het weerspiegelt beide eigenschappen en moet misschien worden herschreven of verwijderd', correct: true, response: 'Juist. Een item met kruisladingen vertroebelt beide schalen. Lees de formulering voordat je beslist.' },
+    { text: 'De analyse heeft meer factoren nodig', response: 'Mogelijk, maar één item met kruisladingen is daarvoor geen reden genoeg. Kijk eerst naar het item.' },
+  ]}
+/>
+
+<Interpret
+  id="i-17-2"
+  question="Een EFA met twee factoren en promaxrotatie op zes items geeft ladingen van ,67 tot ,76 voor drie drukitems op factor 1 en ,63 tot ,77 voor drie steunitems op factor 2, geen kruisladingen boven ,30, en een chikwadraattoets van fit p = ,70. Welk verslag is correct?"
+  choices={[
+    { text: 'Een exploratieve factoranalyse (maximum likelihood, promaxrotatie) ondersteunde twee factoren. De drie drukitems laadden op de eerste (,67 tot ,76) en de drie steunitems op de tweede (,63 tot ,77), zonder kruisladingen boven ,30; de toets van fit liet geen bewijs van misfit zien voor twee factoren, chikwadraat(4) = 2,22, p = ,70.', correct: true, response: 'Juist: de methode, de rotatie, de ladingen, het criterium voor kruisladingen en de fit.' },
+    { text: 'De vragenlijst is valide omdat de factoranalyse werkte.', response: 'Een schone structuur is één stuk bewijs voor validiteit, geen bewijs, en "werkte" vertelt een lezer niets.' },
+    { text: 'Factoranalyse bewees dat druk en steun twee afzonderlijke eigenschappen zijn.', response: 'Een exploratieve analyse suggereert een structuur in één steekproef. Bevestigen vraagt een CFA op nieuwe data.' },
+    { text: 'De factoren verklaarden 50% van de variantie, dus de vragenlijst is betrouwbaar.', response: 'Verklaarde variantie is geen betrouwbaarheid, en het verslag laat weg welke items waar laden.' },
+  ]}
+/>

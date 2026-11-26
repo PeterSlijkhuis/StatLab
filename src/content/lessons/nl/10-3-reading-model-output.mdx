@@ -1,0 +1,129 @@
+Je kunt een model aanpassen. Lees er nu een, en rapporteer het, wat een aparte
+vaardigheid is en degene die examinatoren daadwerkelijk beoordelen.
+
+Elke inferentiële analyse in deze cursus volgt dezelfde zes stappen:
+
+> **Vraag → Aannames → Modelkeuze → Berekening → Interpretatie → Rapport**
+
+<CodeBlock id="c-fit" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(mean_wellbeing = mean(wellbeing), sd_wellbeing = sd(wellbeing), n = n())
+
+model <- lm(wellbeing ~ autonomy, data = d)
+model %>% tidy()`} />
+
+## De coëfficiëntentabel, kolom voor kolom
+
+- **`estimate`**: *b*, de helling. In de eenheden van de data: punten welzijn per punt
+  autonomie.
+- **`std.error`**: hoeveel *b* zou rondspringen over herhaalde steekproeven. Dit is de
+  standaardfout uit Module 7, toegepast op een helling.
+- **`statistic`**: *t* = `estimate` / `std.error`. Hoeveel standaardfouten de helling
+  van nul af zit.
+- **`p.value`**: de kans op een *t* die minstens zo extreem is als de ware helling
+  precies nul was. De definitie uit Module 8, ongewijzigd.
+
+Merk op waaraan de *p*-waarde hangt: **een helling van nul**, dus een vlakke lijn,
+dus autonomie vertelt je niets over welzijn. Dat is de nulhypothese die wordt
+getoetst, en de enige die wordt getoetst.
+
+## Het hele model
+
+<CodeBlock id="c-glance" code={`model %>% glance()`} />
+
+`glance()` geeft één rij over het model in plaats van één rij per coëfficiënt. Drie
+kolommen doen er nu toe:
+
+- **`r.squared`**: het aandeel van de variantie in welzijn dat het model verklaart.
+  Met één voorspeller is het precies de gekwadrateerde correlatie.
+- **`statistic` en `p.value`**: de *F*-toets van het model, met `df` en
+  `df.residual` vrijheidsgraden. Met één voorspeller is *F* = *t*², en haar *p* is de
+  *p* van de helling. Twee getallen, één feit.
+- **`sigma`**: de residuele standaarddeviatie: de typische grootte van een misser.
+
+<CodeBlock id="c-equivalence" code={`t_value <- model %>% tidy() %>% filter(term == "autonomy") %>% pull(statistic)
+f_value <- model %>% glance() %>% pull(statistic)
+
+c(t_squared = t_value^2, F = f_value)
+
+r_value <- cor(d$autonomy, d$wellbeing)
+c(r_squared = r_value^2, R_squared = model %>% glance() %>% pull(r.squared))`} />
+
+Beide paren horen op elke decimaal die R toont overeen te komen. Dit is de eerste van
+meerdere plekken in Deel 3 waar twee tradities hetzelfde antwoord geven met andere
+rekenkunde: correlatie en regressie hier, de *t*-toets en `lm` in Module 12, de
+gepaarde *t*-toets en `lmer` in Module 14.
+
+<Predict
+  id="p-r2"
+  question="R-kwadraat is voor dit model ongeveer ,05. Wat blijft daarvan over?"
+  choices={[
+    { text: 'De 95% werknemers die het model fout heeft', response: 'R-kwadraat is geen telling van mensen. Het is een aandeel variantie, en het model zit bij bijna iedereen een beetje fout.' },
+    { text: 'De 95% van de variantie in welzijn die autonomie niet verklaart: andere oorzaken, en meetruis', correct: true, response: 'Precies. In Module 11 geef je een deel van die 95% aan werkdruk en dienstjaren.' },
+    { text: 'De kans dat het model fout is', response: 'R-kwadraat is een beschrijving van de pasvorm in deze steekproef, geen kans over het model.' },
+  ]}
+/>
+
+<Exercise id="m10-3-a" />
+
+## Aannames, op het oog gecontroleerd
+
+Stap 2 van de keten. Voor een lineair model, vier aannames:
+
+1. **Onafhankelijkheid**: elk geval is een aparte persoon, eenmaal gemeten (Module 14
+   behandelt data waar dit niet opgaat).
+2. **Lineariteit**: het patroon is ruwweg recht. Controleer het op het
+   spreidingsdiagram.
+3. **Gelijke spreiding**: de residuen waaieren niet uit. Controleer het op een plot van
+   residuen tegen voorspelde waarden.
+4. **Ruwweg normale residuen**: telt vooral bij kleine *n*; bij 480 doet de centrale
+   limietstelling uit Module 6 het werk.
+
+Kijk ook naar een handvol ver weg gelegen punten die de helling dragen.
+
+<CodeBlock id="c-assumptions" code={`model %>%
+  augment() %>%
+  ggplot2::ggplot(ggplot2::aes(x = .fitted, y = .resid)) +
+  ggplot2::geom_point(alpha = 0.4) +
+  ggplot2::geom_hline(yintercept = 0) +
+  ggplot2::labs(x = "Fitted wellbeing", y = "Residual") +
+  ggplot2::theme_classic()`} />
+
+Een vormloze band van ongeveer dezelfde hoogte over de hele plot is wat je wilt. Een
+trechter betekent dat de spreiding met de voorspelling verandert; een bocht betekent
+dat een rechte lijn de verkeerde vorm was.
+
+## De andere richting
+
+<Exercise id="m10-3-b" />
+
+## Rapporteren
+
+Een APA 7-rapport van een enkelvoudige regressie bevat het model, zijn pasvorm en de
+coëfficiënt: *F*(1, 478), *R*², dan *b* met zijn *SE*, *t* en *p*. Nooit alleen een
+*p*-waarde, en nooit een kaal "significant".
+
+<Quiz
+  id="q-p-meaning"
+  question="De autonomiehelling heeft p < ,001. Welke bewering is een correcte lezing van die p-waarde?"
+  choices={[
+    { text: 'Er is minder dan 0,1% kans dat autonomie niet samenhangt met welzijn.', response: 'Dat is een kans over de hypothese. Een p-waarde is een kans over data, berekend onder de aanname dat de nulhypothese waar is.' },
+    { text: 'Als de ware helling nul was, zou een helling die minstens zo ver van nul ligt in minder dan 1 op 1000 steekproeven voorkomen.', correct: true, response: 'Juist: een uitspraak over data onder een aangenomen nulhypothese, wat een p-waarde altijd is.' },
+    { text: 'Het resultaat repliceert in meer dan 99,9% van de gevallen.', response: 'De replicatiekans hangt af van de ware effectgrootte en de power van het nieuwe onderzoek, niet van deze p-waarde.' },
+    { text: 'Het effect van autonomie is groot.', response: 'p beantwoordt "hoe verrassend onder de nulhypothese", niet "hoe groot". Met n = 480 kan een kleine helling p < ,001 halen.' },
+  ]}
+/>
+
+<Interpret
+  id="i-10-3"
+  question="Je model geeft F(1, 478) = 24,37, R-kwadraat = ,049, en voor autonomie b = 1,05, SE = 0,21, t(478) = 4,94, p < ,001. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Autonomie voorspelde welzijn significant (p < ,001), en verklaarde 4,9% van de werknemers.', response: 'Twee problemen: een p-waarde op zichzelf is geen rapport, en R-kwadraat is een aandeel variantie, geen aandeel werknemers.' },
+    { text: 'Een enkelvoudige lineaire regressie liet zien dat autonomie welzijn significant voorspelde, F(1, 478) = 24,37, p < ,001, R-kwadraat = ,049. Elk extra punt autonomie ging samen met een toename van 1,05 punt in welzijn, b = 1,05, SE = 0,21, t(478) = 4,94, p < ,001.', correct: true, response: 'Juist. De modeltoets, de pasvorm en de coëfficiënt staan er allemaal in, en "ging samen met" houdt de bewering op het niveau dat het ontwerp ondersteunt.' },
+    { text: 'Autonomie veroorzaakte een toename van 1,05 punt in welzijn, b = 1,05, SE = 0,21, t(478) = 4,94, p < ,001.', response: 'De statistieken kloppen en het werkwoord niet. Er is niets gemanipuleerd of gerandomiseerd, dus het ontwerp kan "veroorzaakte" niet dragen.' },
+    { text: 'Er was een sterk verband tussen autonomie en welzijn, R-kwadraat = ,049, p < ,001.', response: 'De coëfficiënt ontbreekt, en met R-kwadraat = ,049 is het verband zwak. Een lezer kan de helling of haar precisie niet uit deze zin halen.' },
+  ]}
+/>

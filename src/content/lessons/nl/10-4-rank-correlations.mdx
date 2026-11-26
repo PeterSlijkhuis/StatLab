@@ -1,0 +1,116 @@
+Pearsons *r* meet hoe goed een **rechte lijn** twee variabelen beschrijft. Wanneer het
+patroon gekromd is maar nog steeds gestaag stijgt of daalt, of wanneer een paar
+extreme punten de lijn meetrekken, is een rangcorrelatie de veiligere beschrijving.
+Ze stelt een eenvoudiger vraag: als de ene variabele omhoog gaat, gaat de andere dan
+ook doorgaans omhoog?
+
+<CodeBlock id="c-load" code={`library(dplyr)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d %>% summarise(
+  median_workload = median(workload),
+  median_wellbeing = median(wellbeing),
+  n = n()
+)
+
+c(
+  pearson = cor(d$workload, d$wellbeing),
+  spearman = cor(d$workload, d$wellbeing, method = "spearman"),
+  kendall = cor(d$workload, d$wellbeing, method = "kendall")
+)`} />
+
+Drie getallen, drie definities, één verhaal: drukkere werknemers rapporteren lager
+welzijn. De groottes verschillen omdat de drie coëfficiënten verschillende dingen
+meten, dus vergelijk nooit een Spearman-waarde uit het ene onderzoek met een
+Kendall-waarde uit een ander.
+
+## Spearman is Pearson op rangen
+
+Vervang elke score door zijn rang (1 voor de laagste, 480 voor de hoogste, gelijke
+scores delen de gemiddelde rang) en bereken een gewone Pearson-correlatie. Dat is alles
+wat Spearmans *ρ* (rho) is.
+
+<CodeBlock id="c-ranks" code={`c(
+  spearman = cor(d$workload, d$wellbeing, method = "spearman"),
+  pearson_on_ranks = cor(rank(d$workload), rank(d$wellbeing))
+)`} />
+
+Omdat alleen de volgorde wordt bewaard, doen de exacte afstanden tussen scores er niet
+meer toe. Een score van 9,9 en een score van 99 zijn allebei gewoon "de hoogste".
+
+## Kendall telt paren
+
+Kendalls *τ* (tau) neemt elk paar werknemers en vraagt of ze op beide variabelen in
+dezelfde volgorde staan (een **concordant** paar) of in tegengestelde volgorde (een
+**discordant** paar). *τ* is het overschot van concordante over discordante paren, als
+aandeel van alle paren (de versie van R, tau-b, past die noemer bij gelijke scores
+iets aan). Een *τ* van −,28 betekent dat voor een willekeurig gekozen paar degene met
+meer werkdruk vaker lager welzijn heeft dan niet, met ruwweg 28 procentpunten. Kendalls
+*τ* is meestal kleiner dan Spearmans *ρ* voor dezelfde data.
+
+## Wat één extreem punt doet
+
+<CodeBlock id="c-outlier" code={`set.seed(104)
+x <- round(runif(12, 1, 10))
+y <- round(x + rnorm(12, 0, 1.5), 1)
+
+x2 <- c(x, 10)
+y2 <- c(y, -20)
+
+round(c(
+  pearson = cor(x2, y2),
+  spearman = cor(x2, y2, method = "spearman"),
+  kendall = cor(x2, y2, method = "kendall")
+), 3)`} />
+
+Twaalf punten op een duidelijk stijgend patroon, plus één ver onder de rest. Pearsons
+*r* zakt naar ongeveer nul en wordt zelfs negatief. De rangcorrelaties zien de stijging
+nog steeds, omdat op de rangschaal het vreemde punt gewoon de laagste y is, één stap
+onder de volgende, hoe ver weg ook. Ze dalen wel (Spearman van ,78 naar ,42), omdat die
+laagste y bij een van de hoogste x-waarden hoort.
+
+<Predict
+  id="p-rank-outlier"
+  question="Waarom schaadt één extreem punt Pearsons r zoveel meer dan Spearmans rho?"
+  choices={[
+    { text: 'Spearman negeert uitbijters', response: 'Het negeert ze niet: het punt krijgt nog steeds een rang. Het kan alleen niet verder weg zijn dan de laatste plaats.' },
+    { text: 'Pearson werkt met de afstanden zelf, dus één ver weg gelegen punt draagt een enorme gekwadrateerde afwijking; rangen begrenzen hoe ver een punt kan zijn', correct: true, response: 'Precies. Op de rangschaal is het extreme punt gewoon het laagste, één stap onder het volgende.' },
+    { text: 'Spearman heeft een grotere steekproef nodig', response: 'De steekproefgrootte is voor beide gelijk. Het verschil is wat elke coëfficiënt met de scores doet.' },
+  ]}
+/>
+
+<Exercise id="m10-4-a" />
+
+## Toetsen en rapporteren
+
+`cor.test()` neemt hetzelfde argument `method`. Met 480 werknemers en enkele gelijke
+scores kan geen exacte *p*-waarde worden berekend, dus vraag om de benadering voor
+grote steekproeven met `exact = FALSE`, waar R toch op zou terugvallen.
+
+<CodeBlock id="c-test" code={`cor.test(d$workload, d$wellbeing, method = "spearman", exact = FALSE)`} />
+
+Rapporteer *r*<sub>s</sub> (Spearman) of *τ* (Kendall), de steekproefgrootte en de
+*p*-waarde. Een rangcorrelatie heeft geen helling en geen *R*², dus er is niets om mee
+te voorspellen: ze beschrijft een volgorde, en alleen dat.
+
+<Quiz
+  id="q-when-rank"
+  question="Welke situatie vraagt het duidelijkst om een rangcorrelatie in plaats van Pearsons r?"
+  choices={[
+    { text: 'Twee normaal verdeelde variabelen met een rechtlijnig patroon', response: 'Dat is precies waar Pearsons r de beste beschrijving is. Rangen zouden informatie weggooien.' },
+    { text: 'Een patroon dat gestaag stijgt maar buigt, of een paar extreme scores, of een variabele die alleen als volgorde is gemeten (zoals een rangschikking van kandidaten)', correct: true, response: 'Juist. Rangen nemen alleen aan dat hoger meer betekent, wat alles is wat deze situaties kunnen beloven.' },
+    { text: 'Elke steekproef kleiner dan 30', response: 'Steekproefgrootte alleen beslist het niet. Een kleine steekproef met een zuiver recht patroon is nog steeds Pearson-gebied.' },
+  ]}
+/>
+
+<Interpret
+  id="i-10-4"
+  question={'cor.test(..., method = "spearman") geeft rho = -0,404, p < 2.2e-16, voor werkdruk en welzijn bij 480 werknemers. Welke verslaglegging is correct APA 7?'}
+  choices={[
+    { text: 'Werkdruk en welzijn waren negatief gerelateerd, rs = -,40, p < ,001, n = 480: werknemers met meer werkdruk rapporteerden doorgaans lager welzijn.', correct: true, response: 'Juist. De coëfficiënt wordt genoemd, haar teken in woorden gelezen, en de bewering blijft bij "doorgaans", wat een volgorde kan dragen.' },
+    { text: 'Elk extra punt werkdruk verlaagde welzijn met 0,40 punt, rs = -,40, p < ,001.', response: 'Een correlatie is geen helling, en een rangcorrelatie al helemaal niet: ze heeft geen eenheden, dus ze kan niet zeggen "met hoeveel punten".' },
+    { text: 'Werkdruk verklaarde 40% van de variantie in welzijn, rs = -,40, p < ,001.', response: 'Een aandeel variantie zou een gekwadrateerde correlatie uit een lineair model zijn. rho beschrijft een volgorde en heeft geen verklaarde-variantielezing.' },
+    { text: 'Er was een significante correlatie, p < 2.2e-16.', response: 'De coëfficiënt en haar richting ontbreken, en APA rapporteert p < ,001 in plaats van de afdrukgrens van R.' },
+  ]}
+/>

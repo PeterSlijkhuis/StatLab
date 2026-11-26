@@ -1,0 +1,117 @@
+Alles wat je tot nu toe gebruikte is **basis-R**: de functies die bij de taal
+horen. Bijna alles wat je verder in deze cursus gebruikt komt uit een
+**package**: een bundel functies, documentatie en soms data die iemand anders
+schreef en publiceerde.
+
+Er zijn twee aparte stappen, en die verwarren is de meest voorkomende
+frustratie van de eerste week.
+
+- `install.packages("dplyr")` downloadt het package op de machine. Eenmalig.
+- `library(dplyr)` koppelt het aan de huidige sessie, zodat de functies bij naam
+  beschikbaar worden. Elke sessie.
+
+Installeren is als een boek kopen; koppelen is als het van de plank pakken en
+openen. StatLab heeft de packages die deze cursus gebruikt al geïnstalleerd,
+dus je typt alleen de tweede regel.
+
+<CodeBlock id="attach" code={`library(dplyr)`} />
+
+Als er een melding verschijnt over objecten die worden gemaskeerd (masked), is
+dat geen fout. R toont die alleen de eerste keer dat dplyr in een sessie wordt
+gekoppeld, dus je ziet hem hier misschien niet. Het is R die je vertelt dat
+dplyr functies heeft met dezelfde namen als sommige in de packages stats en
+base, die R bij het opstarten koppelt: `filter` en `lag` uit stats, en de
+verzamelingsfuncties `intersect`, `setdiff`, `setequal` en `union` uit base.
+Vanaf nu betekent `filter()` de versie van dplyr, en dat is degene die je
+wilt.
+
+## Iets om het op te gebruiken
+
+Laten we met de hand een klein data frame maken. Een **data frame** is een
+tabel: kolommen van gelijke lengte, elk met een naam, elk met één soort ding.
+
+<CodeBlock id="team" code={`team <- data.frame(
+  name = c("Ada", "Bram", "Chen", "Dani", "Eva", "Finn"),
+  hours = c(32, 41, 38, 29, 35, 44),
+  stringsAsFactors = TRUE
+)
+
+team`} />
+
+<Predict
+  id="p-library"
+  question="Je sluit R, opent het morgen opnieuw en typt team %>% filter(hours > 35). Wat gebeurt er?"
+  choices={[
+    { text: 'Het werkt, want dplyr is gisteren geïnstalleerd', response: 'Installeren is blijvend, maar koppelen niet. Een nieuwe sessie begint alleen met basis-R.' },
+    { text: 'R kan de pipe niet vinden, en filter() is niet die van dplyr, totdat je dplyr opnieuw koppelt', correct: true, response: 'Juist. library(dplyr) hoort bovenaan elk script, daarom begint elk script dat je ooit leest met een blok library()-aanroepen.' },
+    { text: 'Je moet eerst dplyr opnieuw installeren', response: 'Het package staat nog op de machine. Het is alleen nog niet aan deze sessie gekoppeld.' },
+  ]}
+/>
+
+## De pipe
+
+dplyr brengt de pipe uit Module 0 mee: `%>%`, de **pipe**. Die neemt wat links
+staat en geeft het als eerste argument door aan de functie rechts.
+
+<CodeBlock id="pipe" code={`team %>% filter(hours > 35)
+
+# The same thing, written inside out:
+filter(team, hours > 35)`} />
+
+Beide geven dezelfde tabel. De pipe-versie leest van links naar rechts, in de
+volgorde waarin het werk gebeurt: neem het team, en houd dan de drukke mensen.
+Dat voordeel groeit met elke extra stap. Module 2 is erop gebouwd.
+
+Let op wat `filter()` *niet* nodig had: je schreef `hours`, niet `team$hours`.
+Een dplyr-werkwoord weet al in welke tabel het werkt.
+
+<Exercise id="m1-3-a" />
+
+## Een opmerking over de tidyverse
+
+`dplyr` hoort bij een familie packages met een gedeeld ontwerp: `ggplot2` voor
+figuren, `tidyr` voor hervormen, `broom` voor het lezen van modeluitvoer. Samen
+heten ze de **tidyverse**, en er is een metapackage dat de kern van de familie
+in één regel koppelt (broom zit niet in de kern, dus dat heeft nog een eigen
+`library()` nodig):
+
+    library(tidyverse)
+
+Die regel zie je in bijna elke handleiding en in de meeste R-scripts van de
+afgelopen tien jaar, en in RStudio is het wat je moet schrijven. StatLab
+gebruikt het niet, om één praktische reden: het metapackage trekt tientallen
+packages binnen die deze cursus nooit aanraakt, en alles hier wordt in je
+browser gedownload. Dus elke les koppelt precies wat hij nodig heeft, bij naam.
+De functies zijn in beide gevallen identiek.
+
+## De packages die BMS-vakken gebruiken
+
+BMS baseert zijn R-onderwijs op de tidyverse, plus een korte lijst gespecialiseerde
+packages. De meeste ontmoet je in deze cursus.
+
+| Package | Waarvoor | In deze cursus |
+|---|---|---|
+| tidyverse | ggplot2, dplyr, tidyr, readr en de rest van de kern | vanaf Module 2 |
+| readxl, haven | Excel- en SPSS-bestanden lezen (met de tidyverse geïnstalleerd, apart gekoppeld) | Les 2-4 |
+| broom | modeluitvoer als nette tabel met `tidy()` | vanaf Module 10 |
+| janitor | frequentietabellen en kruistabellen met `tabyl()` | Les 9-2 |
+| car | Levene's toets en de variance inflation factor | Les 11-4 en 12-1 |
+| lmtest | de Breusch-Pagan-toets voor gelijke varianties | Les 11-4 |
+| lme4, lmerTest | lineaire gemengde modellen, met benaderde p-waarden | Module 14 |
+| psych | betrouwbaarheid en factoranalyse | Les 3-4 en 17-2 |
+
+Je vak vertelt je welke je aan het begin moet installeren en koppelen. Net als
+broom worden readxl en haven samen met de tidyverse geïnstalleerd maar niet
+gekoppeld door `library(tidyverse)`, dus elk heeft een eigen `library()`-regel
+nodig.
+
+<Quiz
+  id="q-1-3"
+  question="Een klasgenoot stuurt je een script dat begint met library(ggplot2) en op hun machine faalt met 'there is no package called ggplot2'. Wat moeten ze doen?"
+  choices={[
+    { text: 'library(ggplot2) twee keer uitvoeren', response: 'Een package koppelen dat niet geïnstalleerd is faalt, hoe vaak je het ook probeert.' },
+    { text: 'Het package eenmalig installeren met install.packages("ggplot2"), en het dan koppelen', correct: true, response: 'Juist. De fout gaat over het package dat niet op de machine staat; library() kan alleen koppelen wat er al is.' },
+    { text: 'De library()-regel weghalen, omdat de functies in R zitten', response: 'ggplot2 is geen onderdeel van basis-R. Zonder het te koppelen bestaat ggplot() niet.' },
+    { text: 'In plaats daarvan install.packages("ggplot2") bovenaan het script zetten', response: 'Het werkt, maar downloadt het package opnieuw elke keer dat het script draait, en faalt zonder internetverbinding. Installeer in de console, koppel in het script.' },
+  ]}
+/>

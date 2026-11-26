@@ -12,6 +12,7 @@ import {
 } from '../../r/uploads';
 import { HOME } from '../../r/session';
 import { listFiles, type FileEntry } from '../../r/workspace';
+import { useT } from '../../i18n/t';
 
 type Props = {
   webR: WebR | null;
@@ -35,6 +36,7 @@ export function formatBytes(bytes: number): string {
  * and where Import writes the line of code that reads a file in.
  */
 export default function FilesPane({ webR, version, onImport }: Props) {
+  const t = useT();
   const [path, setPath] = useState<string[]>([]);
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [uploads, setUploads] = useState(listUploads);
@@ -66,7 +68,7 @@ export default function FilesPane({ webR, version, onImport }: Props) {
     try {
       await uploadFile(webR, file);
     } catch (err) {
-      setError(err instanceof UploadError ? err.message : `Could not upload "${file.name}". Try again.`);
+      setError(err instanceof UploadError ? t(err.message) : t('Could not upload "{name}". Try again.', { name: file.name }));
     } finally {
       setBusy(false);
       if (input.current) input.current.value = '';
@@ -78,7 +80,7 @@ export default function FilesPane({ webR, version, onImport }: Props) {
     try {
       await removeUpload(webR, name);
     } catch {
-      setError(`Could not remove "${name}". Try again.`);
+      setError(t('Could not remove "{name}". Try again.', { name }));
     }
   }
 
@@ -94,7 +96,7 @@ export default function FilesPane({ webR, version, onImport }: Props) {
       link.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError(`Could not download "${name}". Try again.`);
+      setError(t('Could not download "{name}". Try again.', { name }));
     }
   }
 
@@ -107,18 +109,18 @@ export default function FilesPane({ webR, version, onImport }: Props) {
           ref={input}
           type="file"
           accept={UPLOAD_ACCEPT}
-          aria-label="Choose a data file"
+          aria-label={t('Choose a data file')}
           hidden
           onChange={(event) => void pick(event.target.files)}
         />
         <button type="button" onClick={() => input.current?.click()} disabled={!webR || busy}>
-          {busy ? 'Uploading…' : 'Upload'}
+          {busy ? t('Uploading…') : t('Upload')}
         </button>
-        <span className="ide-toolbar-note">CSV, TSV, TXT or Excel, up to 25 MB. Kept in this browser, never sent anywhere. Download what R writes before you reload.</span>
+        <span className="ide-toolbar-note">{t('CSV, TSV, TXT or Excel, up to 25 MB. Kept in this browser, never sent anywhere. Download what R writes before you reload.')}</span>
       </div>
-      <nav className="ide-breadcrumbs" aria-label="Folder">
+      <nav className="ide-breadcrumbs" aria-label={t('Folder')}>
         <button type="button" className="ide-link" onClick={() => setPath([])} aria-current={path.length ? undefined : 'location'}>
-          Home
+          {t('Home')}
         </button>
         {path.map((part, index) => (
           <span key={index}>
@@ -137,14 +139,14 @@ export default function FilesPane({ webR, version, onImport }: Props) {
       {error && <p className="ide-error" role="alert">{error}</p>}
       <div className="ide-scroll">
         {entries.length === 0 ? (
-          <p className="ide-empty">This folder is empty.</p>
+          <p className="ide-empty">{t('This folder is empty.')}</p>
         ) : (
-          <table className="ide-files" aria-label={`Files in ${path.length ? path.join('/') : 'Home'}`}>
+          <table className="ide-files" aria-label={t('Files in {folder}', { folder: path.length ? path.join('/') : t('Home') })}>
             <thead>
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Size</th>
-                <th scope="col"><span className="visually-hidden">Actions</span></th>
+                <th scope="col">{t('Name')}</th>
+                <th scope="col">{t('Size')}</th>
+                <th scope="col"><span className="visually-hidden">{t('Actions')}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -170,18 +172,18 @@ export default function FilesPane({ webR, version, onImport }: Props) {
                     <td className="ide-file-size">{entry.folder ? '' : formatBytes(entry.bytes)}</td>
                     <td className="ide-file-actions">
                       {code && (
-                        <button type="button" onClick={() => onImport(code)} title={code} aria-label={`Import ${entry.name}`}>
-                          Import
+                        <button type="button" onClick={() => onImport(code)} title={code} aria-label={t('Import {name}', { name: entry.name })}>
+                          {t('Import')}
                         </button>
                       )}
                       {!entry.folder && (
-                        <button type="button" onClick={() => void download(entry.name)} aria-label={`Download ${entry.name}`} title="Save this file to your computer">
-                          Download
+                        <button type="button" onClick={() => void download(entry.name)} aria-label={t('Download {name}', { name: entry.name })} title={t('Save this file to your computer')}>
+                          {t('Download')}
                         </button>
                       )}
                       {upload && (
-                        <button type="button" onClick={() => void remove(upload.name)} aria-label={`Remove ${upload.name}`}>
-                          Remove
+                        <button type="button" onClick={() => void remove(upload.name)} aria-label={t('Remove {name}', { name: upload.name })}>
+                          {t('Remove')}
                         </button>
                       )}
                     </td>

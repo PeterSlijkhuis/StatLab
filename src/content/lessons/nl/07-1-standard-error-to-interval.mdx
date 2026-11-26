@@ -1,0 +1,109 @@
+Module 6 eindigde met een formule: de standaardfout van het gemiddelde is
+**σ/√n**. Ze vals speelde ook stilletjes. We hadden alle 5000 studenten, dus σ lag
+voor het oprapen. Geen enkel echt onderzoek heeft dat. Je hebt één steekproef, je
+hebt geen idee wat σ is, en toch moet je zeggen hoe precies je schatting is.
+
+Deze les gaat over wat je in plaats daarvan doet, en wat het kost.
+
+<CodeBlock id="study" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+
+set.seed(2607)
+study <- population[sample(nrow(population), 50), ]
+
+study %>% summarise(mean_exam = mean(exam_score), sd_exam = sd(exam_score), n = n())`} />
+
+Doe vanaf nu alsof het object `population` niet bestaat. Je hebt `study`: vijftig
+studenten, een gemiddelde en een standaarddeviatie. Alles moet daaruit worden
+opgebouwd.
+
+## s in plaats van σ
+
+De vervanging ligt voor de hand. Je kunt σ niet hebben, dus gebruik je `s`, de
+standaarddeviatie van je eigen vijftig studenten, en de standaardfout wordt
+**s/√n**.
+
+<CodeBlock id="se" code={`sample_mean <- mean(study$exam_score)
+se_mean <- sd(study$exam_score) / sqrt(nrow(study))
+
+sample_mean
+se_mean`} />
+
+Twee getallen met verschillende taken, en ze door elkaar halen is de meest
+voorkomende fout in deze module:
+
+- **`sd(study$exam_score)`** zegt hoeveel *studenten* van elkaar verschillen. Het
+  is een feit over mensen, en er meer verzamelen laat het niet krimpen.
+- **`se_mean`** zegt hoeveel het *steekproefgemiddelde* van onderzoek tot
+  onderzoek zou verschillen. Het is een feit over de procedure, en het krimpt
+  naarmate √n groeit.
+
+<Exercise id="m7-1-a" />
+
+<Predict
+  id="p-price"
+  question="Je schatte de SD uit 50 studenten in plaats van haar te kennen. Wat zou dat je moeten kosten?"
+  choices={[
+    { text: 'Niets, want 50 is een redelijk grote steekproef', response: 'Het kost bij elke n iets. De kosten zijn klein bij 50 en groot bij 5, maar nooit nul.' },
+    { text: 'Een iets breder interval, om rekening te houden met het feit dat s zelf onzeker is', correct: true, response: 'Precies. De t-verdeling heeft zwaardere staarten dan de normale, wat de vermenigvuldiger boven 1,96 uitduwt.' },
+    { text: 'Een smaller interval, omdat de steekproef-SD kleiner is dan de populatie-SD', response: 'Gemiddeld is ze maar een haarbreed kleiner, veel te weinig om uit te maken, en onzekerheid koopt je nooit precisie.' },
+  ]}
+/>
+
+## Waarom t, en niet 1,96
+
+Module 5 vond 1,96: het punt met 2,5 procent van een normale curve erachter. Dat
+getal klopt wanneer je σ *kent*. Als je haar hebt geschat, is de juiste curve de
+**t**-verdeling van Student met `n − 1` vrijheidsgraden, die klokvormig en
+symmetrisch is zoals de normale maar zwaardere staarten heeft, en waarvan het
+97,5e percentiel groter is.
+
+<CodeBlock id="tvsz" code={`qnorm(0.975)            # if sigma were known
+qt(0.975, df = 49)      # 50 students, sigma estimated
+qt(0.975, df = 9)       # 10 students
+qt(0.975, df = 4)       # 5 students`} />
+
+Bij 50 studenten is de straf 2,01 tegenover 1,96, ongeveer 2,5 procent breder. Bij
+vijf studenten is het 2,78 en is het interval ongeveer 42 procent breder. Hoe
+kleiner je steekproef, hoe minder je weet over hoe variabel je data zijn, en hoe
+meer je voor die onwetendheid betaalt.
+
+## Het interval
+
+De schatting, plus en min een veelvoud van haar standaardfout.
+
+<CodeBlock id="ci" code={`ci_95 <- sample_mean + c(-1, 1) * qt(0.975, df = nrow(study) - 1) * se_mean
+ci_95
+
+# t.test() computes the same interval, which is worth knowing
+# because that is where you will usually read it off.
+t.test(study$exam_score)$conf.int`} />
+
+> **Verander de steekproefgrootte.** Ga terug naar het blok `study`, verander `50`
+> in `200` en voer alles opnieuw uit. Het interval hoort ongeveer half zo breed te
+> worden, omdat de standaardfout met een factor √4 = 2 daalde.
+
+<Exercise id="m7-1-b" />
+
+<Quiz
+  id="q-se-sd"
+  question="Je rapport moet 'de variabiliteit van tentamenscores in je steekproef' geven. Welk getal geef je?"
+  choices={[
+    { text: 'De standaardfout, want dat is de nauwkeurigere grootheid', response: 'Ze is kleiner, wat niet hetzelfde is als geschikter. De standaardfout beschrijft het gemiddelde, niet de studenten.' },
+    { text: 'De standaarddeviatie, want de vraag gaat over hoeveel studenten van elkaar verschillen', correct: true, response: 'Juist. SD beschrijft de data; SE beschrijft de schatting. De vraag ging over de data.' },
+    { text: 'Allebei, want ze verschillen alleen door een constante', response: 'Ze verschillen met √n, wat geen constante is over onderzoeken heen, en ze beantwoorden verschillende vragen.' },
+    { text: 'Het betrouwbaarheidsinterval, want dat bevat beide', response: 'Een BI is een uitspraak over het populatiegemiddelde. Het zegt niets direct over hoe uitgespreid de studenten zijn.' },
+  ]}
+/>
+
+<Interpret
+  id="i-7-1"
+  question="Je onderzoek onder 50 studenten gaf M = 73,6, SD = 11,7 en een 95%-betrouwbaarheidsinterval van [70,3; 77,0]. Welke zin rapporteert het correct?"
+  choices={[
+    { text: 'De gemiddelde tentamenscore was 73,6 (SD = 11,7, n = 50), 95%-BI [70,3; 77,0]. Het interval is voortgebracht door een procedure die het populatiegemiddelde in 95% van de onderzoeken vangt.', correct: true, response: 'Juist. De zin rapporteert de schatting, haar spreiding, haar steekproefgrootte en het interval, en plaatst de 95% in de procedure in plaats van in dit ene interval.' },
+    { text: 'Er is 95% kans dat het populatiegemiddelde tussen 70,3 en 77,0 ligt.', response: 'Het populatiegemiddelde is een vast getal: het zit wel of niet in dit interval. De 95% beschrijft hoe vaak de methode werkt, niet dit interval. De volgende les gaat helemaal over deze zin.' },
+    { text: '95% van de studenten scoorde tussen 70,3 en 77,0.', response: 'Daarvoor heb je de SD nodig, niet de SE. Met SD = 11,7 beslaat de middelste 95% van de studenten ruwweg 51 tot 97, veel breder.' },
+    { text: 'Het steekproefgemiddelde van 73,6 is nauwkeurig tot op 3,3 punten.', response: '"Nauwkeurig tot op" claimt een garantie die het interval niet geeft. Eén onderzoek op de twintig levert een interval op dat het populatiegemiddelde helemaal mist.' },
+  ]}
+/>

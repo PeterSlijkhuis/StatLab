@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 import { addBonusPoint } from '../state/progress';
+import { useT } from '../i18n/t';
 import { BOOK_BASE } from '../content/reading';
 import './Credits.css';
 
@@ -75,51 +76,50 @@ type Props = {
 };
 
 export default function Credits({ variant = 'full' }: Props) {
+  const t = useT();
   return (
     <footer className={`credits credits-${variant}`}>
       <p className="credits-authors">
-        Made by dr. P.J.H. <Name>Slijkhuis</Name> and dr. V.d.C. <Name>Resendez Gomez</Name>, based on materials provided by{' '}
+        {t('Made by')} dr. P.J.H. <Name>Slijkhuis</Name> {t('and')} dr. V.d.C. <Name>Resendez Gomez</Name>, {t('based on materials provided by')}{' '}
         {SOURCE_MATERIALS_BY}.
       </p>
       {variant === 'full' && (
         <p className="credits-book">
-          Theory, terminology and topic order follow{' '}
+          {t('Theory, terminology and topic order follow')}{' '}
           <a href={REFERENCE_BOOK.href} target="_blank" rel="noopener noreferrer">
             <cite>{REFERENCE_BOOK.title}</cite>
           </a>{' '}
-          by {REFERENCE_BOOK.author} (University of Twente; the online book is the 2024 edition), licensed under a{' '}
+          {t('by')} {REFERENCE_BOOK.author} ({t('University of Twente; the online book is the 2024 edition')}), {t('licensed under a')}{' '}
           <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
-            Creative Commons BY-NC-SA licence
+            {t('Creative Commons BY-NC-SA licence')}
           </a>
-          . Read it along with the course in the{' '}
-          <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer">online book</a>.
-          StatLab's lessons are written independently.
+          . {t('Read it along with the course in the')}{' '}
+          <a href={REFERENCE_BOOK.onlineHref} target="_blank" rel="noopener noreferrer">{t('online book')}</a>.{' '}
+          {t('StatLab\'s lessons are written independently.')}
         </p>
       )}
       {variant === 'full' && (
         <p className="credits-book">
-          The R lessons follow the R taught in the BMS Research Methods and Statistics courses: the reference guide{' '}
+          {t('The R lessons follow the R taught in the BMS Research Methods and Statistics courses: the reference guide')}{' '}
           <cite>{R_MATERIALS.guide.title}</cite> ({R_MATERIALS.guide.author}) and the{' '}
           <a href={R_MATERIALS.course.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.course.title}</a>{' '}
-          course. For help with your own research, ask the{' '}
+          {t('course. For help with your own research, ask the')}{' '}
           <a href={R_MATERIALS.shop.href} target="_blank" rel="noopener noreferrer">{R_MATERIALS.shop.title}</a>.
         </p>
       )}
       {variant === 'full' && (
         <p className="credits-book">
-          The research methods lessons follow <cite>{RM_MATERIALS.course.title}</cite> ({RM_MATERIALS.course.where})
-          and H. van der Kolk's readers{' '}
-          <cite>{RM_MATERIALS.shortGuide.title}</cite> and <cite>{RM_MATERIALS.decisionMaking.title}</cite>.
+          {t('The research methods lessons follow')} <cite>{RM_MATERIALS.course.title}</cite> ({t(RM_MATERIALS.course.where)}) {t('and H. van der Kolk\'s readers')}{' '}
+          <cite>{RM_MATERIALS.shortGuide.title}</cite> {t('and')} <cite>{RM_MATERIALS.decisionMaking.title}</cite>.
         </p>
       )}
       {variant === 'full' && (
         <p className="credits-book">
-          StatLab is licensed under{' '}
+          {t('StatLab is licensed under')}{' '}
           <a href={REFERENCE_BOOK.licenceHref} target="_blank" rel="noopener noreferrer">
             CC BY-NC-SA 4.0
           </a>
-          . The University of Twente and BMS Lab logos are theirs and are not covered by that licence.
-          RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with or endorsed by Posit.
+          . {t('The University of Twente and BMS Lab logos are theirs and are not covered by that licence.')} {t('RStudio is a trademark of Posit Software, PBC. StatLab is not affiliated with or endorsed by Posit.')}
         </p>
       )}
       <ul className="credits-partners">

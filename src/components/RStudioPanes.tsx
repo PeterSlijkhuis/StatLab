@@ -1,3 +1,4 @@
+import { useT } from '../i18n/t';
 import './Primer.css';
 
 /** RStudio's four panes in their default layout, drawn rather than screenshotted. */
@@ -9,6 +10,7 @@ export const PANES = [
 ] as const;
 
 export default function RStudioPanes() {
+  const t = useT();
   return (
     <figure className="rstudio">
       <div className="rstudio-bar" aria-hidden="true">
@@ -18,14 +20,14 @@ export default function RStudioPanes() {
       <div className="rstudio-grid">
         {PANES.map((pane) => (
           <div key={pane.name} className="rstudio-pane">
-            <small>{pane.where}</small>
-            <strong>{pane.name}</strong>
-            <p>{pane.job}</p>
+            <small>{t(pane.where)}</small>
+            <strong>{t(pane.name)}</strong>
+            <p>{t(pane.job)}</p>
           </div>
         ))}
       </div>
       <figcaption>
-        RStudio's default layout. The name at the top right is the open project; it reads "Project: (None)" when no project is open.
+        {t('RStudio\'s default layout. The name at the top right is the open project; it reads "Project: (None)" when no project is open.')}
       </figcaption>
     </figure>
   );

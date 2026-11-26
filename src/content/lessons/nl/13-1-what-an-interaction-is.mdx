@@ -1,0 +1,107 @@
+Elk model tot nu toe nam aan dat een effect een effect is: werkdruk kost evenveel
+welzijnspunten wie je ook bent, training helpt iedereen gelijk. Die aanname is vaak fout, en
+deze module gaat over wat je dan doet. Wanneer het effect van de ene variabele afhangt van
+een andere, wordt gezegd dat de tweede variabele de eerste **modereert**, en een
+interactieterm is hoe een lineair model **moderatie** toetst.
+
+Het onderzoek op de werkvloer voerde twee interventies uit. De helft van de werknemers kreeg
+een trainingsprogramma; onafhankelijk daarvan kreeg de helft een mentor. De uitkomst is de
+**verandering** in betrokkenheid tussen de twee metingen.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+d2 <- d %>% mutate(change = engagement_t2 - engagement_t1)
+
+d2 %>%
+  group_by(training, mentoring) %>%
+  summarise(mean_change = mean(change), sd_change = sd(change), n = n(), .groups = "drop")`} />
+
+Vier cellen, vier gemiddelden. Lees ze voordat je iets anders leest, want alles in deze
+module zijn die vier getallen in verschillende opstellingen.
+
+<Predict
+  id="p-additive"
+  question="Stel dat training alleen ongeveer 1,3 punt betrokkenheid toevoegt en mentoring alleen ongeveer 0,9. Als de twee effecten gewoon stapelden, wat zouden werknemers met beide dan winnen ten opzichte van die met geen van beide?"
+  choices={[
+    { text: 'Ongeveer 2,2 punten: de twee opgeteld', correct: true, response: 'Dat is de additieve voorspelling. Vergelijk haar met de cel met beide interventies hierboven: de werkelijke winst is groter, en het overschot is de interactie.' },
+    { text: 'Ongeveer 1,3 punt: de grootste wint', response: 'Effecten strijden niet om de uitkomst. Onder een plusteken-model tellen ze op.' },
+    { text: 'Ongeveer 1,2 punt: ze vermenigvuldigen', response: 'Effecten op een ruwe score tellen op. Vermenigvuldigen komt bij oddsratio\'s in Module 15.' },
+    { text: 'Niets voorspelbaars', response: 'Een additief model doet een volkomen definitieve voorspelling, en dat maakt het toetsbaar.' },
+  ]}
+/>
+
+## Additief, en niet
+
+Pas eerst het additieve model aan, dat met een plusteken. Het wordt gedwongen te zeggen dat
+het trainingseffect hetzelfde is of je nu een mentor had of niet.
+
+<CodeBlock id="c-additive" code={`model_add <- lm(change ~ training + mentoring, data = d2)
+
+model_add %>% tidy()`} />
+
+Maak het nu vrij. Een `*` past beide hoofdeffecten **en** de term aan die ze laat verschillen.
+
+<CodeBlock id="c-interaction" code={`model_int <- lm(change ~ training * mentoring, data = d2)
+
+model_int %>% tidy()`} />
+
+Nu vier coëfficiënten, en in deze codering heeft elk een precieze betekenis:
+
+- **`(Intercept)`**: gemiddelde verandering zonder een van beide interventies.
+- **`trainingYes`**: het trainingseffect **onder werknemers zonder mentoring**.
+- **`mentoringYes`**: het mentoringeffect **onder werknemers zonder training**.
+- **`trainingYes:mentoringYes`**: hoeveel meer training waard is wanneer mentoring ook
+  aanwezig is. Evenzo, hoeveel meer mentoring waard is met training.
+
+De middelste twee punten zijn degene die mensen verrassen. Met een interactie in het model en
+treatmentcodering is `trainingYes` **niet** het totale trainingseffect. Het is een enkelvoudig
+effect op één niveau van de andere factor.
+
+## `*` en `:`
+
+<CodeBlock id="c-star-colon" code={`names(coef(lm(change ~ training + mentoring, data = d2)))
+names(coef(lm(change ~ training : mentoring, data = d2)))
+names(coef(lm(change ~ training * mentoring, data = d2)))`} />
+
+`a * b` breidt uit tot `a + b + a:b`. Een dubbele punt alleen geeft de interactieterm zonder
+hoofdeffecten, wat een model oplevert waarvan bijna niemand de coëfficiënten kan
+interpreteren. Gebruik de ster.
+
+<Exercise id="m13-1-a" />
+
+## Is de interactie het houden waard?
+
+De twee modellen zijn genest: het additieve is het interactiemodel met die term op nul, dus de
+vergelijking uit Module 11 geldt.
+
+<CodeBlock id="c-anova" code={`anova(model_add, model_int) %>% tidy()
+
+bind_rows(
+  model_add %>% glance() %>% mutate(model = "additive"),
+  model_int %>% glance() %>% mutate(model = "with interaction")
+) %>% select(model, r.squared, adj.r.squared, sigma)`} />
+
+<Quiz
+  id="q-star"
+  question="Wat is het verschil tussen change ~ training + mentoring en change ~ training * mentoring?"
+  choices={[
+    { text: 'De ster vermenigvuldigt de twee variabelen tot één enkele voorspeller', response: 'Ze voegt een productterm toe aan een model dat beide hoofdeffecten nog bevat. Ze vervangt ze niet.' },
+    { text: 'De ster voegt een term toe die het effect van elke factor laat verschillen over de niveaus van de andere; het plusteken dwingt ze gelijk te zijn', correct: true, response: 'Juist, en daarom kan een additief model slecht passen ook als beide hoofdeffecten echt zijn.' },
+    { text: 'Ze passen hetzelfde model aan, anders geschreven', response: 'Het additieve model heeft drie coëfficiënten, het interactiemodel vier. Vergelijk names(coef(...)) voor elk.' },
+    { text: 'De ster is alleen geldig voor factoren met twee niveaus', response: 'Ze werkt voor factoren van elke grootte en ook voor continue voorspellers, hoewel het aantal coëfficiënten snel groeit.' },
+  ]}
+/>
+
+<Interpret
+  id="i-13-1"
+  question="Je interactiemodel geeft trainingYes b = 1,31, SE = 0,42, t(476) = 3,11, p = ,002 en trainingYes:mentoringYes b = 2,05, SE = 0,59, t(476) = 3,50, p < ,001. Welke lezing is juist?"
+  choices={[
+    { text: 'Training verhoogde betrokkenheid in totaal met 1,31 punt, en mentoring voegde daar 2,05 aan toe.', response: 'Geen van beide helften klopt. 1,31 geldt alleen voor werknemers zonder mentor, en 2,05 is niet het mentoringeffect: het is de extra waarde van training wanneer mentoring aanwezig is.' },
+    { text: 'Onder werknemers zonder mentoring ging training samen met een 1,31 punt grotere winst in betrokkenheid, b = 1,31, SE = 0,42, t(476) = 3,11, p = ,002; het voordeel van training was nog eens 2,05 punten groter onder werknemers met een mentor, b = 2,05, SE = 0,59, t(476) = 3,50, p < ,001.', correct: true, response: 'Juist. Elke coëfficiënt wordt gerapporteerd op het niveau van de andere factor waar hij werkelijk geldt.' },
+    { text: 'Training en mentoring hadden beide significante hoofdeffecten.', response: 'Met treatmentcodering en een interactie in het model is geen van die coëfficiënten een hoofdeffect. Het zijn enkelvoudige effecten op het referentieniveau van de andere factor.' },
+    { text: 'De interactie was significant, dus de hoofdeffecten kunnen helemaal niet worden geïnterpreteerd.', response: 'Te sterk. Ze kunnen worden geïnterpreteerd, als enkelvoudige effecten op één niveau van de andere factor, wat ze precies zijn.' },
+  ]}
+/>

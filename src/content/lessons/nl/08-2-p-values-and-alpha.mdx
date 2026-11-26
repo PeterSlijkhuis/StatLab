@@ -1,0 +1,149 @@
+De nulverdeling is gebouwd; het waargenomen verschil is een stippellijn in haar
+staart. Dat plaatje omzetten in een getal kost één regel code, en het getal
+interpreteren kost de rest van de les.
+
+<CodeBlock id="rebuild" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+population$sleep_group <- ifelse(population$sleep_hours >= 7, "7 or more", "under 7")
+
+set.seed(8241)
+study <- population[sample(nrow(population), 60), ]
+observed <- mean(study$exam_score[study$sleep_group == "7 or more"]) -
+  mean(study$exam_score[study$sleep_group == "under 7"])
+
+set.seed(81)
+null_diffs <- replicate(2000, {
+  shuffled <- sample(study$exam_score)
+  mean(shuffled[study$sleep_group == "7 or more"]) -
+    mean(shuffled[study$sleep_group == "under 7"])
+})
+
+observed`} />
+
+<Predict
+  id="p-tail"
+  question="Je gaat de schuddingen tellen die minstens zo extreem waren als het waargenomen verschil. Welke schuddingen tellen mee?"
+  choices={[
+    { text: 'Alleen die met een groter verschil dan het waargenomen, in dezelfde richting', response: 'Dat is een eenzijdige telling, en ze halveert het antwoord grofweg. Je gebruikt haar alleen als je je vóór het verzamelen van de data aan een richting hebt gebonden.' },
+    { text: 'Die minstens even ver van nul liggen als het waargenomen verschil, in beide richtingen', correct: true, response: 'Ja. Tenzij je de richting vooraf voorspelde, is een verschil van dezelfde grootte de andere kant op even verrassend, dus beide staarten tellen.' },
+    { text: 'Allemaal, want elke schudding is een mogelijk resultaat', response: 'Dan zou het antwoord altijd 1 zijn. Het punt is de extreme te tellen.' },
+  ]}
+/>
+
+<CodeBlock id="pval" code={`p_perm <- mean(abs(null_diffs) >= abs(observed))
+p_perm
+
+# The same thing, counted rather than averaged.
+sum(abs(null_diffs) >= abs(observed))`} />
+
+Dat is een **p-waarde**: het aandeel resultaten dat minstens zo extreem is als het
+jouwe, *berekend in een wereld waarin de nulhypothese waar is*.
+
+## Wat een p-waarde niet is
+
+Drie zinnen die alle drie fout zijn, alle drie veel voorkomen, en die je alle drie
+moet kunnen weerleggen:
+
+1. **"p is de kans dat de nulhypothese waar is."** Nee. De p-waarde wordt berekend
+   *onder de aanname* dat de nulhypothese waar is; die aanname is een invoer, dus
+   het antwoord kan geen oordeel erover zijn. De kans op een hypothese uit data
+   halen vraagt om een prior, wat een ander kader is.
+2. **"p is de kans dat het resultaat aan toeval te wijten was."** Dezelfde fout in
+   andere kleren. Toeval wordt aangenomen, niet gemeten.
+3. **"Een grote p bewijst dat er geen effect is."** Een grote p betekent dat de data
+   verenigbaar zijn met de nulhypothese. Ze zijn meestal ook verenigbaar met van
+   alles daarnaast, waaronder een echt effect dat het onderzoek te klein was om te
+   zien. Dat is het onderwerp van de volgende les.
+
+Wat een p-waarde *wel* zegt is smal en nuttig: **als er niets aan de hand was,
+zouden data die minstens zo extreem zijn zo vaak voorkomen.**
+
+<Simulation name="pvalue" />
+
+<Exercise id="m8-2-a" />
+
+## α, en waar het vandaan komt
+
+Niemand rapporteert een p-waarde en stopt. Ze vergelijken haar met een drempel,
+**α**, vastgelegd voordat de data zijn gezien, en noemen het resultaat
+"significant" als de p-waarde eronder valt.
+
+α is een keuze, geen ontdekking. `α = .05` instellen zegt: *Als er geen effect is,
+ben ik bereid er toch een te claimen, een keer op de twintig.* Kies `.01` en je
+maakt die fout minder vaak, ten koste van vaker echte effecten missen. De volgende
+les prijst die afweging.
+
+Twee dingen volgen daaruit die studenten geregeld fout hebben:
+
+- α wordt **vooraf** gekozen. Het verplaatsen na het zien van de p-waarde maakt van
+  een beslisregel een rationalisering.
+- `.05` heeft geen enkele wiskundige status. Het is een conventie die bleef hangen.
+  Een resultaat met `p = .049` en een met `p = .051` zijn hetzelfde resultaat.
+
+## De snelle weg
+
+Tweeduizend keer schudden is de eerlijke constructie, en zo moet het idee worden
+geleerd. In de praktijk brengt een formule je er in één regel, omdat de centrale
+limietstelling ons al vertelde hoe de nulverdeling eruitziet.
+
+<CodeBlock id="ttest" code={`t.test(exam_score ~ sleep_group, data = study, var.equal = TRUE)`} />
+
+Lees de uitvoer naast wat je bouwde. De `t`-statistiek is het waargenomen verschil
+gedeeld door zijn standaardfout, de standaardfout uit Module 7, toegepast op een
+verschil. De vrijheidsgraden zijn `n − 2`. De p-waarde hoort heel dicht bij
+`p_perm` te liggen, omdat beide dezelfde staartoppervlakte meten, de een door haar
+te simuleren en de ander door haar op te zoeken.
+
+"Opzoeken" betekende vroeger een tabel achter in een studieboek. In R geven de
+`p`-functies de oppervlakte voorbij een statistiek en de `q`-functies de kritieke
+waarde voor een oppervlakte. Je hebt ze nodig wanneer je een *t* of een χ² met de
+hand hebt berekend en er zonder tabel de p-waarde van wilt.
+
+<CodeBlock id="p-and-q" code={`# Two-sided p-value for t = 2.68 with 478 degrees of freedom:
+# the area in one tail, doubled.
+pt(2.68, df = 478, lower.tail = FALSE) * 2
+
+# The critical t for alpha = .05, two-sided: 2.5% in each tail.
+qt(0.025, df = 478, lower.tail = FALSE)
+
+# The same pair for a chi-square statistic with 1 degree of freedom.
+pchisq(3.84, df = 1, lower.tail = FALSE)
+qchisq(0.05, df = 1, lower.tail = FALSE)`} />
+
+`lower.tail = FALSE` vraagt om de oppervlakte boven de waarde, de staart waarin een
+toetsstatistiek valt. Een *t*-toets is tweezijdig, dus haar p-waarde is twee keer
+één staart; een chi-kwadraattoets heeft alleen een bovenstaart, dus er wordt niets
+verdubbeld.
+
+<Exercise id="m8-2-b" />
+
+## Rapporteren
+
+APA 7 wil de toets, haar vrijheidsgraden, de statistiek, de p-waarde, een interval
+en een effectgrootte (Les 8-4 voegt dat laatste toe). Rapporteer de exacte `p` met
+twee of drie decimalen zonder voorloopnul, en schrijf `p < ,001` als ze kleiner is
+dan ,001, nooit `p = 0`. Een simulatie met 2000 schuddingen kan een p-waarde van
+,0004 niet onderscheiden van een van ,00000001, en een lezer evenmin.
+
+<Quiz
+  id="q-alpha"
+  question="Een onderzoek rapporteert p = ,06 met alfa op ,05. Welke conclusie is verdedigbaar?"
+  choices={[
+    { text: 'Het effect is niet significant op het ,05-niveau; de data zijn verenigbaar met geen effect, maar bewijzen het niet', correct: true, response: 'Juist, en de tweede helft is het deel dat meestal wordt weggelaten. De nulhypothese niet verwerpen is niet hetzelfde als haar accepteren.' },
+    { text: 'Er is geen effect', response: 'Een niet-significant resultaat toont de nulhypothese niet aan. Bij een kleine steekproef is het precies hoe een echt effect er vaak uitziet.' },
+    { text: 'Het effect is marginaal significant', response: 'Of de drempel was .05, of niet. "Marginaal significant" verplaatst alfa achteraf, het ene wat een vaste drempel moet voorkomen.' },
+    { text: 'Er is 6% kans dat de nulhypothese waar is', response: 'De p-waarde wordt berekend ONDER DE AANNAME dat de nulhypothese waar is. Ze kan niet tegelijk de kans zijn dat ze waar is.' },
+  ]}
+/>
+
+<Interpret
+  id="i-8-2"
+  question="Je toets gaf t(58) = 2,20, p = ,032, met een 95%-BI voor het verschil van [0,6; 12,3]. Welke zin hoort in de resultatensectie?"
+  choices={[
+    { text: 'Studenten die zeven uur of meer sliepen scoorden hoger op het tentamen dan studenten die minder sliepen, t(58) = 2,20, p = ,032, 95%-BI [0,6; 12,3].', correct: true, response: 'Juist, APA 7: de richting van het effect, de toets met haar vrijheidsgraden, de exacte p met drie decimalen zonder voorloopnul, en het interval voor het verschil. Les 8-4 voegt de effectgrootte toe die het compleet maakt.' },
+    { text: 'Er is 3,2% kans dat de nulhypothese waar is, t(58) = 2,20, p = ,032.', response: 'De p-waarde wordt berekend onder de aanname dat de nulhypothese waar is, dus ze kan niet de kans zijn dat de nulhypothese waar is. Dit is de meest voorkomende verkeerde lezing in de literatuur.' },
+    { text: 'Er is 96,8% kans dat het effect echt is, t(58) = 2,20, p = ,032.', response: 'Dezelfde fout omgekeerd. 1 − p is niet de kans dat er een effect bestaat.' },
+    { text: 'Slaap had een significant effect op tentamenscores, p = ,032, wat bewijst dat slaap de prestaties verbetert.', response: 'Twee problemen: "bewijst" overdrijft elke afzonderlijke p-waarde, en dit is een observationele vergelijking, dus ze kan niet vaststellen dat slaap het verschil veroorzaakte.' },
+  ]}
+/>

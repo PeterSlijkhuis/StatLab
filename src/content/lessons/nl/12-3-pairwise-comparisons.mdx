@@ -1,0 +1,97 @@
+De algemene *F* zei dat welzijn ergens tussen de vier afdelingen verschilt. Ze zei niet
+waar, en de coëfficiëntentabel vergelijkt elke afdeling alleen met Engineering. Marketing
+tegen Sales staat nergens in de uitvoer.
+
+> **Deze les installeert `emmeans`.** Het eerste codeblok kan een paar seconden wachten
+> terwijl het wordt gedownload; de statusbalk bovenaan de pagina toont wat er gebeurt.
+> Daarna staat het in de cache.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+library(emmeans)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+model_dept <- lm(wellbeing ~ department, data = d)
+model_dept %>% glance() %>% select(statistic, df, df.residual, p.value)`} />
+
+## Geschatte marginale gemiddelden
+
+`emmeans()` vraagt het model om zijn voorspelde gemiddelde bij elk niveau van een factor.
+
+<CodeBlock id="c-emm" code={`emm <- emmeans(model_dept, ~ department)
+emm`} />
+
+Met afdeling als enige voorspeller komen deze precies overeen met de ruwe
+groepsgemiddelden. Ze houden meestal op overeen te komen zodra het model iets anders
+bevat; dan zijn het de voorspelde gemiddelden met numerieke voorspellers op hun gemiddelde
+gehouden en gelijk gemiddeld over de niveaus van andere factoren, en dat is wat `emmeans`
+de moeite waard maakt om te leren in plaats van met de hand te middelen.
+
+<Predict
+  id="p-multiple"
+  question="Vier afdelingen geven zes paarsgewijze vergelijkingen. Als je elk toetst op het ,05-niveau zonder correctie, hoe groot is dan de kans op minstens één vals positief als geen enkele afdeling echt verschilt?"
+  choices={[
+    { text: 'Nog steeds 5%, want elke toets is op 5%', response: 'Elke toets is dat, maar je voert er zes uit. De kans dat minstens één misgaat is veel hoger.' },
+    { text: 'Ongeveer 26%', correct: true, response: 'Juist, als eerste benadering: 1 - ,95 tot de macht 6 is ongeveer ,26 als de zes toetsen onafhankelijk waren. Ze delen groepen, dus het werkelijke getal is iets lager (hier ongeveer ,20), nog steeds vier keer de 5% die je bedoelde.' },
+    { text: 'Ongeveer 30%, wat zes keer 5% is', response: 'In de buurt van het juiste, maar met de verkeerde rekenkunde: kansen van onafhankelijke gebeurtenissen tellen niet op.' },
+    { text: '100%, want je toetste alles', response: 'Meer toetsen verhoogt het risico, het garandeert geen vals positief.' },
+  ]}
+/>
+
+## Alle zes vergelijkingen, gecorrigeerd
+
+<CodeBlock id="c-pairwise" code={`comparisons <- emmeans(model_dept, pairwise ~ department, adjust = "tukey")
+
+comparisons$contrasts`} />
+
+Elke rij is één vergelijking: het verschil tussen twee geschatte gemiddelden, zijn
+standaardfout, een *t*-waarde en een *p*-waarde die zo is gecorrigeerd dat de kans op
+**enig** vals positief over alle zes bij ,05 blijft. De methode van Tukey is precies voor
+deze situatie ontworpen (elk paar, na een lineair model) en is minder conservatief dan
+Bonferroni voor dezelfde garantie.
+
+<CodeBlock id="c-compare-adjust" code={`library(dplyr)
+
+bind_rows(
+  as.data.frame(emmeans(model_dept, pairwise ~ department, adjust = "none")$contrasts) %>%
+    mutate(adjustment = "none"),
+  as.data.frame(comparisons$contrasts) %>% mutate(adjustment = "tukey")
+) %>%
+  select(adjustment, contrast, estimate, p.value) %>%
+  arrange(contrast, adjustment)`} />
+
+Elke gecorrigeerde *p* is groter dan zijn ongecorrigeerde tweeling, en de schattingen
+bewegen nooit. Correctie verandert wat als verrassend telt, niet wat er is gemeten.
+
+<Exercise id="m12-3-a" />
+
+## Betrouwbaarheidsintervallen, die beter rapporteren dan p-waarden
+
+<CodeBlock id="c-ci" code={`confint(comparisons$contrasts)`} />
+
+Een verschil van 3,2 punten met een interval van 0,4 tot 6,0 en een verschil van 3,2
+punten met een interval van 2,9 tot 3,5 hebben hetzelfde oordeel bij ,05 en volkomen
+verschillende wetenschappelijke. Rapporteer het interval.
+
+<Quiz
+  id="q-tukey"
+  question="Een reviewer vraagt waarom je Tukey gebruikte in plaats van simpelweg alle zes ongecorrigeerde toetsen te rapporteren."
+  choices={[
+    { text: 'Omdat Tukey kleinere p-waarden geeft, dus meer resultaten significant zijn', response: 'Het tegenovergestelde: gecorrigeerde p-waarden zijn nooit kleiner dan ongecorrigeerde, en meestal groter. Correctie kost power en koopt beheersing van het foutpercentage.' },
+    { text: 'Omdat zes toetsen op ,05 ongeveer een kans van een op vier geven op minstens één vals positief als de toetsen onafhankelijk waren (hier iets minder, omdat ze groepen delen), en Tukey dat risico over de hele familie dicht bij ,05 houdt', correct: true, response: 'Juist, en precies zo formuleer je het tegenover een reviewer.' },
+    { text: 'Omdat de data niet normaal verdeeld zijn', response: 'Tukey corrigeert voor meervoudigheid. Het heeft niets te maken met de vorm van de data.' },
+    { text: 'Omdat de algemene F significant was, wat een post-hoctoets vereist', response: 'Een significante F vereist niets. Ze vertelt je dat er een verschil bestaat; daarna beslis je welke vergelijkingen je vraag nodig heeft.' },
+  ]}
+/>
+
+<Interpret
+  id="i-12-3"
+  question="Je Tukey-tabel toont Marketing - Support = 4,70, SE = 1,40, t(476) = 3,36, gecorrigeerde p = ,005, en Marketing - Sales = 0,57, SE = 1,37, t(476) = 0,41, gecorrigeerde p = ,976. Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Met Tukey gecorrigeerde paarsgewijze vergelijkingen lieten zien dat welzijn hoger was bij Marketing dan bij Support, M-verschil = 4,70, SE = 1,40, t(476) = 3,36, p = ,005, terwijl Marketing en Sales niet betrouwbaar verschilden, M-verschil = 0,57, SE = 1,37, t(476) = 0,41, p = ,976.', correct: true, response: 'Juist: de correctie wordt genoemd, beide vergelijkingen worden met hun statistieken gerapporteerd, en het nulresultaat wordt beschreven als "niet betrouwbaar verschilden" in plaats van als gelijkheid.' },
+    { text: 'Marketing scoorde significant hoger dan Support (p = ,005) en Marketing en Sales waren gelijk (p = ,976).', response: 'Twee problemen: kale p-waarden zonder verschillen of SE\'s, en "gelijk", wat een niet-significante vergelijking nooit vaststelt.' },
+    { text: 'Alle paarsgewijze vergelijkingen zijn uitgevoerd; Marketing verschilde van Support, t(476) = 3,36, p < ,05.', response: 'De correctie wordt niet genoemd, het verschil en zijn SE ontbreken, en een gecorrigeerde p van ,005 moet exact worden gerapporteerd.' },
+    { text: 'Marketing had het hoogste welzijn van de vier afdelingen, t(476) = 3,36, p = ,005.', response: 'Eén vergelijking tegen één afdeling maakt Marketing niet in totaal het hoogste, en de mediaan in Les 12-2 vertelt hoe dan ook een ander verhaal over "het hoogste".' },
+  ]}
+/>

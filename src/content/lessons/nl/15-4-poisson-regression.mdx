@@ -1,0 +1,111 @@
+Sommige uitkomsten zijn tellingen: ziektedagen, fouten, bezoeken, klachten. Een telling kan
+niet negatief zijn, komt in hele getallen, en haar spreiding groeit met haar gemiddelde: mensen
+met gemiddeld één ziektedag variëren minder dan mensen met gemiddeld tien. Het gegeneraliseerde
+lineaire model uit Les 15-2 pakt dit aan met een andere family en hetzelfde idee: zet het
+lineaire deel op een schaal waar een rechte lijn zin heeft.
+
+De werkplekdata hebben geen telling, dus deze les voegt er een toe aan de echte werknemers:
+ziektedagen over een jaar, gesimuleerd zodat ze stijgen met werkdruk en dalen met thuiswerken.
+
+<CodeBlock id="c-load" code={`library(dplyr)
+library(broom)
+
+d <- read.csv("data/workplace.csv", stringsAsFactors = TRUE)
+
+set.seed(154)
+d$sick_days <- rpois(nrow(d), exp(-0.2 + 0.18 * d$workload - 0.35 * (d$remote == "Yes")))
+
+d %>% summarise(mean_sick = mean(sick_days), var_sick = var(sick_days), min = min(sick_days), max = max(sick_days))`} />
+
+## De loglink
+
+Poissonregressie modelleert de **logaritme** van de verwachte telling als een rechte lijn.
+Teruggetransformeerd vermenigvuldigt elke coëfficiënt de verwachte telling in plaats van er
+iets bij op te tellen. Het boek beschrijft hetzelfde model als een exponentiële linkfunctie,
+waarmee de transformatie terug vanuit het lineaire deel wordt benoemd; R en de meeste teksten
+noemen het de loglink.
+
+<CodeBlock id="c-fit" code={`m_sick <- glm(sick_days ~ workload + remote, data = d, family = poisson)
+
+m_sick %>% tidy()
+m_sick %>% tidy(exponentiate = TRUE, conf.int = TRUE)`} />
+
+De eerste tabel staat op de logschaal, waar 0 geen effect betekent. De tweede is
+geëxponentieerd: dit zijn **rate ratio's**, waar 1 geen effect betekent.
+
+- **`workload`**: ongeveer 1,20. Elk extra punt werkdruk gaat samen met ongeveer 20% meer
+  ziektedagen.
+- **`remoteYes`**: ongeveer 0,68. Thuiswerkers hebben ongeveer twee derde van de ziektedagen
+  van kantoorwerkers met dezelfde werkdruk, 32% minder.
+
+Omdat de effecten vermenigvuldigen, voegt dezelfde stijging van één punt werkdruk aan de
+hoge kant meer ziektedagen toe dan aan de lage kant:
+
+<CodeBlock id="c-predict" code={`predict(m_sick, newdata = data.frame(workload = c(4, 9), remote = "No"), type = "response")`} />
+
+<Predict
+  id="p-rate-ratio"
+  question="De rate ratio voor werkdruk is 1,20. Wat doen drie extra punten werkdruk met het verwachte aantal ziektedagen?"
+  choices={[
+    { text: 'Ze voegen 0,60 ziektedagen toe', response: 'Rate ratio\'s vermenigvuldigen, ze tellen niet op. Het aantal toegevoegde dagen hangt af van waar je begint.' },
+    { text: 'Ze vermenigvuldigen het met ongeveer 1,20 × 1,20 × 1,20, dus ongeveer 1,73', correct: true, response: 'Juist. Op de logschaal tellen de drie stappen op; teruggetransformeerd vermenigvuldigen ze.' },
+    { text: 'Ze vermenigvuldigen het met 3,60', response: 'Dat behandelt de ratio als iets dat lineair schaalt. Elke stap vermenigvuldigt opnieuw met 1,20.' },
+  ]}
+/>
+
+<Exercise id="m15-4-a" />
+
+## De Poissonaanname controleren
+
+Een Poissonverdeling heeft een variantie gelijk aan haar gemiddelde. Echte tellingen variëren
+vaak meer, wat **overdispersie** heet, en dat maakt de standaardfouten te klein. Schat haar
+uit de Pearson-residuen:
+
+<CodeBlock id="c-dispersion" code={`sum(residuals(m_sick, type = "pearson")^2) / df.residual(m_sick)`} />
+
+Dicht bij 1 is prima, zoals hier. Duidelijk erboven, zeg 1,5 of meer, en een negatief
+binomiaal model is de betere keuze; de modelkiezer laat zien hoe.
+
+## De chikwadraattoets is een Poissonmodel
+
+In Module 9 toetste je met een chikwadraattoets of vertrek uit het bedrijf van de afdeling
+afhing. Dezelfde vraag kan worden gesteld over de **tellingen** in de tabel: pas een
+Poissonmodel aan waarin afdeling en vertrek elk de tellingen beïnvloeden maar niet
+interacteren, en vraag hoe slecht het ernaast zit.
+
+<CodeBlock id="c-counts" code={`counts <- as.data.frame(table(department = d$department, left_company = d$left_company))
+counts
+
+m_independent <- glm(Freq ~ department + left_company, data = counts, family = poisson)
+
+c(deviance = deviance(m_independent), df = df.residual(m_independent),
+  p = pchisq(deviance(m_independent), df.residual(m_independent), lower.tail = FALSE))
+
+chisq.test(table(d$department, d$left_company))`} />
+
+Het model zonder interactie **is** de hypothese van onafhankelijkheid. Haar deviantie is een
+likelihood-ratiochikwadraat, en ze komt bijna precies uit op het chikwadraat van Pearson, met
+dezelfde vrijheidsgraden. Het toevoegen van de interactie `department:left_company` zou de
+tabel perfect laten passen, dus toetsen of die interactie nodig is, is de chikwadraattoets.
+Wederom blijkt een klassieke toets een vraag over een model te zijn.
+
+<Quiz
+  id="q-counts"
+  question="Welke uitkomst vraagt om Poissonregressie in plaats van logistische regressie?"
+  choices={[
+    { text: 'Of een werknemer binnen een jaar vertrok', response: 'Ja of nee is een binaire uitkomst: logistische regressie.' },
+    { text: 'Het aantal keren dat een werknemer in een jaar te laat was', correct: true, response: 'Juist: een telling van gebeurtenissen per persoon.' },
+    { text: 'Een welzijnsscore van een werknemer van 0 tot 100', response: 'Een continue score zonder tellingstructuur hoort in een lineair model.' },
+  ]}
+/>
+
+<Interpret
+  id="i-15-4"
+  question="Het Poissonmodel geeft rate ratio's van 1,20 voor werkdruk (95%-BI 1,15 tot 1,25, z = 8,41, p < ,001) en 0,68 voor thuiswerken (95%-BI 0,60 tot 0,77, z = -6,12, p < ,001). Welke verslaglegging is correct APA 7?"
+  choices={[
+    { text: 'Een Poissonregressie liet zien dat ziektedagen stegen met werkdruk, RR = 1,20, 95%-BI [1,15; 1,25], z = 8,41, p < ,001, en lager waren voor thuiswerkers, RR = 0,68, 95%-BI [0,60; 0,77], z = -6,12, p < ,001: ongeveer 20% meer ziektedagen per punt werkdruk, en 32% minder bij thuiswerken.', correct: true, response: 'Juist. Rate ratio\'s met hun intervallen en z-waarden, en een heldere lezing van elk als procentuele verandering.' },
+    { text: 'Elk punt werkdruk voegde 1,20 ziektedagen toe, en thuiswerken haalde er 0,68 dagen af, beide p < ,001.', response: 'Rate ratio\'s vermenigvuldigen de verwachte telling. Het zijn geen aantallen dagen om op te tellen of af te trekken.' },
+    { text: 'Thuiswerken verlaagde de odds op ziektedagen, OR = 0,68, p < ,001.', response: 'Dit zijn rate ratio\'s uit een tellingmodel, geen odds ratio\'s uit een binair model.' },
+    { text: 'Werkdruk en thuiswerken voorspelden ziektedagen significant, p < ,001.', response: 'Geen schattingen, geen intervallen: een lezer leert niets over hoe groot de effecten zijn.' },
+  ]}
+/>

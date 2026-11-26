@@ -1,0 +1,110 @@
+Je meet bijna nooit iedereen over wie je iets wilt zeggen. Je meet een
+steekproef en generaliseert. Of die generalisatie klopt, hangt veel meer af van
+*hoe* de steekproef getrokken is dan van hoe groot ze is.
+
+## Populatie, steekproefkader en steekproef
+
+- De **populatie** is iedereen over wie je conclusie gaat: bijvoorbeeld alle
+  BMS-bachelorstudenten van dit jaar.
+- Het **steekproefkader** is de lijst waaruit je daadwerkelijk trekt: de
+  mailinglijst van de studentenadministratie. Mensen die niet in het kader
+  staan, kunnen nooit in de steekproef terechtkomen.
+- De **steekproef** is wie je uitnodigt, en de **respons** is het deel van hen
+  dat daadwerkelijk meedoet. Als je 400 mensen uitnodigt en 120 reageren, is de
+  respons 30%.
+
+## Kans- en niet-kanssteekproeven
+
+Bij een **kanssteekproef** heeft elke eenheid in het kader een bekende kans,
+groter dan nul, om geselecteerd te worden.
+
+- Een **enkelvoudige aselecte steekproef** geeft elke eenheid dezelfde kans,
+  als namen trekken uit een hoed.
+- Een **gestratificeerde steekproef** verdeelt de populatie eerst in groepen
+  (strata), zoals opleidingen, en trekt binnen elke groep aselect, zodat elke
+  groep in een vast aantal vertegenwoordigd is.
+- Een **clustersteekproef** trekt hele groepen aselect, zoals
+  werkgroepen, en meet iedereen in de getrokken groepen.
+
+Bij een **niet-kanssteekproef** zijn de kansen onbekend.
+
+- Een **gemakssteekproef** neemt wie makkelijk te bereiken is.
+- Een **doelgerichte steekproef** kiest eenheden bewust om een reden, zoals
+  experts.
+- Een **sneeuwbalsteekproef** vraagt deelnemers om anderen te werven.
+- Een **quotasteekproef** vult vaste aantallen per groep, net als
+  stratificeren, maar zonder binnen de groepen aselect te trekken.
+
+## Het verschil zien in R
+
+De cursusdataset `wellbeing-population.csv` bevat alle 5000 studenten van een
+denkbeeldig paar opleidingen, zodat je hier steekproeven met de waarheid kunt
+vergelijken.
+
+<CodeBlock id="c-population" code={`library(dplyr)
+
+population <- read.csv("data/wellbeing-population.csv", stringsAsFactors = TRUE)
+mean(population$stress)`} />
+
+Een enkelvoudige aselecte steekproef van 100 komt dicht bij dat gemiddelde.
+
+<CodeBlock id="c-random" code={`set.seed(1)
+random_sample <- population %>% slice_sample(n = 100)
+mean(random_sample$stress)`} />
+
+Nu een gemakssteekproef: je deelt vragenlijsten uit bij een college van 8.45
+uur, en alleen studenten die minstens zeven uur sliepen zijn gekomen.
+
+<CodeBlock id="c-convenience" code={`set.seed(1)
+lecture_sample <- population %>%
+  filter(sleep_hours >= 7) %>%
+  slice_sample(n = 100)
+mean(lecture_sample$stress)`} />
+
+<Predict
+  id="p-bigger"
+  question="Zou het vragen aan 1000 studenten bij het college van 8.45 uur, in plaats van 100, de schatting verbeteren?"
+  choices={[
+    { text: 'Ja, een grotere steekproef is altijd nauwkeuriger', response: 'Een grotere steekproef verkleint alleen de toevallige spreiding. Elke student erin sliep nog steeds minstens zeven uur, dus de schatting blijft te laag.' },
+    { text: 'Nee, het zou een verkeerde waarde nauwkeuriger schatten', correct: true, response: 'Juist. Grootte verkleint toevallige fouten, niet de systematische fout die ingebouwd zit in wie er geselecteerd kon worden.' },
+  ]}
+/>
+
+Door elke methode vaak te herhalen zie je het patroon.
+
+<CodeBlock id="c-repeat" code={`set.seed(2)
+random_means <- replicate(500, mean(slice_sample(population, n = 100)$stress))
+rested <- population %>% filter(sleep_hours >= 7)
+lecture_means <- replicate(500, mean(slice_sample(rested, n = 100)$stress))
+
+c(true = mean(population$stress), random = mean(random_means), lecture = mean(lecture_means))`} />
+
+De aselecte steekproeven spreiden rond het ware gemiddelde: die spreiding is
+**steekproeffout**, en ze wordt kleiner naarmate steekproeven groter worden. De
+collegesteekproeven spreiden rond een waarde die ongeveer twee punten te laag
+is: dat is **bias**, een systematische fout die geen steekproefgrootte
+wegneemt. Non-respons werkt op dezelfde manier als de mensen die niet reageren
+verschillen van degenen die dat wel doen.
+
+Een gestratificeerde steekproef trekt een vast aantal uit elke groep. In dplyr
+groepeer je eerst en trek je dan.
+
+<CodeBlock id="c-stratified" code={`set.seed(3)
+per_programme <- population %>%
+  group_by(programme) %>%
+  slice_sample(n = 20) %>%
+  ungroup()
+count(per_programme, programme)`} />
+
+<Exercise id="mrm-3-a" />
+
+<Quiz
+  id="q-quota"
+  question="Een onderzoeker staat in de Vrijhof en interviewt 50 studenten Bedrijfskunde en 50 studenten Psychologie, wie er ook maar het eerst langsloopt. Wat voor steekproef is dit?"
+  choices={[
+    { text: 'Een gestratificeerde steekproef', response: 'De vaste aantallen per opleiding lijken gestratificeerd, maar binnen elke opleiding is niemand aselect getrokken.' },
+    { text: 'Een quotasteekproef', correct: true, response: 'Juist. Vaste quota per groep, gevuld op gemak. De kansen om geselecteerd te worden zijn onbekend, dus bias is mogelijk binnen elke groep.' },
+    { text: 'Een enkelvoudige aselecte steekproef', response: 'Studenten die nooit door de Vrijhof lopen hadden geen enkele kans om geselecteerd te worden.' },
+    { text: 'Een clustersteekproef', response: 'Er zijn geen groepen als geheel getrokken. Individuen werden gekozen totdat elk quotum vol was.' },
+  ]}
+/>
